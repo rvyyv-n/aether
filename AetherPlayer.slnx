@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Aether.App/Aether.App.csproj" />
+    <Project Path="src/Aether.Core.Interop/Aether.Core.Interop.csproj" />
+    <Project Path="src/Aether.PvP.Review/Aether.PvP.Review.csproj" />
+    <Project Path="src/Aether.Server.LanHost/Aether.Server.LanHost.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Aether.Core.Tests/Aether.Core.Tests.csproj" />
+    <Project Path="tests/Aether.PvP.Tests/Aether.PvP.Tests.csproj" />
+    <Project Path="tests/Aether.Server.Tests/Aether.Server.Tests.csproj" />
+  </Folder>
+</Solution>

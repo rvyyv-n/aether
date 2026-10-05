@@ -1,0 +1,27 @@
+name: Build & Test (Native AOT)
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore AetherPlayer.sln
+
+      - name: Build solution
+        run: dotnet build AetherPlayer.sln -c Release --no-restore
+
+      - name: Run unit & integration tests
+        run: dotnet test AetherPlayer.sln -c Release --no-build --verbosity normal

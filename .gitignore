@@ -1,0 +1,45 @@
+# .NET & Visual Studio build outputs
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+ARM64/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# WinUI / AppSDK generated
+Generated Files/
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+
+# Native binaries downloaded/cached locally
+src/Aether.App/Native/x64/*.dll
+src/Aether.App/Native/x64/*.exe
+!src/Aether.App/Native/x64/.gitkeep
+
+# Testing & Coverage
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# AI / IDE tooling (per repo hooks)
+CLAUDE.md
+.claude/
+GEMINI.md
+.gemini/
+.vs/
+.idea/
+.vscode/
+
+# OS / temporary files
+.DS_Store
+Thumbs.db
+*.part
+*.tmp
