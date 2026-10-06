@@ -1,7 +1,8 @@
-# Operational Instructions for AI Agents
+# Agent rules
 
-See detailed operational guidelines and role division in [`docs/AGENTS.md`](docs/AGENTS.md).
+Full rules and technical invariants: [`docs/AGENTS.md`](docs/AGENTS.md).
 
-- **Claude Opus 5.5**: `Aether.Core.Interop` (P/Invoke, DirectX, memory safety, event loop).
-- **Claude Sonnet 5.5**: `Aether.App`, `Aether.PvP.Review`, `Aether.Server.LanHost` (WinUI 3 XAML, controls, trimming, Kestrel).
-- **Gemini**: Scaffolding, refactoring, header ingestion, test harness generation, CI workflows.
+- **Opus**: `Aether.Core.Interop` (P/Invoke, DirectX, memory safety, event loop), plus architecture and design review.
+- **Sonnet**: `Aether.App`, `Aether.PvP.Review`, `Aether.Server.LanHost` (WinUI 3, controls, trimming, Kestrel).
+- **Gemini**: repo scouting, header ingestion, test harnesses, CI workflows, mechanical refactors.
+- Threads retire at 8 turns or 150k tokens. Build passes run in a worktree.

@@ -1,30 +1,44 @@
-# Operational Instructions for AI Agents (Antigravity / Claude)
+# Agent rules
 
-## Role Division & Model Assignment
-- **Claude Opus 5.5 / Reasoning Specialists:**
-  - Strictly assigned to `Aether.Core.Interop`.
-  - Authoring low-level unsafe structs, P/Invoke signatures, DirectX COM wrappers (`ISwapChainPanelNative`), and memory lifetime safety.
-  - Verification of zero unmanaged memory leaks and thread safety on the MPV event loop.
-- **Claude Sonnet 5.5 / Velocity Specialists:**
-  - Assigned to `Aether.App`, `Aether.PvP.Review`, and `Aether.Server.LanHost`.
-  - WinUI 3 XAML styling, MVVM wiring, keyboard accelerators, and FFmpeg command builder integration.
-- **Gemini / Context Refactoring:**
-  - Large header ingestions (`mpv.h`, `render.h`), multi-file project restructuring, build issue resolution, and test generation.
+## Stack and build
+Native AOT player on .NET 9 (WinUI 3): libmpv C API bindings, with DirectComposition / Direct3D 11 interop for the swap chain. Solution `AetherPlayer.sln` (`.slnx` alongside):
+- `src/Aether.Core.Interop`: C-ABI `LibraryImport` bindings and DirectX interop.
+- `src/Aether.App`: WinUI 3 presentation layer and controls.
+- `src/Aether.PvP.Review`: high-FPS frame analysis and lossless clipping.
+- `src/Aether.Server.LanHost`: embedded Kestrel HTTP 206 streaming host and QR service.
+- `tests/`: xUnit suites (`Aether.Core.Tests`, `Aether.PvP.Tests`, `Aether.Server.Tests`).
 
-## Technical Rules of Engagement
-1. **P/Invoke Standard:** DO NOT use legacy `[DllImport]`. Use modern .NET 9 source-generated `[LibraryImport]` with explicit marshaling to ensure Native AOT compatibility.
-2. **Memory Allocation:** Zero allocations on frame-rendering loops. Interop callbacks from `libmpv` must not marshal objects across every tick.
-3. **No Thread Starvation:** The `mpv_wait_event` listener must operate on a dedicated long-running background thread (`TaskCreationOptions.LongRunning`). Never block the WinUI `DispatcherQueue`.
-4. **Error Handling:** Unmanaged pointer operations must be guarded. Direct3D calls must validate `HRESULT` returns with `Marshal.ThrowExceptionForHR` or explicit failure logging.
-5. **No Visual Bloat:** Adhere strictly to the minimal Windows 11 design philosophy: zero window borders, fluid Mica backdrops, auto-hiding scrubbers, and high-contrast analytical typography.
-6. **Native Callbacks:** Use `[UnmanagedCallersOnly]` + function pointers (`delegate* unmanaged[Cdecl]`) for libmpv callbacks — no managed delegates (AOT-safe, GC-safe).
-7. **Process Arguments:** Build external process arguments with `ProcessStartInfo.ArgumentList`.
-8. **Decisions:** Record architecture choices in `docs/DECISIONS.md`.
+```powershell
+dotnet restore AetherPlayer.sln
+dotnet build AetherPlayer.sln
+dotnet test AetherPlayer.sln
+dotnet build AetherPlayer.sln --no-incremental -warnaserror   # warnings are errors (Directory.Build.props)
+```
+CI (`.github/workflows/build-aot.yml`) builds and tests in Release.
 
-## T3 Code Orchestration Guidelines
-- **Child Tasks / Subagents:** Use `delegate_task` to dispatch specialized subtasks:
-  - Low-level Interop / DirectX / Memory Safety -> Claude Opus 5.5 (`claudeAgent` / `claude-opus-5-5`).
-  - WinUI 3 UX / PvP Review / Kestrel LAN Host -> Claude Sonnet 5.5 (`claudeAgent` / `claude-sonnet-5-5`).
-  - Refactoring, Headers, Test Suite & CI -> Gemini 3.8 Flash (`acpRegistry_google_antigravity`).
-- **Feature Branches & Worktrees:** Use `t3_thread_launch` with `workspaceStrategy: {"type": "worktree", ...}` for isolated feature implementation.
-- **Pull Requests:** Call `link_pull_request` for every branch/PR opened to bind it to the T3 thread.
+## Roles
+- **Opus**: `Aether.Core.Interop`. Unsafe structs, P/Invoke signatures, DirectX COM wrappers (`ISwapChainPanelNative`), memory lifetimes (verify no unmanaged leaks), MPV event-loop thread safety, and architecture decisions. Use it for 1-3 turns per task, not for file reading or test-fix loops.
+- **Sonnet**: `Aether.App`, `Aether.PvP.Review`, `Aether.Server.LanHost`. WinUI 3 XAML and styling, MVVM wiring, keyboard accelerators, FFmpeg command builder, Kestrel host. Max 8 turns per thread.
+- **Gemini**: scouting and header ingestion (`mpv.h`, `render.h`), test suites and harnesses, build-error loops, CI, multi-file restructuring. Gemini doesn't auto-delegate; it names a fork candidate in its build summary.
+
+## Rules
+1. **P/Invoke**: no `[DllImport]`. Use .NET 9 source-generated `[LibraryImport]` with explicit marshaling (Native AOT).
+2. **Frame loop**: zero allocations. libmpv callbacks don't marshal objects per tick.
+3. **Threads**: `mpv_wait_event` runs on a dedicated `TaskCreationOptions.LongRunning` thread. Never block the WinUI `DispatcherQueue`.
+4. **Errors**: guard unmanaged pointer operations. Check Direct3D `HRESULT`s with `Marshal.ThrowExceptionForHR` or log the failure.
+5. **UI**: minimal Windows 11 design. No window borders, Mica backdrops, auto-hiding scrubbers, high-contrast type.
+6. **Callbacks**: `[UnmanagedCallersOnly]` plus `delegate* unmanaged[Cdecl]` for libmpv. No managed delegates.
+7. **Processes**: build arguments with `ProcessStartInfo.ArgumentList`.
+8. **Decisions**: record architecture choices in `docs/DECISIONS.md`.
+
+## Orchestration
+- At a build checkpoint, fork with `t3_thread_fork` (from `latest_stable`) into a worktree (`claude/pass-<n>` or `claude/eval`). Don't chain `delegate_task` calls between models.
+  - Fork to Opus for Interop memory safety, P/Invoke signatures and COM wrappers.
+  - Fork to Sonnet for WinUI polish, Mica, MVVM controls, PvP review.
+- Retire a thread at 8 turns or 150k tokens: commit, then fork or start fresh.
+- Fork checkpoints replace delegation loops: finish and commit the pass, then fork.
+- Never leave a dev server or file watcher running at the end of a turn.
+- Call `link_pull_request` for every PR you open.
+
+## Commits
+Author and committer are `rvyyv-n` only. No co-author, generated-by or assistant mentions in commits, PRs or files; the global git hooks reject them. Never `--no-verify`.
