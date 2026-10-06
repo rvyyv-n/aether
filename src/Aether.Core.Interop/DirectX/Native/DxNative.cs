@@ -44,9 +44,3 @@ internal static unsafe partial class DxNative
     [LibraryImport("kernel32.dll", SetLastError = true)]
     public static partial uint WaitForSingleObjectEx(SafeHandle handle, uint milliseconds, int alertable);
 }
-
-[StructLayout(LayoutKind.Sequential)]
-internal struct DxgiMatrix3x2
-{
-    public float M11, M12, M21, M22, M31, M32;
-}

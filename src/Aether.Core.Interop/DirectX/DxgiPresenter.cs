@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using System.Threading;
 using Aether.Core.Interop.DirectX.Native;
 using Microsoft.Win32.SafeHandles;
 
@@ -34,8 +36,10 @@ public sealed class DxgiPresenterOptions
 /// Composition flip-discard swap chain for a XAML <c>SwapChainPanel</c>, with a
 /// frame-latency waitable object.
 /// <para>
-/// Threading: <see cref="WaitForNextFrame"/>, <see cref="Clear"/> and <see cref="Present"/>
-/// belong to one render thread (the owner). They don't allocate.
+/// Threading: <see cref="WaitForNextFrame"/>, <see cref="Clear"/>, <see cref="Present"/>
+/// and <see cref="ApplyPendingResize"/> belong to one render thread (the owner). They don't
+/// allocate. <see cref="SetTargetSize"/> may be called from any thread (normally the UI
+/// thread's SizeChanged / CompositionScaleChanged) and never blocks on the GPU.
 /// </para>
 /// </summary>
 public sealed unsafe class DxgiPresenter : IDisposable
@@ -45,6 +49,15 @@ public sealed unsafe class DxgiPresenter : IDisposable
     private nint _swapChain; // IDXGISwapChain2*
     private nint _rtv;       // cached ID3D11RenderTargetView* for buffer 0
     private readonly SafeWaitHandle _frameLatencyHandle;
+
+    /// <summary>Largest D3D11 texture dimension (D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION).</summary>
+    public const uint MaxDimension = 16384;
+
+    private readonly Lock _pendingLock = new();
+    private volatile bool _resizePending;
+    private SwapChainTargetSize _pendingSize;
+    private float _pendingScaleX = 1f;
+    private float _pendingScaleY = 1f;
 
     public DxgiPresenter(D3D11DeviceManager deviceManager, DxgiPresenterOptions? options = null)
     {
@@ -136,6 +149,22 @@ public sealed unsafe class DxgiPresenter : IDisposable
 
     public uint PixelHeight { get; private set; }
 
+    /// <summary>Composition scale currently compensated by the swap chain's matrix transform.</summary>
+    public float CompositionScaleX { get; private set; } = 1f;
+
+    public float CompositionScaleY { get; private set; } = 1f;
+
+    /// <summary><c>IDXGISwapChain2::GetMatrixTransform</c>.</summary>
+    public Matrix3x2 MatrixTransform
+    {
+        get
+        {
+            Matrix3x2 m;
+            Com.ThrowIfFailed(((delegate* unmanaged[Stdcall]<nint, Matrix3x2*, int>)Com.Vtbl(SwapChainPointer)[35])(_swapChain, &m));
+            return m;
+        }
+    }
+
     /// <summary>Set once Present or ResizeBuffers reports device removal/reset. Recreate device and presenter.</summary>
     public bool IsDeviceLost { get; private set; }
 
@@ -205,6 +234,102 @@ public sealed unsafe class DxgiPresenter : IDisposable
         }
         Com.ThrowIfFailed(hr);
         return PresentResult.Ok;
+    }
+
+    /// <summary>
+    /// Physical back-buffer size for a panel of <paramref name="logicalWidth"/> x
+    /// <paramref name="logicalHeight"/> DIPs at the given composition scale, clamped to 1..16384.
+    /// </summary>
+    public static SwapChainTargetSize ComputeTargetSize(double logicalWidth, double logicalHeight, float scaleX, float scaleY) =>
+        new(ToPixels(logicalWidth, scaleX), ToPixels(logicalHeight, scaleY));
+
+    private static uint ToPixels(double logical, float scale)
+    {
+        double px = logical * SanitizeScale(scale);
+        if (!(px >= 1)) // also catches NaN
+        {
+            return 1;
+        }
+        return px >= MaxDimension ? MaxDimension : (uint)Math.Round(px, MidpointRounding.AwayFromZero);
+    }
+
+    private static float SanitizeScale(float scale) => float.IsFinite(scale) && scale > 0 ? scale : 1f;
+
+    /// <summary>
+    /// Records the panel's size (DIPs) and composition scale (<c>SwapChainPanel.CompositionScaleX/Y</c>).
+    /// Any thread; cheap; the swap chain changes on the next <see cref="ApplyPendingResize"/>.
+    /// </summary>
+    public void SetTargetSize(double logicalWidth, double logicalHeight, float compositionScaleX, float compositionScaleY)
+    {
+        SwapChainTargetSize size = ComputeTargetSize(logicalWidth, logicalHeight, compositionScaleX, compositionScaleY);
+        lock (_pendingLock)
+        {
+            _pendingSize = size;
+            _pendingScaleX = SanitizeScale(compositionScaleX);
+            _pendingScaleY = SanitizeScale(compositionScaleY);
+            _resizePending = true;
+        }
+    }
+
+    /// <summary>
+    /// Owner thread, between frames: applies the latest <see cref="SetTargetSize"/>.
+    /// Resizes the buffers (<c>ResizeBuffers</c>) when the pixel size changed and sets the
+    /// inverse composition-scale matrix (<c>SetMatrixTransform</c>) when the scale changed,
+    /// so the pixel-sized buffer maps 1:1 onto physical pixels instead of being scaled twice.
+    /// Returns true if anything changed; false with <see cref="IsDeviceLost"/> set on device loss.
+    /// </summary>
+    public bool ApplyPendingResize()
+    {
+        if (!_resizePending)
+        {
+            return false;
+        }
+
+        SwapChainTargetSize size;
+        float scaleX, scaleY;
+        lock (_pendingLock)
+        {
+            size = _pendingSize;
+            scaleX = _pendingScaleX;
+            scaleY = _pendingScaleY;
+            _resizePending = false;
+        }
+
+        nint sc = SwapChainPointer;
+        bool changed = false;
+
+        if (size.Width != PixelWidth || size.Height != PixelHeight)
+        {
+            // ResizeBuffers fails while anything still references a back buffer.
+            Com.Release(ref _rtv);
+            ((delegate* unmanaged[Stdcall]<nint, void>)Com.Vtbl(_context)[110])(_context); // ClearState
+            ((delegate* unmanaged[Stdcall]<nint, void>)Com.Vtbl(_context)[111])(_context); // Flush
+
+            // IDXGISwapChain::ResizeBuffers: keep count and format; flags must match creation.
+            int hr = ((delegate* unmanaged[Stdcall]<nint, uint, uint, uint, DxgiFormat, uint, int>)Com.Vtbl(sc)[13])(
+                sc, 0, size.Width, size.Height, DxgiFormat.Unknown, (uint)SwapChainFlags);
+            if (IsDeviceLostResult(hr))
+            {
+                IsDeviceLost = true;
+                return false;
+            }
+            Com.ThrowIfFailed(hr);
+            PixelWidth = size.Width;
+            PixelHeight = size.Height;
+            changed = true;
+        }
+
+        if (scaleX != CompositionScaleX || scaleY != CompositionScaleY)
+        {
+            var inverse = new Matrix3x2(1f / scaleX, 0f, 0f, 1f / scaleY, 0f, 0f);
+            // IDXGISwapChain2::SetMatrixTransform
+            Com.ThrowIfFailed(((delegate* unmanaged[Stdcall]<nint, Matrix3x2*, int>)Com.Vtbl(sc)[34])(sc, &inverse));
+            CompositionScaleX = scaleX;
+            CompositionScaleY = scaleY;
+            changed = true;
+        }
+
+        return changed;
     }
 
     private nint EnsureRenderTargetView()

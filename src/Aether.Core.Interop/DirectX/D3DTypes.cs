@@ -93,3 +93,6 @@ public enum PresentResult
     Occluded,
     DeviceLost,
 }
+
+/// <summary>Back-buffer size in physical pixels.</summary>
+public readonly record struct SwapChainTargetSize(uint Width, uint Height);
