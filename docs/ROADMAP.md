@@ -1,5 +1,7 @@
 # Aether Media Player — Roadmap
 
+**Design tasks (4.1–4.5, 5.1–5.3, 6.2, 6.3) run on Opus.** Before building any of them, Opus asks the user design questions and requests reference screenshots, then confirms the direction before writing UI code.
+
 ### Pass 1: DirectX 11 Pipeline & SwapChain Interop
 
 | # | Task | Effort | Model |
@@ -46,11 +48,11 @@
 
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
-| 4.1 | Custom window chrome: borderless window, `ExtendsContentIntoTitleBar`, blended title bar | S | Sonnet |
-| 4.2 | `MicaTheme`: apply Windows 11 `MicaBackdrop` (Base) behind letterboxing and controls | S | Sonnet |
-| 4.3 | `DesignTokens`: warm-charcoal glass (`#181615CC`), 1px luminous borders (`#FFFFFF14`), Cascadia typography | S | Sonnet |
-| 4.4 | Auto-hiding OSD: Composition GPU opacity animation after 2s mouse idle + cursor hide | M | Sonnet |
-| 4.5 | Drag-and-drop listener on main window for `.mp4`, `.mkv`, `.mov`, `.webm` | S | Sonnet |
+| 4.1 | Custom window chrome: borderless window, `ExtendsContentIntoTitleBar`, blended title bar | S | Opus |
+| 4.2 | `MicaTheme`: apply Windows 11 `MicaBackdrop` (Base) behind letterboxing and controls | S | Opus |
+| 4.3 | `DesignTokens`: warm-charcoal glass (`#181615CC`), 1px luminous borders (`#FFFFFF14`), Cascadia typography | S | Opus |
+| 4.4 | Auto-hiding OSD: Composition GPU opacity animation after 2s mouse idle + cursor hide | M | Opus |
+| 4.5 | Drag-and-drop listener on main window for `.mp4`, `.mkv`, `.mov`, `.webm` | S | Opus |
 
 **Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, and zero airspace clipping.
 
@@ -60,9 +62,9 @@
 
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
-| 5.1 | `OverlayHud`: sub-millisecond timestamp, game tick (`floor(T*20)`), sub-tick %, frame count, source FPS | S | Sonnet |
-| 5.2 | `PrecisionSeekBar`: fluent scrubber with hover timestamp tooltips and In (`I`) / Out (`O`) indicators | M | Sonnet |
-| 5.3 | `ClipDrawer`: export drawer UI with drag-to-export into Discord / File Explorer (`DataPackage`) | M | Sonnet |
+| 5.1 | `OverlayHud`: sub-millisecond timestamp, game tick (`floor(T*20)`), sub-tick %, frame count, source FPS | S | Opus |
+| 5.2 | `PrecisionSeekBar`: fluent scrubber with hover timestamp tooltips and In (`I`) / Out (`O`) indicators | M | Opus |
+| 5.3 | `ClipDrawer`: export drawer UI with drag-to-export into Discord / File Explorer (`DataPackage`) | M | Opus |
 | 5.4 | Pre-warm FFmpeg on idle and execute sub-300ms `-c copy` export with atomic `.part` rename | S | Sonnet |
 | 5.5 | Integration tests for FFmpeg argument building, GOP alignment, and export cancellation | S | Gemini |
 
@@ -75,8 +77,8 @@
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
 | 6.1 | `KestrelStreamServer`: lightweight HTTP 206 partial content server with session token auth | M | Sonnet |
-| 6.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding | S | Sonnet |
-| 6.3 | `QrPairingService`: in-memory SVG/PNG QR code generator with local LAN IP flyout (`S` key) | S | Sonnet |
+| 6.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding | S | Opus |
+| 6.3 | `QrPairingService`: in-memory SVG/PNG QR code generator with local LAN IP flyout (`S` key) | S | Opus |
 | 6.4 | Release hardening: Native AOT build (`dotnet publish -c Release -r win-x64`) | M | Gemini |
 | 6.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations | M | Opus |
 
