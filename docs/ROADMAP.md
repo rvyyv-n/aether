@@ -1,6 +1,22 @@
 # Aether Media Player — Roadmap
 
-**Design tasks (4.1–4.6, 5.1–5.3, 6.2, 6.3) run on Opus.** Before building any of them, Opus asks the user design questions and requests reference screenshots, then confirms the direction before writing UI code.
+## Model routing
+
+Every task row has a **Model** column. Autonomous runs should follow it without asking:
+
+| Model | Use for | Rows |
+|:---|:---|:---|
+| **Opus** | Design work (UI, chrome, Mica, OSD, HUD, seek bar, drawers, QR flyout), `Aether.Core.Interop` (P/Invoke, COM, memory, event-loop safety), architecture decisions, on-screen checks | Every row marked Opus |
+| **Sonnet** | Non-design wiring in `Aether.App`, `Aether.Core.Playback`, `Aether.PvP.Review`, `Aether.Server.LanHost` | Every row marked Sonnet |
+| **Gemini** | Test suites, benchmarks, CI workflows, scouting, mechanical refactors | Every row marked Gemini |
+
+**Rules for every task:**
+- **Design tasks** (4.1–4.6, 5.1–5.3, 6.2, 6.3) run on Opus. Before writing UI code, Opus asks the user design questions and requests reference screenshots, then confirms the direction.
+- **Helpers** get a self-contained brief (goal, files, project rules, what to report). Floor: Sonnet at medium effort. At most three helpers per task.
+- **Threads** retire at 8 turns or 150k tokens: commit, then fork (`t3_thread_fork`) or start fresh.
+- **Build passes** run in a worktree, not the main folder.
+- **Gates:** `dotnet build AetherPlayer.sln --no-incremental -warnaserror --no-restore -p:NuGetAudit=false` and `dotnet test AetherPlayer.sln --no-restore -p:NuGetAudit=false` must pass before a task is marked done.
+- **Not autonomous:** merges, pushes, version numbers and tags stay with the user.
 
 ### Pass 1: DirectX 11 Pipeline & SwapChain Interop [Completed]
 
@@ -68,11 +84,16 @@
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
 | 5.1 | `PrecisionSeekBar`: fluent scrubber with hover timestamp preview, exact seek vs coarse drag scrubbing | M | Opus |
-| 5.2 | `TransportControls`: full playback transport: jump ±5s / ±1s, frame step (`<` / `>`), speed control (0.25x-4.0x), volume slider & mute | M | Opus |
+| 5.2 | `TransportControls`: full playback transport: jump ±5s / ±1s, frame step (`<` / `>`), speed control (0.1x–4.0x, per spec §4.1), volume slider & mute | M | Opus |
 | 5.3 | `NavigationRail`: minimal collapsible side icon rail (Player, Playlist/Recent, Settings) overlaid above video with auto-hide | S | Opus |
 | 5.4 | `PerformanceLoop`: async seek coalescing, zero-drop GPU decode verification, smooth 60fps+ UI under high-bitrate 1440p/4K load | M | Gemini |
 | 5.5 | `LosslessTrimmer`: lightweight In (`I`) / Out (`O`) range selector on seek bar with sub-300ms `-c copy` export | S | Sonnet |
 | 5.6 | Integration & benchmark tests: seek latency, frame-accurate boundaries, zero memory leaks across playback cycles | S | Gemini |
+| 5.7 | Open paths: file dialog (`Ctrl+O`), command-line argument, and file association registration for the four containers | S | Sonnet |
+| 5.8 | Loop playback: toggle (`L`), restart at end of file, state held in `PlayerViewModel` | S | Sonnet |
+| 5.9 | Always-on-top toggle on the window (`T`), via `AppWindow.Presenter`, persisted with window state | S | Sonnet |
+| 5.10 | Resume position per file: save time on close or switch, restore on open, skip near start/end, cap stored entries | S | Sonnet |
+| 5.11 | Tests for 5.7–5.10: argument and extension parsing, loop wrap, resume store round-trip and pruning, speed bounds 0.1–4.0 | S | Gemini |
 
 **Pass 5 means:** A responsive, high-performance daily-driver media player: butter-smooth scrubber with hover preview, comprehensive playback & audio transport controls, unobtrusive navigation rail, and instant lossless clipping without gimmicks.
 
