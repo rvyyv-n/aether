@@ -46,6 +46,9 @@ public static unsafe partial class MpvApi
     [LibraryImport(LibMpv, EntryPoint = "mpv_observe_property", StringMarshalling = StringMarshalling.Utf8)]
     public static partial int ObserveProperty(IntPtr handle, ulong replyUserdata, string name, MpvFormat format);
 
+    [LibraryImport(LibMpv, EntryPoint = "mpv_unobserve_property")]
+    public static partial int UnobserveProperty(IntPtr handle, ulong registeredReplyUserdata);
+
     [LibraryImport(LibMpv, EntryPoint = "mpv_free")]
     public static partial void Free(IntPtr data);
 
