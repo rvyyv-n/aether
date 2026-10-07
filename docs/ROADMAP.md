@@ -57,8 +57,9 @@
 | 4.5 | Drag-and-drop listener on main window for `.mp4`, `.mkv`, `.mov`, `.webm` | S | Opus |
 | 4.6 | `StartupState`: off-UI-thread core initialization, loading transition, and missing binary/init failure presentation | M | Opus |
 | 4.7 | `InputPolish`: fast-tap frame step queue/drop arbitration, window blur repeat release | S | Sonnet |
+| 4.C1 | Carry-over: on-screen check of every shell state (empty, starting, failure, drag-over, playing, full screen) against the design; needs the packaged app (Developer Mode or Visual Studio) plus libmpv and a sample clip | S | Opus |
 
-**Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, graceful startup and error handling, and zero airspace clipping. *(4.1–4.6 built on `claude/pass-4`, 270 tests passing, 0 warnings; on-screen check pending. 4.7 open.)*
+**Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, graceful startup and error handling, and zero airspace clipping. *(4.1–4.6 built on `claude/pass-4`: 270 tests passing, 0 warnings. Open: 4.7 and 4.C1.)*
 
 ---
 
