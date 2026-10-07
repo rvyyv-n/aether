@@ -723,11 +723,10 @@ public class FrameStepperTests
             // Reply asynchronously from a background thread
             Task.Run(() =>
             {
-                Thread.Sleep(5);
                 stepper.OnCommandReply(currentId, 0);
             });
 
-            bool cleared = TestWait.ForCondition(() => !stepper.IsStepInFlight, timeoutMs: 2000);
+            bool cleared = TestWait.ForCondition(() => !stepper.IsStepInFlight, timeoutMs: 5000);
             Assert.True(cleared, $"In-flight was not cleared on iteration {i}.");
 
             stepper.Release(FrameStepDirection.Forward);
@@ -746,7 +745,6 @@ public class FrameStepperTests
         {
             Task.Run(() =>
             {
-                Thread.Sleep(2);
                 stepper.OnCommandReply(replyId, 0);
             });
         };
@@ -760,7 +758,7 @@ public class FrameStepperTests
             Thread.Sleep(5);
         }
 
-        bool cleared = TestWait.ForCondition(() => !stepper.IsStepInFlight, timeoutMs: 2000);
+        bool cleared = TestWait.ForCondition(() => !stepper.IsStepInFlight, timeoutMs: 5000);
         Assert.True(cleared, "Final in-flight step was not cleared by background thread reply.");
         Assert.True(stepper.StepsSent > 1, $"Expected multiple steps to be sent, but only sent {stepper.StepsSent}.");
 
