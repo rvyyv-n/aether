@@ -1,0 +1,14 @@
+* text=auto eol=lf
+*.md text eol=lf working-tree-encoding=UTF-8
+*.cs text eol=lf working-tree-encoding=UTF-8
+*.xaml text eol=lf working-tree-encoding=UTF-8
+*.json text eol=lf working-tree-encoding=UTF-8
+*.props text eol=lf working-tree-encoding=UTF-8
+*.targets text eol=lf working-tree-encoding=UTF-8
+*.sln text eol=crlf
+*.slnx text eol=lf
+*.dll binary
+*.lib binary
+*.exe binary
+*.png binary
+*.ico binary
