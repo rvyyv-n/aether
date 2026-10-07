@@ -16,6 +16,8 @@
     <Color x:Key="AetherStrokeColor">#0FFFFFFF</Color>
     <Color x:Key="AetherStrokeStrongColor">#1FFFFFFF</Color>
     <Color x:Key="AetherSelectedColor">#FF0B0C0E</Color>
+    <!--  Active pill fill: a white tint, so it reads on dark and light wallpapers alike.  -->
+    <Color x:Key="AetherActiveColor">#24FFFFFF</Color>
     <Color x:Key="AetherHoverColor">#0FFFFFFF</Color>
     <Color x:Key="AetherPressedColor">#08FFFFFF</Color>
     <Color x:Key="AetherSuccessColor">#FF4ADE80</Color>
@@ -31,6 +33,7 @@
     <SolidColorBrush x:Key="AetherStrokeBrush" Color="{StaticResource AetherStrokeColor}" />
     <SolidColorBrush x:Key="AetherStrokeStrongBrush" Color="{StaticResource AetherStrokeStrongColor}" />
     <SolidColorBrush x:Key="AetherSelectedBrush" Color="{StaticResource AetherSelectedColor}" />
+    <SolidColorBrush x:Key="AetherActiveBrush" Color="{StaticResource AetherActiveColor}" />
     <SolidColorBrush x:Key="AetherHoverBrush" Color="{StaticResource AetherHoverColor}" />
     <SolidColorBrush x:Key="AetherPressedBrush" Color="{StaticResource AetherPressedColor}" />
     <SolidColorBrush x:Key="AetherSuccessBrush" Color="{StaticResource AetherSuccessColor}" />
@@ -188,7 +191,7 @@
         x:Key="AetherSelectedPillButtonStyle"
         BasedOn="{StaticResource AetherPillButtonStyle}"
         TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource AetherSelectedBrush}" />
+        <Setter Property="Background" Value="{StaticResource AetherActiveBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeStrongBrush}" />
     </Style>
 

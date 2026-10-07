@@ -28,6 +28,11 @@
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
 
+  <!-- libmpv and ANGLE for the target platform (not in git; see docs/AGENTS.md). Packaged next to the exe. -->
+  <ItemGroup>
+    <Content Include="Native\$(Platform)\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
