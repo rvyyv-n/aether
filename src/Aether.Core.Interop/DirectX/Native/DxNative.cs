@@ -14,6 +14,8 @@ internal static unsafe partial class DxNative
     public const int DXGI_STATUS_OCCLUDED = 0x087A0001;
     public const int DXGI_ERROR_DEVICE_REMOVED = unchecked((int)0x887A0005);
     public const int DXGI_ERROR_DEVICE_RESET = unchecked((int)0x887A0007);
+    public const int DXGI_ERROR_DEVICE_HUNG = unchecked((int)0x887A0006);
+    public const int DXGI_ERROR_DRIVER_INTERNAL_ERROR = unchecked((int)0x887A0020);
     public const int DXGI_ERROR_SDK_COMPONENT_MISSING = unchecked((int)0x887A002D);
 
     public const uint WAIT_OBJECT_0 = 0;

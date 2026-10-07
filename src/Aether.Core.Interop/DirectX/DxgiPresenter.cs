@@ -421,7 +421,8 @@ public sealed unsafe class DxgiPresenter : IDisposable
     }
 
     private static bool IsDeviceLostResult(int hr) =>
-        hr == DxNative.DXGI_ERROR_DEVICE_REMOVED || hr == DxNative.DXGI_ERROR_DEVICE_RESET;
+        hr is DxNative.DXGI_ERROR_DEVICE_REMOVED or DxNative.DXGI_ERROR_DEVICE_RESET
+            or DxNative.DXGI_ERROR_DEVICE_HUNG or DxNative.DXGI_ERROR_DRIVER_INTERNAL_ERROR;
 
     public void Dispose()
     {
