@@ -61,8 +61,8 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     private readonly MpvRenderLoopOptions _options;
     private readonly Thread _thread;
 
-    // Kernel events. The raw values are used on the render thread and in mpv's callback; the safe
-    // handles are closed only after the thread has exited (Dispose), never while it can wait on them.
+    // Kernel events. The raw values are used on the render thread and in mpv's callback, so the
+    // handles close only once both Dispose has been called and the thread has exited (two votes).
     private readonly SafeWaitHandle _frameEvent;
     private readonly SafeWaitHandle _wakeEvent;
     private readonly nint _frameEventRaw;
@@ -77,6 +77,8 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     private int _redraw;
     private volatile RenderLoopState _state;
     private int _started;
+    private int _disposed;
+    private int _closeVotes;
     private int _generation;
     private int _deviceLossCount;
     private long _framesPresented;
@@ -113,6 +115,7 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     /// <summary>Starts the render thread. Once only.</summary>
     public void Start()
     {
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
         if (Interlocked.Exchange(ref _started, 1) != 0)
         {
             throw new InvalidOperationException("The render loop was already started.");
@@ -162,12 +165,28 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     }
 
     /// <summary>
-    /// Stops (waiting up to 5 s) and closes the events. If the thread is stuck, the events stay open:
-    /// the thread still references this object, and they close once it exits and is collected.
+    /// Requests stop and returns without waiting, so it is safe on the UI thread. The render thread
+    /// tears its stack down on the way out, and the events close once it has exited.
     /// </summary>
     public void Dispose()
     {
-        if (Stop(5000))
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+        _stop = true;
+        Wake();
+        if (Volatile.Read(ref _started) == 0)
+        {
+            _state = RenderLoopState.Stopped;
+            VoteClose(); // no thread will ever vote
+        }
+        VoteClose();
+    }
+
+    private void VoteClose()
+    {
+        if (Interlocked.Increment(ref _closeVotes) == 2)
         {
             _frameEvent.Dispose();
             _wakeEvent.Dispose();
@@ -279,6 +298,7 @@ public sealed unsafe class MpvRenderLoop : IDisposable
         {
             DestroyStack();
             _state = RenderLoopState.Stopped;
+            VoteClose();
         }
     }
 
