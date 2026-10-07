@@ -7,9 +7,353 @@
     xmlns:controls="using:Aether_App.Controls"
     xmlns:local="using:Aether_App"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    AllowDrop="True"
+    Background="Transparent"
+    DragEnter="OnDragEnter"
+    DragLeave="OnDragLeave"
+    DragOver="OnDragOver"
+    Drop="OnDrop"
+    PointerExited="OnPagePointerExited"
+    PointerMoved="OnPagePointerMoved"
     mc:Ignorable="d">
 
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator
+            Key="O"
+            Invoked="OnOpenAccelerator"
+            Modifiers="Control" />
+        <KeyboardAccelerator Key="Space" Invoked="OnPlayPauseAccelerator" />
+        <KeyboardAccelerator Key="F" Invoked="OnFullScreenAccelerator" />
+        <KeyboardAccelerator Key="F11" Invoked="OnFullScreenAccelerator" />
+        <KeyboardAccelerator Key="Escape" Invoked="OnEscapeAccelerator" />
+    </Page.KeyboardAccelerators>
+
     <Grid>
-        <controls:MpvVideoSurface x:Name="VideoSurface" />
+        <!--
+            Video. The surface is sized to the video's own aspect ratio, so the letterbox bars are
+            Mica (windowed) or black (full screen, VideoHost background), never mpv's clear colour.
+        -->
+        <Grid
+            x:Name="VideoHost"
+            Background="Transparent"
+            DoubleTapped="OnVideoDoubleTapped"
+            SizeChanged="OnVideoHostSizeChanged">
+            <controls:MpvVideoSurface
+                x:Name="VideoSurface"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Opacity="0" />
+        </Grid>
+
+        <!--  Dims the video while a file is dragged over it.  -->
+        <Rectangle
+            x:Name="DropScrim"
+            Fill="#99000000"
+            IsHitTestVisible="False"
+            Visibility="Collapsed" />
+
+        <!--
+            Home: empty, starting, opening, drag-over and startup-failure states share one layout,
+            like the device page of the references: title, subtitle, glyph, status line, panel.
+        -->
+        <Grid
+            x:Name="HomeView"
+            Margin="{StaticResource AetherPageMargin}"
+            Padding="0,32,0,0">
+            <Grid.OpacityTransition>
+                <ScalarTransition Duration="0:0:0.2" />
+            </Grid.OpacityTransition>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock
+                x:Name="HomeTitle"
+                Margin="0,28,0,0"
+                HorizontalAlignment="Center"
+                Style="{StaticResource AetherTitleTextStyle}"
+                Text="Starting engine" />
+            <TextBlock
+                x:Name="HomeSubtitle"
+                Grid.Row="1"
+                Margin="0,4,0,0"
+                HorizontalAlignment="Center"
+                Style="{StaticResource AetherSecondaryTextStyle}"
+                Text="Loading libmpv" />
+
+            <!--  Film frame glyph, in place of the references' product shot.  -->
+            <Grid
+                x:Name="HomeGlyph"
+                Grid.Row="2"
+                Width="112"
+                Height="72"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <Grid.OpacityTransition>
+                    <ScalarTransition Duration="0:0:0.15" />
+                </Grid.OpacityTransition>
+                <Border
+                    x:Name="GlyphFrame"
+                    BorderBrush="#59FFFFFF"
+                    BorderThickness="1.5"
+                    CornerRadius="8" />
+                <Line
+                    x:Name="GlyphSprocketLeft"
+                    Margin="10,8"
+                    HorizontalAlignment="Left"
+                    Stroke="#59FFFFFF"
+                    StrokeDashArray="1,2.5"
+                    StrokeThickness="1.5"
+                    Y2="54" />
+                <Line
+                    x:Name="GlyphSprocketRight"
+                    Margin="10,8"
+                    HorizontalAlignment="Right"
+                    Stroke="#59FFFFFF"
+                    StrokeDashArray="1,2.5"
+                    StrokeThickness="1.5"
+                    Y2="54" />
+                <FontIcon
+                    x:Name="GlyphPlay"
+                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    FontSize="18"
+                    Foreground="#8CFFFFFF"
+                    Glyph="&#xF5B0;" />
+            </Grid>
+
+            <!--  Status line: dot, coloured label, muted detail ("● Engine ready · libmpv · D3D11").  -->
+            <StackPanel
+                Grid.Row="3"
+                Margin="0,0,0,14"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="6">
+                <Ellipse x:Name="StatusDot" Style="{StaticResource AetherStatusDotStyle}" />
+                <TextBlock x:Name="StatusLabel" Style="{StaticResource AetherBodyTextStyle}" />
+                <TextBlock
+                    x:Name="StatusDetail"
+                    Style="{StaticResource AetherSecondaryTextStyle}" />
+            </StackPanel>
+
+            <!--  Startup progress, between the status line and the panel.  -->
+            <ProgressBar
+                x:Name="StartupProgress"
+                Grid.Row="3"
+                Width="120"
+                MinHeight="2"
+                Margin="0,0,0,2"
+                VerticalAlignment="Bottom"
+                Foreground="{StaticResource AetherTextPrimaryBrush}"
+                IsIndeterminate="True" />
+
+            <Border Grid.Row="4" Style="{StaticResource AetherPanelStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="PanelCaption" Style="{StaticResource AetherCaptionTextStyle}" Text="SUPPORTED" />
+
+                    <!--  Ready / drag: formats and renderer.  -->
+                    <StackPanel
+                        x:Name="SupportedRow"
+                        Orientation="Horizontal"
+                        Spacing="28">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Style="{StaticResource AetherSecondaryTextStyle}" Text="Formats" />
+                            <TextBlock
+                                x:Name="FormatsText"
+                                FontWeight="SemiBold"
+                                Style="{StaticResource AetherMonoTextStyle}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Style="{StaticResource AetherSecondaryTextStyle}" Text="Renderer" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Style="{StaticResource AetherMonoTextStyle}"
+                                Text="ANGLE · D3D11" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!--  Failure: what failed and where it looked, with Retry / Open folder.  -->
+                    <StackPanel
+                        x:Name="FailureRow"
+                        Spacing="10"
+                        Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock
+                                x:Name="FailureKey"
+                                Style="{StaticResource AetherSecondaryTextStyle}"
+                                Text="Searched" />
+                            <TextBlock
+                                x:Name="FailureValue"
+                                FontWeight="SemiBold"
+                                IsTextSelectionEnabled="True"
+                                Style="{StaticResource AetherMonoTextStyle}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Button
+                                Click="OnRetryClick"
+                                Content="Retry"
+                                Style="{StaticResource AetherSelectedPillButtonStyle}" />
+                            <Button
+                                Click="OnOpenFolderClick"
+                                Content="Open folder"
+                                Style="{StaticResource AetherPillButtonStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!--  Inset dashed outline while a file is dragged over the window.  -->
+        <Rectangle
+            x:Name="DropOutline"
+            Margin="8,40,8,8"
+            IsHitTestVisible="False"
+            RadiusX="8"
+            RadiusY="8"
+            Stroke="#4DFFFFFF"
+            StrokeDashArray="4,3"
+            StrokeThickness="1"
+            Visibility="Collapsed" />
+
+        <!--  Title bar strip: the window's drag region. The gradient shows only over video.  -->
+        <Grid
+            x:Name="TitleBar"
+            Height="{StaticResource AetherTitleBarHeight}"
+            VerticalAlignment="Top">
+            <Rectangle x:Name="TitleBarScrim" Opacity="0">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Offset="0" Color="#B3000000" />
+                        <GradientStop Offset="1" Color="#00000000" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+            <Grid x:Name="TitleBarDragArea" Background="Transparent">
+                <StackPanel
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Foreground="#D9FFFFFF"
+                        Style="{StaticResource AetherBodyTextStyle}"
+                        Text="Aether" />
+                    <Border VerticalAlignment="Center" Style="{StaticResource AetherBadgeStyle}">
+                        <TextBlock
+                            x:Name="TitleBadgeText"
+                            MaxWidth="360"
+                            FontSize="10"
+                            FontWeight="SemiBold"
+                            Style="{StaticResource AetherBodyTextStyle}"
+                            Text="Alpha" />
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!--  Playback controls: a full-width strip in the style of the references' status panel.  -->
+        <Border
+            x:Name="Osd"
+            Margin="{StaticResource AetherPageMargin}"
+            Padding="8,6,12,6"
+            VerticalAlignment="Bottom"
+            Background="{StaticResource AetherOsdBrush}"
+            BorderBrush="{StaticResource AetherStrokeBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource AetherPanelCornerRadius}"
+            PointerEntered="OnOsdPointerEntered"
+            PointerExited="OnOsdPointerExited"
+            PointerCanceled="OnOsdPointerExited"
+            PointerCaptureLost="OnOsdPointerExited"
+            Visibility="Collapsed">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button
+                    x:Name="PlayPauseButton"
+                    Click="OnPlayPauseClick"
+                    Content="&#xE768;"
+                    Style="{StaticResource AetherPlayButtonStyle}"
+                    ToolTipService.ToolTip="Play (Space)" />
+
+                <StackPanel
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="6">
+                    <TextBlock
+                        x:Name="PositionText"
+                        FontSize="{StaticResource AetherTimecodeFontSize}"
+                        Style="{StaticResource AetherMonoTextStyle}"
+                        Text="00:00:00.000" />
+                    <TextBlock
+                        FontSize="{StaticResource AetherTimecodeFontSize}"
+                        Foreground="{StaticResource AetherTextTertiaryBrush}"
+                        Style="{StaticResource AetherMonoTextStyle}"
+                        Text="/" />
+                    <TextBlock
+                        x:Name="DurationText"
+                        FontSize="{StaticResource AetherTimecodeFontSize}"
+                        Foreground="{StaticResource AetherTextTertiaryBrush}"
+                        Style="{StaticResource AetherMonoTextStyle}"
+                        Text="00:00:00.000" />
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Column="3"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="6">
+                    <FontIcon
+                        x:Name="VolumeIcon"
+                        FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                        FontSize="14"
+                        Foreground="{StaticResource AetherTextSecondaryBrush}"
+                        Glyph="&#xE767;" />
+                    <Slider
+                        x:Name="VolumeSlider"
+                        Width="88"
+                        VerticalAlignment="Center"
+                        AllowFocusOnInteraction="False"
+                        IsThumbToolTipEnabled="False"
+                        Maximum="100"
+                        Minimum="0"
+                        ValueChanged="OnVolumeChanged"
+                        Value="100">
+                        <Slider.Resources>
+                            <SolidColorBrush x:Key="SliderTrackFill" Color="#26FFFFFF" />
+                            <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#33FFFFFF" />
+                            <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#33FFFFFF" />
+                            <SolidColorBrush x:Key="SliderTrackValueFill" Color="#FFFFFFFF" />
+                            <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#FFFFFFFF" />
+                            <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="#D9FFFFFF" />
+                            <SolidColorBrush x:Key="SliderThumbBackground" Color="#FFFFFFFF" />
+                            <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="#FFFFFFFF" />
+                            <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="#D9FFFFFF" />
+                            <SolidColorBrush x:Key="SliderOuterThumbBackground" Color="#FF0B0C0E" />
+                        </Slider.Resources>
+                    </Slider>
+                </StackPanel>
+
+                <Button
+                    x:Name="FullScreenButton"
+                    Grid.Column="4"
+                    Click="OnFullScreenClick"
+                    Content="&#xE740;"
+                    Style="{StaticResource AetherIconButtonStyle}"
+                    ToolTipService.ToolTip="Full screen (F)" />
+            </Grid>
+        </Border>
     </Grid>
 </Page>

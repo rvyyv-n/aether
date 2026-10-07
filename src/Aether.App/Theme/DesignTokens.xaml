@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    Aether design tokens. Quiet, near-monochrome glass over Mica Alt: the window takes its colour from
+    the wallpaper; colour in the UI itself is reserved for status dots.
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  Colour  -->
+    <Color x:Key="AetherTextPrimaryColor">#FFFFFFFF</Color>
+    <Color x:Key="AetherTextSecondaryColor">#73FFFFFF</Color>
+    <Color x:Key="AetherTextTertiaryColor">#59FFFFFF</Color>
+    <Color x:Key="AetherPanelColor">#730E1014</Color>
+    <Color x:Key="AetherOsdColor">#9E0E1014</Color>
+    <Color x:Key="AetherStrokeColor">#0FFFFFFF</Color>
+    <Color x:Key="AetherStrokeStrongColor">#1FFFFFFF</Color>
+    <Color x:Key="AetherSelectedColor">#FF0B0C0E</Color>
+    <Color x:Key="AetherHoverColor">#0FFFFFFF</Color>
+    <Color x:Key="AetherPressedColor">#08FFFFFF</Color>
+    <Color x:Key="AetherSuccessColor">#FF4ADE80</Color>
+    <Color x:Key="AetherWarningColor">#FFF2A35E</Color>
+    <Color x:Key="AetherNeutralDotColor">#80FFFFFF</Color>
+    <Color x:Key="AetherLetterboxFullScreenColor">#FF000000</Color>
+
+    <SolidColorBrush x:Key="AetherTextPrimaryBrush" Color="{StaticResource AetherTextPrimaryColor}" />
+    <SolidColorBrush x:Key="AetherTextSecondaryBrush" Color="{StaticResource AetherTextSecondaryColor}" />
+    <SolidColorBrush x:Key="AetherTextTertiaryBrush" Color="{StaticResource AetherTextTertiaryColor}" />
+    <SolidColorBrush x:Key="AetherPanelBrush" Color="{StaticResource AetherPanelColor}" />
+    <SolidColorBrush x:Key="AetherOsdBrush" Color="{StaticResource AetherOsdColor}" />
+    <SolidColorBrush x:Key="AetherStrokeBrush" Color="{StaticResource AetherStrokeColor}" />
+    <SolidColorBrush x:Key="AetherStrokeStrongBrush" Color="{StaticResource AetherStrokeStrongColor}" />
+    <SolidColorBrush x:Key="AetherSelectedBrush" Color="{StaticResource AetherSelectedColor}" />
+    <SolidColorBrush x:Key="AetherHoverBrush" Color="{StaticResource AetherHoverColor}" />
+    <SolidColorBrush x:Key="AetherPressedBrush" Color="{StaticResource AetherPressedColor}" />
+    <SolidColorBrush x:Key="AetherSuccessBrush" Color="{StaticResource AetherSuccessColor}" />
+    <SolidColorBrush x:Key="AetherWarningBrush" Color="{StaticResource AetherWarningColor}" />
+    <SolidColorBrush x:Key="AetherNeutralDotBrush" Color="{StaticResource AetherNeutralDotColor}" />
+    <SolidColorBrush x:Key="AetherLetterboxFullScreenBrush" Color="{StaticResource AetherLetterboxFullScreenColor}" />
+
+    <!--  Type  -->
+    <FontFamily x:Key="AetherUiFont">Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="AetherDisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="AetherMonoFont">Cascadia Mono, Cascadia Code, Consolas</FontFamily>
+
+    <x:Double x:Key="AetherCaptionFontSize">10</x:Double>
+    <x:Double x:Key="AetherBodyFontSize">12</x:Double>
+    <x:Double x:Key="AetherTitleFontSize">20</x:Double>
+    <x:Double x:Key="AetherTimecodeFontSize">13</x:Double>
+
+    <!--  Shape  -->
+    <CornerRadius x:Key="AetherPanelCornerRadius">6</CornerRadius>
+    <CornerRadius x:Key="AetherBadgeCornerRadius">3</CornerRadius>
+    <CornerRadius x:Key="AetherPillCornerRadius">999</CornerRadius>
+    <x:Double x:Key="AetherTitleBarHeight">32</x:Double>
+    <Thickness x:Key="AetherPageMargin">16,0,16,16</Thickness>
+
+    <!--  Motion: chrome fades (Composition, see ChromeFader)  -->
+    <x:Double x:Key="AetherChromeShowMilliseconds">150</x:Double>
+    <x:Double x:Key="AetherChromeHideMilliseconds">300</x:Double>
+
+    <!--  Text styles  -->
+    <Style x:Key="AetherBodyTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style
+        x:Key="AetherSecondaryTextStyle"
+        BasedOn="{StaticResource AetherBodyTextStyle}"
+        TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource AetherTextSecondaryBrush}" />
+    </Style>
+
+    <Style
+        x:Key="AetherMonoTextStyle"
+        BasedOn="{StaticResource AetherBodyTextStyle}"
+        TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource AetherMonoFont}" />
+    </Style>
+
+    <Style
+        x:Key="AetherTitleTextStyle"
+        BasedOn="{StaticResource AetherBodyTextStyle}"
+        TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource AetherDisplayFont}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherTitleFontSize}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!--  Small letter-spaced capitals ("SUPPORTED", "DETAILS"). Write the text upper-case.  -->
+    <Style
+        x:Key="AetherCaptionTextStyle"
+        BasedOn="{StaticResource AetherBodyTextStyle}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource AetherCaptionFontSize}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="CharacterSpacing" Value="100" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextSecondaryBrush}" />
+    </Style>
+
+    <!--  Surfaces  -->
+    <Style x:Key="AetherPanelStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource AetherPanelBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherPanelCornerRadius}" />
+        <Setter Property="Padding" Value="14,10" />
+    </Style>
+
+    <Style x:Key="AetherBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource AetherSelectedBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherBadgeCornerRadius}" />
+        <Setter Property="Padding" Value="6,1,6,2" />
+    </Style>
+
+    <Style x:Key="AetherStatusDotStyle" TargetType="Ellipse">
+        <Setter Property="Width" Value="6" />
+        <Setter Property="Height" Value="6" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Fill" Value="{StaticResource AetherSuccessBrush}" />
+    </Style>
+
+    <!--
+        Pill button, as in the tab row of the references: transparent with a faint stroke, darker when
+        hovered. AetherSelectedPillButtonStyle is the filled, "active" variant. Keeps keyboard focus off
+        itself so the page keeps the frame-step keys.
+    -->
+    <Style x:Key="AetherPillButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherPillCornerRadius}" />
+        <Setter Property="Padding" Value="12,4,12,5" />
+        <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
+        <Setter Property="AllowFocusOnInteraction" Value="False" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid
+                        x:Name="Root"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <Border x:Name="StateLayer" CornerRadius="{TemplateBinding CornerRadius}" />
+                        <ContentPresenter
+                            x:Name="ContentPresenter"
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            Foreground="{TemplateBinding Foreground}" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="StateLayer.Background" Value="{StaticResource AetherHoverBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="StateLayer.Background" Value="{StaticResource AetherPressedBrush}" />
+                                        <Setter Target="ContentPresenter.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Opacity" Value="0.4" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style
+        x:Key="AetherSelectedPillButtonStyle"
+        BasedOn="{StaticResource AetherPillButtonStyle}"
+        TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AetherSelectedBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeStrongBrush}" />
+    </Style>
+
+    <!--  Round icon button for the playback controls.  -->
+    <Style
+        x:Key="AetherIconButtonStyle"
+        BasedOn="{StaticResource AetherPillButtonStyle}"
+        TargetType="Button">
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextSecondaryBrush}" />
+        <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <Style
+        x:Key="AetherPlayButtonStyle"
+        BasedOn="{StaticResource AetherIconButtonStyle}"
+        TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AetherSelectedBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeStrongBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+</ResourceDictionary>

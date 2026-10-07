@@ -1,4 +1,3 @@
-using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
 using Aether_App.Controls;
@@ -26,10 +25,12 @@ public sealed class PlayerSession : IDisposable
     private readonly MpvVideoSurface _surface;
     private bool _disposed;
 
-    private PlayerSession(MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
+    private static readonly MpvCommand TogglePauseCommand = new("cycle", "pause");
+
+    private PlayerSession(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
     {
         _surface = surface;
-        _context = MpvContext.Create();
+        _context = context;
         try
         {
             var scheduler = new DispatcherQueueFlushScheduler(queue);
@@ -47,6 +48,7 @@ public sealed class PlayerSession : IDisposable
         }
         catch
         {
+            _keys?.Dispose();
             _events?.Dispose();
             _context.Dispose();
             throw;
@@ -57,14 +59,44 @@ public sealed class PlayerSession : IDisposable
 
     public MpvContext Context => _context;
 
-    /// <summary>Starts a session, or returns null when libmpv is not installed (the surface stays black).</summary>
-    public static PlayerSession? TryCreate(MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
+    /// <summary>
+    /// UI thread: starts a session around <paramref name="context"/>, which may have been created on
+    /// another thread (see <see cref="EngineStartup"/>). The session owns the context from here on and
+    /// disposes it, also when this throws.
+    /// </summary>
+    public static PlayerSession Create(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
     {
-        ArgumentNullException.ThrowIfNull(surface);
-        ArgumentNullException.ThrowIfNull(keyTarget);
-        ArgumentNullException.ThrowIfNull(queue);
-        return NativeLibraries.IsMpvAvailable() ? new PlayerSession(surface, keyTarget, queue) : null;
+        ArgumentNullException.ThrowIfNull(context);
+        try
+        {
+            ArgumentNullException.ThrowIfNull(surface);
+            ArgumentNullException.ThrowIfNull(keyTarget);
+            ArgumentNullException.ThrowIfNull(queue);
+        }
+        catch
+        {
+            context.Dispose();
+            throw;
+        }
+        return new PlayerSession(context, surface, keyTarget, queue);
     }
+
+    /// <summary>Opens <paramref name="path"/>, replacing the current file. Non-blocking.</summary>
+    /// <exception cref="MpvException">The core is shutting down.</exception>
+    public void Open(string path)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        _context.CommandAsync(new MpvCommand("loadfile", path, "replace"));
+    }
+
+    /// <summary>Toggles pause. Non-blocking.</summary>
+    /// <exception cref="MpvException">The core is shutting down.</exception>
+    public void TogglePause() => _context.CommandAsync(TogglePauseCommand);
+
+    /// <summary>Sets the volume (100 is unity gain). Non-blocking.</summary>
+    /// <exception cref="MpvException">The core is shutting down.</exception>
+    public void SetVolume(double volume) =>
+        _context.CommandAsync(new MpvCommand("set", "volume", Math.Clamp(volume, 0, 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)));
 
     /// <summary>Releases a held step key, e.g. when the window is deactivated.</summary>
     public void ReleaseKeys() => _keys.ReleaseAll();
