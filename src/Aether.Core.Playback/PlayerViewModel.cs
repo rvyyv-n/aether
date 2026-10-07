@@ -18,6 +18,8 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs IsAtEndArgs = new(nameof(IsAtEnd));
     private static readonly PropertyChangedEventArgs FramesPerSecondArgs = new(nameof(FramesPerSecond));
     private static readonly PropertyChangedEventArgs StatusArgs = new(nameof(Status));
+    private static readonly PropertyChangedEventArgs VideoWidthArgs = new(nameof(VideoWidth));
+    private static readonly PropertyChangedEventArgs VideoHeightArgs = new(nameof(VideoHeight));
 
     private PlayerState _state = PlayerState.Initial;
 
@@ -46,6 +48,12 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
     public PlaybackStatus Status => _state.Status;
 
+    /// <summary>Display width in pixels after aspect correction (<c>dwidth</c>); 0 without video.</summary>
+    public int VideoWidth => _state.VideoWidth;
+
+    /// <summary>Display height in pixels (<c>dheight</c>); 0 without video.</summary>
+    public int VideoHeight => _state.VideoHeight;
+
     /// <summary>
     /// UI thread. Replaces the state and raises <see cref="PropertyChanged"/> for each field that
     /// differs (and <see cref="State"/> once if any did). Shared event args: no allocation per call.
@@ -68,6 +76,8 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         if (previous.IsAtEnd != next.IsAtEnd) Raise(IsAtEndArgs);
         if (!previous.FramesPerSecond.Equals(next.FramesPerSecond)) Raise(FramesPerSecondArgs);
         if (previous.Status != next.Status) Raise(StatusArgs);
+        if (previous.VideoWidth != next.VideoWidth) Raise(VideoWidthArgs);
+        if (previous.VideoHeight != next.VideoHeight) Raise(VideoHeightArgs);
     }
 
     private void Raise(PropertyChangedEventArgs args) => PropertyChanged?.Invoke(this, args);
