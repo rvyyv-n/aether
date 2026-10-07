@@ -57,24 +57,24 @@
 | 4.5 | Drag-and-drop listener on main window for `.mp4`, `.mkv`, `.mov`, `.webm` | S | Opus |
 | 4.6 | `StartupState`: off-UI-thread core initialization, loading transition, and missing binary/init failure presentation | M | Opus |
 | 4.7 | `InputPolish`: fast-tap frame step queue/drop arbitration, window blur repeat release | S | Sonnet |
-| 4.8 | Window follows the video: opens at the video's size (native pixels, within 90% of the work area, at least 640 DIPs wide) and keeps its aspect ratio while dragging the edges | S | Opus |
 | 4.C1 | Carry-over: on-screen check of every shell state (empty, starting, failure, drag-over, playing, full screen) against the design; needs the packaged app (Developer Mode or Visual Studio) plus libmpv and a sample clip | S | Opus |
 
 **Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, graceful startup and error handling, and zero airspace clipping. *(4.1–4.6 built on `claude/pass-4`: 270 tests passing, 0 warnings. 4.7 built: fast taps queue in one slot; open: 4.C1.)*
 
 ---
 
-### Pass 5: Analytical PvP HUD & Lossless Stream Clipper
+### Pass 5: Core Player Controls & High-Performance Playback
 
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
-| 5.1 | `OverlayHud`: sub-millisecond timestamp, game tick (`floor(T*20)`), sub-tick %, frame count, source FPS | S | Opus |
-| 5.2 | `PrecisionSeekBar`: fluent scrubber with hover timestamp tooltips and In (`I`) / Out (`O`) indicators | M | Opus |
-| 5.3 | `ClipDrawer`: export drawer UI with drag-to-export into Discord / File Explorer (`DataPackage`) | M | Opus |
-| 5.4 | Pre-warm FFmpeg on idle and execute sub-300ms `-c copy` export with atomic `.part` rename | S | Sonnet |
-| 5.5 | Integration tests for FFmpeg argument building, GOP alignment, and export cancellation | S | Gemini |
+| 5.1 | `PrecisionSeekBar`: fluent scrubber with hover timestamp preview, exact seek vs coarse drag scrubbing | M | Opus |
+| 5.2 | `TransportControls`: full playback transport: jump ±5s / ±1s, frame step (`<` / `>`), speed control (0.25x-4.0x), volume slider & mute | M | Opus |
+| 5.3 | `NavigationRail`: minimal collapsible side icon rail (Player, Playlist/Recent, Settings) overlaid above video with auto-hide | S | Opus |
+| 5.4 | `PerformanceLoop`: async seek coalescing, zero-drop GPU decode verification, smooth 60fps+ UI under high-bitrate 1440p/4K load | M | Gemini |
+| 5.5 | `LosslessTrimmer`: lightweight In (`I`) / Out (`O`) range selector on seek bar with sub-300ms `-c copy` export | S | Sonnet |
+| 5.6 | Integration & benchmark tests: seek latency, frame-accurate boundaries, zero memory leaks across playback cycles | S | Gemini |
 
-**Pass 5 means:** Real-time game tick HUD, seek bar with visual in/out bounds, and sub-300ms lossless clip generation draggable directly into Discord.
+**Pass 5 means:** A responsive, high-performance daily-driver media player: butter-smooth scrubber with hover preview, comprehensive playback & audio transport controls, unobtrusive navigation rail, and instant lossless clipping without gimmicks.
 
 ---
 
