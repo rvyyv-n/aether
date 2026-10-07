@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- UI-agnostic player logic (event dispatch, frame stepping, view-model state): testable without WinUI. -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aether.Core.Interop\Aether.Core.Interop.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Aether.Core.Tests" />
+  </ItemGroup>
+
+</Project>

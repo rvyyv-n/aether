@@ -6,4 +6,8 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Aether.Core.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -1,20 +1,33 @@
+using Aether_App.Playback;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace Aether_App;
 
-/// <summary>
-/// The main content page displayed inside the application window.
-/// Add your UI logic, event handlers, and data binding here.
-/// </summary>
+/// <summary>Hosts the video surface and the player session behind it.</summary>
 public sealed partial class MainPage : Page
 {
+    private PlayerSession? _session;
+
     public MainPage()
     {
         InitializeComponent();
+        IsTabStop = true; // receives the frame-step keys
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+    }
 
-        // TODO: Add your initialization logic here.
+    public PlayerSession? Session => _session;
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        _session ??= PlayerSession.TryCreate(VideoSurface, this, DispatcherQueue);
+        Focus(FocusState.Programmatic);
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        _session?.Dispose();
+        _session = null;
     }
 }

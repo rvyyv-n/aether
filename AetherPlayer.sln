@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aether.PvP.Tests", "tests\A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aether.Server.Tests", "tests\Aether.Server.Tests\Aether.Server.Tests.csproj", "{4B8EA7FC-7D29-495A-85EB-3826871F92D2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aether.Core.Playback", "src\Aether.Core.Playback\Aether.Core.Playback.csproj", "{67AAB1E1-E553-4B37-B524-83365B165D51}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +117,18 @@ Global
 		{4B8EA7FC-7D29-495A-85EB-3826871F92D2}.Release|x64.Build.0 = Release|Any CPU
 		{4B8EA7FC-7D29-495A-85EB-3826871F92D2}.Release|x86.ActiveCfg = Release|Any CPU
 		{4B8EA7FC-7D29-495A-85EB-3826871F92D2}.Release|x86.Build.0 = Release|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Debug|x64.Build.0 = Debug|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Debug|x86.Build.0 = Debug|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Release|x64.ActiveCfg = Release|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Release|x64.Build.0 = Release|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Release|x86.ActiveCfg = Release|Any CPU
+		{67AAB1E1-E553-4B37-B524-83365B165D51}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -127,5 +141,6 @@ Global
 		{BF6709FE-B466-4A43-9231-5997192A9518} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{8DF3B433-B127-44E4-8F68-460625F25C13} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{4B8EA7FC-7D29-495A-85EB-3826871F92D2} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{67AAB1E1-E553-4B37-B524-83365B165D51} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

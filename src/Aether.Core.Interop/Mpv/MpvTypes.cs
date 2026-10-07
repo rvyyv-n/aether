@@ -109,3 +109,64 @@ public struct MpvEvent
     public ulong ReplyUserdata;
     public IntPtr Data;
 }
+
+/// <summary><c>mpv_event_id</c> (client.h, API 2.x). Deprecated ids are omitted.</summary>
+public enum MpvEventId
+{
+    None = 0,
+    Shutdown = 1,
+    LogMessage = 2,
+    GetPropertyReply = 3,
+    SetPropertyReply = 4,
+    CommandReply = 5,
+    StartFile = 6,
+    EndFile = 7,
+    FileLoaded = 8,
+    ClientMessage = 16,
+    VideoReconfig = 17,
+    AudioReconfig = 18,
+    Seek = 20,
+    PlaybackRestart = 21,
+    PropertyChange = 22,
+    QueueOverflow = 24,
+    Hook = 25,
+}
+
+/// <summary><c>mpv_end_file_reason</c>.</summary>
+public enum MpvEndFileReason
+{
+    Eof = 0,
+    Stop = 2,
+    Quit = 3,
+    Error = 4,
+    Redirect = 5,
+}
+
+/// <summary><c>mpv_event_property</c>: payload of property-change and get-property-reply events.</summary>
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct MpvEventProperty
+{
+    public byte* Name;
+    public MpvFormat Format;
+    /// <summary>Points to the value in <see cref="Format"/>: <c>int</c> (flag), <c>long</c>, <c>double</c>, <c>char*</c> (strings), <c>mpv_node</c>.</summary>
+    public void* Data;
+}
+
+/// <summary><c>mpv_event_start_file</c>.</summary>
+[StructLayout(LayoutKind.Sequential)]
+public struct MpvEventStartFile
+{
+    public long PlaylistEntryId;
+}
+
+/// <summary><c>mpv_event_end_file</c>.</summary>
+[StructLayout(LayoutKind.Sequential)]
+public struct MpvEventEndFile
+{
+    public MpvEndFileReason Reason;
+    /// <summary>A negative <c>mpv_error</c> when <see cref="Reason"/> is <see cref="MpvEndFileReason.Error"/>.</summary>
+    public int Error;
+    public long PlaylistEntryId;
+    public long PlaylistInsertId;
+    public int PlaylistInsertNumEntries;
+}

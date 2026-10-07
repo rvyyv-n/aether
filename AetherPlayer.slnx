@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Aether.App/Aether.App.csproj" />
     <Project Path="src/Aether.Core.Interop/Aether.Core.Interop.csproj" />
+    <Project Path="src/Aether.Core.Playback/Aether.Core.Playback.csproj" />
     <Project Path="src/Aether.PvP.Review/Aether.PvP.Review.csproj" />
     <Project Path="src/Aether.Server.LanHost/Aether.Server.LanHost.csproj" />
   </Folder>

@@ -67,6 +67,8 @@ public sealed class MpvContext : IDisposable
             new("input-vo-keyboard", "no"),
             new("osc", "no"),
             new("idle", "yes"),
+            // Stay on the last frame at end of file, so stepping and seeking near the end keep working.
+            new("keep-open", "yes"),
         };
         foreach (KeyValuePair<string, string> extra in options.AdditionalOptions)
         {
@@ -191,8 +193,100 @@ public sealed class MpvContext : IDisposable
     }
 
     /// <summary>
-    /// Releases this wrapper's reference. The core is destroyed now, or when the last render
-    /// context created from it is disposed.
+    /// <c>mpv_observe_property</c>: property-change events for <paramref name="name"/> arrive with
+    /// <see cref="MpvPropertyChange.Id"/> = <paramref name="id"/>. Use a nonzero id that is unique per property.
     /// </summary>
-    public void Dispose() => _handle.Dispose();
+    public void ObserveProperty(ulong id, string name, MpvFormat format)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        bool added = false;
+        _handle.DangerousAddRef(ref added);
+        try
+        {
+            MpvException.ThrowIfError(MpvApi.ObserveProperty(_handle.DangerousGetHandle(), id, name, format), $"mpv_observe_property({name})");
+        }
+        finally
+        {
+            if (added)
+            {
+                _handle.DangerousRelease();
+            }
+        }
+    }
+
+    /// <summary><c>mpv_unobserve_property</c>. Returns how many observers were removed.</summary>
+    public int UnobserveProperty(ulong id)
+    {
+        bool added = false;
+        _handle.DangerousAddRef(ref added);
+        try
+        {
+            return MpvException.ThrowIfError(MpvApi.UnobserveProperty(_handle.DangerousGetHandle(), id), "mpv_unobserve_property");
+        }
+        finally
+        {
+            if (added)
+            {
+                _handle.DangerousRelease();
+            }
+        }
+    }
+
+    /// <summary>
+    /// <c>mpv_command_async</c> with a pre-encoded command; never blocks on the core and allocates
+    /// nothing unless it throws. The result arrives on the event loop as
+    /// <see cref="MpvEventId.CommandReply"/> with <see cref="MpvEventView.ReplyUserdata"/> =
+    /// <paramref name="replyUserdata"/> and the command's error code.
+    /// </summary>
+    /// <exception cref="MpvException">mpv rejected the request outright (e.g. the core is shutting down).</exception>
+    public unsafe void CommandAsync(MpvCommand command, ulong replyUserdata = 0)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        bool added = false;
+        _handle.DangerousAddRef(ref added);
+        try
+        {
+            MpvException.ThrowIfError(MpvApi.CommandAsync(_handle.DangerousGetHandle(), replyUserdata, command.Argv), "mpv_command_async");
+        }
+        finally
+        {
+            if (added)
+            {
+                _handle.DangerousRelease();
+            }
+            GC.KeepAlive(command);
+        }
+    }
+
+    /// <summary>
+    /// Releases this wrapper's reference and wakes any <see cref="MpvEventLoop"/> parked in
+    /// <c>mpv_wait_event</c> so it drops its own. The core is destroyed by whichever reference goes
+    /// last: this one, the event loop's, or a render context's.
+    /// </summary>
+    public void Dispose()
+    {
+        bool added = false;
+        try
+        {
+            _handle.DangerousAddRef(ref added);
+        }
+        catch (ObjectDisposedException)
+        {
+            return; // already disposed
+        }
+        try
+        {
+            // Close first, then wake: the woken loop must already see IsClosed. mpv latches a
+            // wake-up that arrives while no one is waiting, so the order cannot lose it.
+            _handle.Dispose();
+            MpvApi.Wakeup(_handle.DangerousGetHandle());
+        }
+        finally
+        {
+            if (added)
+            {
+                _handle.DangerousRelease();
+            }
+        }
+    }
 }

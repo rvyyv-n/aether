@@ -26,7 +26,7 @@ public class MpvContextTests
     {
         IReadOnlyList<KeyValuePair<string, string>> options = MpvContext.BuildOptions();
 
-        Assert.Equal(10, options.Count);
+        Assert.Equal(11, options.Count);
         Assert.Equal(new KeyValuePair<string, string>("vo", "libmpv"), options[0]);
         Assert.Equal(new KeyValuePair<string, string>("hwdec", "d3d11va"), options[1]);
         Assert.Equal(new KeyValuePair<string, string>("demuxer-max-back-bytes", "512MiB"), options[2]);
@@ -37,6 +37,7 @@ public class MpvContextTests
         Assert.Equal(new KeyValuePair<string, string>("input-vo-keyboard", "no"), options[7]);
         Assert.Equal(new KeyValuePair<string, string>("osc", "no"), options[8]);
         Assert.Equal(new KeyValuePair<string, string>("idle", "yes"), options[9]);
+        Assert.Equal(new KeyValuePair<string, string>("keep-open", "yes"), options[10]);
     }
 
     [Fact]
@@ -84,9 +85,9 @@ public class MpvContextTests
 
         IReadOnlyList<KeyValuePair<string, string>> list = MpvContext.BuildOptions(options);
 
-        Assert.Equal(12, list.Count);
-        Assert.Equal(new KeyValuePair<string, string>("gpu-api", "d3d11"), list[10]);
-        Assert.Equal(new KeyValuePair<string, string>("keep-open", "yes"), list[11]);
+        Assert.Equal(13, list.Count);
+        Assert.Equal(new KeyValuePair<string, string>("gpu-api", "d3d11"), list[11]);
+        Assert.Equal(new KeyValuePair<string, string>("keep-open", "yes"), list[12]);
     }
 
     [Theory]
