@@ -231,21 +231,26 @@ public class EngineStartupTests
     }
 
     [Fact]
-    public async System.Threading.Tasks.Task RunAsync_RunsOffTheCallingThread()
+    public async System.Threading.Tasks.Task RunAsync_ReturnsBeforeTheWorkRuns()
     {
-        int callerThread = Environment.CurrentManagedThreadId;
-        int probeThread = callerThread;
+        // The probe blocks until the caller holds the task, so a synchronous RunAsync would time out
+        // in the probe and report MissingBinary. (Comparing thread ids is flaky: the awaiting test
+        // thread is itself a pool thread and may pick up the queued work.)
+        using var callerHasTask = new ManualResetEventSlim();
+        bool onPoolThread = false;
         var engine = new Engine();
 
-        EngineStartupResult<Engine> result = await EngineStartup.RunAsync(() =>
+        System.Threading.Tasks.Task<EngineStartupResult<Engine>> task = EngineStartup.RunAsync(() =>
         {
-            probeThread = Environment.CurrentManagedThreadId;
-            return true;
+            onPoolThread = Thread.CurrentThread.IsThreadPoolThread;
+            return callerHasTask.Wait(TimeSpan.FromSeconds(10));
         }, () => engine);
+        callerHasTask.Set();
+        EngineStartupResult<Engine> result = await task;
 
         Assert.Equal(EngineStartupStatus.Ready, result.Status);
         Assert.Same(engine, result.Engine);
-        Assert.NotEqual(callerThread, probeThread);
+        Assert.True(onPoolThread);
     }
 }
 
