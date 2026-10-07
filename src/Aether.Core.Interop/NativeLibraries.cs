@@ -35,6 +35,12 @@ public static class NativeLibraries
     /// <summary>True if ANGLE's EGL library can be loaded.</summary>
     public static bool IsAngleAvailable() => TryLoad(LibEgl, out _);
 
+    /// <summary>Address of <paramref name="export"/> in the module the import stubs bind to (same name resolution).</summary>
+    internal static nint GetExport(string libraryName, string export) =>
+        TryLoad(libraryName, out nint module) && NativeLibrary.TryGetExport(module, export, out nint address)
+            ? address
+            : throw new EntryPointNotFoundException($"{libraryName} does not export {export}.");
+
     private static nint Resolve(string libraryName, Assembly assembly, DllImportSearchPath? searchPath) =>
         TryLoad(libraryName, out nint handle) ? handle : 0;
 

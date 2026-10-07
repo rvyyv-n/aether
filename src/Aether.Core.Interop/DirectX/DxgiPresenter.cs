@@ -30,6 +30,13 @@ public sealed class DxgiPresenterOptions
 
     /// <summary>Frames the CPU may queue ahead of the display. 1 gives the lowest latency.</summary>
     public uint MaximumFrameLatency { get; init; } = 1;
+
+    /// <summary>
+    /// Run <c>ClearState</c> before <c>ResizeBuffers</c> so no pipeline binding still references a back
+    /// buffer. Turn off when another API shares the immediate context and caches its state (ANGLE):
+    /// it must release its own references (destroy its surface) before the resize instead.
+    /// </summary>
+    public bool ClearStateOnResize { get; init; } = true;
 }
 
 /// <summary>
@@ -49,6 +56,7 @@ public sealed unsafe class DxgiPresenter : IDisposable
     private nint _swapChain; // IDXGISwapChain2*
     private nint _rtv;       // cached ID3D11RenderTargetView* for buffer 0
     private readonly SafeWaitHandle _frameLatencyHandle;
+    private readonly bool _clearStateOnResize;
 
     /// <summary>Largest D3D11 texture dimension (D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION).</summary>
     public const uint MaxDimension = 16384;
@@ -131,6 +139,7 @@ public sealed unsafe class DxgiPresenter : IDisposable
         _context = context;
 
         SwapChainFlags = flags;
+        _clearStateOnResize = options.ClearStateOnResize;
         PixelWidth = desc.Width;
         PixelHeight = desc.Height;
     }
@@ -302,8 +311,11 @@ public sealed unsafe class DxgiPresenter : IDisposable
         {
             // ResizeBuffers fails while anything still references a back buffer.
             Com.Release(ref _rtv);
-            ((delegate* unmanaged[Stdcall]<nint, void>)Com.Vtbl(_context)[110])(_context); // ClearState
-            ((delegate* unmanaged[Stdcall]<nint, void>)Com.Vtbl(_context)[111])(_context); // Flush
+            if (_clearStateOnResize)
+            {
+                ((delegate* unmanaged[Stdcall]<nint, void>)Com.Vtbl(_context)[110])(_context); // ClearState
+            }
+            ((delegate* unmanaged[Stdcall]<nint, void>)Com.Vtbl(_context)[111])(_context); // Flush: run deferred releases now
 
             // IDXGISwapChain::ResizeBuffers: keep count and format; flags must match creation.
             int hr = ((delegate* unmanaged[Stdcall]<nint, uint, uint, uint, DxgiFormat, uint, int>)Com.Vtbl(sc)[13])(
@@ -332,6 +344,21 @@ public sealed unsafe class DxgiPresenter : IDisposable
         return changed;
     }
 
+    /// <summary>
+    /// <c>ID3D11Texture2D*</c> for buffer 0, with a reference the caller must release. In the D3D11
+    /// flip model buffer 0 always aliases the current back buffer, so one wrapper (an ANGLE pbuffer,
+    /// a view) stays valid across presents; release it before <see cref="ApplyPendingResize"/>.
+    /// </summary>
+    public nint GetBackBufferTexture()
+    {
+        nint sc = SwapChainPointer;
+        Guid iid = DxNative.IID_ID3D11Texture2D;
+        nint texture = 0;
+        // IDXGISwapChain::GetBuffer
+        Com.ThrowIfFailed(((delegate* unmanaged[Stdcall]<nint, uint, Guid*, nint*, int>)Com.Vtbl(sc)[9])(sc, 0, &iid, &texture));
+        return texture;
+    }
+
     private nint EnsureRenderTargetView()
     {
         nint rtv = _rtv;
@@ -341,10 +368,7 @@ public sealed unsafe class DxgiPresenter : IDisposable
         }
 
         // In D3D11 flip model, buffer 0 always aliases the current back buffer, so one view suffices.
-        nint sc = SwapChainPointer;
-        Guid iid = DxNative.IID_ID3D11Texture2D;
-        nint texture = 0;
-        Com.ThrowIfFailed(((delegate* unmanaged[Stdcall]<nint, uint, Guid*, nint*, int>)Com.Vtbl(sc)[9])(sc, 0, &iid, &texture));
+        nint texture = GetBackBufferTexture();
         try
         {
             // ID3D11Device::CreateRenderTargetView
