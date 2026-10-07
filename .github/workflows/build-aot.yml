@@ -15,13 +15,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore AetherPlayer.sln
+        run: dotnet restore AetherPlayer.sln -p:Platform=x64
 
       - name: Build solution
-        run: dotnet build AetherPlayer.sln -c Release --no-restore
+        run: dotnet build AetherPlayer.sln -c Release -p:Platform=x64 --no-restore
 
       - name: Run unit & integration tests
-        run: dotnet test AetherPlayer.sln -c Release --no-build --verbosity normal
+        run: dotnet test AetherPlayer.sln -c Release -p:Platform=x64 --no-build --verbosity normal
