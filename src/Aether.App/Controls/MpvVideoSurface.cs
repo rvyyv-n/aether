@@ -1,4 +1,5 @@
 using Aether.Core.Interop.DirectX;
+using Aether.Core.Interop.Mpv;
 using Aether.Core.Interop.Rendering;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -29,11 +30,46 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
         CompositionScaleChanged += OnCompositionScaleChanged;
     }
 
+    private MpvContext? _player;
+
     /// <summary>
-    /// What draws the frames, read when the control loads (e.g. <see cref="AngleMpvRenderBackendFactory"/>
-    /// for video). Null clears to black.
+    /// Overrides what draws the frames, read whenever a render loop starts. Null (the default) uses the
+    /// attached player (<see cref="AttachPlayer"/>), or clears to black when none is attached.
     /// </summary>
     public IVideoRenderBackendFactory? BackendFactory { get; set; }
+
+    /// <summary>The attached core, or null. The surface never disposes it.</summary>
+    public MpvContext? Player => _player;
+
+    /// <summary>
+    /// UI thread: renders <paramref name="player"/> into this surface. The caller keeps ownership of the
+    /// core and should detach before disposing it. Disposing while attached is memory-safe (the mpv
+    /// render context holds its own reference, so the core lives until the render loop lets go), but
+    /// after the next device loss the loop can no longer recreate the render context and keeps
+    /// reporting <see cref="RenderFault"/>. If the surface is loaded, its render loop restarts (non-blocking).
+    /// </summary>
+    public void AttachPlayer(MpvContext player)
+    {
+        ArgumentNullException.ThrowIfNull(player);
+        ObjectDisposedException.ThrowIf(player.IsDisposed, player);
+        if (ReferenceEquals(player, _player))
+        {
+            return;
+        }
+        _player = player;
+        RestartLoop();
+    }
+
+    /// <summary>UI thread: stops rendering the attached core (the surface clears to black). Does not dispose it.</summary>
+    public void DetachPlayer()
+    {
+        if (_player is null)
+        {
+            return;
+        }
+        _player = null;
+        RestartLoop();
+    }
 
     /// <summary>The device was lost; the render thread is already recreating it. Raised on the UI thread with the HRESULT.</summary>
     public event EventHandler<int>? DeviceLost;
@@ -50,9 +86,31 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
         {
             return; // Loaded can fire again without an Unloaded in between
         }
+        StartLoop();
+    }
 
+    private void OnUnloaded(object sender, RoutedEventArgs e) => StopLoop();
+
+    /// <summary>
+    /// Swaps in a loop for the current player. The old loop frees its mpv render context on its own
+    /// thread while the new one starts; mpv allows one render context per core, so the new loop's
+    /// first creation can fail and is retried by the loop's backoff (raising one RenderFault).
+    /// </summary>
+    private void RestartLoop()
+    {
+        if (_loop is null)
+        {
+            return; // not loaded: OnLoaded picks the player up
+        }
+        StopLoop();
+        StartLoop();
+    }
+
+    private void StartLoop()
+    {
+        IVideoRenderBackendFactory? factory = BackendFactory ?? (_player is { } player ? new AngleMpvRenderBackendFactory(player) : null);
         var host = new Host(this, DispatcherQueue);
-        var loop = new MpvRenderLoop(BackendFactory, host);
+        var loop = new MpvRenderLoop(factory, host);
         host.Loop = loop; // published to the render thread by Start
         _loop = loop;
         _boundGeneration = 0;
@@ -60,7 +118,7 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
         loop.Start();
     }
 
-    private void OnUnloaded(object sender, RoutedEventArgs e)
+    private void StopLoop()
     {
         MpvRenderLoop? loop = _loop;
         if (loop is null)
