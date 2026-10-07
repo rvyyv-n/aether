@@ -33,3 +33,14 @@
   - Resize: the UI thread posts the panel's DIP size and `CompositionScale` with `SetTargetSize` (no GPU work, no wait). The render-owner thread applies it with `ApplyPendingResize` between frames: `ResizeBuffers` (same flags) when the pixel size changes, and `SetMatrixTransform` with the inverse scale when the DPI changes.
   - Device loss surfaces as `PresentResult.DeviceLost` / `IsDeviceLost`, not an exception. Recovery (recreate device and presenter) is left to the Pass 2 render loop.
 - **Status:** Accepted.
+
+## ADR-0007: ANGLE Is the Primary Render Path
+- **Context:** ADR-0002 preferred a native D3D11 render API "if exposed by libmpv". The libmpv headers at release `v0.41.0` and on `master` (`include/mpv/render.h`, client API 2.5) define only `MPV_RENDER_API_TYPE_OPENGL` (`"opengl"`) and `MPV_RENDER_API_TYPE_SW` (`"sw"`); `mpv_render_context_create` returns `MPV_ERROR_NOT_IMPLEMENTED` for anything else. `vo=libmpv` ignores `gpu-api`, `gpu-context` and the `gpu-next` renderer. Embedding through `--wid` would give mpv its own D3D11 swap chain, but on a child HWND, which brings back the airspace problem ADR-0002 exists to avoid.
+- **Decision:**
+  - Path 2 (ANGLE) becomes the only GPU path. `AngleBridge` creates an ANGLE EGL display on *our* `ID3D11Device` (`EGL_ANGLE_device_creation` + `EGL_PLATFORM_DEVICE_EXT`) and wraps swap chain buffer 0 as an EGL pbuffer (`EGL_ANGLE_d3d_texture_client_buffer`). mpv renders into GL framebuffer 0 of that pbuffer, which is the swap chain back buffer; DXGI presents it. No copy.
+  - `hwdec=d3d11va` stays: mpv's ANGLE interop (`d3d11egl`) queries the D3D11 device from the current EGL display, so decode, render and present all run on the one device created by `D3D11DeviceManager` (which already carries video support and multithread protection).
+  - Task 2.2 ("Path 1") is adapted: `MpvRenderContext` is the API-agnostic render-context wrapper (`Create` takes any parameter block, `CreateOpenGL` is the path in use). If libmpv ever adds a D3D11 render API it slots in there without touching the loop.
+  - The `gpu-next` flag from the roadmap is dropped: it has no effect on the render API. Low-latency options that do apply are set by `MpvContext` (`vo=libmpv`, `hwdec=d3d11va`, `demuxer-max-back-bytes=512MiB`, `video-latency-hacks=yes`).
+  - ANGLE ships next to libmpv as `libEGL.dll` + `libGLESv2.dll`. Aether loads `libEGL.dll` before mpv creates its render context, so mpv's own `LoadLibrary("libEGL.dll")` binds to the same module.
+  - The `sw` render API (CPU copy into the back buffer) is not implemented; it would only serve machines without ANGLE, and those don't exist once ANGLE ships with the app.
+- **Status:** Accepted.
