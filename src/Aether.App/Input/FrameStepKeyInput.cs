@@ -46,10 +46,7 @@ public sealed class FrameStepKeyInput : IDisposable
     /// <summary>Releases whichever step key is held and stops the timer (e.g. on window deactivation).</summary>
     public void ReleaseAll()
     {
-        if (_stepper.HeldDirection is { } held)
-        {
-            _stepper.Release(held);
-        }
+        _stepper.ReleaseAll();
         _timer.Stop();
     }
 

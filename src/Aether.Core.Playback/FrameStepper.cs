@@ -41,6 +41,11 @@ public sealed class FrameStepper : IMpvCommandReplyHandler
     private long _stepsSent;
     private long _repeatsDropped;
     private long _stepFailures;
+    private int _pendingTap; // 0 = none, otherwise (int)FrameStepDirection: a press that landed on a step in flight
+    private long _tapsQueued;
+
+    /// <summary>How often <see cref="Tick"/> asks to be called while a queued tap waits for the step in flight.</summary>
+    private static readonly TimeSpan PendingTapPoll = TimeSpan.FromMilliseconds(2);
 
     /// <param name="sender">Delivers the steps.</param>
     /// <param name="time">Clock; defaults to <see cref="TimeProvider.System"/>.</param>
@@ -75,12 +80,17 @@ public sealed class FrameStepper : IMpvCommandReplyHandler
     /// <summary>Steps (repeats, or a press landing on a step still in flight) dropped because a step was in flight.</summary>
     public long RepeatsDropped => Volatile.Read(ref _repeatsDropped);
 
+    /// <summary>Presses that landed on a step in flight and were queued (one slot, newest wins) instead of dropped.</summary>
+    public long TapsQueued => Volatile.Read(ref _tapsQueued);
+
     /// <summary>Replies that reported an mpv error (e.g. stepping while nothing is loaded).</summary>
     public long StepFailures => Volatile.Read(ref _stepFailures);
 
     /// <summary>
     /// UI thread: a step key went down. Steps immediately (if allowed) and starts the repeat timing. A press
     /// of the already-held direction does nothing (key auto-repeat); the opposite direction takes over.
+    /// A press that lands on a step still in flight is queued in a single slot (the newest tap wins) and sent
+    /// from <see cref="Tick"/> once the reply arrives, so fast taps are not lost; held repeats are still dropped.
     /// </summary>
     public void Press(FrameStepDirection direction)
     {
@@ -94,16 +104,28 @@ public sealed class FrameStepper : IMpvCommandReplyHandler
         _held = value;
         _nextDue = now + _options.InitialRepeatDelay;
         _firstRepeatPending = true;
-        TryStep(direction, now);
+        if (!TryStep(direction, now) && IsStepInFlight)
+        {
+            _pendingTap = value;
+            Volatile.Write(ref _tapsQueued, _tapsQueued + 1);
+        }
     }
 
     /// <summary>UI thread: a step key went up. Stops repeating at once if it is the held direction.</summary>
     public void Release(FrameStepDirection direction)
     {
+        // A queued tap survives its key-up on purpose: it was a real press that has not been sent yet.
         if (_held == Validated(direction))
         {
             _held = 0;
         }
+    }
+
+    /// <summary>UI thread: window blur or focus loss. Releases the held key and discards any queued tap.</summary>
+    public void ReleaseAll()
+    {
+        _held = 0;
+        _pendingTap = 0;
     }
 
     /// <summary>
@@ -112,15 +134,18 @@ public sealed class FrameStepper : IMpvCommandReplyHandler
     /// <returns>The delay until the next repeat is due, or null if no key is held (the timer can stop).</returns>
     public TimeSpan? Tick()
     {
+        TimeSpan now = Now();
+        bool tapWaiting = FlushPendingTap(now);
+
         if (_held == 0)
         {
-            return null;
+            return tapWaiting ? PendingTapPoll : null;
         }
 
-        TimeSpan now = Now();
         if (now < _nextDue)
         {
-            return _nextDue - now;
+            TimeSpan wait = _nextDue - now;
+            return tapWaiting && PendingTapPoll < wait ? PendingTapPoll : wait;
         }
 
         TimeSpan due = _nextDue;
@@ -134,7 +159,7 @@ public sealed class FrameStepper : IMpvCommandReplyHandler
         // A failed send releases the held key.
         if (_held == 0)
         {
-            return null;
+            return tapWaiting ? PendingTapPoll : null;
         }
 
         // Schedule from the due time to keep the cadence; if the UI stalled for more than an interval,
@@ -142,7 +167,8 @@ public sealed class FrameStepper : IMpvCommandReplyHandler
         TimeSpan interval = FrameRepeatCurve.IntervalAt(due - _firstRepeatDue, _options);
         TimeSpan next = due + interval;
         _nextDue = next > now ? next : now + interval;
-        return _nextDue - now;
+        TimeSpan delay = _nextDue - now;
+        return tapWaiting && PendingTapPoll < delay ? PendingTapPoll : delay;
     }
 
     /// <summary>
@@ -174,11 +200,35 @@ public sealed class FrameStepper : IMpvCommandReplyHandler
         return true;
     }
 
-    private void TryStep(FrameStepDirection direction, TimeSpan now)
+    /// <summary>Sends a queued tap once nothing is in flight. Returns true while one is still waiting.</summary>
+    private bool FlushPendingTap(TimeSpan now)
+    {
+        if (_pendingTap == 0)
+        {
+            return false;
+        }
+
+        var direction = (FrameStepDirection)_pendingTap;
+        if (TryStep(direction, now))
+        {
+            _pendingTap = 0;
+            return false;
+        }
+        // Still in flight keeps it waiting; a boundary (or a failed send) discards it.
+        if (IsStepInFlight)
+        {
+            return true;
+        }
+        _pendingTap = 0;
+        return false;
+    }
+
+    /// <returns>True if a step was handed to the sender.</returns>
+    private bool TryStep(FrameStepDirection direction, TimeSpan now)
     {
         if ((direction == FrameStepDirection.Backward && _atStart) || (direction == FrameStepDirection.Forward && _atEnd))
         {
-            return;
+            return false;
         }
 
         ulong inFlight = Volatile.Read(ref _inFlightId);
@@ -187,7 +237,7 @@ public sealed class FrameStepper : IMpvCommandReplyHandler
             if (now - _inFlightSince < _options.InFlightTimeout)
             {
                 Volatile.Write(ref _repeatsDropped, _repeatsDropped + 1);
-                return;
+                return false;
             }
             // Lost reply: forget it. If it arrives after all, it no longer matches.
             Interlocked.CompareExchange(ref _inFlightId, 0, inFlight);
@@ -201,12 +251,15 @@ public sealed class FrameStepper : IMpvCommandReplyHandler
         try
         {
             _sender.Send(direction, id);
+            return true;
         }
         catch (MpvException ex)
         {
             Interlocked.CompareExchange(ref _inFlightId, 0, id);
             _held = 0; // the core is going away: stop repeating instead of failing on every tick
+            _pendingTap = 0;
             SendFailed?.Invoke(this, ex);
+            return false;
         }
     }
 
