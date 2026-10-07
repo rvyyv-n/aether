@@ -46,19 +46,19 @@
 
 ---
 
-### Pass 4: Minimalist Windows 11 Shell & Mica Theming [Next]
+### Pass 4: Minimalist Windows 11 Shell & Mica Theming [In Progress]
 
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
 | 4.1 | Custom window chrome: borderless window, `ExtendsContentIntoTitleBar`, blended title bar | S | Opus |
-| 4.2 | `MicaTheme`: apply Windows 11 `MicaBackdrop` (Base) behind letterboxing and controls | S | Opus |
-| 4.3 | `DesignTokens`: warm-charcoal glass (`#181615CC`), 1px luminous borders (`#FFFFFF14`), Cascadia typography | S | Opus |
+| 4.2 | `MicaTheme`: apply Windows 11 `MicaBackdrop` (Base Alt) behind letterboxing and controls; black letterbox in full screen | S | Opus |
+| 4.3 | `DesignTokens`: neutral glass panels (`#730E1014`, controls `#9E0E1014`), faint 1px borders (`#FFFFFF0F`), Segoe UI Variable with Cascadia Mono for numbers | S | Opus |
 | 4.4 | Auto-hiding OSD: Composition GPU opacity animation after 2s mouse idle + cursor hide | M | Opus |
 | 4.5 | Drag-and-drop listener on main window for `.mp4`, `.mkv`, `.mov`, `.webm` | S | Opus |
 | 4.6 | `StartupState`: off-UI-thread core initialization, loading transition, and missing binary/init failure presentation | M | Opus |
 | 4.7 | `InputPolish`: fast-tap frame step queue/drop arbitration, window blur repeat release | S | Sonnet |
 
-**Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, graceful startup and error handling, and zero airspace clipping.
+**Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, graceful startup and error handling, and zero airspace clipping. *(4.1–4.6 built on `claude/pass-4`, 270 tests passing, 0 warnings; on-screen check pending. 4.7 open.)*
 
 ---
 
