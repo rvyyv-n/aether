@@ -44,3 +44,14 @@
   - ANGLE ships next to libmpv as `libEGL.dll` + `libGLESv2.dll`. Aether loads `libEGL.dll` before mpv creates its render context, so mpv's own `LoadLibrary("libEGL.dll")` binds to the same module.
   - The `sw` render API (CPU copy into the back buffer) is not implemented; it would only serve machines without ANGLE, and those don't exist once ANGLE ships with the app.
 - **Status:** Accepted.
+
+## ADR-0008: Render Thread Ownership and Device-Loss Recovery
+- **Context:** ADR-0006 left recovery after device loss to Pass 2. Device loss can surface from DXGI (`Present`, `ResizeBuffers`) or from ANGLE (a context reset), and the swap chain must reach the `SwapChainPanel` on the UI thread without the UI ever waiting on the GPU.
+- **Decision:**
+  - `MpvRenderLoop` owns one dedicated thread ("Aether.Render") and the whole device stack: `D3D11DeviceManager` → `DxgiPresenter` → `IVideoRenderBackend` (ANGLE + mpv render context). The stack is built on that thread, because EGL contexts are bound per thread and mpv needs its GL context current to create and free a render context. It is torn down in reverse order.
+  - Frame: wait on two kernel events (mpv's update callback signals one from native code; resize, redraw and stop requests signal the other) → `mpv_render_context_update` → frame-latency wait → `mpv_render_context_render` → `glFlush` → `Present` → `mpv_render_context_report_swap`. No managed allocation on that path (measured: 0 bytes over 100 frames on both backends).
+  - Signal: `DxgiPresenter` latches the first loss in `DeviceLostReason` (the HRESULT, refined by `GetDeviceRemovedReason`); `IsDeviceLost` is a lock-free read, and a lost presenter returns `PresentResult.DeviceLost` without touching the swap chain. Backends report a lost GPU context by returning false from `Render`, and the loop forwards that through `ReportDeviceLost`. No logging-only paths remain.
+  - Recovery: notify the host (`OnDeviceLost`), dispose backend, presenter and device, then build a new generation at once. Failed creation retries with exponential backoff (100 ms doubling to 2 s). Each new swap chain travels to the UI in a `SwapChainHandoff` that holds its own COM reference, so a second loss before the UI thread runs cannot leave a dangling pointer. The UI binds only the newest generation.
+  - `Dispose` never blocks: it requests a stop and returns, and the thread releases everything on exit. The two kernel events close only once both `Dispose` and thread exit have happened.
+  - With ANGLE on the shared immediate context, the presenter skips `ClearState` before `ResizeBuffers` (`ClearStateOnResize = false`). ANGLE caches D3D11 state, and destroying the pbuffer with no context current already drops its back-buffer references (verified on hardware and WARP).
+- **Status:** Accepted. Not yet verified with libmpv loaded: whether mpv's d3d11va decoder re-binds to the new device after recovery.
