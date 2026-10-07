@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Aether.Core.Interop\Aether.Core.Interop.csproj" />
+    <ProjectReference Include="..\..\src\Aether.Core.Playback\Aether.Core.Playback.csproj" />
   </ItemGroup>
 
 </Project>

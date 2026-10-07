@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Aether.Core.Interop\Aether.Core.Interop.csproj" />
+    <ProjectReference Include="..\Aether.Core.Playback\Aether.Core.Playback.csproj" />
     <ProjectReference Include="..\Aether.PvP.Review\Aether.PvP.Review.csproj" />
     <ProjectReference Include="..\Aether.Server.LanHost\Aether.Server.LanHost.csproj" />
   </ItemGroup>
