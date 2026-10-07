@@ -52,6 +52,24 @@ public sealed unsafe class NativeMpvEvents : IDisposable
         return evt;
     }
 
+    public MpvEvent* CreatePropertyInt64(ulong propertyId, long value, string? name = null)
+    {
+        long* data = (long*)Alloc((nuint)sizeof(long));
+        *data = value;
+
+        MpvEventProperty* prop = (MpvEventProperty*)Alloc((nuint)sizeof(MpvEventProperty));
+        prop->Name = CreateUtf8String(name);
+        prop->Format = MpvFormat.Int64;
+        prop->Data = data;
+
+        MpvEvent* evt = (MpvEvent*)Alloc((nuint)sizeof(MpvEvent));
+        evt->EventId = (int)MpvEventId.PropertyChange;
+        evt->Error = 0;
+        evt->ReplyUserdata = propertyId;
+        evt->Data = (IntPtr)prop;
+        return evt;
+    }
+
     public MpvEvent* CreatePropertyFlag(ulong propertyId, bool value, string? name = null)
     {
         int* data = (int*)Alloc((nuint)sizeof(int));
