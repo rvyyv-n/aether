@@ -13,6 +13,7 @@
     DragLeave="OnDragLeave"
     DragOver="OnDragOver"
     Drop="OnDrop"
+    KeyboardAcceleratorPlacementMode="Hidden"
     PointerExited="OnPagePointerExited"
     PointerMoved="OnPagePointerMoved"
     mc:Ignorable="d">
