@@ -174,8 +174,42 @@ public sealed unsafe class DxgiPresenter : IDisposable
         }
     }
 
-    /// <summary>Set once Present or ResizeBuffers reports device removal/reset. Recreate device and presenter.</summary>
-    public bool IsDeviceLost { get; private set; }
+    private int _deviceLostReason; // 0 while healthy, else the HRESULT that reported the loss
+
+    /// <summary>
+    /// Latched once Present or ResizeBuffers reports device removal/reset, or someone calls
+    /// <see cref="ReportDeviceLost"/>. The presenter is dead from then on: the owner must recreate
+    /// device, presenter and anything rendering into them. Readable from any thread; no allocation.
+    /// </summary>
+    public bool IsDeviceLost => Volatile.Read(ref _deviceLostReason) != 0;
+
+    /// <summary>
+    /// Why the device was lost: <c>ID3D11Device::GetDeviceRemovedReason</c> when it gives one,
+    /// otherwise the HRESULT that reported it. 0 while healthy.
+    /// </summary>
+    public int DeviceLostReason => Volatile.Read(ref _deviceLostReason);
+
+    /// <summary>
+    /// Marks the device lost on behalf of another API sharing it (e.g. ANGLE reporting a context
+    /// reset). The first report wins; later ones are ignored. No allocation. Any thread, but not
+    /// concurrently with <see cref="Dispose"/>.
+    /// </summary>
+    /// <param name="hresult">The failure seen by the caller; a non-negative value means <c>DXGI_ERROR_DEVICE_REMOVED</c>.</param>
+    public void ReportDeviceLost(int hresult)
+    {
+        int reason = hresult < 0 ? hresult : DxNative.DXGI_ERROR_DEVICE_REMOVED;
+        nint device = _device;
+        if (device != 0)
+        {
+            // ID3D11Device::GetDeviceRemovedReason: the driver's own reason (hung, reset, driver update).
+            int removed = ((delegate* unmanaged[Stdcall]<nint, int>)Com.Vtbl(device)[39])(device);
+            if (removed < 0)
+            {
+                reason = removed;
+            }
+        }
+        Interlocked.CompareExchange(ref _deviceLostReason, reason, 0);
+    }
 
     /// <summary>Frame-latency waitable object. Signalled when the swap chain can accept another frame.</summary>
     public SafeWaitHandle FrameLatencyWaitHandle => _frameLatencyHandle;
@@ -229,6 +263,10 @@ public sealed unsafe class DxgiPresenter : IDisposable
     public PresentResult Present(bool vsync = true)
     {
         nint sc = SwapChainPointer;
+        if (IsDeviceLost)
+        {
+            return PresentResult.DeviceLost;
+        }
         uint flags = !vsync && TearingEnabled ? DxNative.DXGI_PRESENT_ALLOW_TEARING : 0;
         // IDXGISwapChain::Present
         int hr = ((delegate* unmanaged[Stdcall]<nint, uint, uint, int>)Com.Vtbl(sc)[8])(sc, vsync ? 1u : 0u, flags);
@@ -238,7 +276,7 @@ public sealed unsafe class DxgiPresenter : IDisposable
         }
         if (IsDeviceLostResult(hr))
         {
-            IsDeviceLost = true;
+            ReportDeviceLost(hr);
             return PresentResult.DeviceLost;
         }
         Com.ThrowIfFailed(hr);
@@ -289,7 +327,7 @@ public sealed unsafe class DxgiPresenter : IDisposable
     /// </summary>
     public bool ApplyPendingResize()
     {
-        if (!_resizePending)
+        if (!_resizePending || IsDeviceLost)
         {
             return false;
         }
@@ -322,7 +360,7 @@ public sealed unsafe class DxgiPresenter : IDisposable
                 sc, 0, size.Width, size.Height, DxgiFormat.Unknown, (uint)SwapChainFlags);
             if (IsDeviceLostResult(hr))
             {
-                IsDeviceLost = true;
+                ReportDeviceLost(hr);
                 return false;
             }
             Com.ThrowIfFailed(hr);
