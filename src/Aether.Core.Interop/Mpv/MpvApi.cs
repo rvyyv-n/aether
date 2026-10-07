@@ -5,7 +5,16 @@ namespace Aether.Core.Interop.Mpv;
 
 public static unsafe partial class MpvApi
 {
-    private const string LibMpv = "mpv-2.dll";
+    private const string LibMpv = NativeLibraries.LibMpv;
+
+    static MpvApi() => NativeLibraries.EnsureResolver();
+
+    [LibraryImport(LibMpv, EntryPoint = "mpv_client_api_version")]
+    public static partial ulong ClientApiVersion();
+
+    /// <summary>Static string for an <c>mpv_error</c> code; never freed.</summary>
+    [LibraryImport(LibMpv, EntryPoint = "mpv_error_string")]
+    public static partial byte* ErrorString(int error);
 
     [LibraryImport(LibMpv, EntryPoint = "mpv_create")]
     public static partial IntPtr Create();
