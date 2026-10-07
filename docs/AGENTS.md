@@ -1,8 +1,9 @@
 # Agent rules
 
 ## Stack and build
-Native AOT player on .NET 9/10 (WinUI 3; `Aether.App` and the test projects target .NET 10, Interop and LanHost .NET 9): libmpv C API bindings, with DirectComposition / Direct3D 11 interop for the swap chain. Solution `AetherPlayer.sln` (`.slnx` alongside):
+Native AOT player on .NET 9/10 (WinUI 3; `Aether.App` and the test projects target .NET 10, Interop and LanHost .NET 9): libmpv C API bindings, with DirectComposition / Direct3D 11 interop for the swap chain. (Local offline gate builds on x86 by default; CI builds on x64). Solution `AetherPlayer.sln` (`.slnx` alongside):
 - `src/Aether.Core.Interop`: C-ABI `LibraryImport` bindings and DirectX interop.
+- `src/Aether.Core.Playback`: UI-agnostic playback session, throttled dispatch, and frame stepping.
 - `src/Aether.App`: WinUI 3 presentation layer and controls.
 - `src/Aether.PvP.Review`: high-FPS frame analysis and lossless clipping.
 - `src/Aether.Server.LanHost`: embedded Kestrel HTTP 206 streaming host and QR service.
@@ -18,8 +19,8 @@ CI (`.github/workflows/build-aot.yml`) builds and tests in Release.
 
 ## Roles
 - **Opus**: `Aether.Core.Interop`. Unsafe structs, P/Invoke signatures, DirectX COM wrappers (`ISwapChainPanelNative`), memory lifetimes (verify no unmanaged leaks), MPV event-loop thread safety, and architecture decisions. Use it for 1-3 turns per task, not for file reading or test-fix loops.
-- **Opus (design)**: all design work: custom chrome, Mica, `DesignTokens`, auto-hiding OSD, drag-and-drop, `OverlayHud`, `PrecisionSeekBar`, `ClipDrawer`, the mobile player shell and the QR flyout (roadmap tasks 4.1-4.5, 5.1-5.3, 6.2, 6.3). Before building any of them it asks the user design questions and requests reference screenshots, then confirms the direction before writing UI code.
-- **Sonnet**: non-design wiring in `Aether.App`, `Aether.PvP.Review`, `Aether.Server.LanHost`. `MpvVideoSurface`, throttled UI dispatch, `FrameStepper`, `PlayerViewModel`, keyboard accelerators, FFmpeg command builder and export, Kestrel host. Max 8 turns per thread.
+- **Opus (design)**: all design work: custom chrome, Mica, `DesignTokens`, auto-hiding OSD, drag-and-drop, startup/error states, `OverlayHud`, `PrecisionSeekBar`, `ClipDrawer`, the mobile player shell and the QR flyout (roadmap tasks 4.1-4.6, 5.1-5.3, 6.2, 6.3). Before building any of them it asks the user design questions and requests reference screenshots, then confirms the direction before writing UI code.
+- **Sonnet**: non-design wiring in `Aether.App`, `Aether.Core.Playback`, `Aether.PvP.Review`, `Aether.Server.LanHost`. `MpvVideoSurface`, throttled UI dispatch, `FrameStepper`, `PlayerViewModel`, keyboard accelerators, FFmpeg command builder and export, Kestrel host. Max 8 turns per thread.
 - **Gemini**: scouting and header ingestion (`mpv.h`, `render.h`), test suites and harnesses, build-error loops, CI, multi-file restructuring. Gemini doesn't auto-delegate; it names a fork candidate in its build summary.
 
 ## Rules
