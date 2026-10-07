@@ -34,6 +34,7 @@ Running the app: `Aether.App` is a packaged (MSIX) app. `dotnet run --project sr
 6. **Callbacks**: `[UnmanagedCallersOnly]` plus `delegate* unmanaged[Cdecl]` for libmpv. No managed delegates.
 7. **Processes**: build arguments with `ProcessStartInfo.ArgumentList`.
 8. **Decisions**: record architecture choices in `docs/DECISIONS.md`.
+9. **Encoding**: files must be UTF-8 without BOM. When scripting in PowerShell 5.1, avoid default Get-Content/Set-Content/> (which default to Windows-1252/Unicode). Use explicit UTF-8 to prevent mojibake.
 
 ## Orchestration
 - At a build checkpoint, fork with `t3_thread_fork` (from `latest_stable`) into a worktree (`claude/pass-<n>` or `claude/eval`). Don't chain `delegate_task` calls between models, unless the user asks for a lead thread to delegate to subagents (as in Passes 1 and 2: Opus lead, Sonnet and Gemini helpers).
