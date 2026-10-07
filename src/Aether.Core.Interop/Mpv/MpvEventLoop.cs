@@ -156,7 +156,8 @@ public sealed unsafe class MpvEventLoop : IDisposable
 
     private void Run()
     {
-        Thread.CurrentThread.Name ??= ThreadName;
+        // LongRunning gives this task a dedicated thread, already named by the runtime; rename it (allowed since .NET 6).
+        Thread.CurrentThread.Name = ThreadName;
         Volatile.Write(ref _threadId, Environment.CurrentManagedThreadId);
         try
         {
