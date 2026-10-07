@@ -1,6 +1,8 @@
+﻿using Aether.Core.Interop.Windowing;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Windows.Graphics;
 using Windows.UI;
 
 namespace Aether_App;
@@ -17,6 +19,12 @@ public interface IShellWindow
 
     /// <summary>Fades the minimize/maximize/close glyphs with the rest of the chrome (they stay clickable).</summary>
     void SetCaptionButtonsVisible(bool visible);
+
+    /// <summary>Resizes a restored window around a video of this display size (no-op when maximized or full screen).</summary>
+    void FitToVideo(int videoWidth, int videoHeight);
+
+    /// <summary>Client width / height to keep while the user drags the edges; 0 lets the window resize freely.</summary>
+    void SetVideoAspect(double aspect);
 }
 
 /// <summary>
@@ -29,6 +37,13 @@ public sealed partial class MainWindow : Window, IShellWindow
     private static readonly Color CaptionInactiveForeground = Color.FromArgb(0x73, 0xFF, 0xFF, 0xFF);
     private static readonly Color CaptionHover = Color.FromArgb(0x14, 0xFF, 0xFF, 0xFF);
     private static readonly Color CaptionPressed = Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF);
+
+    // A video opens at one video pixel per screen pixel, within this share of the work area, and
+    // no narrower than this (DIPs) so the controls fit.
+    private const double FitMaxWorkAreaFraction = 0.9;
+    private const double FitMinClientWidth = 640;
+
+    private readonly AspectRatioLock? _aspectLock;
 
     public MainWindow()
     {
@@ -48,8 +63,18 @@ public sealed partial class MainWindow : Window, IShellWindow
         titleBar.ButtonPressedForegroundColor = Colors.White;
         SetCaptionButtonsVisible(true);
 
+        try
+        {
+            _aspectLock = new AspectRatioLock(WinRT.Interop.WindowNative.GetWindowHandle(this));
+        }
+        catch (InvalidOperationException)
+        {
+            _aspectLock = null; // the window still works, just without the drag-resize aspect lock
+        }
+
         Shell.Host = this;
         Activated += OnActivated;
+        Closed += (_, _) => _aspectLock?.Dispose();
         AppWindow.Changed += OnAppWindowChanged;
     }
 
@@ -70,6 +95,41 @@ public sealed partial class MainWindow : Window, IShellWindow
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonForegroundColor = visible ? CaptionForeground : Colors.Transparent;
         titleBar.ButtonInactiveForegroundColor = visible ? CaptionInactiveForeground : Colors.Transparent;
+    }
+
+    public void FitToVideo(int videoWidth, int videoHeight)
+    {
+        if (videoWidth <= 0 || videoHeight <= 0
+            || AppWindow.Presenter is not OverlappedPresenter { State: OverlappedPresenterState.Restored })
+        {
+            return;
+        }
+
+        RectInt32 work = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest).WorkArea;
+        SizeInt32 size = AppWindow.Size;
+        SizeInt32 client = AppWindow.ClientSize;
+        PointInt32 position = AppWindow.Position;
+        int frameWidth = size.Width - client.Width;
+        int frameHeight = size.Height - client.Height;
+        double scale = Shell.XamlRoot?.RasterizationScale ?? 1;
+
+        PixelRect workArea = new(work.X, work.Y, work.X + work.Width, work.Y + work.Height);
+        (int clientWidth, int clientHeight) = WindowGeometry.FitClient(
+            videoWidth, videoHeight, workArea, frameWidth, frameHeight,
+            FitMaxWorkAreaFraction, (int)Math.Round(FitMinClientWidth * scale));
+        int width = clientWidth + frameWidth;
+        int height = clientHeight + frameHeight;
+        (int x, int y) = WindowGeometry.Recentre(
+            new PixelRect(position.X, position.Y, position.X + size.Width, position.Y + size.Height), width, height, workArea);
+        AppWindow.MoveAndResize(new RectInt32(x, y, width, height));
+    }
+
+    public void SetVideoAspect(double aspect)
+    {
+        if (_aspectLock is not null)
+        {
+            _aspectLock.AspectRatio = aspect;
+        }
     }
 
     private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)

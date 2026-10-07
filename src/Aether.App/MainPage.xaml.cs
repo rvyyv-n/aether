@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
@@ -52,6 +52,8 @@ public sealed partial class MainPage : Page
     private bool _isLoaded;
 
     private string? _currentPath;
+    private bool _fitWindowPending; // the next video size resizes the window (set per opened file)
+    private bool _windowSyncQueued;
     private bool _dragging;
     private string? _dragPath;
     private bool _dragSupported;
@@ -210,6 +212,7 @@ public sealed partial class MainPage : Page
             return;
         }
         _currentPath = path;
+        _fitWindowPending = true;
         TrySend(() => session.Open(path));
         Render();
     }
@@ -254,6 +257,7 @@ public sealed partial class MainPage : Page
             case nameof(PlayerViewModel.VideoWidth):
             case nameof(PlayerViewModel.VideoHeight):
                 FitVideo();
+                QueueWindowSync();
                 break;
             case nameof(PlayerViewModel.IsPaused):
             case nameof(PlayerViewModel.Status):
@@ -530,6 +534,36 @@ public sealed partial class MainPage : Page
         double scale = Math.Min(hostWidth / width, hostHeight / height);
         VideoSurface.Width = Math.Round(width * scale);
         VideoSurface.Height = Math.Round(height * scale);
+    }
+
+    /// <summary>
+    /// Width and height arrive as two changes in one flush; sync the window once both are applied, so
+    /// a new width is never paired with the previous file's height.
+    /// </summary>
+    private void QueueWindowSync()
+    {
+        if (!_windowSyncQueued)
+        {
+            _windowSyncQueued = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, SyncWindowToVideo);
+        }
+    }
+
+    private void SyncWindowToVideo()
+    {
+        _windowSyncQueued = false;
+        int width = _session?.ViewModel.VideoWidth ?? 0;
+        int height = _session?.ViewModel.VideoHeight ?? 0;
+        if (width <= 0 || height <= 0)
+        {
+            _host?.SetVideoAspect(0);
+            return;
+        }
+        _host?.SetVideoAspect((double)width / height);
+        if (_fitWindowPending)
+        {
+            _fitWindowPending = false;
+            _host?.FitToVideo(width, height);
+        }
     }
 
     /// <summary>Brings every view element in line with the startup, playback, drag and window state.</summary>
