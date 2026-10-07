@@ -20,9 +20,9 @@
 
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
-| 2.1 | `MpvContext`: SafeHandle lifecycle wrapper with low-latency flags (`d3d11va`, `gpu-next`, 512MiB back-buffer) | M | Opus |
-| 2.2 | `MpvRenderContext`: Path 1 direct D3D11 render context targeting swap chain back buffer | M | Opus |
-| 2.3 | `AngleBridge`: Path 2 ANGLE EGL client buffer fallback mapping swap chain texture to FBO | M | Opus |
+| 2.1 | `MpvContext`: SafeHandle lifecycle wrapper with low-latency flags (`d3d11va`, 512MiB back-buffer; `gpu-next` dropped, see ADR-0007) | M | Opus |
+| 2.2 | `MpvRenderContext`: API-agnostic render context wrapper (libmpv has no D3D11 render API, see ADR-0007) | M | Opus |
+| 2.3 | `AngleBridge`: primary render path, ANGLE EGL client buffer mapping swap chain texture to FBO | M | Opus |
 | 2.4 | `MpvRenderLoop`: dedicated render thread loop (`Render` → `Present` → `ReportSwap`, zero GC allocations) | M | Opus |
 | 2.5 | Context lifecycle and unmanaged parameter block disposal tests | S | Gemini |
 

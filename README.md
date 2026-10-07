@@ -14,7 +14,7 @@
   - Mark IN (`I`) / Mark OUT (`O`) visual bounding indicators.
 - **Instant Lossless Trimming:** Sub-300 ms FFmpeg `-c copy` stream-copy export preserving native 240/360 fps streams with direct drag-and-drop export.
 - **Embedded LAN Streamer:** In-memory Kestrel HTTP 206 server with QR code pairing for instant playback on mobile devices without transcoding.
-- **Modern .NET & Native AOT:** Built with C# 13, .NET 9, Windows App SDK 1.6+, and source-generated `[LibraryImport]` P/Invoke bindings.
+- **Modern .NET & Native AOT:** Built with C# 13, .NET 9/10, Windows App SDK 1.6+, and source-generated `[LibraryImport]` P/Invoke bindings.
 
 ---
 

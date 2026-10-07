@@ -1,7 +1,7 @@
 # Agent rules
 
 ## Stack and build
-Native AOT player on .NET 9 (WinUI 3): libmpv C API bindings, with DirectComposition / Direct3D 11 interop for the swap chain. Solution `AetherPlayer.sln` (`.slnx` alongside):
+Native AOT player on .NET 9/10 (WinUI 3; `Aether.App` and the test projects target .NET 10, Interop and LanHost .NET 9): libmpv C API bindings, with DirectComposition / Direct3D 11 interop for the swap chain. Solution `AetherPlayer.sln` (`.slnx` alongside):
 - `src/Aether.Core.Interop`: C-ABI `LibraryImport` bindings and DirectX interop.
 - `src/Aether.App`: WinUI 3 presentation layer and controls.
 - `src/Aether.PvP.Review`: high-FPS frame analysis and lossless clipping.
@@ -23,7 +23,7 @@ CI (`.github/workflows/build-aot.yml`) builds and tests in Release.
 - **Gemini**: scouting and header ingestion (`mpv.h`, `render.h`), test suites and harnesses, build-error loops, CI, multi-file restructuring. Gemini doesn't auto-delegate; it names a fork candidate in its build summary.
 
 ## Rules
-1. **P/Invoke**: no `[DllImport]`. Use .NET 9 source-generated `[LibraryImport]` with explicit marshaling (Native AOT).
+1. **P/Invoke**: no `[DllImport]`. Use source-generated `[LibraryImport]` with explicit marshaling (Native AOT).
 2. **Frame loop**: zero allocations. libmpv callbacks don't marshal objects per tick.
 3. **Threads**: `mpv_wait_event` runs on a dedicated `TaskCreationOptions.LongRunning` thread. Never block the WinUI `DispatcherQueue`.
 4. **Errors**: guard unmanaged pointer operations. Check Direct3D `HRESULT`s with `Marshal.ThrowExceptionForHR` or log the failure.
@@ -33,7 +33,7 @@ CI (`.github/workflows/build-aot.yml`) builds and tests in Release.
 8. **Decisions**: record architecture choices in `docs/DECISIONS.md`.
 
 ## Orchestration
-- At a build checkpoint, fork with `t3_thread_fork` (from `latest_stable`) into a worktree (`claude/pass-<n>` or `claude/eval`). Don't chain `delegate_task` calls between models.
+- At a build checkpoint, fork with `t3_thread_fork` (from `latest_stable`) into a worktree (`claude/pass-<n>` or `claude/eval`). Don't chain `delegate_task` calls between models, unless the user asks for a lead thread to delegate to subagents (as in Passes 1 and 2: Opus lead, Sonnet and Gemini helpers).
   - Fork to Opus for Interop memory safety, P/Invoke signatures and COM wrappers.
   - Fork to Opus for WinUI design, Mica and UI polish (ask the user questions and request reference screenshots first).
   - Fork to Sonnet for MVVM wiring, PvP review plumbing and the Kestrel host.
