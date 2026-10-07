@@ -65,6 +65,7 @@ public sealed unsafe class MpvRenderParamBlock : IDisposable
     /// <returns>The payload's address inside the block; write through it to update the value later.</returns>
     public T* Add<T>(MpvRenderParamType type, T value) where T : unmanaged
     {
+        EnsureSlot(type);
         byte* payload = Reserve(sizeof(T));
         *(T*)payload = value;
         Append(type, payload);
@@ -79,6 +80,7 @@ public sealed unsafe class MpvRenderParamBlock : IDisposable
         {
             length = utf8.Length;
         }
+        EnsureSlot(type);
         byte* payload = Reserve(length + 1);
         utf8[..length].CopyTo(new Span<byte>(payload, length));
         payload[length] = 0;
@@ -87,7 +89,11 @@ public sealed unsafe class MpvRenderParamBlock : IDisposable
     }
 
     /// <summary>Appends a parameter whose payload lives elsewhere. The caller keeps it alive while the block is used.</summary>
-    public void AddExternal(MpvRenderParamType type, void* data) => Append(type, data);
+    public void AddExternal(MpvRenderParamType type, void* data)
+    {
+        EnsureSlot(type);
+        Append(type, data);
+    }
 
     private byte* Reserve(int size)
     {
@@ -101,17 +107,23 @@ public sealed unsafe class MpvRenderParamBlock : IDisposable
         return memory + _payloadOffset + offset;
     }
 
-    private void Append(MpvRenderParamType type, void* data)
+    /// <summary>Validates before any payload is reserved, so a rejected add leaves the block unchanged.</summary>
+    private void EnsureSlot(MpvRenderParamType type)
     {
+        _ = Memory; // ObjectDisposedException first
         if (type == MpvRenderParamType.Invalid)
         {
             throw new ArgumentOutOfRangeException(nameof(type), "INVALID is the terminator.");
         }
-        MpvRenderParam* parameters = Parameters;
         if (_count >= _paramCapacity)
         {
             throw new InvalidOperationException($"Render parameter block is full ({_paramCapacity}).");
         }
+    }
+
+    private void Append(MpvRenderParamType type, void* data)
+    {
+        MpvRenderParam* parameters = Parameters;
         parameters[_count].Type = type;
         parameters[_count].Data = (nint)data;
         _count++;

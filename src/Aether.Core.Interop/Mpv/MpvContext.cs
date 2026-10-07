@@ -71,6 +71,7 @@ public sealed class MpvContext : IDisposable
         foreach (KeyValuePair<string, string> extra in options.AdditionalOptions)
         {
             ArgumentException.ThrowIfNullOrEmpty(extra.Key, nameof(options));
+            ArgumentNullException.ThrowIfNull(extra.Value, nameof(options));
             list.Add(extra);
         }
         return list.AsReadOnly();
