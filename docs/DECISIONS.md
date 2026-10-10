@@ -96,3 +96,11 @@
   - Cascadia Mono only for timecodes. The controls' clock is `mm:ss`, with hours (`h:mm:ss`) only for clips of an hour or more.
   - Shell text comes from `Strings/en-us/Resources.resw` through `AppStrings` (`ResourceLoader`). Keys stay `Area_Name`, so `x:Uid` (which needs `Name.Text` keys) is not used; a test checks every key the app reads exists.
 - **Status:** Accepted.
+
+## ADR-0013: Surfaces over Video (Acrylic Spike)
+- **Context:** The handoff puts menus, flyouts and the time bubble on SurfaceDialog (in-app Acrylic, blur behind) with a solid fallback, and gives the controls pill an OSD shadow (0 8 24, black 32%). The video is drawn by `MpvVideoSurface`, which derives from `SwapChainPanel`; the question was whether in-app Acrylic blurs it.
+- **Decision:**
+  - In-app `AcrylicBrush` blurs what the XAML compositor draws behind the element. A `SwapChainPanel`'s content is presented through its own DirectComposition surface and is not reliably part of that backdrop (the swap chain can present between XAML frames, and Microsoft's guidance is that Acrylic over a swap chain or `MediaPlayerElement` may sample nothing). Over video the brush would show its tint over an unblurred or empty backdrop, and its look would change with the render path.
+  - Every surface over video therefore uses the solid `AetherSurfaceDialogFallbackBrush` (#F20E1014), which is what the handoff names as the fallback. The volume flyout already does; menus and the time bubble (Pass 5) follow the same rule. Mica behind the letterbox bars is unaffected: it samples the desktop, not the video.
+  - The OSD shadow is not built yet. The pill is 62% ink, so a Composition `DropShadow` cast from it would show through and darken the pill unless masked out beneath it (a `CompositionMaskBrush` per resize), and `ThemeShadow` needs XAML receivers, so it would not fall on the swap chain and does not have the redline's offset or blur. Neither is cheap enough for Pass 4. The flyout keeps the system popup shadow it gets by default.
+- **Status:** Accepted. Needs an on-screen check in the packaged app: confirm whether an `AcrylicBrush` over playing video blurs it (if it does, SurfaceDialog can switch back to Acrylic), and judge whether the pill needs its shadow over bright video.

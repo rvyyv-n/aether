@@ -467,7 +467,7 @@
                             Opened="OnVolumeFlyoutOpened"
                             Placement="Top">
                             <Flyout.FlyoutPresenterStyle>
-                                <!--  Solid dialog fallback until the Acrylic-over-swap-chain spike (4.D6) settles it.  -->
+                                <!--  Solid dialog fallback over video: in-app Acrylic does not sample the swap chain (ADR-0013).  -->
                                 <Style TargetType="FlyoutPresenter">
                                     <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
                                     <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
