@@ -25,8 +25,6 @@ public sealed class PlayerSession : IDisposable
     private readonly MpvVideoSurface _surface;
     private bool _disposed;
 
-    private static readonly MpvCommand TogglePauseCommand = new("cycle", "pause");
-
     private PlayerSession(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
     {
         _surface = surface;
@@ -89,9 +87,15 @@ public sealed class PlayerSession : IDisposable
         _context.CommandAsync(new MpvCommand("loadfile", path, "replace"));
     }
 
-    /// <summary>Toggles pause. Non-blocking.</summary>
+    /// <summary>Toggles pause; on an ended file restarts it from 0. Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
-    public void TogglePause() => _context.CommandAsync(TogglePauseCommand);
+    public void TogglePause()
+    {
+        foreach (MpvCommand command in PlayToggleCommands.For(ViewModel.State.IsAtEnd))
+        {
+            _context.CommandAsync(command);
+        }
+    }
 
     /// <summary>Sets the volume (100 is unity gain). Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
