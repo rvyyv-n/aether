@@ -6,6 +6,7 @@ using Aether_App.Controls;
 using Aether_App.Playback;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
@@ -78,6 +79,8 @@ public sealed partial class MainPage : Page
     private void ApplyStaticStrings()
     {
         TitleAppName.Text = AppStrings.Get("App_Name");
+        ToolTipService.SetToolTip(SettingsButton, AppStrings.Get("TitleBar_SettingsTooltip"));
+        AutomationProperties.SetName(SettingsButton, AppStrings.Get("Settings_Title"));
         SearchedKey.Text = AppStrings.Get("EmptyState_DetailsSearched");
         ErrorKey.Text = AppStrings.Get("EmptyState_DetailsError");
         RetryButton.Content = AppStrings.Get("Shell_EngineFailedRetry");
@@ -87,7 +90,7 @@ public sealed partial class MainPage : Page
     public PlayerSession? Session => _session;
 
     /// <summary>The strip the window uses as its drag region.</summary>
-    public UIElement TitleBarDragRegion => TitleBar;
+    public UIElement TitleBarDragRegion => TitleBarDragArea;
 
     /// <summary>Set once by the window that hosts this page.</summary>
     public IShellWindow? Host
@@ -128,8 +131,8 @@ public sealed partial class MainPage : Page
             var resources = Application.Current.Resources;
             _fader = new ChromeFader(
                 ElementCompositionPreview.GetElementVisual(this).Compositor,
-                TimeSpan.FromMilliseconds((double)resources["AetherChromeShowMilliseconds"]),
-                TimeSpan.FromMilliseconds((double)resources["AetherChromeHideMilliseconds"]));
+                TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeShowMilliseconds"]),
+                TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeHideMilliseconds"]));
             _chromeTimer = DispatcherQueue.CreateTimer();
             _chromeTimer.IsRepeating = false;
             _chromeTimer.Tick += OnChromeTimerTick;
@@ -491,6 +494,7 @@ public sealed partial class MainPage : Page
         if (visible != _chromeShown && _fader is not null)
         {
             _chromeShown = visible;
+            _fader.Fade(TopScrim, visible);
             _fader.Fade(TitleBar, visible);
             _fader.Fade(Osd, visible);
             Osd.IsHitTestVisible = visible;
@@ -588,14 +592,14 @@ public sealed partial class MainPage : Page
         // Video, scrims and controls.
         VideoSurface.Opacity = hasVideo ? 1 : 0;
         VideoHost.Background = fullScreen && hasVideo
-            ? (Brush)Application.Current.Resources["AetherLetterboxFullScreenBrush"]
+            ? (Brush)Application.Current.Resources["AetherSurfaceLetterboxBrush"]
             : null;
         HomeView.Visibility = !hasVideo || _dragging ? Visibility.Visible : Visibility.Collapsed;
         DropScrim.Visibility = hasVideo && _dragging ? Visibility.Visible : Visibility.Collapsed;
         DropOutline.Visibility = _dragging ? Visibility.Visible : Visibility.Collapsed;
         Osd.Visibility = hasVideo ? Visibility.Visible : Visibility.Collapsed;
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
-        TitleBarScrim.Opacity = hasVideo ? 1 : 0;
+        TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         TitleBadgeText.Text = hasVideo || vm?.Status == PlaybackStatus.Loading
             ? Path.GetFileName(_currentPath) ?? AppStrings.Get("App_Badge")
             : AppStrings.Get("App_Badge");
@@ -720,8 +724,8 @@ public sealed partial class MainPage : Page
 
     private static Brush ToneBrush(Tone tone) => (Brush)Application.Current.Resources[tone switch
     {
-        Tone.Success => "AetherSuccessBrush",
-        Tone.Warning => "AetherWarningBrush",
-        _ => "AetherNeutralDotBrush",
+        Tone.Success => "AetherStatusReadyBrush",
+        Tone.Warning => "AetherStatusWarningBrush",
+        _ => "AetherStatusNeutralBrush",
     }];
 }

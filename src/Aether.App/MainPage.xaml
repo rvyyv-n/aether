@@ -85,7 +85,7 @@
                     Visibility="Collapsed" />
                 <TextBlock
                     x:Name="HomeTitle"
-                    Style="{StaticResource AetherTitleTextStyle}"
+                    Style="{StaticResource AetherSubtitleTextStyle}"
                     Text="No video loaded" />
             </StackPanel>
             <TextBlock
@@ -168,7 +168,7 @@
             <Border
                 x:Name="DetailsPanel"
                 Grid.Row="4"
-                Style="{StaticResource AetherPanelStyle}"
+                Style="{StaticResource AetherGlassPanelStyle}"
                 Visibility="Collapsed">
                 <StackPanel Spacing="12">
                     <Grid ColumnSpacing="16" RowSpacing="8">
@@ -208,12 +208,12 @@
                             x:Name="RetryButton"
                             Click="OnRetryClick"
                             Content="Retry"
-                            Style="{StaticResource AetherSelectedPillButtonStyle}" />
+                            Style="{StaticResource AetherEmphasisPillButtonStyle}" />
                         <Button
                             x:Name="OpenFolderButton"
                             Click="OnOpenFolderClick"
                             Content="Open folder"
-                            Style="{StaticResource AetherPillButtonStyle}" />
+                            Style="{StaticResource AetherOutlinePillButtonStyle}" />
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -231,43 +231,77 @@
             StrokeThickness="1"
             Visibility="Collapsed" />
 
-        <!--  Title bar strip: the window's drag region. The gradient shows only over video.  -->
+        <!--
+            Top scrim, over video only: black 50% under the 32 px title bar, fading to 0 by 72 px, so
+            the title text holds contrast over bright frames. It fades with the chrome.
+        -->
+        <Rectangle
+            x:Name="TopScrim"
+            Height="72"
+            VerticalAlignment="Top"
+            IsHitTestVisible="False"
+            Visibility="Collapsed">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Offset="0" Color="{StaticResource AetherSurfaceTopScrimColor}" />
+                    <GradientStop Offset="0.4444" Color="{StaticResource AetherSurfaceTopScrimColor}" />
+                    <GradientStop Offset="1" Color="#00000000" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <!--
+            Title bar: name and badge (the drag region), the gear, then 138 px left clear for the
+            system caption buttons. The gear sits outside the drag region so it takes clicks.
+        -->
         <Grid
             x:Name="TitleBar"
-            Height="{StaticResource AetherTitleBarHeight}"
+            Height="{StaticResource AetherSizeTitleBar}"
             VerticalAlignment="Top">
-            <Rectangle x:Name="TitleBarScrim" Opacity="0">
-                <Rectangle.Fill>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Offset="0" Color="#B3000000" />
-                        <GradientStop Offset="1" Color="#00000000" />
-                    </LinearGradientBrush>
-                </Rectangle.Fill>
-            </Rectangle>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
             <Grid x:Name="TitleBarDragArea" Background="Transparent">
-                <!--  Name and badge are both 12 px, so they share a baseline; the badge trims at 320 (file names).  -->
+                <!--
+                    Shared baseline at y 20: both blocks trim to their baseline and sit on the panel's
+                    bottom edge; the badge's -2 margin cancels its 2 px bottom padding.
+                -->
                 <StackPanel
-                    Margin="12,0,0,0"
-                    VerticalAlignment="Center"
+                    Height="20"
+                    Margin="16,0,0,0"
+                    VerticalAlignment="Top"
                     Orientation="Horizontal"
                     Spacing="8">
                     <TextBlock
                         x:Name="TitleAppName"
-                        VerticalAlignment="Center"
+                        VerticalAlignment="Bottom"
                         Style="{StaticResource AetherCaptionStrongTextStyle}"
-                        Text="Aether" />
+                        Text="Aether"
+                        TextLineBounds="TrimToBaseline" />
                     <Border
                         MaxWidth="320"
-                        Padding="6,2"
-                        VerticalAlignment="Center"
+                        Margin="0,0,0,-2"
+                        VerticalAlignment="Bottom"
                         Style="{StaticResource AetherBadgeStyle}">
                         <TextBlock
                             x:Name="TitleBadgeText"
+                            Foreground="{StaticResource AetherTextPrimaryBrush}"
                             Style="{StaticResource AetherCaptionTextStyle}"
-                            Text="Alpha" />
+                            Text="Alpha"
+                            TextLineBounds="TrimToBaseline" />
                     </Border>
                 </StackPanel>
             </Grid>
+            <!--  Disabled until the Settings page exists (Pass 7).  -->
+            <Button
+                x:Name="SettingsButton"
+                Grid.Column="1"
+                Content="&#xE713;"
+                IsEnabled="False"
+                Style="{StaticResource AetherTitleBarButtonStyle}" />
+            <Border Grid.Column="2" Width="{StaticResource AetherSizeCaptionButtons}" />
         </Grid>
 
         <!--  Playback controls: a full-width strip in the style of the references' status panel.  -->
@@ -276,8 +310,8 @@
             Margin="{StaticResource AetherPageMargin}"
             Padding="8,6,12,6"
             VerticalAlignment="Bottom"
-            Background="{StaticResource AetherOsdBrush}"
-            BorderBrush="{StaticResource AetherStrokeBrush}"
+            Background="{StaticResource AetherSurfaceOsdBrush}"
+            BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource AetherPanelCornerRadius}"
             PointerEntered="OnOsdPointerEntered"

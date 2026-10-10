@@ -1,5 +1,7 @@
 ﻿using Aether.Core.Interop.Windowing;
+using Aether.Core.Playback;
 using Microsoft.UI;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Windows.Graphics;
@@ -44,6 +46,11 @@ public sealed partial class MainWindow : Window, IShellWindow
     private const double FitMinClientWidth = 640;
 
     private readonly AspectRatioLock? _aspectLock;
+    private readonly CaptionGlyphFade _captionFade = new();
+    private readonly DispatcherQueueTimer _captionTimer;
+    private readonly TimeSpan _chromeShow;
+    private readonly TimeSpan _chromeHide;
+    private bool _captionsVisible = true;
 
     public MainWindow()
     {
@@ -61,7 +68,15 @@ public sealed partial class MainWindow : Window, IShellWindow
         titleBar.ButtonPressedBackgroundColor = CaptionPressed;
         titleBar.ButtonHoverForegroundColor = Colors.White;
         titleBar.ButtonPressedForegroundColor = Colors.White;
-        SetCaptionButtonsVisible(true);
+        ApplyCaptionGlyphs(1);
+
+        var resources = Application.Current.Resources;
+        _chromeShow = TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeShowMilliseconds"]);
+        _chromeHide = TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeHideMilliseconds"]);
+        _captionTimer = DispatcherQueue.CreateTimer();
+        _captionTimer.Interval = TimeSpan.FromMilliseconds(16);
+        _captionTimer.IsRepeating = true;
+        _captionTimer.Tick += OnCaptionTimerTick;
 
         try
         {
@@ -74,7 +89,11 @@ public sealed partial class MainWindow : Window, IShellWindow
 
         Shell.Host = this;
         Activated += OnActivated;
-        Closed += (_, _) => _aspectLock?.Dispose();
+        Closed += (_, _) =>
+        {
+            _captionTimer.Stop();
+            _aspectLock?.Dispose();
+        };
         AppWindow.Changed += OnAppWindowChanged;
     }
 
@@ -92,10 +111,35 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     public void SetCaptionButtonsVisible(bool visible)
     {
-        AppWindowTitleBar titleBar = AppWindow.TitleBar;
-        titleBar.ButtonForegroundColor = visible ? CaptionForeground : Colors.Transparent;
-        titleBar.ButtonInactiveForegroundColor = visible ? CaptionInactiveForeground : Colors.Transparent;
+        if (visible == _captionsVisible)
+        {
+            return;
+        }
+        _captionsVisible = visible;
+        _captionFade.Start(visible, visible ? _chromeShow : _chromeHide);
+        OnCaptionTimerTick(_captionTimer, null);
+        _captionTimer.Start();
     }
+
+    private void OnCaptionTimerTick(DispatcherQueueTimer sender, object? args)
+    {
+        bool running = _captionFade.Step();
+        ApplyCaptionGlyphs(_captionFade.Opacity);
+        if (!running)
+        {
+            sender.Stop();
+        }
+    }
+
+    private void ApplyCaptionGlyphs(double opacity)
+    {
+        AppWindowTitleBar titleBar = AppWindow.TitleBar;
+        titleBar.ButtonForegroundColor = Scale(CaptionForeground, opacity);
+        titleBar.ButtonInactiveForegroundColor = Scale(CaptionInactiveForeground, opacity);
+    }
+
+    private static Color Scale(Color color, double opacity) =>
+        Color.FromArgb((byte)Math.Round(color.A * opacity), color.R, color.G, color.B);
 
     public void FitToVideo(int videoWidth, int videoHeight)
     {

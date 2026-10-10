@@ -289,7 +289,7 @@
     <Style x:Key="AetherBadgeStyle" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource AetherSurfaceOsdBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
-        <Setter Property="Padding" Value="6,0,6,0" />
+        <Setter Property="Padding" Value="6,2" />
         <Setter Property="MaxWidth" Value="{StaticResource AetherSizeBadgeMaxWidth}" />
     </Style>
     <!--  Status dot: 6 px, top-aligned; Margin top 5 on caption lines, 7 on body lines, 11 on subtitle lines  -->
