@@ -28,6 +28,7 @@ public sealed partial class MainPage : Page
 {
     private const string PlayGlyph = "";
     private const string PauseGlyph = "";
+    private const string ReplayGlyph = ""; // UpdateRestore: the counter-clockwise arrow of frame 3.4
     private const string FullScreenGlyph = "";
     private const string ExitFullScreenGlyph = "";
     private const string VolumeGlyph = "";
@@ -63,6 +64,9 @@ public sealed partial class MainPage : Page
     private bool _pointerInside;
     private Point _lastPointer = new(double.NaN, double.NaN);
     private bool _updatingVolume;
+    private double _lastAudibleVolume = TransportState.DefaultVolume;
+    private bool _updatingSeek;
+    private bool _seekDragging;
 
     public MainPage()
     {
@@ -71,6 +75,10 @@ public sealed partial class MainPage : Page
         ApplyStaticStrings();
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
+        // The slider handles its own pointer events; listen anyway to know when a drag starts and ends.
+        SeekSlider.AddHandler(PointerPressedEvent, new PointerEventHandler(OnSeekPointerPressed), handledEventsToo: true);
+        SeekSlider.AddHandler(PointerReleasedEvent, new PointerEventHandler(OnSeekPointerReleased), handledEventsToo: true);
+        SeekSlider.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(OnSeekPointerReleased), handledEventsToo: true);
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -86,6 +94,10 @@ public sealed partial class MainPage : Page
         OpenFileLabel.Text = AppStrings.Get("EmptyState_OpenFile");
         ToolTipService.SetToolTip(OpenButton, AppStrings.Get("Transport_OpenFile"));
         AutomationProperties.SetName(OpenButton, AppStrings.Get("Menu_OpenFile"));
+        ToolTipService.SetToolTip(VolumeButton, AppStrings.Get("Transport_Mute"));
+        AutomationProperties.SetName(VolumeButton, AppStrings.Get("Transport_Volume"));
+        AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
+        AutomationProperties.SetName(SeekSlider, AppStrings.Get("Transport_Seek"));
         RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         StatusRenderer.Text = AppStrings.Get("EmptyState_Renderer");
@@ -284,12 +296,8 @@ public sealed partial class MainPage : Page
         switch (e.PropertyName)
         {
             case nameof(PlayerViewModel.Position):
-                PositionText.Text = Timecode.FormatClock(vm.Position, vm.Duration);
-                break;
             case nameof(PlayerViewModel.Duration):
-                // Both change shape together when the clip is an hour or more.
-                PositionText.Text = Timecode.FormatClock(vm.Position, vm.Duration);
-                DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
+                UpdateClock(vm);
                 break;
             case nameof(PlayerViewModel.Volume):
                 SyncVolume();
@@ -299,20 +307,65 @@ public sealed partial class MainPage : Page
                 FitVideo();
                 QueueWindowSync();
                 break;
-            case nameof(PlayerViewModel.IsPaused):
             case nameof(PlayerViewModel.Status):
+                UpdateClock(vm); // an ended file reads its full duration
+                Render();
+                break;
+            case nameof(PlayerViewModel.IsPaused):
                 Render();
                 break;
         }
     }
 
+    /// <summary>Position and duration text and the seek bar. Both times change shape together from an hour.</summary>
+    private void UpdateClock(PlayerViewModel vm)
+    {
+        DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
+        if (_seekDragging)
+        {
+            return; // the bar and the time follow the pointer, not playback
+        }
+        double position = TransportState.DisplayPosition(vm.State);
+        PositionText.Text = Timecode.FormatClock(position, vm.Duration);
+        _updatingSeek = true;
+        SeekSlider.Maximum = Math.Max(0, vm.Duration);
+        SeekSlider.Value = Math.Clamp(position, 0, SeekSlider.Maximum);
+        _updatingSeek = false;
+    }
+
+    private void OnSeekChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        if (_updatingSeek || _session is not { } session || !HasVideo)
+        {
+            return;
+        }
+        PositionText.Text = Timecode.FormatClock(e.NewValue, session.ViewModel.Duration);
+        TrySend(() => session.Seek(e.NewValue, _seekDragging));
+    }
+
+    private void OnSeekPointerPressed(object sender, PointerRoutedEventArgs e) => _seekDragging = true;
+
+    /// <summary>Release (or a lost capture) ends the drag with an exact seek to where the bar stopped.</summary>
+    private void OnSeekPointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_seekDragging)
+        {
+            return;
+        }
+        _seekDragging = false;
+        if (_session is { } session && HasVideo)
+        {
+            TrySend(() => session.Seek(SeekSlider.Value, dragging: false));
+        }
+    }
+
     private void SyncVolume()
     {
-        double volume = _session?.ViewModel.Volume ?? 100;
+        double volume = _session?.ViewModel.Volume ?? TransportState.DefaultVolume;
         _updatingVolume = true;
         VolumeSlider.Value = Math.Clamp(volume, 0, 100);
         _updatingVolume = false;
-        VolumeIcon.Glyph = volume <= 0 ? MuteGlyph : VolumeGlyph;
+        ShowVolume(volume);
     }
 
     private void OnVolumeChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -321,8 +374,41 @@ public sealed partial class MainPage : Page
         {
             return;
         }
-        VolumeIcon.Glyph = e.NewValue <= 0 ? MuteGlyph : VolumeGlyph;
+        ShowVolume(e.NewValue);
         TrySend(() => session.SetVolume(e.NewValue));
+    }
+
+    private void ShowVolume(double volume)
+    {
+        if (volume > 0)
+        {
+            _lastAudibleVolume = volume;
+        }
+        VolumeButton.Content = volume <= 0 ? MuteGlyph : VolumeGlyph;
+    }
+
+    private void OnMuteAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (_session is not { } session)
+        {
+            return;
+        }
+        args.Handled = true;
+        double volume = TransportState.ToggleMute(session.ViewModel.Volume, _lastAudibleVolume);
+        TrySend(() => session.SetVolume(volume));
+    }
+
+    private void OnVolumeFlyoutOpened(object? sender, object e)
+    {
+        _chrome.SetHold(ChromeHolds.Flyout, true);
+        ApplyChrome();
+    }
+
+    private void OnVolumeFlyoutClosed(object? sender, object e)
+    {
+        _chrome.SetHold(ChromeHolds.Flyout, false);
+        ApplyChrome();
+        Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
     }
 
     private void OnPlayPauseClick(object sender, RoutedEventArgs e) => TogglePause();
@@ -637,9 +723,15 @@ public sealed partial class MainPage : Page
             ? Path.GetFileName(_currentPath) ?? AppStrings.Get("App_Badge")
             : AppStrings.Get("App_Badge");
 
-        bool showPlay = vm is null || vm.IsPaused || vm.Status == PlaybackStatus.Ended;
-        PlayPauseButton.Content = showPlay ? PlayGlyph : PauseGlyph;
-        ToolTipService.SetToolTip(PlayPauseButton, AppStrings.Get(showPlay ? "Transport_Play" : "Transport_Pause"));
+        (string glyph, string label) = TransportState.PlayButton(vm?.Status ?? PlaybackStatus.Idle) switch
+        {
+            PlayButtonAction.Pause => (PauseGlyph, AppStrings.Get("Transport_Pause")),
+            PlayButtonAction.Replay => (ReplayGlyph, AppStrings.Get("Transport_Replay")),
+            _ => (PlayGlyph, AppStrings.Get("Transport_Play")),
+        };
+        PlayPauseButton.Content = glyph;
+        ToolTipService.SetToolTip(PlayPauseButton, label);
+        AutomationProperties.SetName(PlayPauseButton, label);
         FullScreenButton.Content = fullScreen ? ExitFullScreenGlyph : FullScreenGlyph;
         ToolTipService.SetToolTip(FullScreenButton, AppStrings.Get(fullScreen ? "Transport_ExitFullScreen" : "Transport_FullScreen"));
 

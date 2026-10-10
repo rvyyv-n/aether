@@ -14,6 +14,9 @@ public enum ChromeHolds
 
     /// <summary>A drag, a menu or a dialog is in progress.</summary>
     Interaction = 4,
+
+    /// <summary>A flyout from the controls is open (volume). Separate from <see cref="Interaction"/>, which a drag ending clears.</summary>
+    Flyout = 8,
 }
 
 /// <summary>

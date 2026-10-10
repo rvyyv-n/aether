@@ -1,5 +1,6 @@
 ﻿using Aether.Core.Interop.Windowing;
 using Aether.Core.Playback;
+using Aether_App.Controls;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
@@ -116,7 +117,8 @@ public sealed partial class MainWindow : Window, IShellWindow
             return;
         }
         _captionsVisible = visible;
-        _captionFade.Start(visible, visible ? _chromeShow : _chromeHide);
+        TimeSpan duration = Motion.AnimationsEnabled ? (visible ? _chromeShow : _chromeHide) : TimeSpan.Zero;
+        _captionFade.Start(visible, duration);
         OnCaptionTimerTick(_captionTimer, null);
         _captionTimer.Start();
     }

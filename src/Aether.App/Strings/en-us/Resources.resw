@@ -338,6 +338,12 @@
   <data name="Transport_Mute" xml:space="preserve">
     <value>Mute (M)</value>
   </data>
+  <data name="Transport_Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="Transport_Seek" xml:space="preserve">
+    <value>Seek</value>
+  </data>
   <data name="Transport_MoreControls" xml:space="preserve">
     <value>More controls</value>
   </data>

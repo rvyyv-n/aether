@@ -101,6 +101,18 @@ public class ChromeVisibilityTests
     }
 
     [Fact]
+    public void EndingADrag_KeepsAnOpenFlyoutsHold()
+    {
+        var chrome = new ChromeVisibility(new ManualTimeProvider(), Delay);
+        chrome.SetHold(ChromeHolds.Flyout, true);
+        chrome.SetHold(ChromeHolds.Interaction, true);
+        chrome.SetHold(ChromeHolds.Interaction, false);
+
+        Assert.Equal(ChromeHolds.Flyout, chrome.Holds);
+        Assert.Null(chrome.DueIn);
+    }
+
+    [Fact]
     public void ClearingAHoldThatIsNotSet_DoesNotRestartCountdown()
     {
         var time = new ManualTimeProvider();

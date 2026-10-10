@@ -27,6 +27,12 @@ internal sealed class ChromeFader
     public void Fade(UIElement element, bool visible)
     {
         Visual visual = ElementCompositionPreview.GetElementVisual(element);
+        if (!Motion.AnimationsEnabled)
+        {
+            visual.StopAnimation("Opacity");
+            visual.Opacity = visible ? 1f : 0f;
+            return;
+        }
         visual.StartAnimation("Opacity", visible ? _show : _hide);
     }
 

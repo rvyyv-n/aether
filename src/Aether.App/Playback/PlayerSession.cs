@@ -97,6 +97,10 @@ public sealed class PlayerSession : IDisposable
         }
     }
 
+    /// <summary>Seeks from the seek bar; see <see cref="TransportState.Seek"/>. Non-blocking.</summary>
+    /// <exception cref="MpvException">The core is shutting down.</exception>
+    public void Seek(double seconds, bool dragging) => _context.CommandAsync(TransportState.Seek(seconds, dragging));
+
     /// <summary>Sets the volume (100 is unity gain). Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
     public void SetVolume(double volume) =>
