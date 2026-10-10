@@ -181,4 +181,89 @@ public class SettingsStoreTests
     {
         Assert.Empty(MpvOptionsValidator.Validate(text));
     }
+
+    [Fact]
+    public void Every_Definition_Default_Is_In_Its_Allowed_Values()
+    {
+        var defaults = SettingDefinitions.Defaults;
+        foreach (var definition in SettingDefinitions.All)
+        {
+            var defaultValue = definition.GetValue(defaults);
+            Assert.NotNull(defaultValue);
+            var applied = definition.TryWith(defaults, defaultValue);
+            Assert.NotNull(applied);
+            Assert.Equal(defaultValue, definition.GetValue(applied));
+        }
+    }
+
+    [Fact]
+    public void Every_Restart_Flagged_Key_Reports_RequiresRestart()
+    {
+        var store = NewStore();
+        foreach (var definition in SettingDefinitions.All)
+        {
+            Assert.Equal(definition.RequiresRestart, store.RequiresRestart(definition.Key));
+        }
+        Assert.False(store.RequiresRestart("nonexistent.setting.key"));
+    }
+
+    [Fact]
+    public void Reset_Of_One_Key_Leaves_Others_Intact()
+    {
+        var store = NewStore();
+        store.Set(SettingKeys.QualityPreset, "high");
+        store.Set(SettingKeys.Brightness, 25);
+        store.Set(SettingKeys.LoopByDefault, true);
+
+        Assert.True(store.Reset(SettingKeys.Brightness));
+
+        Assert.True(store.IsDefault(SettingKeys.Brightness));
+        Assert.Equal(0, store.Current.Brightness);
+        Assert.Equal("high", store.Current.QualityPreset);
+        Assert.True(store.Current.LoopByDefault);
+    }
+
+    [Fact]
+    public void Changed_Event_Fires_Once_Per_Successful_Set()
+    {
+        var store = NewStore();
+        var changes = new System.Collections.Generic.List<string>();
+        store.Changed += (_, e) => changes.Add(e.Key);
+
+        // Setting current value should not fire Changed.
+        store.Set(SettingKeys.HardwareDecoding, "auto-safe");
+        Assert.Empty(changes);
+
+        // Changing the value fires once.
+        store.Set(SettingKeys.HardwareDecoding, "d3d11va");
+        Assert.Single(changes);
+        Assert.Equal(SettingKeys.HardwareDecoding, changes[0]);
+
+        // Setting the identical value again should not fire.
+        store.Set(SettingKeys.HardwareDecoding, "d3d11va");
+        Assert.Single(changes);
+
+        // Setting another key fires once.
+        store.Set(SettingKeys.Contrast, 10);
+        Assert.Equal(2, changes.Count);
+        Assert.Equal(SettingKeys.Contrast, changes[1]);
+    }
+
+    [Fact]
+    public void ResetAll_Clears_PendingRestart()
+    {
+        var store = NewStore();
+        Assert.False(store.PendingRestart);
+
+        store.Set(SettingKeys.HardwareDecoding, "no");
+        Assert.True(store.PendingRestart);
+        Assert.True(store.IsRestartPending(SettingKeys.HardwareDecoding));
+
+        store.ResetAll();
+
+        Assert.False(store.PendingRestart);
+        Assert.False(store.IsRestartPending(SettingKeys.HardwareDecoding));
+        Assert.Equal(new AetherSettings(), store.Current);
+    }
 }
+
