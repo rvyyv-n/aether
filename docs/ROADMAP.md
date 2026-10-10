@@ -11,7 +11,7 @@ Every task row has a **Model** column. Autonomous runs should follow it without 
 | **Gemini** | Test suites, benchmarks, CI workflows, scouting, mechanical refactors | Every row marked Gemini |
 
 **Rules for every task:**
-- **Design tasks** (4.1–4.6, 5.1–5.3, 6.2, 6.3) run on Opus. Before writing UI code, Opus asks the user design questions and requests reference screenshots, then confirms the direction.
+- **Design tasks** (4.1–4.6, 4.C3–4.C5, 4.D2–4.D6, 5.1–5.4, 6.1–6.2, 7.1–7.3, 8.1–8.2, 9.2–9.3) run on Opus. Before writing UI code, Opus asks the user design questions and requests reference screenshots, then confirms the direction.
 - **Helpers** get a self-contained brief (goal, files, project rules, what to report). Floor: Sonnet at medium effort. At most three helpers per task.
 - **Threads** retire at 8 turns or 150k tokens: commit, then fork (`t3_thread_fork`) or start fresh.
 - **Build passes** run in a worktree, not the main folder.
@@ -78,41 +78,108 @@ Every task row has a **Model** column. Autonomous runs should follow it without 
 | 4.C3 | Bug: no clickable open control. Files open only via `Ctrl+O` and drag-and-drop. Add a visible Open button (controls bar and empty-state panel) that calls the same picker as the accelerator; placement and look need design approval first | S | Opus |
 | 4.C4 | Bug: label alignment and capitalisation. Known items: hint text reads "press Ctrl O" (should be `Ctrl+O`); panel captions mix `SUPPORTED` / `DETAILS` (all caps) with sentence-case labels (`Formats`, `Renderer`, `Searched`); status text mixes cases (`Engine ready`, `Starting`). Full audit of every label with the user's list before fixing; Opus confirms the casing rule first | S | Opus |
 | 4.C5 | Design review: compare the current shell against the user's reference screenshots (`C:\Users\rayyan\Pictures\Screenshots`, Wintoys and OpenMouse references) and list gaps. Opus asks the user which references apply and gets approval on the list before any UI code | M | Opus |
-
+| 4.D0 | Foundations (mechanical): generate the XAML `ResourceDictionary` from `aether.tokens.json` (the handoff `DesignTokens.xaml` is the starting point), no-accent overrides so standard controls stay white, strings file | S | Gemini |
+| 4.D1 | `SettingsStore`: persisted settings object (defaults, per-setting reset, applies-on-restart flags) | M | Sonnet |
+| 4.D2 | Rebase the built shell (4.1–4.6) onto the handoff tokens: Mica Alt, glass surfaces, Segoe UI Variable, 32 px title bar with 138 px caption inset, caption glyphs fading with the controls (screens 1, 3, 4) | M | Opus |
+| 4.D3 | Empty state (2A), status strip and startup/failure states (screens 1–2) | M | Opus |
+| 4.D4 | Playing view: one-row pill (5.8), tooltips, paused, ended, controls hidden, portrait 405 (screen 3) | M | Opus |
+| 4.D5 | Open URL dialog with invalid and 405 states, progress, returning-user and missing-recent states (screen 2) | M | Opus |
+| 4.D6 | Spike: Acrylic over the swap chain; confirm `MpvVideoSurface` is a `SwapChainPanel`. Result in `docs/DECISIONS.md` | S | Opus |
+| 4.D7 | Tests for the settings store, token dictionary keys and strings coverage; CI build | S | Gemini |
 **Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, graceful startup and error handling, and zero airspace clipping. *(4.1–4.6 built on `claude/pass-4`: 270 tests passing, 0 warnings. 4.7 built: fast taps queue in one slot. 4.8 built: window fits the video and keeps its aspect ratio. Shell states and window behaviour checked on screen by the user. Open: 4.C2 (replay), 4.C3 (open button), 4.C4 (labels and casing), 4.C5 (reference screenshot review).)*
 
 ---
 
-### Pass 5: Core Player Controls & High-Performance Playback
+### Pass 5: Transport, HUD & Lossless Stream Clipper
+
+Mockups: screen 5 (transport).
 
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
-| 5.1 | `PrecisionSeekBar`: fluent scrubber with hover timestamp preview, exact seek vs coarse drag scrubbing | M | Opus |
-| 5.2 | `TransportControls`: full playback transport: jump ±5s / ±1s, frame step (`<` / `>`), speed control (0.1x–4.0x, per spec §4.1), volume slider & mute | M | Opus |
-| 5.3 | `NavigationRail`: minimal collapsible side icon rail (Player, Playlist/Recent, Settings) overlaid above video with auto-hide | S | Opus |
-| 5.4 | `PerformanceLoop`: async seek coalescing, zero-drop GPU decode verification, smooth 60fps+ UI under high-bitrate 1440p/4K load | M | Gemini |
-| 5.5 | `LosslessTrimmer`: lightweight In (`I`) / Out (`O`) range selector on seek bar with sub-300ms `-c copy` export | S | Sonnet |
-| 5.6 | Integration & benchmark tests: seek latency, frame-accurate boundaries, zero memory leaks across playback cycles | S | Gemini |
-| 5.7 | Open paths: file dialog (`Ctrl+O`), command-line argument, and file association registration for the four containers | S | Sonnet |
+| 5.1 | `OverlayHud`: sub-millisecond timestamp, game tick (`floor(T*20)`), sub-tick %, frame count, source FPS | S | Opus |
+| 5.2 | `PrecisionSeekBar` and transport pill: hover and drag tooltips, In (`I`) / Out (`O`) band, speed and quality menus, loop states, compact pill below 520 px | M | Opus |
+| 5.3 | `ClipDrawer`: export drawer UI with drag-to-export into Discord / File Explorer (`DataPackage`) | M | Opus |
+| 5.4 | Export chip and "Clip saved" result for the in/out range | S | Opus |
+| 5.5 | Pre-warm FFmpeg on idle and execute sub-300ms `-c copy` export with atomic `.part` rename | S | Sonnet |
+| 5.6 | Integration tests for FFmpeg argument building, GOP alignment, and export cancellation | S | Gemini |
+| 5.7 | Open paths: command-line argument and file association registration for the four containers | S | Sonnet |
 | 5.8 | Loop playback: toggle (`L`), restart at end of file, state held in `PlayerViewModel` | S | Sonnet |
-| 5.9 | Always-on-top toggle on the window (`T`), via `AppWindow.Presenter`, persisted with window state | S | Sonnet |
-| 5.10 | Resume position per file: save time on close or switch, restore on open, skip near start/end, cap stored entries | S | Sonnet |
-| 5.11 | Tests for 5.7–5.10: argument and extension parsing, loop wrap, resume store round-trip and pruning, speed bounds 0.1–4.0 | S | Gemini |
+| 5.9 | Always-on-top toggle (`T`) via `AppWindow.Presenter`, persisted with window state | S | Sonnet |
+| 5.10 | Resume position per file: save on close or switch, restore on open, skip near start/end, cap stored entries | S | Sonnet |
+| 5.11 | `PerformanceLoop`: async seek coalescing, zero-drop GPU decode verification, smooth 60fps+ UI under high-bitrate 1440p/4K load | M | Gemini |
+| 5.12 | Tests for 5.7–5.10: argument and extension parsing, loop wrap, resume store round-trip and pruning, speed bounds 0.1–4.0 | S | Gemini |
 
-**Pass 5 means:** A responsive, high-performance daily-driver media player: butter-smooth scrubber with hover preview, comprehensive playback & audio transport controls, unobtrusive navigation rail, and instant lossless clipping without gimmicks.
+**Pass 5 means:** Real-time game tick HUD, the full transport with visual in/out bounds, and sub-300ms lossless clip generation draggable directly into Discord.
 
 ---
 
-### Pass 6: Embedded Kestrel LAN Streamer & Release Verification
+### Pass 6: Settings
+
+Mockups: screen 7 (settings, all pages).
 
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
-| 6.1 | `KestrelStreamServer`: lightweight HTTP 206 partial content server with session token auth | M | Sonnet |
-| 6.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding | S | Opus |
-| 6.3 | `QrPairingService`: in-memory SVG/PNG QR code generator with local LAN IP flyout (`S` key) | S | Opus |
-| 6.4 | Release hardening: Native AOT build (`dotnet publish -c Release -r win-x64`); fix the Release build's IL2104 trim warnings from `WinRT.Runtime` / `Microsoft.Windows.SDK.NET`, then move CI from Debug to Release | M | Gemini |
-| 6.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations | M | Opus |
-| 6.6 | `EngineResilience`: attach/detach context cleanup, attached core disposal device-loss safety, queue overflow resync, background core destruction | M | Opus |
-| 6.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S | Gemini |
+| 6.1 | Settings page shell: custom section list plus `Frame` (not `NavigationView`), picker below 640 px, Back button in the title bar | M | Opus |
+| 6.2 | Controls without accent colour: toggle, segmented, combo, slider, keycap, expander rows | M | Opus |
+| 6.3 | Pages and bindings to the settings store: General, Playback, Video, Audio, Subtitles, Streaming, Shortcuts, Advanced, About | M | Sonnet |
+| 6.4 | Hardware decoding combo: Auto (`auto-safe`), Software only (`no`), Direct3D 11 (`d3d11va`), Direct3D 11 copy (`d3d11va-copy`), applied on restart | S | Sonnet |
+| 6.5 | Custom mpv options field (Cascadia Mono, per-line validation) and Streaming page state when yt-dlp is missing | S | Sonnet |
+| 6.6 | Settings tests: defaults, reset, restart flags, invalid option lines | S | Gemini |
 
-**Pass 6 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
+**Pass 6 means:** Every setting in the mockups is reachable, persisted and applied, and the page holds at 405 px.
+
+---
+
+### Pass 7: Menus, Toasts & Diagnostics
+
+Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
+
+| # | Task | Effort | Model |
+|:---|:---|:---:|:---:|
+| 7.1 | Right-click `MenuFlyout` with icons, shortcuts, submenus (including Clips and Stream), max height with scroll; tracks and video flyouts | M | Opus |
+| 7.2 | Toast control: look, placement, fade, reduced motion, live-region announcement | S | Opus |
+| 7.2a | `ToastService`: one visible at a time, queued by priority, a toast with an action is never replaced, duplicates collapse, 4 s / 8 s with an action, pauses on hover and focus | M | Sonnet |
+| 7.3 | Diagnostics panel (Ctrl+I) on a solid surface: decoder, video, frame rate, dropped, cache ("—" when unavailable). No GPU row | S | Opus |
+| 7.4 | libmpv property wiring for diagnostics: `hwdec-current`, `video-format`, `video-params/w` and `h`, `container-fps`, `display-fps` (spike first: with `vo=libmpv` it is expected to stay empty, so read the monitor refresh rate via `MonitorFromWindow`/`EnumDisplaySettingsW` and set `display-fps-override`, updating on `WM_DISPLAYCHANGE`), `decoder-frame-drop-count`, `frame-drop-count`, `demuxer-cache-duration` | S | Sonnet |
+| 7.5 | Wire engine failures, yt-dlp updates, frame copy and export results to the toast service | S | Sonnet |
+| 7.6 | Tests for toast queue rules and diagnostics formatting | S | Gemini |
+
+**Pass 7 means:** Menus, toasts and diagnostics behave as the redline describes, including narrow windows and missing data.
+
+---
+
+### Pass 8: Picture in Picture
+
+Mockups: screens 8.3–8.4.
+
+| # | Task | Effort | Model |
+|:---|:---|:---:|:---:|
+| 8.1 | Picture in picture: `AppWindow` CompactOverlay presenter at 400×225 (spike first: confirm the minimum size), hover controls, "Back to full window" beside the system close button, `P` shortcut (ignored when a text field has focus) | M | Opus |
+| 8.2 | Engine hand-over between the main window and the overlay window without a decode restart (swap chain, device and lifetime safety) | M | Opus |
+| 8.3 | Tests for the hand-over lifecycle and picture-in-picture state transitions | S | Gemini |
+
+**Pass 8 means:** The video can float in a small always-on-top window and return to the full window without a stall.
+
+---
+
+### Pass 9: Embedded Kestrel LAN Streamer & Release Verification
+
+| # | Task | Effort | Model |
+|:---|:---|:---:|:---:|
+| 9.1 | `KestrelStreamServer`: lightweight HTTP 206 partial content server with session token auth | M | Sonnet |
+| 9.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding | S | Opus |
+| 9.3 | `QrPairingService`: in-memory SVG/PNG QR code generator with local LAN IP flyout (`S` key) | S | Opus |
+| 9.4 | Release hardening: Native AOT build (`dotnet publish -c Release -r win-x64`); fix the Release build's IL2104 trim warnings from `WinRT.Runtime` / `Microsoft.Windows.SDK.NET`, then move CI from Debug to Release | M | Gemini |
+| 9.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations | M | Opus |
+| 9.6 | `EngineResilience`: attach/detach context cleanup, attached core disposal device-loss safety, queue overflow resync, background core destruction | M | Opus |
+| 9.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S | Gemini |
+
+**Pass 9 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
+
+---
+
+### Parked
+
+- **Hover rail (screen 6):** deferred. Clips and Stream are reached from the right-click menu and shortcuts. The spec stays in the design handoff.
+- **Re-encode export (NVENC / QSV / AMF / x264):** not planned. Export is stream copy only. Revisit for non-keyframe cuts or size-limited exports.
+- **GPU timing row in Diagnostics:** libmpv doesn't expose it. Would need our own D3D11 timestamp queries.
