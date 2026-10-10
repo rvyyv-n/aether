@@ -451,15 +451,23 @@
                         Text="00:00" />
                 </Grid>
 
-                <!--  Volume moves into a flyout to make room for the bar (5.8): 72 px slider, thumb 12 white.  -->
+                <!--
+                    Volume moves into a flyout to make room for the bar (5.8): 72 px slider, thumb 12
+                    white. Clicking mutes; the flyout opens on hover, or pinned from right-click or
+                    Shift+F10 so the keyboard can reach the slider.
+                -->
                 <Button
                     x:Name="VolumeButton"
                     Grid.Column="3"
+                    Click="OnVolumeClick"
                     Content="&#xE767;"
+                    ContextRequested="OnVolumeContextRequested"
+                    PointerCanceled="OnVolumeButtonPointerExited"
+                    PointerEntered="OnVolumeButtonPointerEntered"
+                    PointerExited="OnVolumeButtonPointerExited"
                     Style="{StaticResource AetherIconButtonStyle}"
-                    ToolTipService.Placement="Top"
-                    ToolTipService.ToolTip="Mute (M)">
-                    <Button.Flyout>
+                    ToolTipService.Placement="Top">
+                    <FlyoutBase.AttachedFlyout>
                         <Flyout
                             x:Name="VolumeFlyout"
                             AllowFocusOnInteraction="False"
@@ -478,36 +486,43 @@
                                     <Setter Property="MinHeight" Value="0" />
                                 </Style>
                             </Flyout.FlyoutPresenterStyle>
-                            <Slider
-                                x:Name="VolumeSlider"
-                                Width="{StaticResource AetherSizeVolumeSlider}"
-                                VerticalAlignment="Center"
-                                AllowFocusOnInteraction="False"
-                                IsThumbToolTipEnabled="False"
-                                Maximum="100"
-                                Minimum="0"
-                                ValueChanged="OnVolumeChanged"
-                                Value="100">
-                                <Slider.Resources>
-                                    <SolidColorBrush x:Key="SliderTrackFill" Color="{StaticResource AetherFillRangeColor}" />
-                                    <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="{StaticResource AetherFillRangeColor}" />
-                                    <SolidColorBrush x:Key="SliderTrackFillPressed" Color="{StaticResource AetherFillRangeColor}" />
-                                    <SolidColorBrush x:Key="SliderTrackValueFill" Color="{StaticResource AetherTextPrimaryColor}" />
-                                    <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
-                                    <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="{StaticResource AetherTextPrimaryColor}" />
-                                    <SolidColorBrush x:Key="SliderThumbBackground" Color="{StaticResource AetherTextPrimaryColor}" />
-                                    <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
-                                    <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="{StaticResource AetherTextPrimaryColor}" />
-                                    <SolidColorBrush x:Key="SliderOuterThumbBackground" Color="Transparent" />
-                                    <SolidColorBrush x:Key="SliderThumbBorderBrush" Color="Transparent" />
-                                    <x:Double x:Key="SliderHorizontalThumbWidth">12</x:Double>
-                                    <x:Double x:Key="SliderHorizontalThumbHeight">12</x:Double>
-                                    <x:Double x:Key="SliderInnerThumbWidth">12</x:Double>
-                                    <x:Double x:Key="SliderInnerThumbHeight">12</x:Double>
-                                </Slider.Resources>
-                            </Slider>
+                            <Grid
+                                x:Name="VolumeFlyoutContent"
+                                Background="Transparent"
+                                PointerCanceled="OnVolumeFlyoutPointerExited"
+                                PointerEntered="OnVolumeFlyoutPointerEntered"
+                                PointerExited="OnVolumeFlyoutPointerExited">
+                                <Slider
+                                    x:Name="VolumeSlider"
+                                    Width="{StaticResource AetherSizeVolumeSlider}"
+                                    VerticalAlignment="Center"
+                                    AllowFocusOnInteraction="False"
+                                    IsThumbToolTipEnabled="False"
+                                    Maximum="100"
+                                    Minimum="0"
+                                    ValueChanged="OnVolumeChanged"
+                                    Value="100">
+                                    <Slider.Resources>
+                                        <SolidColorBrush x:Key="SliderTrackFill" Color="{StaticResource AetherFillRangeColor}" />
+                                        <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="{StaticResource AetherFillRangeColor}" />
+                                        <SolidColorBrush x:Key="SliderTrackFillPressed" Color="{StaticResource AetherFillRangeColor}" />
+                                        <SolidColorBrush x:Key="SliderTrackValueFill" Color="{StaticResource AetherTextPrimaryColor}" />
+                                        <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
+                                        <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="{StaticResource AetherTextPrimaryColor}" />
+                                        <SolidColorBrush x:Key="SliderThumbBackground" Color="{StaticResource AetherTextPrimaryColor}" />
+                                        <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
+                                        <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="{StaticResource AetherTextPrimaryColor}" />
+                                        <SolidColorBrush x:Key="SliderOuterThumbBackground" Color="Transparent" />
+                                        <SolidColorBrush x:Key="SliderThumbBorderBrush" Color="Transparent" />
+                                        <x:Double x:Key="SliderHorizontalThumbWidth">12</x:Double>
+                                        <x:Double x:Key="SliderHorizontalThumbHeight">12</x:Double>
+                                        <x:Double x:Key="SliderInnerThumbWidth">12</x:Double>
+                                        <x:Double x:Key="SliderInnerThumbHeight">12</x:Double>
+                                    </Slider.Resources>
+                                </Slider>
+                            </Grid>
                         </Flyout>
-                    </Button.Flyout>
+                    </FlyoutBase.AttachedFlyout>
                 </Button>
                 <Button
                     x:Name="FullScreenButton"

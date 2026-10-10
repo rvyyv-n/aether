@@ -3,6 +3,7 @@ using Aether.Core.Playback;
 using Aether_App.Controls;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Windows.Graphics;
@@ -22,6 +23,12 @@ public interface IShellWindow
 
     /// <summary>Fades the minimize/maximize/close glyphs with the rest of the chrome (they stay clickable).</summary>
     void SetCaptionButtonsVisible(bool visible);
+
+    /// <summary>
+    /// Raised when the pointer moves over the title strip or the caption buttons. Those are
+    /// non-client regions, so the page gets no pointer events there and could not wake the controls.
+    /// </summary>
+    event EventHandler? TitleBarPointerMoved;
 
     /// <summary>Resizes a restored window around a video of this display size (no-op when maximized or full screen).</summary>
     void FitToVideo(int videoWidth, int videoHeight);
@@ -52,6 +59,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     private readonly TimeSpan _chromeShow;
     private readonly TimeSpan _chromeHide;
     private bool _captionsVisible = true;
+    private Windows.Foundation.Point _lastNonClientPointer = new(double.NaN, double.NaN);
 
     public MainWindow()
     {
@@ -65,10 +73,6 @@ public sealed partial class MainWindow : Window, IShellWindow
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonBackgroundColor = Colors.Transparent;
         titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        titleBar.ButtonHoverBackgroundColor = CaptionHover;
-        titleBar.ButtonPressedBackgroundColor = CaptionPressed;
-        titleBar.ButtonHoverForegroundColor = Colors.White;
-        titleBar.ButtonPressedForegroundColor = Colors.White;
         ApplyCaptionGlyphs(1);
 
         var resources = Application.Current.Resources;
@@ -87,6 +91,10 @@ public sealed partial class MainWindow : Window, IShellWindow
         {
             _aspectLock = null; // the window still works, just without the drag-resize aspect lock
         }
+
+        InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
+        nonClient.PointerEntered += OnNonClientPointerMoved;
+        nonClient.PointerMoved += OnNonClientPointerMoved;
 
         Shell.Host = this;
         Activated += OnActivated;
@@ -108,6 +116,19 @@ public sealed partial class MainWindow : Window, IShellWindow
         {
             AppWindow.SetPresenter(fullScreen ? AppWindowPresenterKind.FullScreen : AppWindowPresenterKind.Overlapped);
         }
+    }
+
+    public event EventHandler? TitleBarPointerMoved;
+
+    private void OnNonClientPointerMoved(InputNonClientPointerSource sender, NonClientPointerEventArgs args)
+    {
+        // Repeats at the same point (as WinUI does for client moves) are not activity.
+        if (args.Point == _lastNonClientPointer)
+        {
+            return;
+        }
+        _lastNonClientPointer = args.Point;
+        TitleBarPointerMoved?.Invoke(this, EventArgs.Empty);
     }
 
     public void SetCaptionButtonsVisible(bool visible)
@@ -138,6 +159,11 @@ public sealed partial class MainWindow : Window, IShellWindow
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonForegroundColor = Scale(CaptionForeground, opacity);
         titleBar.ButtonInactiveForegroundColor = Scale(CaptionInactiveForeground, opacity);
+        // Hover and press fade too, so an invisible button doesn't light up under the pointer.
+        titleBar.ButtonHoverBackgroundColor = Scale(CaptionHover, opacity);
+        titleBar.ButtonPressedBackgroundColor = Scale(CaptionPressed, opacity);
+        titleBar.ButtonHoverForegroundColor = Scale(Colors.White, opacity);
+        titleBar.ButtonPressedForegroundColor = Scale(Colors.White, opacity);
     }
 
     private static Color Scale(Color color, double opacity) =>

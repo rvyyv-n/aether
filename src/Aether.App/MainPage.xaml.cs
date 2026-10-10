@@ -65,6 +65,9 @@ public sealed partial class MainPage : Page
     private Point _lastPointer = new(double.NaN, double.NaN);
     private bool _updatingVolume;
     private double _lastAudibleVolume = TransportState.DefaultVolume;
+    private readonly HoverFlyout _volumeHover = new();
+    private DispatcherQueueTimer? _volumeHoverTimer;
+    private bool _volumeOpeningPinned;
     private bool _updatingSeek;
     private bool _seekDragging;
 
@@ -73,6 +76,11 @@ public sealed partial class MainPage : Page
         InitializeComponent();
         IsTabStop = true; // receives the frame-step and playback keys
         ApplyStaticStrings();
+        // Light dismiss would otherwise swallow the first click on the pill, e.g. Mute under the flyout.
+        VolumeFlyout.OverlayInputPassThroughElement = Osd;
+        VolumeFlyoutContent.AddHandler(PointerPressedEvent, new PointerEventHandler(OnVolumeFlyoutPressed), true);
+        VolumeFlyoutContent.AddHandler(PointerReleasedEvent, new PointerEventHandler(OnVolumeFlyoutReleased), true);
+        VolumeFlyoutContent.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(OnVolumeFlyoutReleased), true);
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
         // The slider handles its own pointer events; listen anyway to know when a drag starts and ends.
@@ -117,11 +125,13 @@ public sealed partial class MainPage : Page
             if (_host is not null)
             {
                 _host.FullScreenChanged -= OnFullScreenChanged;
+                _host.TitleBarPointerMoved -= OnTitleBarPointerMoved;
             }
             _host = value;
             if (_host is not null)
             {
                 _host.FullScreenChanged += OnFullScreenChanged;
+                _host.TitleBarPointerMoved += OnTitleBarPointerMoved;
             }
         }
     }
@@ -152,6 +162,9 @@ public sealed partial class MainPage : Page
             _chromeTimer = DispatcherQueue.CreateTimer();
             _chromeTimer.IsRepeating = false;
             _chromeTimer.Tick += OnChromeTimerTick;
+            _volumeHoverTimer = DispatcherQueue.CreateTimer();
+            _volumeHoverTimer.IsRepeating = false;
+            _volumeHoverTimer.Tick += OnVolumeHoverTimerTick;
         }
         if (_session is null)
         {
@@ -166,6 +179,7 @@ public sealed partial class MainPage : Page
         _isLoaded = false;
         _startupVersion++; // a startup still running disposes its engine when it returns
         _chromeTimer?.Stop();
+        _volumeHoverTimer?.Stop();
         CursorVisibility.Show();
         if (_session is { } session)
         {
@@ -384,28 +398,142 @@ public sealed partial class MainPage : Page
         {
             _lastAudibleVolume = volume;
         }
-        VolumeButton.Content = volume <= 0 ? MuteGlyph : VolumeGlyph;
+        bool muted = TransportState.IsMuted(volume);
+        VolumeButton.Content = muted ? MuteGlyph : VolumeGlyph;
+        ToolTipService.SetToolTip(VolumeButton, AppStrings.Get(muted ? "Transport_Unmute" : "Transport_Mute"));
     }
 
     private void OnMuteAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (_session is not null)
+        {
+            args.Handled = true;
+            ToggleMute();
+        }
+    }
+
+    private void OnVolumeClick(object sender, RoutedEventArgs e) => ToggleMute();
+
+    private void ToggleMute()
     {
         if (_session is not { } session)
         {
             return;
         }
-        args.Handled = true;
         double volume = TransportState.ToggleMute(session.ViewModel.Volume, _lastAudibleVolume);
         TrySend(() => session.SetVolume(volume));
     }
 
+    // ---- Volume flyout: hover opens it, right-click or Shift+F10 pins it ----
+
+    private void OnVolumeButtonPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _volumeHover.PointerOverAnchor(true);
+        ArmVolumeHover();
+    }
+
+    private void OnVolumeButtonPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _volumeHover.PointerOverAnchor(false);
+        ArmVolumeHover();
+    }
+
+    private void OnVolumeFlyoutPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _volumeHover.PointerOverFlyout(true);
+        ArmVolumeHover();
+    }
+
+    private void OnVolumeFlyoutPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _volumeHover.PointerOverFlyout(false);
+        ArmVolumeHover();
+    }
+
+    private void OnVolumeFlyoutPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _volumeHover.Pressed(true);
+        ArmVolumeHover();
+    }
+
+    private void OnVolumeFlyoutReleased(object sender, PointerRoutedEventArgs e)
+    {
+        _volumeHover.Pressed(false);
+        ArmVolumeHover();
+    }
+
+    private void OnVolumeContextRequested(UIElement sender, ContextRequestedEventArgs args)
+    {
+        args.Handled = true;
+        if (_volumeHover.IsOpen)
+        {
+            _volumeHover.Opened(pinned: true);
+            ArmVolumeHover();
+            VolumeSlider.Focus(FocusState.Keyboard);
+        }
+        else
+        {
+            ShowVolumeFlyout(pinned: true);
+        }
+    }
+
+    private void ArmVolumeHover()
+    {
+        if (_volumeHoverTimer is null)
+        {
+            return;
+        }
+        if (_volumeHover.DueIn is { } due)
+        {
+            _volumeHoverTimer.Interval = due;
+            _volumeHoverTimer.Start();
+        }
+        else
+        {
+            _volumeHoverTimer.Stop();
+        }
+    }
+
+    private void OnVolumeHoverTimerTick(DispatcherQueueTimer sender, object args)
+    {
+        switch (_volumeHover.Decide())
+        {
+            case HoverFlyoutAction.Open:
+                ShowVolumeFlyout(pinned: false);
+                break;
+            case HoverFlyoutAction.Close:
+                VolumeFlyout.Hide();
+                break;
+        }
+    }
+
+    private void ShowVolumeFlyout(bool pinned)
+    {
+        _volumeOpeningPinned = pinned;
+        // Transient: a hover-opened flyout must not take focus from the page's playback keys.
+        VolumeFlyout.ShowAt(VolumeButton, new FlyoutShowOptions
+        {
+            Placement = FlyoutPlacementMode.Top,
+            ShowMode = pinned ? FlyoutShowMode.Standard : FlyoutShowMode.Transient,
+        });
+    }
+
     private void OnVolumeFlyoutOpened(object? sender, object e)
     {
+        _volumeHover.Opened(_volumeOpeningPinned);
+        ArmVolumeHover();
+        if (_volumeOpeningPinned)
+        {
+            VolumeSlider.Focus(FocusState.Keyboard);
+        }
         _chrome.SetHold(ChromeHolds.Flyout, true);
         ApplyChrome();
     }
 
     private void OnVolumeFlyoutClosed(object? sender, object e)
     {
+        _volumeHover.Closed();
+        ArmVolumeHover();
         _chrome.SetHold(ChromeHolds.Flyout, false);
         ApplyChrome();
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
@@ -573,6 +701,8 @@ public sealed partial class MainPage : Page
         _lastPointer = position;
         NotifyActivity();
     }
+
+    private void OnTitleBarPointerMoved(object? sender, EventArgs e) => NotifyActivity();
 
     private void OnPagePointerExited(object sender, PointerRoutedEventArgs e)
     {

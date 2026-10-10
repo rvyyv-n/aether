@@ -45,4 +45,7 @@ public static class TransportState
     /// <summary>The volume after Mute (M): silent if audible, otherwise back to <paramref name="lastAudible"/>.</summary>
     public static double ToggleMute(double volume, double lastAudible) =>
         volume > 0 ? 0 : lastAudible > 0 ? lastAudible : DefaultVolume;
+
+    /// <summary>Clicking the volume button toggles mute, so its label names what the click does.</summary>
+    public static bool IsMuted(double volume) => volume <= 0;
 }

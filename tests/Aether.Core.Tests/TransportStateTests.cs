@@ -48,4 +48,12 @@ public class TransportStateTests
     [InlineData(0, 0, TransportState.DefaultVolume)]
     public void ToggleMute_SilencesOrRestores(double volume, double lastAudible, double expected) =>
         Assert.Equal(expected, TransportState.ToggleMute(volume, lastAudible));
+
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(-1, true)]
+    [InlineData(0.5, false)]
+    [InlineData(100, false)]
+    public void IsMuted_OnlyWhenSilent(double volume, bool expected) =>
+        Assert.Equal(expected, TransportState.IsMuted(volume));
 }

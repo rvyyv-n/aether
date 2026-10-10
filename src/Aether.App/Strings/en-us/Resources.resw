@@ -338,6 +338,9 @@
   <data name="Transport_Mute" xml:space="preserve">
     <value>Mute (M)</value>
   </data>
+  <data name="Transport_Unmute" xml:space="preserve">
+    <value>Unmute (M)</value>
+  </data>
   <data name="Transport_Volume" xml:space="preserve">
     <value>Volume</value>
   </data>
