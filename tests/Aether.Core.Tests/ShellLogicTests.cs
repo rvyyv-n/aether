@@ -325,3 +325,28 @@ public unsafe class VideoDimensionDispatchTests
         Assert.Equal(0, PlayerState.Initial.VideoHeight);
     }
 }
+
+public class FailureDetailsTests
+{
+    [Fact]
+    public void Format_ListsTitleSubtitleAndRows_OnePerLine()
+    {
+        string text = FailureDetails.Format(
+            "Engine failed to start",
+            "libmpv-2.dll wasn’t found",
+            [("Searched", @"C:\Program Files\Aether\libmpv-2.dll"), ("Error", "Reinstall Aether to restore it.")]);
+
+        Assert.Equal(
+            "Engine failed to start\r\nlibmpv-2.dll wasn’t found\r\n"
+            + @"Searched: C:\Program Files\Aether\libmpv-2.dll" + "\r\nError: Reinstall Aether to restore it.",
+            text);
+    }
+
+    [Fact]
+    public void Format_SkipsEmptySubtitleAndRows()
+    {
+        string text = FailureDetails.Format("Engine failed to start", " ", [("Searched", null), ("Error", "Access denied")]);
+
+        Assert.Equal("Engine failed to start\r\nError: Access denied", text);
+    }
+}

@@ -83,8 +83,9 @@ public sealed partial class MainPage : Page
         AutomationProperties.SetName(SettingsButton, AppStrings.Get("Settings_Title"));
         SearchedKey.Text = AppStrings.Get("EmptyState_DetailsSearched");
         ErrorKey.Text = AppStrings.Get("EmptyState_DetailsError");
-        RetryButton.Content = AppStrings.Get("Shell_EngineFailedRetry");
-        OpenFolderButton.Content = AppStrings.Get("Shell_EngineFailedOpenFolder");
+        RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
+        CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
+        StatusRenderer.Text = AppStrings.Get("EmptyState_Renderer");
     }
 
     public PlayerSession? Session => _session;
@@ -211,10 +212,31 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private async void OnOpenFolderClick(object sender, RoutedEventArgs e) =>
-        await Windows.System.Launcher.LaunchFolderPathAsync(LibrarySearchDirectory);
+    /// <summary>Copies the failure as shown: title, subtitle and the details rows that are visible.</summary>
+    private void OnCopyDetailsClick(object sender, RoutedEventArgs e)
+    {
+        string text = FailureDetails.Format(
+            HomeTitle.Text,
+            HomeSubtitle.Text,
+            [
+                (SearchedKey.Text, SearchedValue.Visibility == Visibility.Visible ? SearchedValue.Text : null),
+                (ErrorKey.Text, ErrorValue.Text),
+            ]);
+        var package = new DataPackage();
+        package.SetText(text);
+        try
+        {
+            Clipboard.SetContent(package);
+        }
+        catch (Exception)
+        {
+            // Another app holds the clipboard open; the details stay selectable in the tile.
+        }
+    }
 
-    private static string LibrarySearchDirectory => NativeLibraries.SearchDirectory ?? AppContext.BaseDirectory;
+    // The loader also tries mpv-2.dll, but the failure names the file the installer ships.
+    private static string LibraryPath =>
+        Path.Combine(NativeLibraries.SearchDirectory ?? AppContext.BaseDirectory, "libmpv-2.dll");
 
     // ---- Playback ----
 
@@ -627,21 +649,17 @@ public sealed partial class MainPage : Page
     {
         bool failed = _startup is StartupPhase.MissingBinary or StartupPhase.Failed;
         bool busy = false;
-        bool highlightGlyph = false;
-        double glyphOpacity = 1;
 
-        // The status line always describes the engine; the renderer has one name, everywhere.
-        string renderer = AppStrings.Get("EmptyState_Renderer");
+        // The strip reports the engine only; the renderer sits at its right end.
         (Tone Tone, string Label, string? Detail) engine = _startup switch
         {
             StartupPhase.Starting => (Tone.Neutral, AppStrings.Get("Shell_StartingEngine"), AppStrings.Get("Shell_LoadingLibmpv")),
-            StartupPhase.Ready => (Tone.Success, AppStrings.Get("EmptyState_EngineReady"), renderer),
-            _ => (Tone.Warning, AppStrings.Get("Shell_EngineNotRunning"), renderer),
+            StartupPhase.Ready => (Tone.Success, AppStrings.Get("EmptyState_EngineReady"), null),
+            _ => (Tone.Warning, AppStrings.Get("Shell_EngineNotRunning"), null),
         };
 
         if (_dragging)
         {
-            highlightGlyph = _dragSupported;
             if (_dragSupported)
             {
                 SetHome(AppStrings.Get("Shell_DropToPlay"), AppStrings.Get("Shell_DropFormats"), null, engine);
@@ -666,14 +684,13 @@ public sealed partial class MainPage : Page
         }
         else if (failed)
         {
-            glyphOpacity = 0.45;
             bool missing = _startup == StartupPhase.MissingBinary;
             SetHome(
                 AppStrings.Get("Shell_EngineFailedTitle"),
                 AppStrings.Get(missing ? "Shell_EngineFailedMissingFile" : "Shell_EngineFailedUnavailable"),
                 Tone.Warning,
                 engine);
-            SearchedValue.Text = LibrarySearchDirectory;
+            SearchedValue.Text = LibraryPath;
             ErrorValue.Text = missing
                 ? AppStrings.Get("Shell_EngineFailedReinstall")
                 : _startupError ?? AppStrings.Get("Shell_EngineFailedUnknownError");
@@ -681,11 +698,7 @@ public sealed partial class MainPage : Page
         else if (vm?.Status == PlaybackStatus.Loading)
         {
             busy = true;
-            SetHome(
-                AppStrings.Get("Shell_OpeningTitle"),
-                Path.GetFileName(_currentPath) ?? string.Empty,
-                null,
-                (Tone.Neutral, AppStrings.Get("Shell_Loading"), MediaFormats.Label(_currentPath)));
+            SetHome(AppStrings.Get("Shell_OpeningTitle"), Path.GetFileName(_currentPath) ?? string.Empty, null, engine);
         }
         else
         {
@@ -693,21 +706,16 @@ public sealed partial class MainPage : Page
         }
 
         StartupProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-        DetailsPanel.Visibility = failed && !_dragging ? Visibility.Visible : Visibility.Collapsed;
+        Visibility failure = failed && !_dragging ? Visibility.Visible : Visibility.Collapsed;
+        DetailsPanel.Visibility = failure;
+        FailureActions.Visibility = failure;
         Visibility searched = _startup == StartupPhase.MissingBinary ? Visibility.Visible : Visibility.Collapsed;
         SearchedKey.Visibility = searched;
         SearchedValue.Visibility = searched;
-
-        var glyphBrush = new SolidColorBrush(highlightGlyph ? Microsoft.UI.Colors.White : Windows.UI.Color.FromArgb(0x59, 0xFF, 0xFF, 0xFF));
-        GlyphFrame.BorderBrush = glyphBrush;
-        GlyphSprocketLeft.Stroke = glyphBrush;
-        GlyphSprocketRight.Stroke = glyphBrush;
-        GlyphPlay.Foreground = highlightGlyph ? glyphBrush : new SolidColorBrush(Windows.UI.Color.FromArgb(0x8C, 0xFF, 0xFF, 0xFF));
-        HomeGlyph.Opacity = glyphOpacity;
     }
 
     /// <param name="titleTone">Dot beside the title (failures), or null for none.</param>
-    /// <param name="status">Dot, label and muted detail of the status line. Colour stays in the dots; the text is white.</param>
+    /// <param name="status">Dot, label and muted detail of the status strip. Colour stays in the dots; the text is white.</param>
     private void SetHome(string title, string subtitle, Tone? titleTone, (Tone Tone, string Label, string? Detail) status)
     {
         HomeTitle.Text = title;
@@ -719,7 +727,8 @@ public sealed partial class MainPage : Page
         }
         StatusDot.Fill = ToneBrush(status.Tone);
         StatusLabel.Text = status.Label;
-        StatusDetail.Text = status.Detail is null ? string.Empty : "· " + status.Detail;
+        StatusDetail.Text = status.Detail ?? string.Empty;
+        StatusDetail.Visibility = status.Detail is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private static Brush ToneBrush(Tone tone) => (Brush)Application.Current.Resources[tone switch

@@ -175,9 +175,6 @@
   <data name="Shell_EngineFailedUnknownError" xml:space="preserve">
     <value>Unknown error</value>
   </data>
-  <data name="Shell_EngineFailedOpenFolder" xml:space="preserve">
-    <value>Open folder</value>
-  </data>
   <data name="Shell_EngineNotReadyTitle" xml:space="preserve">
     <value>Engine not ready</value>
     <comment>Title while a playable file is dragged over and the engine is not running</comment>
