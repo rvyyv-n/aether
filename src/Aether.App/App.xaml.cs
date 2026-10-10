@@ -1,4 +1,5 @@
-﻿using Windows.ApplicationModel;
+﻿using Aether.Core.Playback.Settings;
+using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -22,6 +23,9 @@ namespace Aether_App;
 public partial class App : Application
 {
     private Window? _window;
+
+    /// <summary>The single settings instance. Loaded on the thread pool at launch; it holds defaults until then.</summary>
+    public static SettingsStore Settings { get; } = new(new FileSettingsStorage(FileSettingsStorage.DefaultPath()));
     
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
@@ -38,6 +42,7 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
+        _ = Task.Run(Settings.Load);
         _window = new MainWindow();
         _window.Activate();
     }

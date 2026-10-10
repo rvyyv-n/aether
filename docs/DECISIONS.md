@@ -77,3 +77,13 @@
   - Startup: `EngineStartup` probes for libmpv and creates the `MpvContext` on the thread pool; the UI thread then composes `PlayerSession` around it (event loop, dispatch, key input, surface). Missing binaries and initialization failures come back as a status, never as an exception, and the page shows them with Retry and Open folder. A startup abandoned by unload or retry disposes the engine it produced.
   - Commands from the shell (`loadfile`, `cycle pause`, `set volume`) go through `mpv_command_async`, so the UI never waits on the core.
 - **Status:** Accepted. Not yet verified on screen: the packaged app needs Developer Mode to launch from the CLI, and an unpackaged build lacks the merged framework resources.
+
+## ADR-0011: Settings Store
+- **Context:** The Settings pages (Pass 6) need a model with defaults, per-setting reset and "applies on restart" flags, usable without WinUI.
+- **Decision:**
+  - `SettingsStore` and `AetherSettings` (an immutable record) live in `Aether.Core.Playback/Settings`. A table of `SettingDefinition`s (key, restart flag, allowed values) drives `Set`, `Reset`, load validation and the JSON file, so the UI binds by key and nothing is written twice.
+  - The JSON is read with `JsonDocument` and written with `Utf8JsonWriter`, per key. That is reflection-free (Native AOT) and lets one invalid or unknown value fall back to its own default instead of failing the whole file, which a source-generated whole-object deserialiser cannot do.
+  - Storage is behind `ISettingsStorage`. `FileSettingsStorage` writes `settings.json.tmp` then replaces the file, at `%LOCALAPPDATA%\Aether\settings.json` (works packaged and unpackaged). It lives in Core.Playback so the atomic write is tested; `App.Settings` is the one shared instance, loaded on the thread pool at launch.
+  - Restart-flagged settings: hardware decoding, passthrough, custom mpv options. `PendingRestart` compares them with the values at the last `Load`.
+  - `MpvOptionsValidator` only checks the `key=value` shape; "unknown option" needs mpv's option list and is left to the Advanced page (6.5).
+- **Status:** Accepted.
