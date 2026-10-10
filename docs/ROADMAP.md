@@ -86,6 +86,7 @@ Every task row has a **Model** column. Autonomous runs should follow it without 
 | 4.D5 | Open URL dialog with invalid and 405 states, progress, returning-user and missing-recent states (screen 2) | M | Opus |
 | 4.D6 | Spike: Acrylic over the swap chain; confirm `MpvVideoSurface` is a `SwapChainPanel`. Result in `docs/DECISIONS.md` | S | Opus |
 | 4.D7 | Tests for the settings store, token dictionary keys and strings coverage; CI build | S | Gemini |
+
 **Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, graceful startup and error handling, and zero airspace clipping. *(4.1–4.6 built on `claude/pass-4`: 270 tests passing, 0 warnings. 4.7 built: fast taps queue in one slot. 4.8 built: window fits the video and keeps its aspect ratio. Shell states and window behaviour checked on screen by the user. Open: 4.C2 (replay), 4.C3 (open button), 4.C4 (labels and casing), 4.C5 (reference screenshot review).)*
 
 ---
