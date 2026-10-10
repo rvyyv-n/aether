@@ -72,19 +72,29 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock
-                x:Name="HomeTitle"
+            <!--  Status title: an amber dot on failures, top-aligned so it centres on the 28 px first line.  -->
+            <StackPanel
                 Margin="0,28,0,0"
                 HorizontalAlignment="Center"
-                Style="{StaticResource AetherTitleTextStyle}"
-                Text="Starting engine" />
+                Orientation="Horizontal"
+                Spacing="10">
+                <Ellipse
+                    x:Name="TitleDot"
+                    Margin="0,11,0,0"
+                    Style="{StaticResource AetherStatusDotStyle}"
+                    Visibility="Collapsed" />
+                <TextBlock
+                    x:Name="HomeTitle"
+                    Style="{StaticResource AetherTitleTextStyle}"
+                    Text="No video loaded" />
+            </StackPanel>
             <TextBlock
                 x:Name="HomeSubtitle"
                 Grid.Row="1"
                 Margin="0,4,0,0"
                 HorizontalAlignment="Center"
                 Style="{StaticResource AetherSecondaryTextStyle}"
-                Text="Loading libmpv" />
+                Text="Drop a file or press Ctrl+O" />
 
             <!--  Film frame glyph, in place of the references' product shot.  -->
             <Grid
@@ -126,7 +136,7 @@
                     Glyph="&#xF5B0;" />
             </Grid>
 
-            <!--  Status line: dot, coloured label, muted detail ("● Engine ready · libmpv · D3D11").  -->
+            <!--  Status line: dot, label, muted detail ("● Engine ready · ANGLE · D3D11"). Colour is in the dot only.  -->
             <StackPanel
                 Grid.Row="3"
                 Margin="0,0,0,14"
@@ -151,57 +161,59 @@
                 Foreground="{StaticResource AetherTextPrimaryBrush}"
                 IsIndeterminate="True" />
 
-            <Border Grid.Row="4" Style="{StaticResource AetherPanelStyle}">
-                <StackPanel Spacing="8">
-                    <TextBlock x:Name="PanelCaption" Style="{StaticResource AetherCaptionTextStyle}" Text="SUPPORTED" />
-
-                    <!--  Ready / drag: formats and renderer.  -->
-                    <StackPanel
-                        x:Name="SupportedRow"
-                        Orientation="Horizontal"
-                        Spacing="28">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <TextBlock Style="{StaticResource AetherSecondaryTextStyle}" Text="Formats" />
-                            <TextBlock
-                                x:Name="FormatsText"
-                                FontWeight="SemiBold"
-                                Style="{StaticResource AetherMonoTextStyle}" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <TextBlock Style="{StaticResource AetherSecondaryTextStyle}" Text="Renderer" />
-                            <TextBlock
-                                FontWeight="SemiBold"
-                                Style="{StaticResource AetherMonoTextStyle}"
-                                Text="ANGLE · D3D11" />
-                        </StackPanel>
-                    </StackPanel>
-
-                    <!--  Failure: what failed and where it looked, with Retry / Open folder.  -->
-                    <StackPanel
-                        x:Name="FailureRow"
-                        Spacing="10"
-                        Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <TextBlock
-                                x:Name="FailureKey"
-                                Style="{StaticResource AetherSecondaryTextStyle}"
-                                Text="Searched" />
-                            <TextBlock
-                                x:Name="FailureValue"
-                                FontWeight="SemiBold"
-                                IsTextSelectionEnabled="True"
-                                Style="{StaticResource AetherMonoTextStyle}" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Button
-                                Click="OnRetryClick"
-                                Content="Retry"
-                                Style="{StaticResource AetherSelectedPillButtonStyle}" />
-                            <Button
-                                Click="OnOpenFolderClick"
-                                Content="Open folder"
-                                Style="{StaticResource AetherPillButtonStyle}" />
-                        </StackPanel>
+            <!--
+                Details tile, failures only: one left edge per column (72 and *, gap 16), labels in
+                TextSecondary and values in TextPrimary, both plain Segoe. Retry / Open folder below.
+            -->
+            <Border
+                x:Name="DetailsPanel"
+                Grid.Row="4"
+                Style="{StaticResource AetherPanelStyle}"
+                Visibility="Collapsed">
+                <StackPanel Spacing="12">
+                    <Grid ColumnSpacing="16" RowSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="72" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            x:Name="SearchedKey"
+                            Style="{StaticResource AetherSecondaryTextStyle}"
+                            Text="Searched" />
+                        <TextBlock
+                            x:Name="SearchedValue"
+                            Grid.Column="1"
+                            IsTextSelectionEnabled="True"
+                            Style="{StaticResource AetherBodyTextStyle}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="ErrorKey"
+                            Grid.Row="1"
+                            Style="{StaticResource AetherSecondaryTextStyle}"
+                            Text="Error" />
+                        <TextBlock
+                            x:Name="ErrorValue"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            IsTextSelectionEnabled="True"
+                            Style="{StaticResource AetherBodyTextStyle}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button
+                            x:Name="RetryButton"
+                            Click="OnRetryClick"
+                            Content="Retry"
+                            Style="{StaticResource AetherSelectedPillButtonStyle}" />
+                        <Button
+                            x:Name="OpenFolderButton"
+                            Click="OnOpenFolderClick"
+                            Content="Open folder"
+                            Style="{StaticResource AetherPillButtonStyle}" />
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -233,24 +245,25 @@
                 </Rectangle.Fill>
             </Rectangle>
             <Grid x:Name="TitleBarDragArea" Background="Transparent">
+                <!--  Name and badge are both 12 px, so they share a baseline; the badge trims at 320 (file names).  -->
                 <StackPanel
                     Margin="12,0,0,0"
                     VerticalAlignment="Center"
                     Orientation="Horizontal"
                     Spacing="8">
                     <TextBlock
+                        x:Name="TitleAppName"
                         VerticalAlignment="Center"
-                        FontWeight="SemiBold"
-                        Foreground="#D9FFFFFF"
-                        Style="{StaticResource AetherBodyTextStyle}"
+                        Style="{StaticResource AetherCaptionStrongTextStyle}"
                         Text="Aether" />
-                    <Border VerticalAlignment="Center" Style="{StaticResource AetherBadgeStyle}">
+                    <Border
+                        MaxWidth="320"
+                        Padding="6,2"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherBadgeStyle}">
                         <TextBlock
                             x:Name="TitleBadgeText"
-                            MaxWidth="360"
-                            FontSize="10"
-                            FontWeight="SemiBold"
-                            Style="{StaticResource AetherBodyTextStyle}"
+                            Style="{StaticResource AetherCaptionTextStyle}"
                             Text="Alpha" />
                     </Border>
                 </StackPanel>
@@ -293,22 +306,16 @@
                     VerticalAlignment="Center"
                     Orientation="Horizontal"
                     Spacing="6">
+                    <!--  Three blocks with equal 6 px gaps, so the slash is centred. TextPrimary only on the pill.  -->
                     <TextBlock
                         x:Name="PositionText"
-                        FontSize="{StaticResource AetherTimecodeFontSize}"
-                        Style="{StaticResource AetherMonoTextStyle}"
-                        Text="00:00:00.000" />
-                    <TextBlock
-                        FontSize="{StaticResource AetherTimecodeFontSize}"
-                        Foreground="{StaticResource AetherTextTertiaryBrush}"
-                        Style="{StaticResource AetherMonoTextStyle}"
-                        Text="/" />
+                        Style="{StaticResource AetherTimecodeTextStyle}"
+                        Text="00:00" />
+                    <TextBlock Style="{StaticResource AetherTimecodeTextStyle}" Text="/" />
                     <TextBlock
                         x:Name="DurationText"
-                        FontSize="{StaticResource AetherTimecodeFontSize}"
-                        Foreground="{StaticResource AetherTextTertiaryBrush}"
-                        Style="{StaticResource AetherMonoTextStyle}"
-                        Text="00:00:00.000" />
+                        Style="{StaticResource AetherTimecodeTextStyle}"
+                        Text="00:00" />
                 </StackPanel>
 
                 <StackPanel

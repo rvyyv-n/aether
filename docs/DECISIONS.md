@@ -87,3 +87,12 @@
   - Restart-flagged settings: hardware decoding, passthrough, custom mpv options. `PendingRestart` compares them with the values at the last `Load`.
   - `MpvOptionsValidator` only checks the `key=value` shape; "unknown option" needs mpv's option list and is left to the Advanced page (6.5).
 - **Status:** Accepted.
+
+## ADR-0012: Label Casing and Shell Strings
+- **Context:** The shell mixed all-caps captions (`SUPPORTED`, `DETAILS`), "press Ctrl O", coloured status text and two names for the renderer. The final design handoff (spec sheet, screen 4) fixes the wording.
+- **Decision:**
+  - Sentence case for every label, button, title, tooltip and status; no all-caps, no Title Case. Format names (MP4, WEBM), "URL", "ANGLE · D3D11" and file names keep their own spelling.
+  - Shortcuts are written `Ctrl+O`; tooltips read "Label (Key)". The renderer is always "ANGLE · D3D11". Colour lives in status dots only; status text stays white.
+  - Cascadia Mono only for timecodes. The controls' clock is `mm:ss`, with hours (`h:mm:ss`) only for clips of an hour or more.
+  - Shell text comes from `Strings/en-us/Resources.resw` through `AppStrings` (`ResourceLoader`). Keys stay `Area_Name`, so `x:Uid` (which needs `Name.Text` keys) is not used; a test checks every key the app reads exists.
+- **Status:** Accepted.

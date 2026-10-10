@@ -118,6 +118,35 @@ public class ResourcesStringsTests
     }
 
     [Fact]
+    public void Every_Key_The_App_Reads_Exists_In_Resw()
+    {
+        var reswKeys = GetDataElements(LoadResourcesResw())
+            .Select(d => (string)d.Attribute("name")!)
+            .ToHashSet(StringComparer.Ordinal);
+
+        string appDir = RepoPath.Get("src", "Aether.App");
+        var lookup = new Regex(@"AppStrings\.(?:Get|Format)\(\s*(?:[^""()]*\?\s*)?""(?<a>[A-Za-z0-9_]+)""(?:\s*:\s*""(?<b>[A-Za-z0-9_]+)"")?", RegexOptions.Compiled);
+        var used = new HashSet<string>(StringComparer.Ordinal);
+        foreach (string file in Directory.GetFiles(appDir, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
+                        !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")))
+        {
+            foreach (Match match in lookup.Matches(File.ReadAllText(file)))
+            {
+                used.Add(match.Groups["a"].Value);
+                if (match.Groups["b"].Success)
+                {
+                    used.Add(match.Groups["b"].Value);
+                }
+            }
+        }
+
+        Assert.NotEmpty(used);
+        var missing = used.Where(k => !reswKeys.Contains(k)).ToList();
+        Assert.Empty(missing);
+    }
+
+    [Fact]
     public void Every_Xaml_Uid_Has_Matching_Resw_Key_Prefix()
     {
         var doc = LoadResourcesResw();

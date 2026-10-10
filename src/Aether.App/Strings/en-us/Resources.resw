@@ -86,6 +86,10 @@
   <data name="EmptyState_Subtitle" xml:space="preserve">
     <value>Drop a file, paste a link or press Ctrl+O</value>
   </data>
+  <data name="EmptyState_SubtitleFilesOnly" xml:space="preserve">
+    <value>Drop a file or press Ctrl+O</value>
+    <comment>Shown until links play (streaming); EmptyState_Subtitle replaces it then</comment>
+  </data>
   <data name="EmptyState_OpenFile" xml:space="preserve">
     <value>Open file</value>
   </data>
@@ -161,7 +165,32 @@
     <value>Unsupported format</value>
   </data>
   <data name="Shell_UnsupportedFormatMessage" xml:space="preserve">
-    <value>notes.pdf isn’t a video. MP4, MKV, MOV and WEBM play.</value>
+    <value>{0} isn’t a video. MP4, MKV, MOV and WEBM play.</value>
+    <comment>{0} is the dropped file name, e.g. notes.pdf</comment>
+  </data>
+  <data name="Shell_EngineFailedUnavailable" xml:space="preserve">
+    <value>Playback is unavailable until the engine loads</value>
+    <comment>Subtitle when the engine fails for a reason other than a missing libmpv</comment>
+  </data>
+  <data name="Shell_EngineFailedUnknownError" xml:space="preserve">
+    <value>Unknown error</value>
+  </data>
+  <data name="Shell_EngineFailedOpenFolder" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="Shell_EngineNotReadyTitle" xml:space="preserve">
+    <value>Engine not ready</value>
+    <comment>Title while a playable file is dragged over and the engine is not running</comment>
+  </data>
+  <data name="Shell_OpeningTitle" xml:space="preserve">
+    <value>Opening</value>
+  </data>
+  <data name="Shell_Loading" xml:space="preserve">
+    <value>Loading</value>
+  </data>
+  <data name="Shell_DropCaption" xml:space="preserve">
+    <value>Play</value>
+    <comment>Windows drag caption beside the pointer</comment>
   </data>
 
   <!-- Open URL dialog (Screen 2.5) -->
@@ -287,6 +316,9 @@
   </data>
   <data name="Transport_FullScreen" xml:space="preserve">
     <value>Full screen (F)</value>
+  </data>
+  <data name="Transport_ExitFullScreen" xml:space="preserve">
+    <value>Exit full screen (Esc)</value>
   </data>
   <data name="Transport_Back5s" xml:space="preserve">
     <value>Back 5 s (←)</value>

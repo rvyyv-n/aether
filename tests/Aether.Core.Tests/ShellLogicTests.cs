@@ -143,6 +143,24 @@ public class TimecodeTests
         Assert.Equal("00:00:00.083", Timecode.Format(5 / 60.0));
         Assert.Equal("00:00:01.001", Timecode.Format(1.001));
     }
+
+    [Theory]
+    [InlineData(0, 0, "00:00")]
+    [InlineData(42.9, 195, "00:42")]
+    [InlineData(195, 195, "03:15")]
+    [InlineData(59.9999999, 60, "01:00")]
+    [InlineData(3599, 3599, "59:59")]
+    [InlineData(42, 3600, "0:00:42")]
+    [InlineData(3723, 7200, "1:02:03")]
+    [InlineData(3600, 0, "1:00:00")]
+    [InlineData(363_600.5, 363_600.5, "101:00:00")]
+    [InlineData(-1, 195, "00:00")]
+    [InlineData(double.NaN, double.NaN, "00:00")]
+    [InlineData(double.PositiveInfinity, 195, "00:00")]
+    public void FormatClock_ShowsHoursOnlyFromAnHour(double seconds, double duration, string expected)
+    {
+        Assert.Equal(expected, Timecode.FormatClock(seconds, duration));
+    }
 }
 
 public class MediaFormatsTests

@@ -67,11 +67,21 @@ public sealed partial class MainPage : Page
     {
         InitializeComponent();
         IsTabStop = true; // receives the frame-step and playback keys
-        FormatsText.Text = string.Join(' ', MediaFormats.Extensions.Select(MediaFormats.Label));
+        ApplyStaticStrings();
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
+    }
+
+    /// <summary>Labels that never change, from the strings file (the XAML text is only a design-time stand-in).</summary>
+    private void ApplyStaticStrings()
+    {
+        TitleAppName.Text = AppStrings.Get("App_Name");
+        SearchedKey.Text = AppStrings.Get("EmptyState_DetailsSearched");
+        ErrorKey.Text = AppStrings.Get("EmptyState_DetailsError");
+        RetryButton.Content = AppStrings.Get("Shell_EngineFailedRetry");
+        OpenFolderButton.Content = AppStrings.Get("Shell_EngineFailedOpenFolder");
     }
 
     public PlayerSession? Session => _session;
@@ -246,10 +256,12 @@ public sealed partial class MainPage : Page
         switch (e.PropertyName)
         {
             case nameof(PlayerViewModel.Position):
-                PositionText.Text = Timecode.Format(vm.Position);
+                PositionText.Text = Timecode.FormatClock(vm.Position, vm.Duration);
                 break;
             case nameof(PlayerViewModel.Duration):
-                DurationText.Text = Timecode.Format(vm.Duration);
+                // Both change shape together when the clip is an hour or more.
+                PositionText.Text = Timecode.FormatClock(vm.Position, vm.Duration);
+                DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
                 break;
             case nameof(PlayerViewModel.Volume):
                 SyncVolume();
@@ -400,7 +412,7 @@ public sealed partial class MainPage : Page
     private void OnDragOver(object sender, DragEventArgs e)
     {
         e.AcceptedOperation = _dragSupported ? DataPackageOperation.Copy : DataPackageOperation.None;
-        e.DragUIOverride.Caption = "Play";
+        e.DragUIOverride.Caption = AppStrings.Get("Shell_DropCaption");
         e.DragUIOverride.IsCaptionVisible = _dragSupported;
         e.DragUIOverride.IsGlyphVisible = false;
     }
@@ -585,14 +597,14 @@ public sealed partial class MainPage : Page
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         TitleBarScrim.Opacity = hasVideo ? 1 : 0;
         TitleBadgeText.Text = hasVideo || vm?.Status == PlaybackStatus.Loading
-            ? Path.GetFileName(_currentPath) ?? "Alpha"
-            : "Alpha";
+            ? Path.GetFileName(_currentPath) ?? AppStrings.Get("App_Badge")
+            : AppStrings.Get("App_Badge");
 
         bool showPlay = vm is null || vm.IsPaused || vm.Status == PlaybackStatus.Ended;
         PlayPauseButton.Content = showPlay ? PlayGlyph : PauseGlyph;
-        ToolTipService.SetToolTip(PlayPauseButton, showPlay ? "Play (Space)" : "Pause (Space)");
+        ToolTipService.SetToolTip(PlayPauseButton, AppStrings.Get(showPlay ? "Transport_Play" : "Transport_Pause"));
         FullScreenButton.Content = fullScreen ? ExitFullScreenGlyph : FullScreenGlyph;
-        ToolTipService.SetToolTip(FullScreenButton, fullScreen ? "Exit full screen (Esc)" : "Full screen (F)");
+        ToolTipService.SetToolTip(FullScreenButton, AppStrings.Get(fullScreen ? "Transport_ExitFullScreen" : "Transport_FullScreen"));
 
         RenderHome(vm);
 
@@ -613,61 +625,74 @@ public sealed partial class MainPage : Page
         bool busy = false;
         bool highlightGlyph = false;
         double glyphOpacity = 1;
-        bool monoSubtitle = false;
+
+        // The status line always describes the engine; the renderer has one name, everywhere.
+        string renderer = AppStrings.Get("EmptyState_Renderer");
+        (Tone Tone, string Label, string? Detail) engine = _startup switch
+        {
+            StartupPhase.Starting => (Tone.Neutral, AppStrings.Get("Shell_StartingEngine"), AppStrings.Get("Shell_LoadingLibmpv")),
+            StartupPhase.Ready => (Tone.Success, AppStrings.Get("EmptyState_EngineReady"), renderer),
+            _ => (Tone.Warning, AppStrings.Get("Shell_EngineNotRunning"), renderer),
+        };
 
         if (_dragging)
         {
-            string name = Path.GetFileName(_dragPath) ?? string.Empty;
-            monoSubtitle = true;
             highlightGlyph = _dragSupported;
             if (_dragSupported)
             {
-                SetHome("Drop to play", name, Tone.Success, "Supported", MediaFormats.Label(_dragPath));
+                SetHome(AppStrings.Get("Shell_DropToPlay"), AppStrings.Get("Shell_DropFormats"), null, engine);
             }
             else if (_session is null && MediaFormats.IsSupported(_dragPath))
             {
-                SetHome("Engine not ready", name, Tone.Warning, "Can't play yet", null);
+                SetHome(AppStrings.Get("Shell_EngineNotReadyTitle"), Path.GetFileName(_dragPath) ?? string.Empty, Tone.Warning, engine);
             }
             else
             {
-                string extension = Path.GetExtension(_dragPath) ?? string.Empty;
-                SetHome("Unsupported format", name, Tone.Warning, "Unsupported", extension.Length > 0 ? extension : null);
+                SetHome(
+                    AppStrings.Get("Shell_UnsupportedFormatTitle"),
+                    AppStrings.Format("Shell_UnsupportedFormatMessage", Path.GetFileName(_dragPath) ?? string.Empty),
+                    Tone.Warning,
+                    engine);
             }
         }
         else if (_startup == StartupPhase.Starting)
         {
             busy = true;
-            SetHome("Starting engine", "Loading libmpv", Tone.Neutral, "Starting", null);
+            SetHome(AppStrings.Get("EmptyState_Title"), AppStrings.Get("EmptyState_SubtitleFilesOnly"), null, engine);
         }
         else if (failed)
         {
             glyphOpacity = 0.45;
             bool missing = _startup == StartupPhase.MissingBinary;
             SetHome(
-                "Engine failed to start",
-                "Playback is unavailable until the engine loads",
+                AppStrings.Get("Shell_EngineFailedTitle"),
+                AppStrings.Get(missing ? "Shell_EngineFailedMissingFile" : "Shell_EngineFailedUnavailable"),
                 Tone.Warning,
-                missing ? "Missing binary" : "Initialization failed",
-                missing ? "libmpv-2.dll" : null);
-            FailureKey.Text = missing ? "Searched" : "Error";
-            FailureValue.Text = missing ? LibrarySearchDirectory : _startupError ?? "Unknown error";
+                engine);
+            SearchedValue.Text = LibrarySearchDirectory;
+            ErrorValue.Text = missing
+                ? AppStrings.Get("Shell_EngineFailedReinstall")
+                : _startupError ?? AppStrings.Get("Shell_EngineFailedUnknownError");
         }
         else if (vm?.Status == PlaybackStatus.Loading)
         {
             busy = true;
-            monoSubtitle = true;
-            SetHome("Opening", Path.GetFileName(_currentPath) ?? string.Empty, Tone.Neutral, "Loading", MediaFormats.Label(_currentPath));
+            SetHome(
+                AppStrings.Get("Shell_OpeningTitle"),
+                Path.GetFileName(_currentPath) ?? string.Empty,
+                null,
+                (Tone.Neutral, AppStrings.Get("Shell_Loading"), MediaFormats.Label(_currentPath)));
         }
         else
         {
-            SetHome("No video loaded", "Drop a file or press Ctrl O", Tone.Success, "Engine ready", "libmpv · D3D11");
+            SetHome(AppStrings.Get("EmptyState_Title"), AppStrings.Get("EmptyState_SubtitleFilesOnly"), null, engine);
         }
 
-        HomeSubtitle.FontFamily = (FontFamily)Application.Current.Resources[monoSubtitle ? "AetherMonoFont" : "AetherUiFont"];
         StartupProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-        PanelCaption.Text = failed && !_dragging ? "DETAILS" : "SUPPORTED";
-        SupportedRow.Visibility = failed && !_dragging ? Visibility.Collapsed : Visibility.Visible;
-        FailureRow.Visibility = failed && !_dragging ? Visibility.Visible : Visibility.Collapsed;
+        DetailsPanel.Visibility = failed && !_dragging ? Visibility.Visible : Visibility.Collapsed;
+        Visibility searched = _startup == StartupPhase.MissingBinary ? Visibility.Visible : Visibility.Collapsed;
+        SearchedKey.Visibility = searched;
+        SearchedValue.Visibility = searched;
 
         var glyphBrush = new SolidColorBrush(highlightGlyph ? Microsoft.UI.Colors.White : Windows.UI.Color.FromArgb(0x59, 0xFF, 0xFF, 0xFF));
         GlyphFrame.BorderBrush = glyphBrush;
@@ -677,20 +702,26 @@ public sealed partial class MainPage : Page
         HomeGlyph.Opacity = glyphOpacity;
     }
 
-    private void SetHome(string title, string subtitle, Tone tone, string statusLabel, string? statusDetail)
+    /// <param name="titleTone">Dot beside the title (failures), or null for none.</param>
+    /// <param name="status">Dot, label and muted detail of the status line. Colour stays in the dots; the text is white.</param>
+    private void SetHome(string title, string subtitle, Tone? titleTone, (Tone Tone, string Label, string? Detail) status)
     {
         HomeTitle.Text = title;
         HomeSubtitle.Text = subtitle;
-        var resources = Application.Current.Resources;
-        var toneBrush = (Brush)resources[tone switch
+        TitleDot.Visibility = titleTone is null ? Visibility.Collapsed : Visibility.Visible;
+        if (titleTone is { } tone)
         {
-            Tone.Success => "AetherSuccessBrush",
-            Tone.Warning => "AetherWarningBrush",
-            _ => "AetherNeutralDotBrush",
-        }];
-        StatusDot.Fill = toneBrush;
-        StatusLabel.Foreground = tone == Tone.Neutral ? (Brush)resources["AetherTextPrimaryBrush"] : toneBrush;
-        StatusLabel.Text = statusLabel;
-        StatusDetail.Text = statusDetail is null ? string.Empty : "· " + statusDetail;
+            TitleDot.Fill = ToneBrush(tone);
+        }
+        StatusDot.Fill = ToneBrush(status.Tone);
+        StatusLabel.Text = status.Label;
+        StatusDetail.Text = status.Detail is null ? string.Empty : "· " + status.Detail;
     }
+
+    private static Brush ToneBrush(Tone tone) => (Brush)Application.Current.Resources[tone switch
+    {
+        Tone.Success => "AetherSuccessBrush",
+        Tone.Warning => "AetherWarningBrush",
+        _ => "AetherNeutralDotBrush",
+    }];
 }
