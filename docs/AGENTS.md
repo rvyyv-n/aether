@@ -21,7 +21,7 @@ Running the app: `Aether.App` is a packaged (MSIX) app. `dotnet run --project sr
 
 ## Roles
 - **Opus**: `Aether.Core.Interop`. Unsafe structs, P/Invoke signatures, DirectX COM wrappers (`ISwapChainPanelNative`), memory lifetimes (verify no unmanaged leaks), MPV event-loop thread safety, and architecture decisions. Use it for 1-3 turns per task, not for file reading or test-fix loops.
-- **Opus (design)**: all design work: custom chrome, Mica, `DesignTokens`, auto-hiding OSD, drag-and-drop, startup/error states, `OverlayHud`, `PrecisionSeekBar`, `ClipDrawer`, the mobile player shell and the QR flyout (roadmap tasks 4.1-4.6, 5.1-5.3, 6.2, 6.3). Before building any of them it asks the user design questions and requests reference screenshots, then confirms the direction before writing UI code.
+- **Opus (design)**: all design work: custom chrome, Mica, `DesignTokens`, auto-hiding OSD, drag-and-drop, startup/error states, `OverlayHud`, `PrecisionSeekBar`, `ClipDrawer`, the mobile player shell and the QR flyout (roadmap tasks 4.1-4.6, 4.8, 4.9, 5.1-5.4, 6.1, 6.2, 7.1-7.3, 8.1, 9.2, 9.3). Before building any of them it asks the user design questions and requests reference screenshots, then confirms the direction before writing UI code.
 - **Sonnet**: non-design wiring in `Aether.App`, `Aether.Core.Playback`, `Aether.PvP.Review`, `Aether.Server.LanHost`. `MpvVideoSurface`, throttled UI dispatch, `FrameStepper`, `PlayerViewModel`, keyboard accelerators, FFmpeg command builder and export, Kestrel host. Max 8 turns per thread.
 - **Gemini**: scouting and header ingestion (`mpv.h`, `render.h`), test suites and harnesses, build-error loops, CI, multi-file restructuring. Gemini doesn't auto-delegate; it names a fork candidate in its build summary.
 
