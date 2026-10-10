@@ -83,6 +83,9 @@ public sealed partial class MainPage : Page
         AutomationProperties.SetName(SettingsButton, AppStrings.Get("Settings_Title"));
         SearchedKey.Text = AppStrings.Get("EmptyState_DetailsSearched");
         ErrorKey.Text = AppStrings.Get("EmptyState_DetailsError");
+        OpenFileLabel.Text = AppStrings.Get("EmptyState_OpenFile");
+        ToolTipService.SetToolTip(OpenButton, AppStrings.Get("Transport_OpenFile"));
+        AutomationProperties.SetName(OpenButton, AppStrings.Get("Menu_OpenFile"));
         RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         StatusRenderer.Text = AppStrings.Get("EmptyState_Renderer");
@@ -343,6 +346,14 @@ public sealed partial class MainPage : Page
     private async void OnOpenAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
+        await PickAndOpenAsync();
+    }
+
+    private async void OnOpenFileClick(object sender, RoutedEventArgs e) => await PickAndOpenAsync();
+
+    /// <summary>The one file picker, shared by Ctrl+O and both Open buttons.</summary>
+    private async Task PickAndOpenAsync()
+    {
         if (_session is null || _host is not Window window)
         {
             return;
@@ -706,6 +717,8 @@ public sealed partial class MainPage : Page
         }
 
         StartupProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        OpenActions.Visibility = failed || _dragging ? Visibility.Collapsed : Visibility.Visible;
+        OpenFileButton.IsEnabled = _session is not null;
         Visibility failure = failed && !_dragging ? Visibility.Visible : Visibility.Collapsed;
         DetailsPanel.Visibility = failure;
         FailureActions.Visibility = failure;

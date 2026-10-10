@@ -161,6 +161,26 @@
 
                 <!--  Pills: 32 tall, at least 144 wide, gap 8; Emphasis on the left, Outline on the right.  -->
                 <StackPanel
+                    x:Name="OpenActions"
+                    Margin="0,24,0,0"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <Button
+                        x:Name="OpenFileButton"
+                        MinWidth="144"
+                        Click="OnOpenFileClick"
+                        Style="{StaticResource AetherEmphasisPillButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="{StaticResource AetherSizeIcon}"
+                                Glyph="&#xE838;" />
+                            <TextBlock x:Name="OpenFileLabel" Text="Open file" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <StackPanel
                     x:Name="FailureActions"
                     Margin="0,24,0,0"
                     HorizontalAlignment="Center"
@@ -349,12 +369,21 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Button
-                    x:Name="PlayPauseButton"
-                    Click="OnPlayPauseClick"
-                    Content="&#xE768;"
-                    Style="{StaticResource AetherPlayButtonStyle}"
-                    ToolTipService.ToolTip="Play (Space)" />
+                <!--  Open, then Play 4 to its right.  -->
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button
+                        x:Name="OpenButton"
+                        Click="OnOpenFileClick"
+                        Content="&#xE838;"
+                        Style="{StaticResource AetherIconButtonStyle}"
+                        ToolTipService.ToolTip="Open file (Ctrl+O)" />
+                    <Button
+                        x:Name="PlayPauseButton"
+                        Click="OnPlayPauseClick"
+                        Content="&#xE768;"
+                        Style="{StaticResource AetherPlayButtonStyle}"
+                        ToolTipService.ToolTip="Play (Space)" />
+                </StackPanel>
 
                 <StackPanel
                     Grid.Column="1"
