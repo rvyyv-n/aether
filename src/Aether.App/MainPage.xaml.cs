@@ -252,6 +252,7 @@ public sealed partial class MainPage : Page
                 }
                 _session.ViewModel.PropertyChanged += OnViewModelChanged;
                 _startup = StartupPhase.Ready;
+                _session.ViewModel.IsLooping = App.Settings.Current.LoopByDefault;
                 SyncVolume();
                 if (_pendingOpen is { } pending)
                 {
@@ -483,6 +484,15 @@ public sealed partial class MainPage : Page
         {
             args.Handled = true;
             ToggleMute();
+        }
+    }
+
+    private void OnLoopAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (_session is { } session && !IsOpenUrlShown)
+        {
+            args.Handled = true;
+            session.ViewModel.ToggleLoop();
         }
     }
 

@@ -30,6 +30,7 @@
         <KeyboardAccelerator Key="Space" Invoked="OnPlayPauseAccelerator" />
         <KeyboardAccelerator Key="F" Invoked="OnFullScreenAccelerator" />
         <KeyboardAccelerator Key="M" Invoked="OnMuteAccelerator" />
+        <KeyboardAccelerator Key="L" Invoked="OnLoopAccelerator" />
         <KeyboardAccelerator Key="F11" Invoked="OnFullScreenAccelerator" />
         <KeyboardAccelerator Key="Escape" Invoked="OnEscapeAccelerator" />
     </Page.KeyboardAccelerators>

@@ -23,6 +23,7 @@ public sealed class PlayerSession : IDisposable
     private readonly FrameStepper _stepper;
     private readonly FrameStepKeyInput _keys;
     private readonly MpvVideoSurface _surface;
+    private readonly LoopRestart _loop = new();
     private bool _disposed;
 
     private PlayerSession(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
@@ -117,6 +118,17 @@ public sealed class PlayerSession : IDisposable
         // The first frame sits at time 0 (or within half a frame of it when the container starts later).
         double halfFrame = state.FramesPerSecond > 0 ? 0.5 / state.FramesPerSecond : 0;
         _stepper.SetBounds(atStart: state.Position <= halfFrame, atEnd: state.IsAtEnd);
+        if (_loop.ShouldRestart(state.IsAtEnd, ViewModel.IsLooping))
+        {
+            try
+            {
+                TogglePause();
+            }
+            catch (MpvException)
+            {
+                // The core is shutting down.
+            }
+        }
     }
 
     /// <summary>Non-blocking: the event and render threads release the core as they exit.</summary>
