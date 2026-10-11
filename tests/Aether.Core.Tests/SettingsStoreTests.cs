@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using Aether.Core.Playback.Settings;
 using Xunit;
 
@@ -184,7 +184,11 @@ public class SettingsStoreTests
         var errors = MpvOptionsValidator.Validate("deband-iterations=2\nvo foo\n\n# comment\n=3\nsub auto=1\nlast=ok\r\nfuzzy");
 
         Assert.Equal([2, 5, 6, 8], errors.Select(e => e.Line));
-        Assert.All(errors, e => Assert.False(string.IsNullOrWhiteSpace(e.Message)));
+        Assert.Equal(MpvOptionErrorKind.MissingEquals, errors[0].Kind);
+        Assert.Equal(MpvOptionErrorKind.MissingName, errors[1].Kind);
+        Assert.Equal(MpvOptionErrorKind.InvalidName, errors[2].Kind);
+        Assert.Equal("sub auto", errors[2].Key);
+        Assert.Equal(MpvOptionErrorKind.MissingEquals, errors[3].Kind);
     }
 
     [Theory]
