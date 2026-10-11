@@ -109,7 +109,7 @@ Mockups: screen 5 (transport).
 | 5.8 | Loop playback: toggle (`L`), restart at end of file, state held in `PlayerViewModel` — **Done** | S | Sonnet |
 | 5.9 | Always-on-top toggle (`T`) via `AppWindow.Presenter`, persisted with window state — **Done** | S | Sonnet |
 | 5.10 | Resume position per file: save on close or switch, restore on open, skip near start/end, cap stored entries — **Done** | S | Sonnet |
-| 5.11 | `PerformanceLoop`: async seek coalescing, zero-drop GPU decode verification, smooth 60fps+ UI under high-bitrate 1440p/4K load | M | Gemini |
+| 5.11 | `PerformanceLoop`: async seek coalescing, zero-drop GPU decode verification, smooth 60fps+ UI under high-bitrate 1440p/4K load — **Done** (`SeekCoalescer`, `CompositeCommandReplyHandler`, exact landing preservation; gate green, 627 core tests) | M | Gemini |
 | 5.12 | Tests for 5.7–5.10: argument and extension parsing, loop wrap, resume store round-trip and pruning, speed bounds 0.1–4.0 — **Done** | S | Gemini |
 
 **Pass 5 means:** Real-time game tick HUD, the full transport with visual in/out bounds, and sub-300ms lossless clip generation draggable directly into Discord.

@@ -21,6 +21,7 @@ public sealed class PlayerSession : IDisposable
     private readonly MpvEventLoop _events;
     private readonly PlayerEventDispatcher _dispatcher;
     private readonly FrameStepper _stepper;
+    private readonly SeekCoalescer _seekCoalescer;
     private readonly FrameStepKeyInput _keys;
     private readonly MpvVideoSurface _surface;
     private readonly LoopRestart _loop = new();
@@ -35,7 +36,8 @@ public sealed class PlayerSession : IDisposable
             var scheduler = new DispatcherQueueFlushScheduler(queue);
             _dispatcher = new PlayerEventDispatcher(ViewModel, scheduler);
             _stepper = new FrameStepper(new MpvFrameStepCommandSender(_context));
-            _dispatcher.CommandReplies = _stepper;
+            _seekCoalescer = new SeekCoalescer(new MpvSeekCommandSender(_context));
+            _dispatcher.CommandReplies = new CompositeCommandReplyHandler(_stepper, _seekCoalescer);
             scheduler.FlushTarget = Flush;
 
             _dispatcher.ObserveAll(_context);
@@ -106,9 +108,11 @@ public sealed class PlayerSession : IDisposable
         }
     }
 
-    /// <summary>Seeks from the seek bar; see <see cref="TransportState.Seek"/>. Non-blocking.</summary>
+    public SeekCoalescer SeekCoalescer => _seekCoalescer;
+
+    /// <summary>Seeks from the seek bar; see <see cref="TransportState.Seek"/>. Non-blocking, coalesced.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
-    public void Seek(double seconds, bool dragging) => _context.CommandAsync(TransportState.Seek(seconds, dragging));
+    public void Seek(double seconds, bool dragging) => _seekCoalescer.Seek(seconds, dragging);
 
     /// <summary>Sets the volume (100 is unity gain). Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
@@ -158,6 +162,7 @@ public sealed class PlayerSession : IDisposable
             return;
         }
         _disposed = true;
+        _seekCoalescer.Reset();
         _keys.Dispose();
         _events.Dispose();
         _surface.DetachPlayer();
