@@ -2,6 +2,7 @@
 using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
+using Aether.Core.Playback.Recents;
 using Aether_App.Controls;
 using Aether_App.Playback;
 using Microsoft.UI.Dispatching;
@@ -71,6 +72,12 @@ public sealed partial class MainPage : Page
     private bool _updatingSeek;
     private bool _seekDragging;
 
+    // Links cannot play until streaming lands, so Play in the dialog reports that instead (4.D5).
+    private readonly OpenUrlFlow _openUrl = new(TimeProvider.System, streamingAvailable: false);
+    private DispatcherQueueTimer? _openUrlTimer;
+    private int _recentsVersion; // bumped to drop a missing-file check that a newer one replaced
+    private bool _durationRecorded;
+
     public MainPage()
     {
         InitializeComponent();
@@ -100,6 +107,16 @@ public sealed partial class MainPage : Page
         SearchedKey.Text = AppStrings.Get("EmptyState_DetailsSearched");
         ErrorKey.Text = AppStrings.Get("EmptyState_DetailsError");
         OpenFileLabel.Text = AppStrings.Get("EmptyState_OpenFile");
+        OpenUrlLabel.Text = AppStrings.Get("EmptyState_OpenUrl");
+        ToolTipService.SetToolTip(OpenUrlButton, AppStrings.Get("EmptyState_OpenUrlTooltip"));
+        StreamCancelButton.Content = AppStrings.Get("Stream_Cancel");
+        RecentsHeader.Text = AppStrings.Get("EmptyState_Recent");
+        ClearRecentsButton.Content = AppStrings.Get("EmptyState_ClearList");
+        OpenUrlTitle.Text = AppStrings.Get("OpenUrl_Title");
+        OpenUrlFieldLabel.Text = AppStrings.Get("OpenUrl_Placeholder");
+        AutomationProperties.SetName(OpenUrlBox, OpenUrlFieldLabel.Text);
+        OpenUrlPlayLabel.Text = AppStrings.Get("OpenUrl_Play");
+        OpenUrlCancelButton.Content = AppStrings.Get("OpenUrl_Cancel");
         ToolTipService.SetToolTip(OpenButton, AppStrings.Get("Transport_OpenFile"));
         AutomationProperties.SetName(OpenButton, AppStrings.Get("Menu_OpenFile"));
         ToolTipService.SetToolTip(VolumeButton, AppStrings.Get("Transport_Mute"));
@@ -165,11 +182,16 @@ public sealed partial class MainPage : Page
             _volumeHoverTimer = DispatcherQueue.CreateTimer();
             _volumeHoverTimer.IsRepeating = false;
             _volumeHoverTimer.Tick += OnVolumeHoverTimerTick;
+            _openUrlTimer = DispatcherQueue.CreateTimer();
+            _openUrlTimer.IsRepeating = false;
+            _openUrlTimer.Tick += OnOpenUrlTimerTick;
         }
         if (_session is null)
         {
             StartEngine();
         }
+        App.Recents.Changed += OnRecentsChanged;
+        RefreshRecents();
         Render();
         Focus(FocusState.Programmatic);
     }
@@ -180,6 +202,8 @@ public sealed partial class MainPage : Page
         _startupVersion++; // a startup still running disposes its engine when it returns
         _chromeTimer?.Stop();
         _volumeHoverTimer?.Stop();
+        _openUrlTimer?.Stop();
+        App.Recents.Changed -= OnRecentsChanged;
         CursorVisibility.Show();
         if (_session is { } session)
         {
@@ -277,7 +301,10 @@ public sealed partial class MainPage : Page
         }
         _currentPath = path;
         _fitWindowPending = true;
+        _durationRecorded = false;
         TrySend(() => session.Open(path));
+        string name = Path.GetFileName(path);
+        _ = Task.Run(() => App.Recents.Add(path, name, DateTimeOffset.Now));
         Render();
     }
 
@@ -310,8 +337,11 @@ public sealed partial class MainPage : Page
         switch (e.PropertyName)
         {
             case nameof(PlayerViewModel.Position):
+                UpdateClock(vm);
+                break;
             case nameof(PlayerViewModel.Duration):
                 UpdateClock(vm);
+                RecordDuration(vm);
                 break;
             case nameof(PlayerViewModel.Volume):
                 SyncVolume();
@@ -323,12 +353,25 @@ public sealed partial class MainPage : Page
                 break;
             case nameof(PlayerViewModel.Status):
                 UpdateClock(vm); // an ended file reads its full duration
+                RecordDuration(vm);
                 Render();
                 break;
             case nameof(PlayerViewModel.IsPaused):
                 Render();
                 break;
         }
+    }
+
+    /// <summary>The recents row shows the length once the file has loaded; once per opened file.</summary>
+    private void RecordDuration(PlayerViewModel vm)
+    {
+        if (_durationRecorded || !HasVideo || vm.Duration <= 0 || _currentPath is not { } path)
+        {
+            return;
+        }
+        _durationRecorded = true;
+        double duration = vm.Duration;
+        _ = Task.Run(() => App.Recents.SetDuration(path, duration));
     }
 
     /// <summary>Position and duration text and the seek bar. Both times change shape together from an hour.</summary>
@@ -405,7 +448,7 @@ public sealed partial class MainPage : Page
 
     private void OnMuteAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (_session is not null)
+        if (_session is not null && !IsOpenUrlShown)
         {
             args.Handled = true;
             ToggleMute();
@@ -560,7 +603,10 @@ public sealed partial class MainPage : Page
     private async void OnOpenAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
-        await PickAndOpenAsync();
+        if (!IsOpenUrlShown)
+        {
+            await PickAndOpenAsync();
+        }
     }
 
     private async void OnOpenFileClick(object sender, RoutedEventArgs e) => await PickAndOpenAsync();
@@ -598,21 +644,35 @@ public sealed partial class MainPage : Page
         }
     }
 
+    // Space, F and M stay text while the Open URL field has focus: unhandled, they reach the field.
     private void OnPlayPauseAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
+        if (IsOpenUrlShown)
+        {
+            return;
+        }
         args.Handled = true;
         TogglePause();
     }
 
     private void OnFullScreenAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
+        if (IsOpenUrlShown)
+        {
+            return;
+        }
         args.Handled = true;
         ToggleFullScreen();
     }
 
     private void OnEscapeAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (_host is { IsFullScreen: true } host)
+        if (IsOpenUrlShown)
+        {
+            args.Handled = true;
+            CloseOpenUrl();
+        }
+        else if (_host is { IsFullScreen: true } host)
         {
             args.Handled = true;
             host.SetFullScreen(false);
@@ -620,6 +680,222 @@ public sealed partial class MainPage : Page
     }
 
     private void OnAnyKeyDown(object sender, KeyRoutedEventArgs e) => NotifyActivity();
+
+    // ---- Open URL (2.5, 2.6, 2.12) ----
+
+    private bool IsOpenUrlShown => _openUrl.Stage == OpenUrlStage.Editing;
+
+    private void OnOpenUrlAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        ShowOpenUrl();
+    }
+
+    private void OnOpenUrlClick(object sender, RoutedEventArgs e) => ShowOpenUrl();
+
+    /// <summary>Opens the dialog prefilled from the clipboard (a link only) with the text selected.</summary>
+    private async void ShowOpenUrl()
+    {
+        if (_session is null || _openUrl.Stage != OpenUrlStage.Closed)
+        {
+            return;
+        }
+        string? clipboard = null;
+        try
+        {
+            DataPackageView content = Clipboard.GetContent();
+            if (content.Contains(StandardDataFormats.Text))
+            {
+                clipboard = await content.GetTextAsync();
+            }
+        }
+        catch (Exception)
+        {
+            // Another app holds the clipboard; open with an empty field.
+        }
+        if (!_isLoaded || _openUrl.Stage != OpenUrlStage.Closed)
+        {
+            return;
+        }
+
+        _openUrl.Open(clipboard);
+        OpenUrlBox.Text = _openUrl.Text;
+        OpenUrlOverlay.Visibility = Visibility.Visible;
+        _chrome.SetHold(ChromeHolds.Dialog, true);
+        ApplyChrome();
+        RenderOpenUrl();
+        OpenUrlBox.Focus(FocusState.Programmatic);
+        OpenUrlBox.SelectAll();
+    }
+
+    private void OnOpenUrlTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (IsOpenUrlShown)
+        {
+            _openUrl.SetText(OpenUrlBox.Text);
+            RenderOpenUrl();
+        }
+    }
+
+    private void OnOpenUrlBoxKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            e.Handled = true;
+            SubmitOpenUrl();
+        }
+        else if (e.Key == Windows.System.VirtualKey.Escape)
+        {
+            e.Handled = true;
+            CloseOpenUrl();
+        }
+    }
+
+    private void OnOpenUrlPlayClick(object sender, RoutedEventArgs e) => SubmitOpenUrl();
+
+    private void OnOpenUrlCancelClick(object sender, RoutedEventArgs e) => CloseOpenUrl();
+
+    private void SubmitOpenUrl()
+    {
+        if (_openUrl.Submit() == OpenUrlSubmitResult.Started)
+        {
+            HideOpenUrlDialog();
+            ArmOpenUrlTimer();
+            Render();
+        }
+        else
+        {
+            RenderOpenUrl();
+        }
+    }
+
+    private void CloseOpenUrl()
+    {
+        if (!IsOpenUrlShown)
+        {
+            return;
+        }
+        _openUrl.Close();
+        HideOpenUrlDialog();
+    }
+
+    private void HideOpenUrlDialog()
+    {
+        OpenUrlOverlay.Visibility = Visibility.Collapsed;
+        _chrome.SetHold(ChromeHolds.Dialog, false);
+        ApplyChrome();
+        Focus(FocusState.Programmatic); // playback keys back on the page
+    }
+
+    private void OnStreamCancelClick(object sender, RoutedEventArgs e)
+    {
+        _openUrl.Close();
+        ArmOpenUrlTimer();
+        Render();
+    }
+
+    private void ArmOpenUrlTimer()
+    {
+        if (_openUrlTimer is null)
+        {
+            return;
+        }
+        if (_openUrl.DueIn is { } due)
+        {
+            _openUrlTimer.Interval = due > TimeSpan.Zero ? due : TimeSpan.FromMilliseconds(1);
+            _openUrlTimer.Start();
+        }
+        else
+        {
+            _openUrlTimer.Stop();
+        }
+    }
+
+    private void OnOpenUrlTimerTick(DispatcherQueueTimer sender, object args)
+    {
+        _openUrl.Tick();
+        ArmOpenUrlTimer();
+        Render();
+    }
+
+    /// <summary>Play follows the link check; the line under the field is the hint or the reason Play did nothing.</summary>
+    private void RenderOpenUrl()
+    {
+        OpenUrlPlayButton.IsEnabled = _openUrl.CanSubmit;
+        // OpenUrl_Hint (Ctrl+V plays a copied link) replaces the not-available text once links play.
+        (string note, Tone? dot) = _openUrl.Note switch
+        {
+            OpenUrlNote.Invalid => (AppStrings.Get("OpenUrl_InvalidLink"), Tone.Warning),
+            OpenUrlNote.Unavailable => (AppStrings.Get("OpenUrl_NotAvailable"), Tone.Neutral),
+            _ => (AppStrings.Get("OpenUrl_NotAvailable"), (Tone?)null),
+        };
+        OpenUrlNoteText.Text = note;
+        OpenUrlNoteDot.Visibility = dot is null ? Visibility.Collapsed : Visibility.Visible;
+        if (dot is { } tone)
+        {
+            OpenUrlNoteDot.Fill = ToneBrush(tone);
+        }
+    }
+
+    // ---- Recents (2.10, 2.18) ----
+
+    private void OnRecentsChanged(object? sender, EventArgs e) => DispatcherQueue.TryEnqueue(RefreshRecents);
+
+    /// <summary>Rebuilds the rows; the missing-file check runs on the thread pool so a slow drive never stalls the UI.</summary>
+    private async void RefreshRecents()
+    {
+        int version = ++_recentsVersion;
+        IReadOnlyList<RecentItem> items = App.Recents.Items;
+        bool[] missing = await Task.Run(() => items.Select(item => RecentDisplay.IsMissing(item, File.Exists)).ToArray());
+        if (version != _recentsVersion || !_isLoaded)
+        {
+            return;
+        }
+        RecentsList.Children.Clear();
+        DateTimeOffset now = DateTimeOffset.Now;
+        for (int i = 0; i < items.Count; i++)
+        {
+            var row = new RecentRow(items[i], missing[i], now);
+            row.OpenRequested += OnRecentOpenRequested;
+            row.RemoveRequested += OnRecentRemoveRequested;
+            RecentsList.Children.Add(row);
+        }
+        Render();
+    }
+
+    /// <summary>A file that went missing since the list was drawn turns into the missing row instead of opening.</summary>
+    private async void OnRecentOpenRequested(object? sender, EventArgs e)
+    {
+        if (sender is not RecentRow { Item.IsLink: false } row || _session is null)
+        {
+            return;
+        }
+        string path = row.Item.Location;
+        bool exists = await Task.Run(() => File.Exists(path));
+        if (!_isLoaded)
+        {
+            return;
+        }
+        if (exists)
+        {
+            Open(path);
+        }
+        else
+        {
+            RefreshRecents();
+        }
+    }
+
+    private void OnRecentRemoveRequested(object? sender, EventArgs e)
+    {
+        if (sender is RecentRow row)
+        {
+            string location = row.Item.Location;
+            _ = Task.Run(() => App.Recents.Remove(location));
+        }
+    }
+
+    private void OnClearRecentsClick(object sender, RoutedEventArgs e) => _ = Task.Run(App.Recents.Clear);
 
     // ---- Drag and drop (4.5) ----
 
@@ -882,6 +1158,7 @@ public sealed partial class MainPage : Page
     {
         bool failed = _startup is StartupPhase.MissingBinary or StartupPhase.Failed;
         bool busy = false;
+        bool streaming = _openUrl.Stage is OpenUrlStage.GettingStream or OpenUrlStage.StillWorking;
 
         // The strip reports the engine only; the renderer sits at its right end.
         (Tone Tone, string Label, string? Detail) engine = _startup switch
@@ -909,6 +1186,16 @@ public sealed partial class MainPage : Page
                     Tone.Warning,
                     engine);
             }
+        }
+        else if (streaming)
+        {
+            bool slow = _openUrl.Stage == OpenUrlStage.StillWorking;
+            string host = _openUrl.Host ?? string.Empty;
+            SetHome(
+                AppStrings.Get(slow ? "Stream_StillWorking" : "Stream_GettingStream"),
+                slow ? AppStrings.Format("Stream_TakingLonger", host) : host,
+                null,
+                engine);
         }
         else if (_startup == StartupPhase.Starting)
         {
@@ -939,8 +1226,17 @@ public sealed partial class MainPage : Page
         }
 
         StartupProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-        OpenActions.Visibility = failed || _dragging ? Visibility.Collapsed : Visibility.Visible;
+        OpenActions.Visibility = failed || _dragging || streaming ? Visibility.Collapsed : Visibility.Visible;
         OpenFileButton.IsEnabled = _session is not null;
+        OpenUrlButton.IsEnabled = _session is not null;
+        bool showStream = streaming && !_dragging;
+        HeroGlyph.Visibility = showStream ? Visibility.Collapsed : Visibility.Visible;
+        StreamProgress.Visibility = showStream ? Visibility.Visible : Visibility.Collapsed;
+        StreamProgress.IsActive = showStream;
+        StreamCancelButton.Visibility = showStream ? Visibility.Visible : Visibility.Collapsed;
+        // Recents belong to the plain empty state: hidden until there is history (2.10).
+        bool idle = _startup == StartupPhase.Ready && !_dragging && !streaming && vm?.Status != PlaybackStatus.Loading;
+        RecentsPanel.Visibility = idle && RecentsList.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         Visibility failure = failed && !_dragging ? Visibility.Visible : Visibility.Collapsed;
         DetailsPanel.Visibility = failure;
         FailureActions.Visibility = failure;

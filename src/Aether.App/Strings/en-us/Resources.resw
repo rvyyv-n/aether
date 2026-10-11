@@ -203,6 +203,10 @@
   <data name="OpenUrl_InvalidLink" xml:space="preserve">
     <value>That isn’t a web link</value>
   </data>
+  <data name="OpenUrl_NotAvailable" xml:space="preserve">
+    <value>Link playback isn’t available yet</value>
+    <comment>Replaces OpenUrl_Hint until links play (streaming); Ctrl+V does not play a link yet</comment>
+  </data>
   <data name="OpenUrl_Play" xml:space="preserve">
     <value>Play</value>
   </data>
@@ -218,7 +222,8 @@
     <value>Still working…</value>
   </data>
   <data name="Stream_TakingLonger" xml:space="preserve">
-    <value>youtube.com is taking longer than usual</value>
+    <value>{0} is taking longer than usual</value>
+    <comment>{0} is the site, e.g. youtube.com</comment>
   </data>
   <data name="Stream_UnavailableTitle" xml:space="preserve">
     <value>Video unavailable</value>
@@ -301,6 +306,9 @@
   <!-- Transport and Playing controls / tooltips (Screens 3 and 5) -->
   <data name="Transport_OpenFile" xml:space="preserve">
     <value>Open file (Ctrl+O)</value>
+  </data>
+  <data name="EmptyState_OpenUrlTooltip" xml:space="preserve">
+    <value>Open URL (Ctrl+Shift+O)</value>
   </data>
   <data name="Transport_Play" xml:space="preserve">
     <value>Play (Space)</value>

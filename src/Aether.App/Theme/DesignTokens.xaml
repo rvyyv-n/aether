@@ -410,6 +410,41 @@
         <Setter Property="Height" Value="{StaticResource AetherSizeTitleBar}" />
         <Setter Property="CornerRadius" Value="0" />
     </Style>
+    <!--  Recents row (2.10): the whole row is the target; glass card, radius 8, content left-aligned (the pill template centres it)  -->
+    <Style x:Key="AetherRecentRowButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AetherSurfaceGlassBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Border x:Name="StateLayer" CornerRadius="{TemplateBinding CornerRadius}" />
+                        <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="StateLayer.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="StateLayer.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <!--  Missing files: the row stays put and its text colours carry the state (2.18)  -->
+                                <VisualState x:Name="Disabled" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
 
     <!-- ========================================================================= -->

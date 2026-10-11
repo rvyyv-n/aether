@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Aether_App.Controls.RecentRow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  52 tall: icon, name over meta, date on the right; a missing file swaps the date for a 32×32 Remove.  -->
+    <Grid Height="{StaticResource AetherSizeRow}">
+        <Button
+            x:Name="RowButton"
+            Click="OnRowClick"
+            Style="{StaticResource AetherRecentRowButtonStyle}">
+            <Grid ColumnSpacing="14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <FontIcon
+                    x:Name="Icon"
+                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    FontSize="{StaticResource AetherSizeIcon}"
+                    Foreground="{StaticResource AetherTextSecondaryBrush}" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        x:Name="NameText"
+                        Style="{StaticResource AetherBodyTextStyle}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap" />
+                    <TextBlock
+                        x:Name="MetaText"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap" />
+                </StackPanel>
+                <TextBlock
+                    x:Name="DateText"
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource AetherCaptionTextStyle}" />
+            </Grid>
+        </Button>
+        <Button
+            x:Name="RemoveButton"
+            Margin="0,0,10,0"
+            HorizontalAlignment="Right"
+            Click="OnRemoveClick"
+            Content="&#xE711;"
+            Style="{StaticResource AetherIconButtonStyle}"
+            ToolTipService.Placement="Top"
+            Visibility="Collapsed" />
+    </Grid>
+</UserControl>

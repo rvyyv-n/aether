@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <Page
     x:Class="Aether_App.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -23,6 +23,10 @@
             Key="O"
             Invoked="OnOpenAccelerator"
             Modifiers="Control" />
+        <KeyboardAccelerator
+            Key="O"
+            Invoked="OnOpenUrlAccelerator"
+            Modifiers="Control,Shift" />
         <KeyboardAccelerator Key="Space" Invoked="OnPlayPauseAccelerator" />
         <KeyboardAccelerator Key="F" Invoked="OnFullScreenAccelerator" />
         <KeyboardAccelerator Key="M" Invoked="OnMuteAccelerator" />
@@ -77,8 +81,12 @@
                     BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
                     BorderThickness="1"
                     CornerRadius="{StaticResource AetherPillCornerRadius}">
+                    <Grid>
                     <!--  Film frame drawn on the handoff's 24 px grid, so the stroke scales with it.  -->
-                    <Viewbox Width="{StaticResource AetherSizeHeroGlyph}" Height="{StaticResource AetherSizeHeroGlyph}">
+                    <Viewbox
+                        x:Name="HeroGlyph"
+                        Width="{StaticResource AetherSizeHeroGlyph}"
+                        Height="{StaticResource AetherSizeHeroGlyph}">
                         <Path
                             Width="24"
                             Height="24"
@@ -89,6 +97,14 @@
                             StrokeStartLineCap="Round"
                             StrokeThickness="1.25" />
                     </Viewbox>
+                    <!--  Getting a stream (2.6): WinUI draws the ring's own stroke.  -->
+                    <ProgressRing
+                        x:Name="StreamProgress"
+                        Width="{StaticResource AetherSizeProgressRing}"
+                        Height="{StaticResource AetherSizeProgressRing}"
+                        IsActive="False"
+                        Visibility="Collapsed" />
+                    </Grid>
                 </Border>
 
                 <!--  Status title: an amber dot on failures, top-aligned so it centres on the 28 px first line.  -->
@@ -180,6 +196,59 @@
                             <TextBlock x:Name="OpenFileLabel" Text="Open file" />
                         </StackPanel>
                     </Button>
+                    <Button
+                        x:Name="OpenUrlButton"
+                        MinWidth="144"
+                        Click="OnOpenUrlClick"
+                        Style="{StaticResource AetherOutlinePillButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="{StaticResource AetherSizeIcon}"
+                                Glyph="&#xE71B;" />
+                            <TextBlock x:Name="OpenUrlLabel" Text="Open URL" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <Button
+                    x:Name="StreamCancelButton"
+                    MinWidth="144"
+                    Margin="0,24,0,0"
+                    HorizontalAlignment="Center"
+                    Click="OnStreamCancelClick"
+                    Content="Cancel"
+                    Style="{StaticResource AetherOutlinePillButtonStyle}"
+                    Visibility="Collapsed" />
+
+                <!--
+                    Recents (2.10): only with history, at most 3 rows of 52 with a gap of 4, in a column
+                    of at most 400; a 32 tall header with the Clear list link.
+                -->
+                <StackPanel
+                    x:Name="RecentsPanel"
+                    MaxWidth="{StaticResource AetherSizeRecentsColumn}"
+                    Margin="0,24,0,0"
+                    Spacing="4"
+                    Visibility="Collapsed">
+                    <Grid Height="{StaticResource AetherSizeControl}">
+                        <TextBlock
+                            x:Name="RecentsHeader"
+                            Margin="4,0,0,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource AetherCaptionTextStyle}"
+                            Text="Recent" />
+                        <Button
+                            x:Name="ClearRecentsButton"
+                            Padding="8,0"
+                            HorizontalAlignment="Right"
+                            BorderBrush="Transparent"
+                            Click="OnClearRecentsClick"
+                            Content="Clear list"
+                            FontSize="{StaticResource AetherCaptionFontSize}"
+                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Style="{StaticResource AetherOutlinePillButtonStyle}" />
+                    </Grid>
+                    <StackPanel x:Name="RecentsList" Spacing="4" />
                 </StackPanel>
                 <StackPanel
                     x:Name="FailureActions"
@@ -534,5 +603,87 @@
                     ToolTipService.ToolTip="Full screen (F)" />
             </Grid>
         </Border>
+
+        <!--
+            Open URL (2.5): scrim over the whole window, the strip dimmed with everything else. The
+            dialog is min(440, window - 32) wide with padding 24, on the solid dialog fallback because
+            it can sit over the swap chain (ADR-0013). Play (Emphasis) left, Cancel right, equal halves.
+        -->
+        <Grid
+            x:Name="OpenUrlOverlay"
+            Background="{StaticResource AetherSurfaceScrimBrush}"
+            Visibility="Collapsed">
+            <Border
+                MaxWidth="{StaticResource AetherSizeDialogWidth}"
+                Margin="16"
+                Padding="24"
+                VerticalAlignment="Center"
+                Background="{StaticResource AetherSurfaceDialogFallbackBrush}"
+                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AetherOverlayCornerRadius}">
+                <StackPanel TabFocusNavigation="Cycle">
+                    <TextBlock
+                        x:Name="OpenUrlTitle"
+                        Style="{StaticResource AetherSubtitleTextStyle}"
+                        Text="Open URL" />
+                    <TextBlock
+                        x:Name="OpenUrlFieldLabel"
+                        Margin="0,16,0,0"
+                        Style="{StaticResource AetherBodyTextStyle}"
+                        Text="Video or stream link" />
+                    <TextBox
+                        x:Name="OpenUrlBox"
+                        Margin="0,8,0,0"
+                        Background="{StaticResource AetherFillInputBrush}"
+                        InputScope="Url"
+                        IsSpellCheckEnabled="False"
+                        KeyDown="OnOpenUrlBoxKeyDown"
+                        TextChanged="OnOpenUrlTextChanged" />
+                    <!--  The hint, or a dot and the reason (Caption; the dot sits on the caption line).  -->
+                    <StackPanel
+                        Margin="0,8,0,0"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Ellipse
+                            x:Name="OpenUrlNoteDot"
+                            Margin="0,5,0,0"
+                            Style="{StaticResource AetherStatusDotStyle}"
+                            Visibility="Collapsed" />
+                        <TextBlock
+                            x:Name="OpenUrlNoteText"
+                            Style="{StaticResource AetherCaptionTextStyle}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Grid Margin="0,24,0,0" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            x:Name="OpenUrlPlayButton"
+                            HorizontalAlignment="Stretch"
+                            Click="OnOpenUrlPlayClick"
+                            IsEnabled="False"
+                            Style="{StaticResource AetherEmphasisPillButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon
+                                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                    FontSize="{StaticResource AetherSizeIcon}"
+                                    Glyph="&#xE768;" />
+                                <TextBlock x:Name="OpenUrlPlayLabel" Text="Play" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            x:Name="OpenUrlCancelButton"
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            Click="OnOpenUrlCancelClick"
+                            Content="Cancel"
+                            Style="{StaticResource AetherOutlinePillButtonStyle}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Page>

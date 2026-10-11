@@ -17,6 +17,9 @@ public enum ChromeHolds
 
     /// <summary>A flyout from the controls is open (volume). Separate from <see cref="Interaction"/>, which a drag ending clears.</summary>
     Flyout = 8,
+
+    /// <summary>A dialog is open (Open URL). The caption glyphs never hide under one.</summary>
+    Dialog = 16,
 }
 
 /// <summary>
