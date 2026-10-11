@@ -39,6 +39,7 @@ GEMINI.md
 .vscode/
 
 # OS / temporary files
+dist/
 .DS_Store
 Thumbs.db
 *.part
