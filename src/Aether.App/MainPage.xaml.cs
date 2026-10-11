@@ -55,6 +55,7 @@ public sealed partial class MainPage : Page
     private bool _isLoaded;
 
     private string? _currentPath;
+    private string? _pendingOpen; // a file from the command line, opened once the engine is up
     private bool _fitWindowPending; // the next video size resizes the window (set per opened file)
     private bool _windowSyncQueued;
     private bool _dragging;
@@ -252,6 +253,11 @@ public sealed partial class MainPage : Page
                 _session.ViewModel.PropertyChanged += OnViewModelChanged;
                 _startup = StartupPhase.Ready;
                 SyncVolume();
+                if (_pendingOpen is { } pending)
+                {
+                    _pendingOpen = null;
+                    Open(pending);
+                }
                 break;
             case EngineStartupStatus.MissingBinary:
                 _startup = StartupPhase.MissingBinary;
@@ -262,6 +268,19 @@ public sealed partial class MainPage : Page
                 break;
         }
         Render();
+    }
+
+    /// <summary>Opens the file now if the engine is running, otherwise once it has started.</summary>
+    public void OpenWhenReady(string path)
+    {
+        if (_session is not null)
+        {
+            Open(path);
+        }
+        else
+        {
+            _pendingOpen = path;
+        }
     }
 
     private void OnRetryClick(object sender, RoutedEventArgs e)

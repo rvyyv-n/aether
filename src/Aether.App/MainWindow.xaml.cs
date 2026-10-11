@@ -106,6 +106,9 @@ public sealed partial class MainWindow : Window, IShellWindow
         AppWindow.Changed += OnAppWindowChanged;
     }
 
+    /// <summary>Opens this file as soon as the engine is ready (launch from a file or the command line).</summary>
+    public void OpenWhenReady(string path) => Shell.OpenWhenReady(path);
+
     public bool IsFullScreen => AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen;
 
     public event EventHandler? FullScreenChanged;
