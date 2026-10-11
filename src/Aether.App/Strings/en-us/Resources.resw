@@ -899,6 +899,261 @@
     <value>Report an issue</value>
   </data>
 
+  <!-- Settings: Page Titles -->
+  <data name="Settings_Page_General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_Page_Playback" xml:space="preserve">
+    <value>Playback</value>
+  </data>
+  <data name="Settings_Page_Video" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="Settings_Page_Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Settings_Page_Subtitles" xml:space="preserve">
+    <value>Subtitles</value>
+  </data>
+  <data name="Settings_Page_Streaming" xml:space="preserve">
+    <value>Streaming</value>
+  </data>
+  <data name="Settings_Page_Shortcuts" xml:space="preserve">
+    <value>Shortcuts</value>
+  </data>
+  <data name="Settings_Page_Advanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="Settings_Page_About" xml:space="preserve">
+    <value>About</value>
+  </data>
+
+  <!-- Settings: Additional Setting Titles and Descriptions -->
+  <data name="Settings_OpenInRunningWindow_Title" xml:space="preserve">
+    <value>Open files in running window</value>
+  </data>
+  <data name="Settings_OpenInRunningWindow_Description" xml:space="preserve">
+    <value>Reuse the existing window instead of creating a new one</value>
+  </data>
+  <data name="Settings_ResumePlayback_Title" xml:space="preserve">
+    <value>Resume playback</value>
+  </data>
+  <data name="Settings_ResumePlayback_Description" xml:space="preserve">
+    <value>Pick up where you left off for played files</value>
+  </data>
+  <data name="Settings_LoopByDefault_Description" xml:space="preserve">
+    <value>Loop media continuously when playing</value>
+  </data>
+  <data name="Settings_PlayNextInFolder_Title" xml:space="preserve">
+    <value>Play next in folder</value>
+  </data>
+  <data name="Settings_PlayNextInFolder_Description" xml:space="preserve">
+    <value>Automatically play the next file in the folder</value>
+  </data>
+  <data name="Settings_RememberWindowSize_Description" xml:space="preserve">
+    <value>Restore window size and position on launch</value>
+  </data>
+  <data name="Settings_QualityPreset_Description" xml:space="preserve">
+    <value>Default video rendering quality preset</value>
+  </data>
+  <data name="Settings_QualityPreset_High" xml:space="preserve">
+    <value>High quality</value>
+  </data>
+  <data name="Settings_HardwareDecoding_Description" xml:space="preserve">
+    <value>Hardware video decoding using your graphics card</value>
+  </data>
+  <data name="Settings_Upscaling_Description" xml:space="preserve">
+    <value>Scaling filter when enlarging video</value>
+  </data>
+  <data name="Settings_Downscaling_Description" xml:space="preserve">
+    <value>Scaling filter when shrinking video</value>
+  </data>
+  <data name="Settings_Debanding_Description" xml:space="preserve">
+    <value>Smooth color gradients and reduce banding</value>
+  </data>
+  <data name="Settings_HdrToneMapping_Description" xml:space="preserve">
+    <value>Tone mapping algorithm for HDR on SDR displays</value>
+  </data>
+  <data name="Settings_Brightness_Description" xml:space="preserve">
+    <value>Adjust video brightness</value>
+  </data>
+  <data name="Settings_Contrast_Description" xml:space="preserve">
+    <value>Adjust video contrast</value>
+  </data>
+  <data name="Settings_Gamma_Description" xml:space="preserve">
+    <value>Adjust video gamma</value>
+  </data>
+  <data name="Settings_Saturation_Description" xml:space="preserve">
+    <value>Adjust colour saturation</value>
+  </data>
+  <data name="Settings_AudioOutputDevice_Title" xml:space="preserve">
+    <value>Audio output device</value>
+  </data>
+  <data name="Settings_AudioOutputDevice_Description" xml:space="preserve">
+    <value>Select audio output device</value>
+  </data>
+  <data name="Settings_ShowSubtitles_Title" xml:space="preserve">
+    <value>Show subtitles by default</value>
+  </data>
+  <data name="Settings_ShowSubtitles_Description" xml:space="preserve">
+    <value>Display subtitles automatically when present</value>
+  </data>
+  <data name="Settings_PreferredAudioLanguage_Title" xml:space="preserve">
+    <value>Preferred audio language</value>
+  </data>
+  <data name="Settings_PreferredAudioLanguage_Description" xml:space="preserve">
+    <value>Language code for audio track preference (e.g. en)</value>
+  </data>
+  <data name="Settings_PreferredSubtitleLanguage_Title" xml:space="preserve">
+    <value>Preferred subtitle language</value>
+  </data>
+  <data name="Settings_PreferredSubtitleLanguage_Description" xml:space="preserve">
+    <value>Language code for subtitle track preference (e.g. en)</value>
+  </data>
+  <data name="Settings_SubtitleFont_Title" xml:space="preserve">
+    <value>Subtitle font</value>
+  </data>
+  <data name="Settings_SubtitleFont_Description" xml:space="preserve">
+    <value>Font used for subtitle rendering</value>
+  </data>
+  <data name="Settings_SubtitleSize_Title" xml:space="preserve">
+    <value>Subtitle size</value>
+  </data>
+  <data name="Settings_SubtitleSize_Description" xml:space="preserve">
+    <value>Relative text size of subtitles</value>
+  </data>
+  <data name="Settings_PreferGpuDecodableFormats_Title" xml:space="preserve">
+    <value>Prefer formats GPU can decode</value>
+  </data>
+  <data name="Settings_PreferGpuDecodableFormats_Description" xml:space="preserve">
+    <value>Choose stream formats compatible with GPU hardware decoding</value>
+  </data>
+  <data name="Settings_YtDlpAutoUpdate_Title" xml:space="preserve">
+    <value>Update yt-dlp automatically</value>
+  </data>
+  <data name="Settings_YtDlpAutoUpdate_Description" xml:space="preserve">
+    <value>Check for yt-dlp updates once a day</value>
+  </data>
+  <data name="Settings_CustomMpvOptions_Title" xml:space="preserve">
+    <value>Custom mpv options</value>
+  </data>
+  <data name="Settings_CustomMpvOptions_Description" xml:space="preserve">
+    <value>Advanced custom mpv options, one key=value per line</value>
+  </data>
+
+  <!-- Settings: Choice Values -->
+  <data name="Settings_Upscaling_Bilinear" xml:space="preserve">
+    <value>Bilinear</value>
+  </data>
+  <data name="Settings_Upscaling_Spline36" xml:space="preserve">
+    <value>Spline36</value>
+  </data>
+  <data name="Settings_Upscaling_Lanczos" xml:space="preserve">
+    <value>Lanczos</value>
+  </data>
+  <data name="Settings_Upscaling_EwaLanczos" xml:space="preserve">
+    <value>EWA Lanczos</value>
+  </data>
+  <data name="Settings_Downscaling_Bilinear" xml:space="preserve">
+    <value>Bilinear</value>
+  </data>
+  <data name="Settings_Downscaling_Hermite" xml:space="preserve">
+    <value>Hermite</value>
+  </data>
+  <data name="Settings_Downscaling_Mitchell" xml:space="preserve">
+    <value>Mitchell</value>
+  </data>
+  <data name="Settings_Downscaling_Lanczos" xml:space="preserve">
+    <value>Lanczos</value>
+  </data>
+  <data name="Settings_HdrToneMapping_Auto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="Settings_HdrToneMapping_Bt2390" xml:space="preserve">
+    <value>BT.2390</value>
+  </data>
+  <data name="Settings_HdrToneMapping_Reinhard" xml:space="preserve">
+    <value>Reinhard</value>
+  </data>
+  <data name="Settings_HdrToneMapping_Hable" xml:space="preserve">
+    <value>Hable</value>
+  </data>
+  <data name="Settings_HdrToneMapping_Clip" xml:space="preserve">
+    <value>Clip</value>
+  </data>
+  <data name="Settings_SubtitleSize_Small" xml:space="preserve">
+    <value>Small</value>
+  </data>
+  <data name="Settings_SubtitleSize_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="Settings_SubtitleSize_Large" xml:space="preserve">
+    <value>Large</value>
+  </data>
+  <data name="Settings_StreamingQuality_480p" xml:space="preserve">
+    <value>480p</value>
+  </data>
+  <data name="Settings_StreamingQuality_720p" xml:space="preserve">
+    <value>720p</value>
+  </data>
+  <data name="Settings_StreamingQuality_1080p" xml:space="preserve">
+    <value>1080p</value>
+  </data>
+  <data name="Settings_StreamingQuality_1440p" xml:space="preserve">
+    <value>1440p</value>
+  </data>
+  <data name="Settings_StreamingQuality_2160p" xml:space="preserve">
+    <value>2160p</value>
+  </data>
+  <data name="Settings_StreamingQuality_Best" xml:space="preserve">
+    <value>Best</value>
+  </data>
+
+  <!-- Settings: Mpv Option Errors -->
+  <data name="Settings_MpvOptions_Error_MissingEquals" xml:space="preserve">
+    <value>Line {0}: Expected key=value</value>
+  </data>
+  <data name="Settings_MpvOptions_Error_MissingName" xml:space="preserve">
+    <value>Line {0}: Missing option name before =</value>
+  </data>
+  <data name="Settings_MpvOptions_Error_InvalidName" xml:space="preserve">
+    <value>Line {0}: Invalid option name '{1}'</value>
+  </data>
+  <data name="Settings_MpvOptions_Error_Reserved" xml:space="preserve">
+    <value>Line {0}: Option '{1}' is reserved</value>
+  </data>
+  <data name="Settings_MpvOptions_Error_Duplicate" xml:space="preserve">
+    <value>Line {0}: Duplicate option '{1}'</value>
+  </data>
+
+  <!-- Settings: Notices and Actions -->
+  <data name="Settings_RestartAetherToApply" xml:space="preserve">
+    <value>Restart Aether to apply</value>
+  </data>
+  <data name="Settings_RestartToApply" xml:space="preserve">
+    <value>Restart Aether to apply</value>
+  </data>
+  <data name="Settings_ResetToDefault" xml:space="preserve">
+    <value>Reset to default</value>
+  </data>
+  <data name="Settings_ResetAllSettings" xml:space="preserve">
+    <value>Reset all settings</value>
+  </data>
+  <data name="Settings_Streaming_YtDlpMissing" xml:space="preserve">
+    <value>yt-dlp isn't installed. Streaming from websites is off until it is.</value>
+  </data>
+  <data name="Settings_YtDlp_NotInstalledNotice" xml:space="preserve">
+    <value>yt-dlp isn't installed. Streaming from websites is off until it is.</value>
+  </data>
+  <data name="Settings_Shortcuts_Conflict" xml:space="preserve">
+    <value>Conflicts with {0}</value>
+  </data>
+  <data name="Settings_Shortcuts_PressKeyCombination" xml:space="preserve">
+    <value>Press a key combination</value>
+  </data>
+  <data name="Settings_Shortcuts_Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
   <!-- Common -->
   <data name="Common_On" xml:space="preserve">
     <value>On</value>
