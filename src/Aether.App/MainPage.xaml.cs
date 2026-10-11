@@ -75,6 +75,7 @@ public sealed partial class MainPage : Page
     // Links cannot play until streaming lands, so Play in the dialog reports that instead (4.D5).
     private readonly OpenUrlFlow _openUrl = new(TimeProvider.System, streamingAvailable: false);
     private DispatcherQueueTimer? _openUrlTimer;
+    private DispatcherQueueTimer? _copiedTimer;
     private int _recentsVersion; // bumped to drop a missing-file check that a newer one replaced
     private bool _durationRecorded;
 
@@ -185,6 +186,10 @@ public sealed partial class MainPage : Page
             _openUrlTimer = DispatcherQueue.CreateTimer();
             _openUrlTimer.IsRepeating = false;
             _openUrlTimer.Tick += OnOpenUrlTimerTick;
+            _copiedTimer = DispatcherQueue.CreateTimer();
+            _copiedTimer.Interval = TimeSpan.FromSeconds(2);
+            _copiedTimer.IsRepeating = false;
+            _copiedTimer.Tick += OnCopiedTimerTick;
         }
         if (_session is null)
         {
@@ -203,6 +208,8 @@ public sealed partial class MainPage : Page
         _chromeTimer?.Stop();
         _volumeHoverTimer?.Stop();
         _openUrlTimer?.Stop();
+        _copiedTimer?.Stop();
+        CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         App.Recents.Changed -= OnRecentsChanged;
         CursorVisibility.Show();
         if (_session is { } session)
@@ -280,12 +287,17 @@ public sealed partial class MainPage : Page
         try
         {
             Clipboard.SetContent(package);
+            CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopied");
+            _copiedTimer?.Start(); // Start on a running timer restarts the 2 seconds
         }
         catch (Exception)
         {
             // Another app holds the clipboard open; the details stay selectable in the tile.
         }
     }
+
+    private void OnCopiedTimerTick(DispatcherQueueTimer sender, object args) =>
+        CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
 
     // The loader also tries mpv-2.dll, but the failure names the file the installer ships.
     private static string LibraryPath =>

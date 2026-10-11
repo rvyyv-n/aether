@@ -126,6 +126,7 @@ Mockups: screen 7 (settings, all pages).
 | 6.4 | Hardware decoding combo: Auto (`auto-safe`), Software only (`no`), Direct3D 11 (`d3d11va`), Direct3D 11 copy (`d3d11va-copy`), applied on restart | S | Sonnet |
 | 6.5 | Custom mpv options field (Cascadia Mono, per-line validation) and Streaming page state when yt-dlp is missing | S | Sonnet |
 | 6.6 | Settings tests: defaults, reset, restart flags, invalid option lines | S | Gemini |
+| 6.7 | Configurable keyboard shortcuts on the Shortcuts page: defaults as today, Open URL = `Ctrl+Shift+O` with `Ctrl+L` offered as an alternative; conflicts flagged, per-shortcut reset | S | Sonnet |
 
 **Pass 6 means:** Every setting in the mockups is reachable, persisted and applied, and the page holds at 405 px.
 
@@ -184,3 +185,4 @@ Mockups: screens 8.3–8.4.
 - **Hover rail (screen 6):** deferred. Clips and Stream are reached from the right-click menu and shortcuts. The spec stays in the design handoff.
 - **Re-encode export (NVENC / QSV / AMF / x264):** not planned. Export is stream copy only. Revisit for non-keyframe cuts or size-limited exports.
 - **GPU timing row in Diagnostics:** libmpv doesn't expose it. Would need our own D3D11 timestamp queries.
+- **Link playback (yt-dlp streaming):** not scheduled yet. When it lands, the empty-state hint must switch to "Drop a file, paste a link or press Ctrl+O", and Play in the Open URL dialog must start the stream instead of showing "Links can’t be played yet." (`OpenUrlFlow` takes `streamingAvailable`).

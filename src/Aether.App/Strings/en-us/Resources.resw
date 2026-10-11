@@ -100,7 +100,7 @@
     <value>Video files, YouTube and stream links</value>
   </data>
   <data name="EmptyState_EngineReady" xml:space="preserve">
-    <value>Engine ready</value>
+    <value>Ready</value>
   </data>
   <data name="EmptyState_Renderer" xml:space="preserve">
     <value>ANGLE · D3D11</value>
@@ -132,13 +132,13 @@
 
   <!-- Shell and engine states (Screen 2) -->
   <data name="Shell_StartingEngine" xml:space="preserve">
-    <value>Starting engine</value>
+    <value>Starting up…</value>
   </data>
   <data name="Shell_LoadingLibmpv" xml:space="preserve">
     <value>Loading libmpv</value>
   </data>
   <data name="Shell_EngineFailedTitle" xml:space="preserve">
-    <value>Engine failed to start</value>
+    <value>Couldn’t start the player</value>
   </data>
   <data name="Shell_EngineFailedMissingFile" xml:space="preserve">
     <value>libmpv-2.dll wasn’t found</value>
@@ -152,8 +152,12 @@
   <data name="Shell_EngineFailedCopyDetails" xml:space="preserve">
     <value>Copy details</value>
   </data>
+  <data name="Shell_EngineFailedCopied" xml:space="preserve">
+    <value>Copied</value>
+    <comment>Copy details label for 2 seconds after a successful copy</comment>
+  </data>
   <data name="Shell_EngineNotRunning" xml:space="preserve">
-    <value>Engine not running</value>
+    <value>Not ready yet</value>
   </data>
   <data name="Shell_DropToPlay" xml:space="preserve">
     <value>Drop to play</value>
@@ -176,11 +180,11 @@
     <value>Unknown error</value>
   </data>
   <data name="Shell_EngineNotReadyTitle" xml:space="preserve">
-    <value>Engine not ready</value>
+    <value>Not ready yet</value>
     <comment>Title while a playable file is dragged over and the engine is not running</comment>
   </data>
   <data name="Shell_OpeningTitle" xml:space="preserve">
-    <value>Opening</value>
+    <value>Opening file</value>
   </data>
   <data name="Shell_Loading" xml:space="preserve">
     <value>Loading</value>
@@ -204,7 +208,7 @@
     <value>That isn’t a web link</value>
   </data>
   <data name="OpenUrl_NotAvailable" xml:space="preserve">
-    <value>Link playback isn’t available yet</value>
+    <value>Links can’t be played yet.</value>
     <comment>Replaces OpenUrl_Hint until links play (streaming); Ctrl+V does not play a link yet</comment>
   </data>
   <data name="OpenUrl_Play" xml:space="preserve">
