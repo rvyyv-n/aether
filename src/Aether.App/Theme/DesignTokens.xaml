@@ -149,8 +149,9 @@
     <!--  Radius  -->
     <CornerRadius x:Key="AetherControlCornerRadius">4</CornerRadius>
     <CornerRadius x:Key="AetherOverlayCornerRadius">8</CornerRadius>
-    <CornerRadius x:Key="AetherPillCornerRadius">999</CornerRadius>
-    <CornerRadius x:Key="AetherTransportCornerRadius">24</CornerRadius>
+    <CornerRadius x:Key="AetherPillCornerRadius">8</CornerRadius>
+    <CornerRadius x:Key="AetherTransportCornerRadius">16</CornerRadius>
+    <CornerRadius x:Key="AetherTileCornerRadius">16</CornerRadius>
 
     <!--  Sizes  -->
     <x:Double x:Key="AetherSizeTitleBar">32</x:Double>
@@ -257,7 +258,8 @@
     </Style>
     <!--  Timecodes only. Tabular digits come with the monospace face.  -->
     <Style x:Key="AetherTimecodeTextStyle" BasedOn="{StaticResource AetherBodyTextStyle}" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="{StaticResource AetherMonoFont}" />
+        <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
+        <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
         <Setter Property="FontSize" Value="{StaticResource AetherTimecodeFontSize}" />
         <Setter Property="LineHeight" Value="{StaticResource AetherTimecodeLineHeight}" />
         <Setter Property="TextTrimming" Value="None" />

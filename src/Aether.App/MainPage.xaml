@@ -86,7 +86,7 @@
                     Background="{StaticResource AetherSurfaceGlassBrush}"
                     BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
                     BorderThickness="1"
-                    CornerRadius="{StaticResource AetherPillCornerRadius}">
+                    CornerRadius="{StaticResource AetherTileCornerRadius}">
                     <Grid>
                     <!--  Film frame drawn on the handoff's 24 px grid, so the stroke scales with it.  -->
                     <Viewbox

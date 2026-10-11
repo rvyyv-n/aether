@@ -9,7 +9,7 @@
     Title="Aether"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
-        <MicaBackdrop Kind="BaseAlt" />
+        <DesktopAcrylicBackdrop />
     </Window.SystemBackdrop>
 
     <!--  The page draws its own title bar over the video; the window only hosts it.  -->
