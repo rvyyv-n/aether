@@ -181,6 +181,10 @@
     <x:Double x:Key="AetherSizeSeekThumb">12</x:Double>  <!-- Shown on hover only; 16 px while dragging -->
     <x:Double x:Key="AetherSizeSeekBubble">24</x:Double>  <!-- Time bubble: surface.dialog, radius 4, padding 4,8, Cascadia Mono 13, 16 above the pill; 1 px hover  -->
     <x:Double x:Key="AetherSizeClipRange">20</x:Double>  <!-- In/out band height (fill.range, radius 4) behind the track; I/O ticks 2×24 white -->
+    <x:Double x:Key="AetherSizeClipChip">40</x:Double>  <!-- Export chip (s5-03): surface.osd pill, 8 above the transport pill, right-aligned -->
+    <x:Double x:Key="AetherSizeClipDrawerWidth">360</x:Double>  <!-- The chip grown into the clip drawer -->
+    <x:Double x:Key="AetherSizeClipThumbWidth">64</x:Double>  <!-- Clip row thumbnail, 16:9, radius 4 -->
+    <x:Double x:Key="AetherSizeClipThumbHeight">36</x:Double>
     <x:Double x:Key="AetherSizeMenuItem">32</x:Double>  <!-- Menu items: 4 px inset, radius 4, check column 16, gap 12, hover fill.subtle.hover; menus on surface -->
     <x:Double x:Key="AetherSizeSpeedPill">52</x:Double>  <!-- Min width of the speed pill, 32 tall, Caption 12 tabular -->
     <x:Double x:Key="AetherSizeTransportCompactBreakpoint">520</x:Double>  <!-- Below this pill width, frame step, loop and always on top move into More controls (…) -->

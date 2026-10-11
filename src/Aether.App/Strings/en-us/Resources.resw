@@ -909,4 +909,37 @@
   <data name="Common_Retry" xml:space="preserve">
     <value>Retry</value>
   </data>
+  <data name="Clips_Clips" xml:space="preserve">
+    <value>Clips</value>
+  </data>
+  <data name="Clips_ShowClips" xml:space="preserve">
+    <value>Show clips</value>
+  </data>
+  <data name="Clips_HideClips" xml:space="preserve">
+    <value>Hide clips</value>
+  </data>
+  <data name="Clips_ShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="Clips_Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="Clips_ShowAllInFolder" xml:space="preserve">
+    <value>Show all in folder</value>
+  </data>
+  <data name="Clips_FileNotFound" xml:space="preserve">
+    <value>File not found</value>
+  </data>
+  <data name="Clips_Saving" xml:space="preserve">
+    <value>Saving clip…</value>
+  </data>
+  <data name="Clips_Failed" xml:space="preserve">
+    <value>Couldn’t save this clip</value>
+  </data>
+  <data name="Clips_NeedsFfmpeg" xml:space="preserve">
+    <value>Clip export needs FFmpeg</value>
+  </data>
+  <data name="Clips_Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
 </root>

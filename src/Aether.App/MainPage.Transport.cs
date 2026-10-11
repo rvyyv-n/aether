@@ -20,6 +20,8 @@ public sealed partial class MainPage
     private void InitializeTransport()
     {
         SeekBar.SeekRequested += OnSeekRequested;
+        ClipDrawer.ClearRequested += (_, _) => SetClipRange(default);
+        ClipDrawer.HoldChanged += OnClipDrawerHoldChanged;
         foreach (double option in PlaybackSpeed.Options)
         {
             var item = new ToggleMenuFlyoutItem
@@ -207,7 +209,7 @@ public sealed partial class MainPage
         MoreAlwaysOnTopItem.IsChecked = onTop;
     }
 
-    // In (I) and Out (O): the band on the seek bar, and later the clip chip above the pill.
+    // In (I) and Out (O): the band on the seek bar and the export chip above the pill.
 
     private void OnSetInAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
         OnTransportKey(args, () => SetClipRange(_clipRange.SetIn(CurrentPosition())));
@@ -223,6 +225,13 @@ public sealed partial class MainPage
         _clipRange = range;
         _clipRangePath = _currentPath;
         SeekBar.Range = range;
+        ClipDrawer.Update(range, _currentPath, _session?.ViewModel.Duration ?? 0);
+    }
+
+    private void OnClipDrawerHoldChanged(object? sender, EventArgs e)
+    {
+        _chrome.SetHold(ChromeHolds.Drawer, ClipDrawer.IsOpen || ClipDrawer.IsDraggingOut);
+        ApplyChrome();
     }
 
     /// <summary>In and Out belong to one file: opening another clears them.</summary>
