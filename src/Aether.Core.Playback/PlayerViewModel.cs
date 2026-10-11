@@ -20,8 +20,10 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs StatusArgs = new(nameof(Status));
     private static readonly PropertyChangedEventArgs VideoWidthArgs = new(nameof(VideoWidth));
     private static readonly PropertyChangedEventArgs VideoHeightArgs = new(nameof(VideoHeight));
+    private static readonly PropertyChangedEventArgs IsLoopingArgs = new(nameof(IsLooping));
 
     private PlayerState _state = PlayerState.Initial;
+    private bool _isLooping;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -53,6 +55,22 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
     /// <summary>Display height in pixels (<c>dheight</c>); 0 without video.</summary>
     public int VideoHeight => _state.VideoHeight;
+
+    /// <summary>Restart from 0 when the file ends (see <see cref="LoopRestart"/>). UI thread; not part of <see cref="State"/>.</summary>
+    public bool IsLooping
+    {
+        get => _isLooping;
+        set
+        {
+            if (_isLooping != value)
+            {
+                _isLooping = value;
+                Raise(IsLoopingArgs);
+            }
+        }
+    }
+
+    public void ToggleLoop() => IsLooping = !IsLooping;
 
     /// <summary>
     /// UI thread. Replaces the state and raises <see cref="PropertyChanged"/> for each field that

@@ -1,5 +1,6 @@
 ﻿using Aether.Core.Interop.Windowing;
 using Aether.Core.Playback;
+using Aether.Core.Playback.Settings;
 using Aether_App.Controls;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
@@ -20,6 +21,14 @@ public interface IShellWindow
     event EventHandler? FullScreenChanged;
 
     void SetFullScreen(bool fullScreen);
+
+    /// <summary>Keep the window above others. Saved with the settings; applies again after full screen.</summary>
+    bool IsAlwaysOnTop { get; }
+
+    /// <summary>Raised after <see cref="IsAlwaysOnTop"/> changes.</summary>
+    event EventHandler? AlwaysOnTopChanged;
+
+    void ToggleAlwaysOnTop();
 
     /// <summary>Fades the minimize/maximize/close glyphs with the rest of the chrome (they stay clickable).</summary>
     void SetCaptionButtonsVisible(bool visible);
@@ -96,15 +105,22 @@ public sealed partial class MainWindow : Window, IShellWindow
         nonClient.PointerEntered += OnNonClientPointerMoved;
         nonClient.PointerMoved += OnNonClientPointerMoved;
 
+        App.Settings.Changed += OnSettingChanged;
+        ApplyAlwaysOnTop();
+
         Shell.Host = this;
         Activated += OnActivated;
         Closed += (_, _) =>
         {
             _captionTimer.Stop();
             _aspectLock?.Dispose();
+            App.Settings.Changed -= OnSettingChanged;
         };
         AppWindow.Changed += OnAppWindowChanged;
     }
+
+    /// <summary>Opens this file as soon as the engine is ready (launch from a file or the command line).</summary>
+    public void OpenWhenReady(string path) => Shell.OpenWhenReady(path);
 
     public bool IsFullScreen => AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen;
 
@@ -116,6 +132,45 @@ public sealed partial class MainWindow : Window, IShellWindow
         {
             AppWindow.SetPresenter(fullScreen ? AppWindowPresenterKind.FullScreen : AppWindowPresenterKind.Overlapped);
         }
+    }
+
+    public bool IsAlwaysOnTop => App.Settings.Current.AlwaysOnTop;
+
+    public event EventHandler? AlwaysOnTopChanged;
+
+    public void ToggleAlwaysOnTop()
+    {
+        App.Settings.Set(SettingKeys.AlwaysOnTop, !IsAlwaysOnTop);
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                App.Settings.Save();
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // The choice still holds this session; it is saved with the next change.
+            }
+        });
+    }
+
+    // The setting changes on the thread pool when it loads, so the window is updated on its own thread.
+    private void OnSettingChanged(object? sender, SettingChangedEventArgs e)
+    {
+        if (e.Key == SettingKeys.AlwaysOnTop)
+        {
+            DispatcherQueue.TryEnqueue(ApplyAlwaysOnTop);
+        }
+    }
+
+    private void ApplyAlwaysOnTop()
+    {
+        // Only the overlapped presenter can be topmost; full screen applies it again on the way back.
+        if (AppWindow.Presenter is OverlappedPresenter presenter && presenter.IsAlwaysOnTop != IsAlwaysOnTop)
+        {
+            presenter.IsAlwaysOnTop = IsAlwaysOnTop;
+        }
+        AlwaysOnTopChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public event EventHandler? TitleBarPointerMoved;
@@ -208,6 +263,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     {
         if (args.DidPresenterChange)
         {
+            ApplyAlwaysOnTop();
             FullScreenChanged?.Invoke(this, EventArgs.Empty);
         }
     }

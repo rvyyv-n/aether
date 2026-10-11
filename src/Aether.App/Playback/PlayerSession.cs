@@ -23,6 +23,7 @@ public sealed class PlayerSession : IDisposable
     private readonly FrameStepper _stepper;
     private readonly FrameStepKeyInput _keys;
     private readonly MpvVideoSurface _surface;
+    private readonly LoopRestart _loop = new();
     private bool _disposed;
 
     private PlayerSession(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
@@ -79,11 +80,19 @@ public sealed class PlayerSession : IDisposable
         return new PlayerSession(context, surface, keyTarget, queue);
     }
 
-    /// <summary>Opens <paramref name="path"/>, replacing the current file. Non-blocking.</summary>
+    /// <summary>
+    /// Opens <paramref name="path"/>, replacing the current file, from <paramref name="startAt"/> seconds
+    /// when given. Non-blocking.
+    /// </summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
-    public void Open(string path)
+    public void Open(string path, double? startAt = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(path);
+        // <c>start</c> is global and sticks, so every open sets it, to "none" when there is nothing to resume.
+        string start = startAt is { } seconds
+            ? seconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
+            : "none";
+        _context.CommandAsync(new MpvCommand("set", "start", start));
         _context.CommandAsync(new MpvCommand("loadfile", path, "replace"));
     }
 
@@ -117,6 +126,17 @@ public sealed class PlayerSession : IDisposable
         // The first frame sits at time 0 (or within half a frame of it when the container starts later).
         double halfFrame = state.FramesPerSecond > 0 ? 0.5 / state.FramesPerSecond : 0;
         _stepper.SetBounds(atStart: state.Position <= halfFrame, atEnd: state.IsAtEnd);
+        if (_loop.ShouldRestart(state.IsAtEnd, ViewModel.IsLooping))
+        {
+            try
+            {
+                TogglePause();
+            }
+            catch (MpvException)
+            {
+                // The core is shutting down.
+            }
+        }
     }
 
     /// <summary>Non-blocking: the event and render threads release the core as they exit.</summary>
