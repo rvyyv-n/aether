@@ -547,13 +547,13 @@
                         Spacing="4">
                         <ToggleButton
                             x:Name="LoopButton"
-                            Visibility="Collapsed"
+                            Click="OnLoopClick"
                             Content="&#xE8EE;"
                             Style="{StaticResource AetherIconToggleButtonStyle}"
                             ToolTipService.Placement="Top" />
                         <ToggleButton
                             x:Name="AlwaysOnTopButton"
-                            Visibility="Collapsed"
+                            Click="OnAlwaysOnTopClick"
                             Content="&#xE718;"
                             Style="{StaticResource AetherIconToggleButtonStyle}"
                             ToolTipService.Placement="Top" />
@@ -653,12 +653,12 @@
                                         Style="{StaticResource AetherMenuItemStyle}" />
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreLoopItem"
-                                        Visibility="Collapsed"
+                                        Click="OnLoopClick"
                                         KeyboardAcceleratorTextOverride="L"
                                         Style="{StaticResource AetherToggleMenuItemStyle}" />
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreAlwaysOnTopItem"
-                                        Visibility="Collapsed"
+                                        Click="OnAlwaysOnTopClick"
                                         KeyboardAcceleratorTextOverride="T"
                                         Style="{StaticResource AetherToggleMenuItemStyle}" />
                                 </MenuFlyout>

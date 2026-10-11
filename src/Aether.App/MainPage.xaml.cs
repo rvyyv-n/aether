@@ -141,13 +141,16 @@ public sealed partial class MainPage : Page
             {
                 _host.FullScreenChanged -= OnFullScreenChanged;
                 _host.TitleBarPointerMoved -= OnTitleBarPointerMoved;
+                _host.AlwaysOnTopChanged -= OnAlwaysOnTopChanged;
             }
             _host = value;
             if (_host is not null)
             {
                 _host.FullScreenChanged += OnFullScreenChanged;
                 _host.TitleBarPointerMoved += OnTitleBarPointerMoved;
+                _host.AlwaysOnTopChanged += OnAlwaysOnTopChanged;
             }
+            SyncAlwaysOnTop();
         }
     }
 
@@ -399,6 +402,9 @@ public sealed partial class MainPage : Page
                 break;
             case nameof(PlayerViewModel.Speed):
                 ShowSpeed(vm.Speed);
+                break;
+            case nameof(PlayerViewModel.IsLooping):
+                SyncLoop();
                 break;
             case nameof(PlayerViewModel.VideoWidth):
             case nameof(PlayerViewModel.VideoHeight):
