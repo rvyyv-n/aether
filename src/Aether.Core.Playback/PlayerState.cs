@@ -28,6 +28,8 @@ public enum PlaybackStatus
 /// <param name="IsAtEnd"><c>eof-reached</c>.</param>
 /// <param name="FramesPerSecond"><c>container-fps</c>; 0 when unknown.</param>
 /// <param name="Status">Derived by <see cref="PlayerEventDispatcher"/>; never observed directly.</param>
+/// <param name="VideoWidth"><c>dwidth</c>: display width in pixels after aspect correction; 0 without video.</param>
+/// <param name="VideoHeight"><c>dheight</c>: display height in pixels; 0 without video.</param>
 public readonly record struct PlayerState(
     double Position,
     double Duration,
@@ -36,7 +38,9 @@ public readonly record struct PlayerState(
     bool IsPaused,
     bool IsAtEnd,
     double FramesPerSecond,
-    PlaybackStatus Status)
+    PlaybackStatus Status,
+    int VideoWidth = 0,
+    int VideoHeight = 0)
 {
     /// <summary>The state before any file or property: idle, unity speed and volume.</summary>
     public static PlayerState Initial { get; } = new(0, 0, 1, 100, false, false, 0, PlaybackStatus.Idle);

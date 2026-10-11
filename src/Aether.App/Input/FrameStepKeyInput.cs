@@ -1,6 +1,7 @@
 using Aether.Core.Playback;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using VirtualKey = Windows.System.VirtualKey;
 
@@ -46,10 +47,7 @@ public sealed class FrameStepKeyInput : IDisposable
     /// <summary>Releases whichever step key is held and stops the timer (e.g. on window deactivation).</summary>
     public void ReleaseAll()
     {
-        if (_stepper.HeldDirection is { } held)
-        {
-            _stepper.Release(held);
-        }
+        _stepper.ReleaseAll();
         _timer.Stop();
     }
 
@@ -85,7 +83,8 @@ public sealed class FrameStepKeyInput : IDisposable
 
     private void OnKeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (!TryGetDirection(e.Key, out FrameStepDirection direction))
+        // A comma or full stop typed into a field (the Open URL link) is text, not a frame step.
+        if (e.OriginalSource is TextBox || !TryGetDirection(e.Key, out FrameStepDirection direction))
         {
             return;
         }

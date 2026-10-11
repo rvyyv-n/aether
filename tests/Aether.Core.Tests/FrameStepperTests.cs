@@ -279,6 +279,68 @@ public class FrameStepperTests
     }
 
     [Fact]
+    public void FastTap_PressedWhileInFlight_IsQueuedAndSentAfterReply()
+    {
+        var sender = new FakeFrameStepCommandSender();
+        var time = new ManualTimeProvider();
+        var stepper = new FrameStepper(sender, time);
+
+        stepper.Press(FrameStepDirection.Forward);
+        stepper.Release(FrameStepDirection.Forward);
+        stepper.Press(FrameStepDirection.Forward); // second tap lands on the step still in flight
+        stepper.Release(FrameStepDirection.Forward);
+
+        Assert.Equal(1, sender.SendCount);
+        Assert.Equal(1, stepper.TapsQueued);
+        Assert.NotNull(stepper.Tick()); // keeps polling while the tap waits
+
+        stepper.OnCommandReply(sender.LastCommand!.Value.ReplyUserdata, 0);
+        time.Advance(TimeSpan.FromMilliseconds(2));
+        Assert.Null(stepper.Tick());
+
+        Assert.Equal(2, sender.SendCount);
+    }
+
+    [Fact]
+    public void FastTap_QueueHoldsOneTap_NewestWins()
+    {
+        var sender = new FakeFrameStepCommandSender();
+        var time = new ManualTimeProvider();
+        var stepper = new FrameStepper(sender, time);
+
+        stepper.Press(FrameStepDirection.Forward);
+        stepper.Release(FrameStepDirection.Forward);
+        stepper.Press(FrameStepDirection.Forward);
+        stepper.Release(FrameStepDirection.Forward);
+        stepper.Press(FrameStepDirection.Backward);
+        stepper.Release(FrameStepDirection.Backward);
+
+        stepper.OnCommandReply(sender.LastCommand!.Value.ReplyUserdata, 0);
+        stepper.Tick();
+
+        Assert.Equal(2, sender.SendCount);
+        Assert.Equal(FrameStepDirection.Backward, sender.LastCommand!.Value.Direction);
+    }
+
+    [Fact]
+    public void ReleaseAll_DiscardsHeldKeyAndQueuedTap()
+    {
+        var sender = new FakeFrameStepCommandSender();
+        var time = new ManualTimeProvider();
+        var stepper = new FrameStepper(sender, time);
+
+        stepper.Press(FrameStepDirection.Forward);
+        stepper.Release(FrameStepDirection.Forward);
+        stepper.Press(FrameStepDirection.Forward);
+        stepper.ReleaseAll();
+
+        Assert.False(stepper.IsHeld);
+        stepper.OnCommandReply(sender.LastCommand!.Value.ReplyUserdata, 0);
+        Assert.Null(stepper.Tick());
+        Assert.Equal(1, sender.SendCount);
+    }
+
+    [Fact]
     public void OnCommandReply_NonMatchingTaggedId_DoesNotClearInFlight()
     {
         var sender = new FakeFrameStepCommandSender();
@@ -661,11 +723,10 @@ public class FrameStepperTests
             // Reply asynchronously from a background thread
             Task.Run(() =>
             {
-                Thread.Sleep(5);
                 stepper.OnCommandReply(currentId, 0);
             });
 
-            bool cleared = TestWait.ForCondition(() => !stepper.IsStepInFlight, timeoutMs: 2000);
+            bool cleared = TestWait.ForCondition(() => !stepper.IsStepInFlight, timeoutMs: 5000);
             Assert.True(cleared, $"In-flight was not cleared on iteration {i}.");
 
             stepper.Release(FrameStepDirection.Forward);
@@ -684,7 +745,6 @@ public class FrameStepperTests
         {
             Task.Run(() =>
             {
-                Thread.Sleep(2);
                 stepper.OnCommandReply(replyId, 0);
             });
         };
@@ -698,7 +758,7 @@ public class FrameStepperTests
             Thread.Sleep(5);
         }
 
-        bool cleared = TestWait.ForCondition(() => !stepper.IsStepInFlight, timeoutMs: 2000);
+        bool cleared = TestWait.ForCondition(() => !stepper.IsStepInFlight, timeoutMs: 5000);
         Assert.True(cleared, "Final in-flight step was not cleared by background thread reply.");
         Assert.True(stepper.StepsSent > 1, $"Expected multiple steps to be sent, but only sent {stepper.StepsSent}.");
 

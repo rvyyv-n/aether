@@ -17,6 +17,8 @@ dotnet build AetherPlayer.sln --no-incremental -warnaserror   # warnings are err
 ```
 CI (`.github/workflows/build-aot.yml`) builds and tests in Release.
 
+Running the app: `Aether.App` is a packaged (MSIX) app. `dotnet run --project src/Aether.App -p:Platform=x86` needs Windows Developer Mode; otherwise run it from Visual Studio. Unpackaged builds (`WindowsPackageType=None`) start but render a black window on the dev machine, so they can't be used for visual checks. libmpv and ANGLE (`libmpv-2.dll`, `libEGL.dll`, `libGLESv2.dll`) go in `src/Aether.App/Native/<Platform>/` (git-ignored) and are packaged next to the exe; only x64 binaries exist so far, so a playback run needs `-p:Platform=x64`.
+
 ## Roles
 - **Opus**: `Aether.Core.Interop`. Unsafe structs, P/Invoke signatures, DirectX COM wrappers (`ISwapChainPanelNative`), memory lifetimes (verify no unmanaged leaks), MPV event-loop thread safety, and architecture decisions. Use it for 1-3 turns per task, not for file reading or test-fix loops.
 - **Opus (design)**: all design work: custom chrome, Mica, `DesignTokens`, auto-hiding OSD, drag-and-drop, startup/error states, `OverlayHud`, `PrecisionSeekBar`, `ClipDrawer`, the mobile player shell and the QR flyout (roadmap tasks 4.1-4.6, 4.8, 4.9, 5.1-5.4, 6.1, 6.2, 7.1-7.3, 8.1, 9.2, 9.3). Before building any of them it asks the user design questions and requests reference screenshots, then confirms the direction before writing UI code.

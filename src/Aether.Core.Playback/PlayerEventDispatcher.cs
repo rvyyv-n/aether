@@ -13,6 +13,8 @@ public enum PlayerProperty : ulong
     Pause,
     EofReached,
     IdleActive,
+    DisplayWidth,
+    DisplayHeight,
 }
 
 /// <summary>
@@ -75,6 +77,8 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
         context.ObserveProperty((ulong)PlayerProperty.Pause, "pause", MpvFormat.Flag);
         context.ObserveProperty((ulong)PlayerProperty.EofReached, "eof-reached", MpvFormat.Flag);
         context.ObserveProperty((ulong)PlayerProperty.IdleActive, "idle-active", MpvFormat.Flag);
+        context.ObserveProperty((ulong)PlayerProperty.DisplayWidth, "dwidth", MpvFormat.Int64);
+        context.ObserveProperty((ulong)PlayerProperty.DisplayHeight, "dheight", MpvFormat.Int64);
     }
 
     /// <summary>Event thread.</summary>
@@ -175,6 +179,12 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
                 case PlayerProperty.EofReached:
                     next = next with { IsAtEnd = change.TryGetFlag(out bool atEnd) && atEnd };
                     break;
+                case PlayerProperty.DisplayWidth:
+                    next = next with { VideoWidth = ToDimension(change) };
+                    break;
+                case PlayerProperty.DisplayHeight:
+                    next = next with { VideoHeight = ToDimension(change) };
+                    break;
                 case PlayerProperty.IdleActive:
                     // Unavailable can't happen for idle-active; treat it as idle.
                     _idleActive = !change.TryGetFlag(out bool idle) || idle;
@@ -212,6 +222,10 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
             MarkDirty();
         }
     }
+
+    /// <summary>A display dimension in pixels; 0 when unavailable or out of range.</summary>
+    private static int ToDimension(in MpvPropertyChange change) =>
+        change.TryGetInt64(out long value) && value > 0 && value <= int.MaxValue ? (int)value : 0;
 
     /// <summary>Loading, then Idle, then Ended, else Paused/Playing. Caller holds <see cref="_gate"/>.</summary>
     private PlaybackStatus DeriveStatus(in PlayerState state)

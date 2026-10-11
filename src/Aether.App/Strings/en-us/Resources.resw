@@ -1,0 +1,903 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- App and Title bar -->
+  <data name="App_Name" xml:space="preserve">
+    <value>Aether</value>
+  </data>
+  <data name="App_Badge" xml:space="preserve">
+    <value>Alpha</value>
+  </data>
+  <data name="TitleBar_SettingsTooltip" xml:space="preserve">
+    <value>Settings (Ctrl+,)</value>
+  </data>
+  <data name="TitleBar_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="TitleBar_Minimize" xml:space="preserve">
+    <value>Minimize</value>
+  </data>
+  <data name="TitleBar_Maximize" xml:space="preserve">
+    <value>Maximize</value>
+  </data>
+
+  <!-- Empty state (Screens 1 and 2A) -->
+  <data name="EmptyState_Title" xml:space="preserve">
+    <value>No video loaded</value>
+  </data>
+  <data name="EmptyState_Subtitle" xml:space="preserve">
+    <value>Drop a file, paste a link or press Ctrl+O</value>
+  </data>
+  <data name="EmptyState_SubtitleFilesOnly" xml:space="preserve">
+    <value>Drop a file or press Ctrl+O</value>
+    <comment>Shown until links play (streaming); EmptyState_Subtitle replaces it then</comment>
+  </data>
+  <data name="EmptyState_OpenFile" xml:space="preserve">
+    <value>Open file</value>
+  </data>
+  <data name="EmptyState_OpenUrl" xml:space="preserve">
+    <value>Open URL</value>
+  </data>
+  <data name="EmptyState_Hint" xml:space="preserve">
+    <value>Video files, YouTube and stream links</value>
+  </data>
+  <data name="EmptyState_EngineReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="EmptyState_Renderer" xml:space="preserve">
+    <value>ANGLE · D3D11</value>
+  </data>
+  <data name="EmptyState_DetailsSearched" xml:space="preserve">
+    <value>Searched</value>
+  </data>
+  <data name="EmptyState_DetailsError" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="EmptyState_Recent" xml:space="preserve">
+    <value>Recent</value>
+  </data>
+  <data name="EmptyState_ClearList" xml:space="preserve">
+    <value>Clear list</value>
+  </data>
+  <data name="EmptyState_Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="EmptyState_Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+  <data name="EmptyState_FileNotFound" xml:space="preserve">
+    <value>File not found</value>
+  </data>
+  <data name="EmptyState_RemoveFromRecent" xml:space="preserve">
+    <value>Remove from recent</value>
+  </data>
+
+  <!-- Shell and engine states (Screen 2) -->
+  <data name="Shell_StartingEngine" xml:space="preserve">
+    <value>Starting up…</value>
+  </data>
+  <data name="Shell_LoadingLibmpv" xml:space="preserve">
+    <value>Loading libmpv</value>
+  </data>
+  <data name="Shell_EngineFailedTitle" xml:space="preserve">
+    <value>Couldn’t start the player</value>
+  </data>
+  <data name="Shell_EngineFailedMissingFile" xml:space="preserve">
+    <value>libmpv-2.dll wasn’t found</value>
+  </data>
+  <data name="Shell_EngineFailedReinstall" xml:space="preserve">
+    <value>Reinstall Aether to restore it.</value>
+  </data>
+  <data name="Shell_EngineFailedRetry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Shell_EngineFailedCopyDetails" xml:space="preserve">
+    <value>Copy details</value>
+  </data>
+  <data name="Shell_EngineFailedCopied" xml:space="preserve">
+    <value>Copied</value>
+    <comment>Copy details label for 2 seconds after a successful copy</comment>
+  </data>
+  <data name="Shell_EngineNotRunning" xml:space="preserve">
+    <value>Not ready yet</value>
+  </data>
+  <data name="Shell_DropToPlay" xml:space="preserve">
+    <value>Drop to play</value>
+  </data>
+  <data name="Shell_DropFormats" xml:space="preserve">
+    <value>MP4, MKV, MOV and WEBM</value>
+  </data>
+  <data name="Shell_UnsupportedFormatTitle" xml:space="preserve">
+    <value>Unsupported format</value>
+  </data>
+  <data name="Shell_UnsupportedFormatMessage" xml:space="preserve">
+    <value>{0} isn’t a video. MP4, MKV, MOV and WEBM play.</value>
+    <comment>{0} is the dropped file name, e.g. notes.pdf</comment>
+  </data>
+  <data name="Shell_EngineFailedUnavailable" xml:space="preserve">
+    <value>Playback is unavailable until the engine loads</value>
+    <comment>Subtitle when the engine fails for a reason other than a missing libmpv</comment>
+  </data>
+  <data name="Shell_EngineFailedUnknownError" xml:space="preserve">
+    <value>Unknown error</value>
+  </data>
+  <data name="Shell_EngineNotReadyTitle" xml:space="preserve">
+    <value>Not ready yet</value>
+    <comment>Title while a playable file is dragged over and the engine is not running</comment>
+  </data>
+  <data name="Shell_OpeningTitle" xml:space="preserve">
+    <value>Opening file</value>
+  </data>
+  <data name="Shell_Loading" xml:space="preserve">
+    <value>Loading</value>
+  </data>
+  <data name="Shell_DropCaption" xml:space="preserve">
+    <value>Play</value>
+    <comment>Windows drag caption beside the pointer</comment>
+  </data>
+
+  <!-- Open URL dialog (Screen 2.5) -->
+  <data name="OpenUrl_Title" xml:space="preserve">
+    <value>Open URL</value>
+  </data>
+  <data name="OpenUrl_Placeholder" xml:space="preserve">
+    <value>Video or stream link</value>
+  </data>
+  <data name="OpenUrl_Hint" xml:space="preserve">
+    <value>Ctrl+V in the empty window plays a copied link</value>
+  </data>
+  <data name="OpenUrl_InvalidLink" xml:space="preserve">
+    <value>That isn’t a web link</value>
+  </data>
+  <data name="OpenUrl_NotAvailable" xml:space="preserve">
+    <value>Links can’t be played yet.</value>
+    <comment>Replaces OpenUrl_Hint until links play (streaming); Ctrl+V does not play a link yet</comment>
+  </data>
+  <data name="OpenUrl_Play" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="OpenUrl_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+
+  <!-- Links and streaming states (Screen 2) -->
+  <data name="Stream_GettingStream" xml:space="preserve">
+    <value>Getting stream</value>
+  </data>
+  <data name="Stream_StillWorking" xml:space="preserve">
+    <value>Still working…</value>
+  </data>
+  <data name="Stream_TakingLonger" xml:space="preserve">
+    <value>{0} is taking longer than usual</value>
+    <comment>{0} is the site, e.g. youtube.com</comment>
+  </data>
+  <data name="Stream_UnavailableTitle" xml:space="preserve">
+    <value>Video unavailable</value>
+  </data>
+  <data name="Stream_UnavailablePrivate" xml:space="preserve">
+    <value>This video is private.</value>
+  </data>
+  <data name="Stream_OfflineTitle" xml:space="preserve">
+    <value>Can’t reach youtube.com</value>
+  </data>
+  <data name="Stream_OfflineMessage" xml:space="preserve">
+    <value>Check your connection, then try again.</value>
+  </data>
+  <data name="Stream_SignInRequiredTitle" xml:space="preserve">
+    <value>Sign-in required</value>
+  </data>
+  <data name="Stream_SignInRequiredMessage" xml:space="preserve">
+    <value>YouTube only shows this video to signed-in viewers.</value>
+  </data>
+  <data name="Stream_RegionBlockedTitle" xml:space="preserve">
+    <value>Not available in your country</value>
+  </data>
+  <data name="Stream_RegionBlockedMessage" xml:space="preserve">
+    <value>The uploader has blocked this video where you are.</value>
+  </data>
+  <data name="Stream_LiveNotStartedTitle" xml:space="preserve">
+    <value>Live stream hasn’t started</value>
+  </data>
+  <data name="Stream_LiveNotStartedMessage" xml:space="preserve">
+    <value>Scheduled for 18:00 today. Try again when it’s live.</value>
+  </data>
+  <data name="Stream_SiteNotSupportedTitle" xml:space="preserve">
+    <value>Site not supported</value>
+  </data>
+  <data name="Stream_SiteNotSupportedMessage" xml:space="preserve">
+    <value>Aether can’t play links from this site.</value>
+  </data>
+  <data name="Stream_EditLink" xml:space="preserve">
+    <value>Edit link</value>
+  </data>
+  <data name="Stream_Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Stream_OpenInBrowser" xml:space="preserve">
+    <value>Open in browser</value>
+  </data>
+  <data name="Stream_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+
+  <!-- yt-dlp update prompts (Screen 2) -->
+  <data name="YtDlp_UpdatePromptTitle" xml:space="preserve">
+    <value>Link playback needs an update</value>
+  </data>
+  <data name="YtDlp_UpdatePromptCaption" xml:space="preserve">
+    <value>yt-dlp 2026.03.17 is out of date</value>
+  </data>
+  <data name="YtDlp_UpdateNow" xml:space="preserve">
+    <value>Update now</value>
+  </data>
+  <data name="YtDlp_NotNow" xml:space="preserve">
+    <value>Not now</value>
+  </data>
+  <data name="YtDlp_UpdatingTitle" xml:space="preserve">
+    <value>Updating yt-dlp</value>
+  </data>
+  <data name="YtDlp_UpdatingProgress" xml:space="preserve">
+    <value>6.1 of 9.8 MB · 62%</value>
+  </data>
+  <data name="YtDlp_UpdateFailedTitle" xml:space="preserve">
+    <value>Couldn’t update link playback</value>
+  </data>
+  <data name="YtDlp_UpdateFailedMessage" xml:space="preserve">
+    <value>The download didn’t finish. Check your connection.</value>
+  </data>
+  <data name="YtDlp_UpdateFailedCaption" xml:space="preserve">
+    <value>yt-dlp 2026.03.17 is still installed</value>
+  </data>
+
+  <!-- Transport and Playing controls / tooltips (Screens 3 and 5) -->
+  <data name="Transport_OpenFile" xml:space="preserve">
+    <value>Open file (Ctrl+O)</value>
+  </data>
+  <data name="EmptyState_OpenUrlTooltip" xml:space="preserve">
+    <value>Open URL (Ctrl+Shift+O)</value>
+  </data>
+  <data name="Transport_Play" xml:space="preserve">
+    <value>Play (Space)</value>
+  </data>
+  <data name="Transport_Pause" xml:space="preserve">
+    <value>Pause (Space)</value>
+  </data>
+  <data name="Transport_Replay" xml:space="preserve">
+    <value>Replay (Space)</value>
+  </data>
+  <data name="Transport_FullScreen" xml:space="preserve">
+    <value>Full screen (F)</value>
+  </data>
+  <data name="Transport_ExitFullScreen" xml:space="preserve">
+    <value>Exit full screen (Esc)</value>
+  </data>
+  <data name="Transport_Back5s" xml:space="preserve">
+    <value>Back 5 s (←)</value>
+  </data>
+  <data name="Transport_Forward5s" xml:space="preserve">
+    <value>Forward 5 s (→)</value>
+  </data>
+  <data name="Transport_Back1Frame" xml:space="preserve">
+    <value>Back 1 frame (,)</value>
+  </data>
+  <data name="Transport_Forward1Frame" xml:space="preserve">
+    <value>Forward 1 frame (.)</value>
+  </data>
+  <data name="Transport_Loop" xml:space="preserve">
+    <value>Loop (L)</value>
+  </data>
+  <data name="Transport_AlwaysOnTop" xml:space="preserve">
+    <value>Always on top (T)</value>
+  </data>
+  <data name="Transport_Mute" xml:space="preserve">
+    <value>Mute (M)</value>
+  </data>
+  <data name="Transport_Unmute" xml:space="preserve">
+    <value>Unmute (M)</value>
+  </data>
+  <data name="Transport_Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="Transport_Seek" xml:space="preserve">
+    <value>Seek</value>
+  </data>
+  <data name="Transport_MoreControls" xml:space="preserve">
+    <value>More controls</value>
+  </data>
+  <data name="Transport_ExportClip" xml:space="preserve">
+    <value>Export clip</value>
+  </data>
+  <data name="Transport_ClearInOut" xml:space="preserve">
+    <value>Clear in and out</value>
+  </data>
+  <data name="Transport_Speed" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="Transport_Quality" xml:space="preserve">
+    <value>Quality</value>
+  </data>
+  <data name="Transport_QualityAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="Transport_QualityDefaultFromSettings" xml:space="preserve">
+    <value>Default from Settings</value>
+  </data>
+
+  <!-- Rail (Screen 6) -->
+  <data name="Rail_Player" xml:space="preserve">
+    <value>Player</value>
+  </data>
+  <data name="Rail_Clips" xml:space="preserve">
+    <value>Clips</value>
+  </data>
+  <data name="Rail_Stream" xml:space="preserve">
+    <value>Stream</value>
+  </data>
+  <data name="Rail_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+
+  <!-- Menus and flyouts (Screen 9) -->
+  <data name="Menu_OpenFile" xml:space="preserve">
+    <value>Open file</value>
+  </data>
+  <data name="Menu_OpenUrl" xml:space="preserve">
+    <value>Open URL</value>
+  </data>
+  <data name="Menu_Recent" xml:space="preserve">
+    <value>Recent</value>
+  </data>
+  <data name="Menu_Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Menu_Subtitles" xml:space="preserve">
+    <value>Subtitles</value>
+  </data>
+  <data name="Menu_Speed" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="Menu_Video" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="Menu_CopyFrame" xml:space="preserve">
+    <value>Copy frame</value>
+  </data>
+  <data name="Menu_SaveFrame" xml:space="preserve">
+    <value>Save frame</value>
+  </data>
+  <data name="Menu_PictureInPicture" xml:space="preserve">
+    <value>Picture in picture</value>
+  </data>
+  <data name="Menu_AlwaysOnTop" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="Menu_Clips" xml:space="preserve">
+    <value>Clips</value>
+  </data>
+  <data name="Menu_Stream" xml:space="preserve">
+    <value>Stream</value>
+  </data>
+  <data name="Menu_Diagnostics" xml:space="preserve">
+    <value>Diagnostics</value>
+  </data>
+  <data name="Menu_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Menu_ClearList" xml:space="preserve">
+    <value>Clear list</value>
+  </data>
+
+  <!-- Tracks flyout (Screen 9.2) -->
+  <data name="Tracks_Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Tracks_Subtitles" xml:space="preserve">
+    <value>Subtitles</value>
+  </data>
+  <data name="Tracks_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Tracks_AddSubtitleFile" xml:space="preserve">
+    <value>Add subtitle file…</value>
+  </data>
+  <data name="Tracks_AudioDelay" xml:space="preserve">
+    <value>Audio delay</value>
+  </data>
+  <data name="Tracks_SubtitleDelay" xml:space="preserve">
+    <value>Subtitle delay</value>
+  </data>
+
+  <!-- Video flyout (Screen 9.3) -->
+  <data name="VideoFlyout_Zoom" xml:space="preserve">
+    <value>Zoom</value>
+  </data>
+  <data name="VideoFlyout_Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="VideoFlyout_Rotate" xml:space="preserve">
+    <value>Rotate</value>
+  </data>
+  <data name="VideoFlyout_AspectRatio" xml:space="preserve">
+    <value>Aspect ratio</value>
+  </data>
+  <data name="VideoFlyout_Auto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="VideoFlyout_Brightness" xml:space="preserve">
+    <value>Brightness</value>
+  </data>
+  <data name="VideoFlyout_Contrast" xml:space="preserve">
+    <value>Contrast</value>
+  </data>
+  <data name="VideoFlyout_Gamma" xml:space="preserve">
+    <value>Gamma</value>
+  </data>
+  <data name="VideoFlyout_Saturation" xml:space="preserve">
+    <value>Saturation</value>
+  </data>
+  <data name="VideoFlyout_ResetColours" xml:space="preserve">
+    <value>Reset colours</value>
+  </data>
+
+  <!-- Diagnostics and Picture in Picture (Screen 8) -->
+  <data name="Diagnostics_Title" xml:space="preserve">
+    <value>Diagnostics</value>
+  </data>
+  <data name="Diagnostics_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Diagnostics_Decoder" xml:space="preserve">
+    <value>Decoder</value>
+  </data>
+  <data name="Diagnostics_Video" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="Diagnostics_FrameRate" xml:space="preserve">
+    <value>Frame rate</value>
+  </data>
+  <data name="Diagnostics_Display" xml:space="preserve">
+    <value>Display</value>
+  </data>
+  <data name="Diagnostics_Dropped" xml:space="preserve">
+    <value>Dropped</value>
+  </data>
+  <data name="Diagnostics_Cache" xml:space="preserve">
+    <value>Cache</value>
+  </data>
+  <data name="Pip_BackToFullWindow" xml:space="preserve">
+    <value>Back to full window</value>
+  </data>
+
+  <!-- Toasts and notifications (Screen 10) -->
+  <data name="Toast_HwDecFailed" xml:space="preserve">
+    <value>Hardware decoding failed, using software decoding</value>
+  </data>
+  <data name="Toast_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Toast_YtDlpUpdated" xml:space="preserve">
+    <value>yt-dlp updated to 2026.07.04</value>
+  </data>
+  <data name="Toast_FrameCopied" xml:space="preserve">
+    <value>Frame copied</value>
+  </data>
+  <data name="Toast_ClipSaved" xml:space="preserve">
+    <value>Clip saved</value>
+  </data>
+  <data name="Toast_ShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="Toast_Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+
+  <!-- Settings page: sections (Screen 7) -->
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings_NavGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_NavPlayback" xml:space="preserve">
+    <value>Playback</value>
+  </data>
+  <data name="Settings_NavVideo" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="Settings_NavAudio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Settings_NavSubtitles" xml:space="preserve">
+    <value>Subtitles</value>
+  </data>
+  <data name="Settings_NavStreaming" xml:space="preserve">
+    <value>Streaming</value>
+  </data>
+  <data name="Settings_NavShortcuts" xml:space="preserve">
+    <value>Shortcuts</value>
+  </data>
+  <data name="Settings_NavAdvanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="Settings_NavAbout" xml:space="preserve">
+    <value>About</value>
+  </data>
+
+  <!-- Settings: General (Screen 7.1) -->
+  <data name="Settings_BatterySaver_Title" xml:space="preserve">
+    <value>Battery saver</value>
+  </data>
+  <data name="Settings_BatterySaver_Description" xml:space="preserve">
+    <value>Switch to Efficient on battery</value>
+  </data>
+  <data name="Settings_SingleInstance_Title" xml:space="preserve">
+    <value>Open files in the running window</value>
+  </data>
+  <data name="Settings_SingleInstance_Description" xml:space="preserve">
+    <value>Instead of opening a new window</value>
+  </data>
+
+  <!-- Settings: Playback (Screen 7.2) -->
+  <data name="Settings_PreciseSeeking_Title" xml:space="preserve">
+    <value>Precise seeking</value>
+  </data>
+  <data name="Settings_PreciseSeeking_Description" xml:space="preserve">
+    <value>Lands on the exact frame; slower on long files</value>
+  </data>
+  <data name="Settings_Resume_Title" xml:space="preserve">
+    <value>Resume where I left off</value>
+  </data>
+  <data name="Settings_Resume_Description" xml:space="preserve">
+    <value>For files you’ve played before</value>
+  </data>
+  <data name="Settings_LoopByDefault_Title" xml:space="preserve">
+    <value>Loop by default</value>
+  </data>
+  <data name="Settings_PlayNextFile_Title" xml:space="preserve">
+    <value>Play the next file in the folder</value>
+  </data>
+  <data name="Settings_PlayNextFile_Description" xml:space="preserve">
+    <value>When a file ends</value>
+  </data>
+  <data name="Settings_RememberWindowSize_Title" xml:space="preserve">
+    <value>Remember window size</value>
+  </data>
+  <data name="Settings_AlwaysOnTop_Title" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="Settings_AlwaysOnTop_Description" xml:space="preserve">
+    <value>Also with T while playing</value>
+  </data>
+
+  <!-- Settings: Video (Screens 7.3 and 7.4) -->
+  <data name="Settings_QualityPreset_Title" xml:space="preserve">
+    <value>Quality preset</value>
+  </data>
+  <data name="Settings_QualityPreset_Efficient" xml:space="preserve">
+    <value>Efficient</value>
+  </data>
+  <data name="Settings_QualityPreset_Balanced" xml:space="preserve">
+    <value>Balanced</value>
+  </data>
+  <data name="Settings_QualityPreset_HighQuality" xml:space="preserve">
+    <value>High quality</value>
+  </data>
+  <data name="Settings_HardwareDecoding_Title" xml:space="preserve">
+    <value>Hardware decoding</value>
+  </data>
+  <data name="Settings_HardwareDecoding_Auto" xml:space="preserve">
+    <value>Auto (recommended)</value>
+  </data>
+  <data name="Settings_RestartNotice" xml:space="preserve">
+    <value>Applies on restart · Restart engine</value>
+  </data>
+  <data name="Settings_RestartEngine" xml:space="preserve">
+    <value>Restart engine</value>
+  </data>
+  <data name="Settings_SmoothMotion_Title" xml:space="preserve">
+    <value>Smooth motion</value>
+  </data>
+  <data name="Settings_SmoothMotion_Description" xml:space="preserve">
+    <value>Turned off while you step frames</value>
+  </data>
+  <data name="Settings_ScalingAndFilters_Title" xml:space="preserve">
+    <value>Scaling and filters</value>
+  </data>
+  <data name="Settings_ScalingAndFilters_Description" xml:space="preserve">
+    <value>Upscaling, downscaling, debanding, HDR</value>
+  </data>
+  <data name="Settings_Upscaling_Title" xml:space="preserve">
+    <value>Upscaling</value>
+  </data>
+  <data name="Settings_ChangedFromDefault" xml:space="preserve">
+    <value>Changed from the default</value>
+  </data>
+  <data name="Settings_Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Settings_Downscaling_Title" xml:space="preserve">
+    <value>Downscaling</value>
+  </data>
+  <data name="Settings_Debanding_Title" xml:space="preserve">
+    <value>Debanding</value>
+  </data>
+  <data name="Settings_HdrToneMapping_Title" xml:space="preserve">
+    <value>HDR tone mapping</value>
+  </data>
+  <data name="Settings_Adjustments_Title" xml:space="preserve">
+    <value>Adjustments</value>
+  </data>
+  <data name="Settings_Adjustments_Description" xml:space="preserve">
+    <value>Brightness, contrast, gamma, saturation</value>
+  </data>
+  <data name="Settings_Brightness_Title" xml:space="preserve">
+    <value>Brightness</value>
+  </data>
+  <data name="Settings_Contrast_Title" xml:space="preserve">
+    <value>Contrast</value>
+  </data>
+  <data name="Settings_Gamma_Title" xml:space="preserve">
+    <value>Gamma</value>
+  </data>
+  <data name="Settings_Saturation_Title" xml:space="preserve">
+    <value>Saturation</value>
+  </data>
+
+  <!-- Settings: Audio (Screen 7.5) -->
+  <data name="Settings_OutputDevice_Title" xml:space="preserve">
+    <value>Output device</value>
+  </data>
+  <data name="Settings_OutputDevice_SystemDefault" xml:space="preserve">
+    <value>System default</value>
+  </data>
+  <data name="Settings_ExclusiveMode_Title" xml:space="preserve">
+    <value>Exclusive mode</value>
+  </data>
+  <data name="Settings_ExclusiveMode_Description" xml:space="preserve">
+    <value>Takes over the device; other apps go quiet</value>
+  </data>
+  <data name="Settings_Passthrough_Title" xml:space="preserve">
+    <value>Passthrough (Dolby, DTS)</value>
+  </data>
+  <data name="Settings_Passthrough_Description" xml:space="preserve">
+    <value>Sends the original audio to your receiver</value>
+  </data>
+  <data name="Settings_VolumeNormalisation_Title" xml:space="preserve">
+    <value>Volume normalisation</value>
+  </data>
+  <data name="Settings_VolumeNormalisation_Description" xml:space="preserve">
+    <value>Evens out loud and quiet files</value>
+  </data>
+
+  <!-- Settings: Subtitles (Screen 7.6) -->
+  <data name="Settings_ShowSubtitlesByDefault_Title" xml:space="preserve">
+    <value>Show subtitles by default</value>
+  </data>
+  <data name="Settings_PreferredAudioLang_Title" xml:space="preserve">
+    <value>Preferred audio language</value>
+  </data>
+  <data name="Settings_PreferredSubtitleLang_Title" xml:space="preserve">
+    <value>Preferred subtitle language</value>
+  </data>
+  <data name="Settings_FontAndSize_Title" xml:space="preserve">
+    <value>Font and size</value>
+  </data>
+
+  <!-- Settings: Streaming (Screens 7.7 and 7.12) -->
+  <data name="Settings_StreamingQuality_Title" xml:space="preserve">
+    <value>Quality</value>
+  </data>
+  <data name="Settings_StreamingQuality_Description" xml:space="preserve">
+    <value>For YouTube and other sites</value>
+  </data>
+  <data name="Settings_PreferHardwareDecode_Title" xml:space="preserve">
+    <value>Prefer formats your GPU can decode</value>
+  </data>
+  <data name="Settings_PreferHardwareDecode_Description" xml:space="preserve">
+    <value>Picks AV1, VP9 or H.264 to match</value>
+  </data>
+  <data name="Settings_YtDlp_Title" xml:space="preserve">
+    <value>yt-dlp</value>
+  </data>
+  <data name="Settings_YtDlp_MissingMessage" xml:space="preserve">
+    <value>Not found, so links won’t play. Aether can download it again.</value>
+  </data>
+  <data name="Settings_YtDlp_Download" xml:space="preserve">
+    <value>Download yt-dlp</value>
+  </data>
+  <data name="Settings_YtDlp_UpdateNow" xml:space="preserve">
+    <value>Update now</value>
+  </data>
+  <data name="Settings_YtDlp_UpdateAutomatically_Title" xml:space="preserve">
+    <value>Update automatically</value>
+  </data>
+  <data name="Settings_YtDlp_UpdateAutomatically_Description" xml:space="preserve">
+    <value>Checks once a day</value>
+  </data>
+  <data name="Settings_YtDlp_AvailableOnceInstalled" xml:space="preserve">
+    <value>Available once yt-dlp is installed</value>
+  </data>
+
+  <!-- Settings: Shortcuts (Screen 7.8) -->
+  <data name="Settings_Shortcuts_PlayPause" xml:space="preserve">
+    <value>Play or pause</value>
+  </data>
+  <data name="Settings_Shortcuts_Back5s" xml:space="preserve">
+    <value>Back 5 s</value>
+  </data>
+  <data name="Settings_Shortcuts_Forward5s" xml:space="preserve">
+    <value>Forward 5 s</value>
+  </data>
+  <data name="Settings_Shortcuts_Back1Frame" xml:space="preserve">
+    <value>Back 1 frame</value>
+  </data>
+  <data name="Settings_Shortcuts_Forward1Frame" xml:space="preserve">
+    <value>Forward 1 frame</value>
+  </data>
+  <data name="Settings_Shortcuts_Navigation" xml:space="preserve">
+    <value>Navigation</value>
+  </data>
+  <data name="Settings_Shortcuts_OpenFile" xml:space="preserve">
+    <value>Open file</value>
+  </data>
+  <data name="Settings_Shortcuts_OpenUrl" xml:space="preserve">
+    <value>Open URL</value>
+  </data>
+  <data name="Settings_Shortcuts_PlayCopiedLink" xml:space="preserve">
+    <value>Play a copied link</value>
+  </data>
+  <data name="Settings_Shortcuts_SetInOut" xml:space="preserve">
+    <value>Set in / Set out</value>
+  </data>
+  <data name="Settings_Shortcuts_Window" xml:space="preserve">
+    <value>Window</value>
+  </data>
+  <data name="Settings_Shortcuts_FullScreen" xml:space="preserve">
+    <value>Full screen</value>
+  </data>
+  <data name="Settings_Shortcuts_LeaveFullScreen" xml:space="preserve">
+    <value>Leave full screen</value>
+  </data>
+  <data name="Settings_Shortcuts_AlwaysOnTop" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="Settings_Shortcuts_PictureInPicture" xml:space="preserve">
+    <value>Picture in picture</value>
+  </data>
+  <data name="Settings_Shortcuts_CopyFrame" xml:space="preserve">
+    <value>Copy frame</value>
+  </data>
+  <data name="Settings_Shortcuts_SaveFrame" xml:space="preserve">
+    <value>Save frame</value>
+  </data>
+  <data name="Settings_Shortcuts_Diagnostics" xml:space="preserve">
+    <value>Diagnostics</value>
+  </data>
+  <data name="Settings_Shortcuts_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+
+  <!-- Settings: Advanced (Screen 7.9) -->
+  <data name="Settings_CustomOptions_Title" xml:space="preserve">
+    <value>Custom mpv options</value>
+  </data>
+  <data name="Settings_CustomOptions_Description" xml:space="preserve">
+    <value>One key=value per line</value>
+  </data>
+  <data name="Settings_ResetAllSettings_Title" xml:space="preserve">
+    <value>Reset all settings</value>
+  </data>
+  <data name="Settings_ResetAllSettings_Description" xml:space="preserve">
+    <value>Restores every setting to its default. Recent files are kept.</value>
+  </data>
+
+  <!-- Settings: About (Screen 7.10) -->
+  <data name="Settings_About_Engine" xml:space="preserve">
+    <value>Engine</value>
+  </data>
+  <data name="Settings_About_Decoder" xml:space="preserve">
+    <value>Decoder</value>
+  </data>
+  <data name="Settings_About_Renderer" xml:space="preserve">
+    <value>Renderer</value>
+  </data>
+  <data name="Settings_About_MpvVersion" xml:space="preserve">
+    <value>mpv version</value>
+  </data>
+  <data name="Settings_About_YtDlpVersion" xml:space="preserve">
+    <value>yt-dlp version</value>
+  </data>
+  <data name="Settings_About_CopyDiagnostics" xml:space="preserve">
+    <value>Copy diagnostics</value>
+  </data>
+  <data name="Settings_About_Licences" xml:space="preserve">
+    <value>Licences</value>
+  </data>
+  <data name="Settings_About_LicencesDescription" xml:space="preserve">
+    <value>libmpv, FFmpeg, yt-dlp, ANGLE and fonts</value>
+  </data>
+  <data name="Settings_About_Footer" xml:space="preserve">
+    <value>Aether is open source · github.com/rvyyv-n/aether · Report an issue</value>
+  </data>
+  <data name="Settings_About_ReportIssue" xml:space="preserve">
+    <value>Report an issue</value>
+  </data>
+
+  <!-- Common -->
+  <data name="Common_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Common_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Common_Auto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="Common_Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common_Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+</root>

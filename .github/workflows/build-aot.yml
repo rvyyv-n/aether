@@ -20,8 +20,10 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore AetherPlayer.sln -p:Platform=x64
 
+      # Debug, like the local gate: a Release build of Aether.App turns on ReadyToRun and trimming,
+      # which still fails on trim warnings in the Windows SDK projections (tracked in ROADMAP Pass 6).
       - name: Build solution
-        run: dotnet build AetherPlayer.sln -c Release -p:Platform=x64 --no-restore
+        run: dotnet build AetherPlayer.sln -c Debug -p:Platform=x64 --no-restore -warnaserror
 
       - name: Run unit & integration tests
-        run: dotnet test AetherPlayer.sln -c Release -p:Platform=x64 --no-build --verbosity normal
+        run: dotnet test AetherPlayer.sln -c Debug -p:Platform=x64 --no-build --verbosity normal

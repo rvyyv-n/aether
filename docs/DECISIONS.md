@@ -67,3 +67,40 @@
   - UI dispatch is coalesced: the event thread writes property values into one pending state and requests a UI flush only on the clean-to-dirty transition; the UI thread applies the newest state at most once per display refresh. Intermediate values are dropped on purpose.
   - Frame stepping keeps at most one step in flight (cleared by its command reply); repeats that arrive while a step is in flight are dropped, not queued, so releasing the key stops stepping at once. `keep-open=yes` keeps the last frame loaded so stepping at the end of a file does not unload it.
 - **Status:** Accepted. Not yet verified with libmpv loaded (no binary on the build machine): the event loop and dispatch are covered by tests against a fake event source.
+
+## ADR-0010: Player Shell, Letterboxing and Startup
+- **Context:** Pass 4 needs a borderless Windows 11 shell whose look follows the OpenMouse/Wintoys references (quiet, near-monochrome glass over a wallpaper-tinted backdrop), Mica behind the letterbox bars, controls that hide on idle, and a window that paints before libmpv has loaded.
+- **Decision:**
+  - The window extends content into the title bar and uses `MicaBackdrop Kind="BaseAlt"`; the stronger wallpaper tint matches the references. The page draws its own 32 px title bar strip (drag region via `SetTitleBar`); the system still draws the caption buttons, whose glyph colour goes transparent while the chrome is hidden.
+  - Letterboxing: the `SwapChainPanel` is sized to the video's display aspect ratio (`dwidth`/`dheight`, observed as `Int64` and carried on `PlayerState`), centred in its host. The bars are therefore the host's background: Mica when windowed, black in full screen. This was chosen over a premultiplied-alpha swap chain with a transparent mpv clear colour, which would change the presenter and the ANGLE path for no gain.
+  - Auto-hide: `ChromeVisibility` (Playback, UI-agnostic, tested with a manual clock) decides; holds (not playing, pointer over controls, drag or dialog) keep the chrome up. The fade animates each element's Composition visual opacity (`ChromeFader`), so it runs on the compositor. The cursor is hidden with `ShowCursor` through `CursorVisibility` (Interop), which steps the per-thread counter only across the shown/hidden boundary; WinUI has no hidden cursor shape.
+  - Startup: `EngineStartup` probes for libmpv and creates the `MpvContext` on the thread pool; the UI thread then composes `PlayerSession` around it (event loop, dispatch, key input, surface). Missing binaries and initialization failures come back as a status, never as an exception, and the page shows them with Retry and Open folder. A startup abandoned by unload or retry disposes the engine it produced.
+  - Commands from the shell (`loadfile`, `cycle pause`, `set volume`) go through `mpv_command_async`, so the UI never waits on the core.
+- **Status:** Accepted. Not yet verified on screen: the packaged app needs Developer Mode to launch from the CLI, and an unpackaged build lacks the merged framework resources.
+
+## ADR-0011: Settings Store
+- **Context:** The Settings pages (Pass 6) need a model with defaults, per-setting reset and "applies on restart" flags, usable without WinUI.
+- **Decision:**
+  - `SettingsStore` and `AetherSettings` (an immutable record) live in `Aether.Core.Playback/Settings`. A table of `SettingDefinition`s (key, restart flag, allowed values) drives `Set`, `Reset`, load validation and the JSON file, so the UI binds by key and nothing is written twice.
+  - The JSON is read with `JsonDocument` and written with `Utf8JsonWriter`, per key. That is reflection-free (Native AOT) and lets one invalid or unknown value fall back to its own default instead of failing the whole file, which a source-generated whole-object deserialiser cannot do.
+  - Storage is behind `ISettingsStorage`. `FileSettingsStorage` writes `settings.json.tmp` then replaces the file, at `%LOCALAPPDATA%\Aether\settings.json` (works packaged and unpackaged). It lives in Core.Playback so the atomic write is tested; `App.Settings` is the one shared instance, loaded on the thread pool at launch.
+  - Restart-flagged settings: hardware decoding, passthrough, custom mpv options. `PendingRestart` compares them with the values at the last `Load`.
+  - `MpvOptionsValidator` only checks the `key=value` shape; "unknown option" needs mpv's option list and is left to the Advanced page (6.5).
+- **Status:** Accepted.
+
+## ADR-0012: Label Casing and Shell Strings
+- **Context:** The shell mixed all-caps captions (`SUPPORTED`, `DETAILS`), "press Ctrl O", coloured status text and two names for the renderer. The final design handoff (spec sheet, screen 4) fixes the wording.
+- **Decision:**
+  - Sentence case for every label, button, title, tooltip and status; no all-caps, no Title Case. Format names (MP4, WEBM), "URL", "ANGLE · D3D11" and file names keep their own spelling.
+  - Shortcuts are written `Ctrl+O`; tooltips read "Label (Key)". The renderer is always "ANGLE · D3D11". Colour lives in status dots only; status text stays white.
+  - Cascadia Mono only for timecodes. The controls' clock is `mm:ss`, with hours (`h:mm:ss`) only for clips of an hour or more.
+  - Shell text comes from `Strings/en-us/Resources.resw` through `AppStrings` (`ResourceLoader`). Keys stay `Area_Name`, so `x:Uid` (which needs `Name.Text` keys) is not used; a test checks every key the app reads exists.
+- **Status:** Accepted.
+
+## ADR-0013: Surfaces over Video (Acrylic Spike)
+- **Context:** The handoff puts menus, flyouts and the time bubble on SurfaceDialog (in-app Acrylic, blur behind) with a solid fallback, and gives the controls pill an OSD shadow (0 8 24, black 32%). The video is drawn by `MpvVideoSurface`, which derives from `SwapChainPanel`; the question was whether in-app Acrylic blurs it.
+- **Decision:**
+  - In-app `AcrylicBrush` blurs what the XAML compositor draws behind the element. A `SwapChainPanel`'s content is presented through its own DirectComposition surface and is not reliably part of that backdrop (the swap chain can present between XAML frames, and Microsoft's guidance is that Acrylic over a swap chain or `MediaPlayerElement` may sample nothing). Over video the brush would show its tint over an unblurred or empty backdrop, and its look would change with the render path.
+  - Every surface over video therefore uses the solid `AetherSurfaceDialogFallbackBrush` (#F20E1014), which is what the handoff names as the fallback. The volume flyout already does; menus and the time bubble (Pass 5) follow the same rule. Mica behind the letterbox bars is unaffected: it samples the desktop, not the video.
+  - The OSD shadow is not built yet. The pill is 62% ink, so a Composition `DropShadow` cast from it would show through and darken the pill unless masked out beneath it (a `CompositionMaskBrush` per resize), and `ThemeShadow` needs XAML receivers, so it would not fall on the swap chain and does not have the redline's offset or blur. Neither is cheap enough for Pass 4. The flyout keeps the system popup shadow it gets by default.
+- **Status:** Accepted. Needs an on-screen check in the packaged app: confirm whether an `AcrylicBrush` over playing video blurs it (if it does, SurfaceDialog can switch back to Acrylic), and judge whether the pill needs its shadow over bright video.
