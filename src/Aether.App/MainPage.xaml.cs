@@ -496,6 +496,15 @@ public sealed partial class MainPage : Page
         }
     }
 
+    private void OnAlwaysOnTopAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (_host is { } host && !IsOpenUrlShown)
+        {
+            args.Handled = true;
+            host.ToggleAlwaysOnTop();
+        }
+    }
+
     private void OnVolumeClick(object sender, RoutedEventArgs e) => ToggleMute();
 
     private void ToggleMute()

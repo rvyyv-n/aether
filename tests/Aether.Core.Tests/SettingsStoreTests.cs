@@ -22,6 +22,20 @@ public class SettingsStoreTests
     }
 
     [Fact]
+    public void AlwaysOnTop_Survives_Save_And_Load()
+    {
+        var storage = new FakeStorage();
+        var first = new SettingsStore(storage);
+        first.Set(SettingKeys.AlwaysOnTop, true);
+        first.Save();
+
+        var second = new SettingsStore(storage);
+        second.Load();
+
+        Assert.True(second.Current.AlwaysOnTop);
+    }
+
+    [Fact]
     public void Missing_File_Gives_Defaults()
     {
         var store = NewStore();
