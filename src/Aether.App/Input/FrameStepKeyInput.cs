@@ -51,6 +51,18 @@ public sealed class FrameStepKeyInput : IDisposable
         _timer.Stop();
     }
 
+    /// <summary>A click on a frame-step button: one step, queued behind a step still in flight like a key tap.</summary>
+    public void Tap(FrameStepDirection direction)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        _stepper.Press(direction);
+        _stepper.Release(direction);
+        Rearm();
+    }
+
     public void Dispose()
     {
         if (_disposed)

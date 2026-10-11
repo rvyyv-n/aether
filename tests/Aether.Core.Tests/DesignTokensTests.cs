@@ -14,7 +14,9 @@ public class DesignTokensTests
     private static readonly HashSet<string> KnownBuiltIns =
     [
         "SymbolThemeFontFamily",
-        "DefaultTextBoxStyle"
+        "DefaultTextBoxStyle",
+        "DefaultMenuFlyoutItemStyle",
+        "DefaultToggleMenuFlyoutItemStyle"
     ];
 
     private static readonly string[] LegacyAliasKeys =

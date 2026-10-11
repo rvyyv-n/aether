@@ -115,6 +115,17 @@ public sealed class PlayerSession : IDisposable
     public void SetVolume(double volume) =>
         _context.CommandAsync(new MpvCommand("set", "volume", Math.Clamp(volume, 0, 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)));
 
+    /// <summary>Back or Forward 5 s from the pill or the arrow keys. Non-blocking.</summary>
+    /// <exception cref="MpvException">The core is shutting down.</exception>
+    public void SeekBy(double seconds) => _context.CommandAsync(TransportState.SeekBy(seconds));
+
+    /// <summary>Speed from the speed menu, 0.1× to 4.0×. Non-blocking.</summary>
+    /// <exception cref="MpvException">The core is shutting down.</exception>
+    public void SetSpeed(double speed) => _context.CommandAsync(TransportState.SetSpeed(speed));
+
+    /// <summary>One frame step from the pill's buttons (the , and . keys step on their own).</summary>
+    public void StepFrame(FrameStepDirection direction) => _keys.Tap(direction);
+
     /// <summary>Releases a held step key, e.g. when the window is deactivated.</summary>
     public void ReleaseKeys() => _keys.ReleaseAll();
 
