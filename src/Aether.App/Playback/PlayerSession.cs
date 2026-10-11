@@ -1,5 +1,6 @@
-using Aether.Core.Interop.Mpv;
+﻿using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
+using Aether.Core.Playback.Settings;
 using Aether_App.Controls;
 using Aether_App.Input;
 using Microsoft.UI.Dispatching;
@@ -59,6 +60,19 @@ public sealed class PlayerSession : IDisposable
     public PlayerViewModel ViewModel { get; } = new();
 
     public MpvContext Context => _context;
+
+    /// <summary>
+    /// Creates an <see cref="MpvContext"/> configured from current application settings,
+    /// passing the configured hardware decoder.
+    /// </summary>
+    public static MpvContext CreateEngine(AetherSettings? settings = null)
+    {
+        var s = settings ?? App.Settings.Current;
+        return MpvContext.Create(new MpvContextOptions
+        {
+            HardwareDecoder = s.HardwareDecoding,
+        });
+    }
 
     /// <summary>
     /// UI thread: starts a session around <paramref name="context"/>, which may have been created on
