@@ -100,17 +100,17 @@ Mockups: screen 5 (transport).
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
 | 5.1 | `OverlayHud`: sub-millisecond timestamp, game tick (`floor(T*20)`), sub-tick %, frame count, source FPS — **Dropped** (not needed, per the user) | S | Opus |
-| 5.2 | `PrecisionSeekBar` and transport pill: hover and drag tooltips, In (`I`) / Out (`O`) band, speed and quality menus, loop states, compact pill below 520 px — **Partly done** (two-row pill, `PrecisionSeekBar`, In/Out points, speed menu, compact More menu; loop and always-on-top buttons still to wire, quality menu waits for streaming. Not yet checked on screen) | M | Opus |
-| 5.3 | `ClipDrawer`: export drawer UI with drag-to-export into Discord / File Explorer (`DataPackage`). Merged with 5.4: the export chip above the pill grows upward into a drawer of download-style rows (thumbnail, name, grey size · length · time line, draggable out, Show in folder and Dismiss, up to about 3 rows) | M | Opus |
-| 5.4 | Export chip and "Clip saved" result for the in/out range (built together with 5.3) | S | Opus |
+| 5.2 | `PrecisionSeekBar` and transport pill: hover and drag tooltips, In (`I`) / Out (`O`) band, speed and quality menus, loop states, compact pill below 520 px — **Done** except the quality menu, which waits for streaming (two-row pill, `PrecisionSeekBar`, In/Out points, speed menu, loop and always-on-top buttons, compact More menu. Not yet checked on screen) | M | Opus |
+| 5.3 | `ClipDrawer`: export drawer UI with drag-to-export into Discord / File Explorer (`DataPackage`). Merged with 5.4: the export chip above the pill grows upward into a drawer of download-style rows (thumbnail, name, grey size · length · time line, draggable out, Show in folder and Dismiss, up to about 3 rows) — **Done** (clip drawer on the export chip; not yet checked on screen) | M | Opus |
+| 5.4 | Export chip and "Clip saved" result for the in/out range (built together with 5.3) — **Done** (built with 5.3) | S | Opus |
 | 5.5 | Pre-warm FFmpeg on idle and execute sub-300ms `-c copy` export with atomic `.part` rename — **Done** (`ClipExportService`, `FfmpegArguments`; gate green) | S | Sonnet |
-| 5.6 | Integration tests for FFmpeg argument building, GOP alignment, and export cancellation | S | Gemini |
+| 5.6 | Integration tests for FFmpeg argument building, GOP alignment, and export cancellation — **Done** | S | Gemini |
 | 5.7 | Open paths: command-line argument and file association registration for the four containers — **Done** | S | Sonnet |
 | 5.8 | Loop playback: toggle (`L`), restart at end of file, state held in `PlayerViewModel` — **Done** | S | Sonnet |
 | 5.9 | Always-on-top toggle (`T`) via `AppWindow.Presenter`, persisted with window state — **Done** | S | Sonnet |
 | 5.10 | Resume position per file: save on close or switch, restore on open, skip near start/end, cap stored entries — **Done** | S | Sonnet |
 | 5.11 | `PerformanceLoop`: async seek coalescing, zero-drop GPU decode verification, smooth 60fps+ UI under high-bitrate 1440p/4K load | M | Gemini |
-| 5.12 | Tests for 5.7–5.10: argument and extension parsing, loop wrap, resume store round-trip and pruning, speed bounds 0.1–4.0 | S | Gemini |
+| 5.12 | Tests for 5.7–5.10: argument and extension parsing, loop wrap, resume store round-trip and pruning, speed bounds 0.1–4.0 — **Done** | S | Gemini |
 
 **Pass 5 means:** Real-time game tick HUD, the full transport with visual in/out bounds, and sub-300ms lossless clip generation draggable directly into Discord.
 
