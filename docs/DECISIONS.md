@@ -104,3 +104,11 @@
   - Every surface over video therefore uses the solid `AetherSurfaceDialogFallbackBrush` (#F20E1014), which is what the handoff names as the fallback. The volume flyout already does; menus and the time bubble (Pass 5) follow the same rule. Mica behind the letterbox bars is unaffected: it samples the desktop, not the video.
   - The OSD shadow is not built yet. The pill is 62% ink, so a Composition `DropShadow` cast from it would show through and darken the pill unless masked out beneath it (a `CompositionMaskBrush` per resize), and `ThemeShadow` needs XAML receivers, so it would not fall on the swap chain and does not have the redline's offset or blur. Neither is cheap enough for Pass 4. The flyout keeps the system popup shadow it gets by default.
 - **Status:** Accepted. Needs an on-screen check in the packaged app: confirm whether an `AcrylicBrush` over playing video blurs it (if it does, SurfaceDialog can switch back to Acrylic), and judge whether the pill needs its shadow over bright video.
+
+## ADR-0014: Open Paths, Loop, Always on Top and Resume (Pass 5)
+- **Context:** Pass 5 adds opening from the command line or Explorer, looping, a topmost window and resuming where a file was left (roadmap 5.7-5.10).
+- **Decision:**
+  - Resume positions are kept in `ResumeStore` (`%LOCALAPPDATA%\Aether\resume.json`), keyed by case-insensitive path, at most 200 entries (oldest pruned), and not kept within the first 5 s or last 10 s. The position is applied through mpv's global `start` option, set before every `loadfile` (to `none` when there is nothing to resume).
+  - The app handles file activation and command-line arguments itself (`App.OnLaunched`, `LaunchArguments`) rather than redirecting to a single running instance, so the `OpenInRunningWindow` setting is not honoured yet.
+  - Loop restarts once when `eof-reached` turns true, through the existing replay commands. `IsLooping` lives on `PlayerViewModel`, outside `PlayerState`.
+- **Status:** Accepted. Needs an on-screen check in the packaged app: double-click and command-line launch, resume seeking (including `start=none`), loop restart and always-on-top after full screen.
