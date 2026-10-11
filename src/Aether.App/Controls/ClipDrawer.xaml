@@ -56,6 +56,7 @@
                     x:Name="ExportButton"
                     Height="{StaticResource AetherSizeControl}"
                     Click="OnExportClick"
+                    FontSize="{StaticResource AetherCaptionFontSize}"
                     Style="{StaticResource AetherEmphasisPillButtonStyle}" />
                 <Button
                     x:Name="ClearButton"

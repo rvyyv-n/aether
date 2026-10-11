@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <!--
     Aether design tokens v2.1, generated from aether.tokens.json (the single source of truth).
-    Dark only, over Mica Alt. Colour in the UI itself is reserved for status dots; there is no accent colour.
+    Dark only, over the Desktop Acrylic backdrop. Colour in the UI itself is reserved for status dots; there is no accent colour.
     Merge into App.xaml after XamlControlsResources, and set Application.RequestedTheme="Dark".
     Keys: Aether + role. Colours have a *Color and a *Brush key. Sizes are effective pixels (x:Double).
 -->
@@ -54,7 +54,7 @@
 
     <!--  Colour roles  -->
     <Color x:Key="AetherTextPrimaryColor">#FFFFFFFF</Color>  <!-- Titles, labels, and all text on video -->
-    <Color x:Key="AetherTextSecondaryColor">#9EFFFFFF</Color>  <!-- 62%. Descriptions, meta, hints. 5.4:1 or better on Mica. Was 45% -->
+    <Color x:Key="AetherTextSecondaryColor">#9EFFFFFF</Color>  <!-- 62%. Descriptions, meta, hints. 5.4:1 or better on the dark backdrop. Was 45% -->
     <Color x:Key="AetherTextTertiaryColor">#73FFFFFF</Color>  <!-- 45%. Decorative or large text only, 3:1 or better. Was 35% -->
     <Color x:Key="AetherTextDisabledColor">#5CFFFFFF</Color>  <!-- 36%. Replaces whole-control 0.4 opacity -->
     <Color x:Key="AetherSurfaceGlassColor">#730E1014</Color>  <!-- 45% ink. Panels, cards, status strip, hero tile. Was Panel -->
