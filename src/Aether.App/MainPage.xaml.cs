@@ -229,7 +229,7 @@ public sealed partial class MainPage : Page
         Render();
 
         EngineStartupResult<MpvContext> result =
-            await EngineStartup.RunAsync(NativeLibraries.IsMpvAvailable, () => MpvContext.Create());
+            await EngineStartup.RunAsync(NativeLibraries.IsMpvAvailable, () => PlayerSession.CreateEngine());
 
         if (version != _startupVersion || !_isLoaded)
         {

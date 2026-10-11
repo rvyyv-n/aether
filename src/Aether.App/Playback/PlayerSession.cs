@@ -1,4 +1,4 @@
-﻿using Aether.Core.Interop.Mpv;
+using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Settings;
 using Aether_App.Controls;
@@ -61,12 +61,13 @@ public sealed class PlayerSession : IDisposable
 
     public MpvContext Context => _context;
 
-    /// <summary>
-    /// Creates an <see cref="MpvContext"/> configured from current application settings,
-    /// passing the configured hardware decoder.
-    /// </summary>
+    /// <summary>Worker thread: creates the engine with the saved start-only options (hardware decoding).</summary>
     public static MpvContext CreateEngine(AetherSettings? settings = null)
     {
+        if (settings is null)
+        {
+            App.SettingsLoaded.Wait();
+        }
         var s = settings ?? App.Settings.Current;
         return MpvContext.Create(new MpvContextOptions
         {

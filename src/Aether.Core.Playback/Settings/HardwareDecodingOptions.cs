@@ -1,4 +1,4 @@
-﻿namespace Aether.Core.Playback.Settings;
+namespace Aether.Core.Playback.Settings;
 
 /// <summary>One selectable choice for the hardware decoding setting.</summary>
 public readonly record struct HardwareDecodingOption(string Value, string ResourceKey);

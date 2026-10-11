@@ -32,6 +32,9 @@ public partial class App : Application
     /// <summary>The single settings instance. Loaded on the thread pool at launch; it holds defaults until then.</summary>
     public static SettingsStore Settings { get; } = new(new FileSettingsStorage(FileSettingsStorage.DefaultPath()));
 
+    /// <summary>Completes once saved settings are read; engine start waits on it so start-only options use the saved values.</summary>
+    public static Task SettingsLoaded { get; private set; } = Task.CompletedTask;
+
     /// <summary>Recently opened files for the empty state. Loaded on the thread pool at launch; empty until then.</summary>
     public static RecentsStore Recents { get; } = new(new FileSettingsStorage(RecentsStore.DefaultPath()));
 
@@ -59,7 +62,7 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
-        _ = Task.Run(Settings.Load);
+        SettingsLoaded = Task.Run(Settings.Load);
         _ = Task.Run(Recents.Load);
         _ = Task.Run(Resume.Load);
         _ = Task.Run(Clips.Load);

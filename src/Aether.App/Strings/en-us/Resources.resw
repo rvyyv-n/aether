@@ -1130,9 +1130,6 @@
   <data name="Settings_RestartAetherToApply" xml:space="preserve">
     <value>Restart Aether to apply</value>
   </data>
-  <data name="Settings_RestartToApply" xml:space="preserve">
-    <value>Restart Aether to apply</value>
-  </data>
   <data name="Settings_ResetToDefault" xml:space="preserve">
     <value>Reset to default</value>
   </data>
@@ -1140,9 +1137,6 @@
     <value>Reset all settings</value>
   </data>
   <data name="Settings_Streaming_YtDlpMissing" xml:space="preserve">
-    <value>yt-dlp isn't installed. Streaming from websites is off until it is.</value>
-  </data>
-  <data name="Settings_YtDlp_NotInstalledNotice" xml:space="preserve">
     <value>yt-dlp isn't installed. Streaming from websites is off until it is.</value>
   </data>
   <data name="Settings_Shortcuts_Conflict" xml:space="preserve">
