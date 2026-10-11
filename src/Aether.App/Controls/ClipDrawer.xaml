@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Aether_App.Controls.ClipDrawer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Export chip (s5-03) and clip drawer (5.3, 5.4). The chip is a 40 tall SurfaceOsd pill: padding 3 plus
+        the 1 px stroke around 32 px controls, radius 20. Opening the drawer grows the same surface upward to
+        360 wide: three 52 px rows (more scroll), a quiet "Show all in folder" link, a divider, then the chip.
+    -->
+    <Border
+        x:Name="Panel"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Bottom"
+        Padding="3"
+        Background="{StaticResource AetherSurfaceOsdBrush}"
+        BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+        BorderThickness="1"
+        CornerRadius="20">
+        <StackPanel>
+            <StackPanel x:Name="DrawerArea" Visibility="Collapsed">
+                <ScrollViewer
+                    x:Name="RowsScroller"
+                    HorizontalScrollMode="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="RowsPanel" Padding="0,1,0,0" />
+                </ScrollViewer>
+                <Button
+                    x:Name="ShowAllButton"
+                    Margin="6,4,0,4"
+                    Padding="8,0"
+                    Click="OnShowAllClick"
+                    FontSize="{StaticResource AetherCaptionFontSize}"
+                    Foreground="{StaticResource AetherTextSecondaryBrush}"
+                    Style="{StaticResource AetherIconButtonStyle}"
+                    FontFamily="{StaticResource AetherUiFont}"
+                    Width="Auto" />
+                <Border
+                    Height="1"
+                    Margin="-3,0,-3,3"
+                    Background="{StaticResource AetherStrokeDividerBrush}" />
+            </StackPanel>
+
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="4">
+                <TextBlock
+                    x:Name="RangeText"
+                    Margin="9,0,4,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource AetherCaptionTextStyle}"
+                    Foreground="{StaticResource AetherTextPrimaryBrush}" />
+                <Button
+                    x:Name="ExportButton"
+                    Height="{StaticResource AetherSizeControl}"
+                    Click="OnExportClick"
+                    Style="{StaticResource AetherEmphasisPillButtonStyle}" />
+                <Button
+                    x:Name="ClearButton"
+                    Click="OnClearClick"
+                    Content="&#xE711;"
+                    Style="{StaticResource AetherIconButtonStyle}"
+                    ToolTipService.Placement="Top" />
+                <ToggleButton
+                    x:Name="ClipsToggle"
+                    Width="Auto"
+                    MinWidth="{StaticResource AetherSizeControl}"
+                    Padding="8,0"
+                    Click="OnClipsToggleClick"
+                    Style="{StaticResource AetherIconToggleButtonStyle}"
+                    ToolTipService.Placement="Top">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock
+                            x:Name="ClipsText"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource AetherUiFont}"
+                            FontSize="{StaticResource AetherCaptionFontSize}" />
+                        <FontIcon
+                            x:Name="Chevron"
+                            FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                            FontSize="12"
+                            Glyph="&#xE70E;" />
+                    </StackPanel>
+                </ToggleButton>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -20,6 +20,9 @@ public enum ChromeHolds
 
     /// <summary>A dialog is open (Open URL). The caption glyphs never hide under one.</summary>
     Dialog = 16,
+
+    /// <summary>The clip drawer is open, or a clip is being dragged out of it.</summary>
+    Drawer = 32,
 }
 
 /// <summary>

@@ -20,6 +20,8 @@ public sealed partial class MainPage
     private void InitializeTransport()
     {
         SeekBar.SeekRequested += OnSeekRequested;
+        ClipDrawer.ClearRequested += (_, _) => SetClipRange(default);
+        ClipDrawer.HoldChanged += OnClipDrawerHoldChanged;
         foreach (double option in PlaybackSpeed.Options)
         {
             var item = new ToggleMenuFlyoutItem
@@ -167,10 +169,47 @@ public sealed partial class MainPage
         Visibility full = compact ? Visibility.Collapsed : Visibility.Visible;
         BackFrameButton.Visibility = full;
         ForwardFrameButton.Visibility = full;
+        LoopButton.Visibility = full;
+        AlwaysOnTopButton.Visibility = full;
+        MoreLoopItem.Visibility = compact ? Visibility.Visible : Visibility.Collapsed;
+        MoreAlwaysOnTopItem.Visibility = MoreLoopItem.Visibility;
         MoreButton.Visibility = compact ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // In (I) and Out (O): the band on the seek bar, and later the clip chip above the pill.
+    // Loop and Always on top: the buttons and their More items follow the state, whoever changed it.
+
+    private void OnLoopClick(object sender, RoutedEventArgs e)
+    {
+        if (_session is { } session)
+        {
+            session.ViewModel.ToggleLoop();
+        }
+        SyncLoop(); // a toggle with no session must not stay checked
+    }
+
+    private void SyncLoop()
+    {
+        bool looping = _session?.ViewModel.IsLooping ?? false;
+        LoopButton.IsChecked = looping;
+        MoreLoopItem.IsChecked = looping;
+    }
+
+    private void OnAlwaysOnTopClick(object sender, RoutedEventArgs e)
+    {
+        _host?.ToggleAlwaysOnTop();
+        SyncAlwaysOnTop();
+    }
+
+    private void OnAlwaysOnTopChanged(object? sender, EventArgs e) => SyncAlwaysOnTop();
+
+    private void SyncAlwaysOnTop()
+    {
+        bool onTop = _host?.IsAlwaysOnTop ?? false;
+        AlwaysOnTopButton.IsChecked = onTop;
+        MoreAlwaysOnTopItem.IsChecked = onTop;
+    }
+
+    // In (I) and Out (O): the band on the seek bar and the export chip above the pill.
 
     private void OnSetInAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
         OnTransportKey(args, () => SetClipRange(_clipRange.SetIn(CurrentPosition())));
@@ -186,6 +225,13 @@ public sealed partial class MainPage
         _clipRange = range;
         _clipRangePath = _currentPath;
         SeekBar.Range = range;
+        ClipDrawer.Update(range, _currentPath, _session?.ViewModel.Duration ?? 0);
+    }
+
+    private void OnClipDrawerHoldChanged(object? sender, EventArgs e)
+    {
+        _chrome.SetHold(ChromeHolds.Drawer, ClipDrawer.IsOpen || ClipDrawer.IsDraggingOut);
+        ApplyChrome();
     }
 
     /// <summary>In and Out belong to one file: opening another clears them.</summary>

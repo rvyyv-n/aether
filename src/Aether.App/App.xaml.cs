@@ -1,7 +1,9 @@
 ﻿using Aether.Core.Playback;
+using Aether.Core.Playback.Clips;
 using Aether.Core.Playback.Recents;
 using Aether.Core.Playback.Resume;
 using Aether.Core.Playback.Settings;
+using Aether.PvP.Review.Clipping;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -36,6 +38,12 @@ public partial class App : Application
     /// <summary>Where each file was left, for Resume playback. Loaded on the thread pool at launch; empty until then.</summary>
     public static ResumeStore Resume { get; } = new(new FileSettingsStorage(ResumeStore.DefaultPath()));
 
+    /// <summary>Exported clips for the clip drawer. Loaded on the thread pool at launch; empty until then.</summary>
+    public static ClipShelf Clips { get; } = new(new FileSettingsStorage(ClipShelf.DefaultPath()));
+
+    /// <summary>Lossless clip export through FFmpeg on the PATH, pre-warmed by the clip drawer once the page is idle.</summary>
+    public static ClipExportService ClipExport { get; } = new();
+
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -54,6 +62,7 @@ public partial class App : Application
         _ = Task.Run(Settings.Load);
         _ = Task.Run(Recents.Load);
         _ = Task.Run(Resume.Load);
+        _ = Task.Run(Clips.Load);
         var window = new MainWindow();
         _window = window;
         if (LaunchPath(args) is { } path)

@@ -141,13 +141,16 @@ public sealed partial class MainPage : Page
             {
                 _host.FullScreenChanged -= OnFullScreenChanged;
                 _host.TitleBarPointerMoved -= OnTitleBarPointerMoved;
+                _host.AlwaysOnTopChanged -= OnAlwaysOnTopChanged;
             }
             _host = value;
             if (_host is not null)
             {
                 _host.FullScreenChanged += OnFullScreenChanged;
                 _host.TitleBarPointerMoved += OnTitleBarPointerMoved;
+                _host.AlwaysOnTopChanged += OnAlwaysOnTopChanged;
             }
+            SyncAlwaysOnTop();
         }
     }
 
@@ -399,6 +402,9 @@ public sealed partial class MainPage : Page
                 break;
             case nameof(PlayerViewModel.Speed):
                 ShowSpeed(vm.Speed);
+                break;
+            case nameof(PlayerViewModel.IsLooping):
+                SyncLoop();
                 break;
             case nameof(PlayerViewModel.VideoWidth):
             case nameof(PlayerViewModel.VideoHeight):
@@ -716,6 +722,10 @@ public sealed partial class MainPage : Page
             args.Handled = true;
             CloseOpenUrl();
         }
+        else if (ClipDrawer.Close())
+        {
+            args.Handled = true;
+        }
         else if (_host is { IsFullScreen: true } host)
         {
             args.Handled = true;
@@ -945,6 +955,10 @@ public sealed partial class MainPage : Page
 
     private async void OnDragEnter(object sender, DragEventArgs e)
     {
+        if (ClipDrawer.IsDraggingOut)
+        {
+            return; // a clip leaving the drawer is not a file to open
+        }
         _dragging = true;
         _dragPath = null;
         _dragSupported = false;
@@ -1067,6 +1081,8 @@ public sealed partial class MainPage : Page
             _fader.Fade(TitleBar, visible);
             _fader.Fade(Osd, visible);
             Osd.IsHitTestVisible = visible;
+            _fader.Fade(ClipLayer, visible);
+            ClipLayer.IsHitTestVisible = visible;
             _host?.SetCaptionButtonsVisible(visible);
         }
         UpdateCursor();
@@ -1167,6 +1183,7 @@ public sealed partial class MainPage : Page
         DropScrim.Visibility = hasVideo && _dragging ? Visibility.Visible : Visibility.Collapsed;
         DropOutline.Visibility = _dragging ? Visibility.Visible : Visibility.Collapsed;
         Osd.Visibility = hasVideo ? Visibility.Visible : Visibility.Collapsed;
+        ClipLayer.Visibility = Osd.Visibility;
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         TitleBadgeText.Text = hasVideo || vm?.Status == PlaybackStatus.Loading

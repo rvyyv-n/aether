@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Aether_App.Controls.ClipRow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        One download-style row (5.3): 52 tall, 64×36 thumbnail, name over a grey size · length · time line.
+        Show in folder and Dismiss appear on hover or focus, so the list stays quiet at rest. The whole row
+        drags out as the file.
+    -->
+    <Grid
+        x:Name="Root"
+        Height="{StaticResource AetherSizeRow}"
+        Padding="6,0,4,0"
+        Background="Transparent"
+        ColumnSpacing="12"
+        CornerRadius="{StaticResource AetherOverlayCornerRadius}"
+        DragStarting="OnDragStarting"
+        DropCompleted="OnDropCompleted"
+        GotFocus="OnFocusChanged"
+        IsTabStop="False"
+        LostFocus="OnFocusChanged"
+        PointerCanceled="OnPointerExited"
+        PointerEntered="OnPointerEntered"
+        PointerExited="OnPointerExited">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Border
+            Width="{StaticResource AetherSizeClipThumbWidth}"
+            Height="{StaticResource AetherSizeClipThumbHeight}"
+            VerticalAlignment="Center"
+            Background="{StaticResource AetherFillSubtleHoverBrush}"
+            CornerRadius="{StaticResource AetherControlCornerRadius}">
+            <Grid>
+                <FontIcon
+                    x:Name="Glyph"
+                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    FontSize="{StaticResource AetherSizeIcon}"
+                    Foreground="{StaticResource AetherTextSecondaryBrush}" />
+                <Image x:Name="Thumbnail" Stretch="UniformToFill" />
+            </Grid>
+        </Border>
+
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <TextBlock
+                x:Name="NameText"
+                Style="{StaticResource AetherBodyTextStyle}"
+                TextTrimming="CharacterEllipsis"
+                TextWrapping="NoWrap" />
+            <TextBlock
+                x:Name="DetailsText"
+                Style="{StaticResource AetherCaptionTextStyle}"
+                TextTrimming="CharacterEllipsis"
+                TextWrapping="NoWrap" />
+            <ProgressBar
+                x:Name="Progress"
+                Height="2"
+                MinHeight="2"
+                Margin="0,4,0,0"
+                IsIndeterminate="True"
+                Visibility="Collapsed" />
+        </StackPanel>
+
+        <StackPanel
+            x:Name="Actions"
+            Grid.Column="2"
+            VerticalAlignment="Center"
+            Opacity="0"
+            Orientation="Horizontal"
+            Spacing="2">
+            <Button
+                x:Name="FolderButton"
+                Click="OnFolderClick"
+                Content="&#xE838;"
+                Style="{StaticResource AetherIconButtonStyle}"
+                ToolTipService.Placement="Top" />
+            <Button
+                x:Name="DismissButton"
+                Click="OnDismissClick"
+                Content="&#xE711;"
+                Style="{StaticResource AetherIconButtonStyle}"
+                ToolTipService.Placement="Top" />
+        </StackPanel>
+    </Grid>
+</UserControl>

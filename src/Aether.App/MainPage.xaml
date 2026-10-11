@@ -422,6 +422,22 @@
         </Grid>
 
         <!--
+            Export chip and clip drawer (s5-03, 5.3): 8 above the 84 px pill (24 + 84 + 8 = 116), right-aligned
+            to it by sharing its width and margins. Fades with the controls.
+        -->
+        <Grid
+            x:Name="ClipLayer"
+            MaxWidth="{StaticResource AetherSizeOsdWidth}"
+            Margin="16,0,16,116"
+            VerticalAlignment="Bottom"
+            PointerCanceled="OnOsdPointerExited"
+            PointerEntered="OnOsdPointerEntered"
+            PointerExited="OnOsdPointerExited"
+            Visibility="Collapsed">
+            <controls:ClipDrawer x:Name="ClipDrawer" />
+        </Grid>
+
+        <!--
             Transport pill (screen 5): the seek row, then the buttons, 4 apart. min(520, window - 32) wide and
             84 tall: padding 8 (7 here, the 1 px stroke is the eighth), two 32 px rows. Radius 24 is the
             16 px button radius plus the padding, so the corners stay concentric. 24 above the bottom.
@@ -547,13 +563,13 @@
                         Spacing="4">
                         <ToggleButton
                             x:Name="LoopButton"
-                            Visibility="Collapsed"
+                            Click="OnLoopClick"
                             Content="&#xE8EE;"
                             Style="{StaticResource AetherIconToggleButtonStyle}"
                             ToolTipService.Placement="Top" />
                         <ToggleButton
                             x:Name="AlwaysOnTopButton"
-                            Visibility="Collapsed"
+                            Click="OnAlwaysOnTopClick"
                             Content="&#xE718;"
                             Style="{StaticResource AetherIconToggleButtonStyle}"
                             ToolTipService.Placement="Top" />
@@ -653,12 +669,12 @@
                                         Style="{StaticResource AetherMenuItemStyle}" />
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreLoopItem"
-                                        Visibility="Collapsed"
+                                        Click="OnLoopClick"
                                         KeyboardAcceleratorTextOverride="L"
                                         Style="{StaticResource AetherToggleMenuItemStyle}" />
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreAlwaysOnTopItem"
-                                        Visibility="Collapsed"
+                                        Click="OnAlwaysOnTopClick"
                                         KeyboardAcceleratorTextOverride="T"
                                         Style="{StaticResource AetherToggleMenuItemStyle}" />
                                 </MenuFlyout>
