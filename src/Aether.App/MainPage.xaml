@@ -27,6 +27,10 @@
             Key="O"
             Invoked="OnOpenUrlAccelerator"
             Modifiers="Control,Shift" />
+        <KeyboardAccelerator Key="Left" Invoked="OnBackAccelerator" />
+        <KeyboardAccelerator Key="Right" Invoked="OnForwardAccelerator" />
+        <KeyboardAccelerator Key="I" Invoked="OnSetInAccelerator" />
+        <KeyboardAccelerator Key="O" Invoked="OnSetOutAccelerator" />
         <KeyboardAccelerator Key="Space" Invoked="OnPlayPauseAccelerator" />
         <KeyboardAccelerator Key="F" Invoked="OnFullScreenAccelerator" />
         <KeyboardAccelerator Key="M" Invoked="OnMuteAccelerator" />
@@ -416,57 +420,35 @@
         </Grid>
 
         <!--
-            Controls pill, the Pass 4 one-row minimum (5.8): Open, Play, time, seek bar, duration,
-            volume, full screen. min(520, window - 32) wide, 48 tall, 24 above the bottom; at 405 the
-            bar takes what is left. Horizontal padding is 7 because the 1 px stroke is the eighth.
+            Transport pill (screen 5): the seek row, then the buttons, 4 apart. min(520, window - 32) wide and
+            84 tall: padding 8 (7 here, the 1 px stroke is the eighth), two 32 px rows. Radius 24 is the
+            16 px button radius plus the padding, so the corners stay concentric. 24 above the bottom.
+            Below a 520 px pill, frame step, loop and always on top move into More controls (5.7).
         -->
         <Border
             x:Name="Osd"
-            Height="{StaticResource AetherSizeOsdHeight}"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
             Margin="16,0,16,24"
-            Padding="7,0"
+            Padding="7"
             VerticalAlignment="Bottom"
             Background="{StaticResource AetherSurfaceOsdBrush}"
             BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
             BorderThickness="1"
-            CornerRadius="{StaticResource AetherPillCornerRadius}"
+            CornerRadius="{StaticResource AetherTransportCornerRadius}"
             PointerEntered="OnOsdPointerEntered"
             PointerExited="OnOsdPointerExited"
             PointerCanceled="OnOsdPointerExited"
             PointerCaptureLost="OnOsdPointerExited"
+            SizeChanged="OnOsdSizeChanged"
             Visibility="Collapsed">
-            <Grid VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <Grid RowSpacing="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <Button
-                    x:Name="OpenButton"
-                    Click="OnOpenFileClick"
-                    Content="&#xE838;"
-                    Style="{StaticResource AetherIconButtonStyle}"
-                    ToolTipService.Placement="Top"
-                    ToolTipService.ToolTip="Open file (Ctrl+O)" />
-                <Button
-                    x:Name="PlayPauseButton"
-                    Grid.Column="1"
-                    Margin="4,0,0,0"
-                    Click="OnPlayPauseClick"
-                    Content="&#xE768;"
-                    Style="{StaticResource AetherPlayButtonStyle}"
-                    ToolTipService.Placement="Top"
-                    ToolTipService.ToolTip="Play (Space)" />
-
-                <!--  Times flank the bar (the slash form stays only where there is no bar). TextPrimary only on the pill.  -->
-                <Grid
-                    Grid.Column="2"
-                    Margin="12,0,8,0"
-                    ColumnSpacing="12">
+                <!--  Row 1: current time, bar, duration, 12 apart and 8 in from the padding. TextPrimary only on the pill.  -->
+                <Grid Padding="8,0" ColumnSpacing="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -477,41 +459,7 @@
                         VerticalAlignment="Center"
                         Style="{StaticResource AetherTimecodeTextStyle}"
                         Text="00:00" />
-                    <!--
-                        Track 4 px in the 32 px row: ProgressTrack, played white. The 12 px thumb shows
-                        only while the pointer is over the bar (5.1); no bubble or markers until Pass 5.
-                    -->
-                    <Slider
-                        x:Name="SeekSlider"
-                        Grid.Column="1"
-                        MinWidth="0"
-                        VerticalAlignment="Center"
-                        AllowFocusOnInteraction="False"
-                        IsThumbToolTipEnabled="False"
-                        LargeChange="5"
-                        Maximum="0"
-                        Minimum="0"
-                        SmallChange="5"
-                        StepFrequency="0.001"
-                        ValueChanged="OnSeekChanged">
-                        <Slider.Resources>
-                            <SolidColorBrush x:Key="SliderTrackFill" Color="{StaticResource AetherFillProgressTrackColor}" />
-                            <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="{StaticResource AetherFillProgressTrackColor}" />
-                            <SolidColorBrush x:Key="SliderTrackFillPressed" Color="{StaticResource AetherFillProgressTrackColor}" />
-                            <SolidColorBrush x:Key="SliderTrackValueFill" Color="{StaticResource AetherTextPrimaryColor}" />
-                            <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
-                            <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="{StaticResource AetherTextPrimaryColor}" />
-                            <SolidColorBrush x:Key="SliderThumbBackground" Color="Transparent" />
-                            <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
-                            <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="{StaticResource AetherTextPrimaryColor}" />
-                            <SolidColorBrush x:Key="SliderOuterThumbBackground" Color="Transparent" />
-                            <SolidColorBrush x:Key="SliderThumbBorderBrush" Color="Transparent" />
-                            <x:Double x:Key="SliderHorizontalThumbWidth">12</x:Double>
-                            <x:Double x:Key="SliderHorizontalThumbHeight">12</x:Double>
-                            <x:Double x:Key="SliderInnerThumbWidth">12</x:Double>
-                            <x:Double x:Key="SliderInnerThumbHeight">12</x:Double>
-                        </Slider.Resources>
-                    </Slider>
+                    <controls:PrecisionSeekBar x:Name="SeekBar" Grid.Column="1" />
                     <TextBlock
                         x:Name="DurationText"
                         Grid.Column="2"
@@ -520,87 +468,209 @@
                         Text="00:00" />
                 </Grid>
 
-                <!--
-                    Volume moves into a flyout to make room for the bar (5.8): 72 px slider, thumb 12
-                    white. Clicking mutes; the flyout opens on hover, or pinned from right-click or
-                    Shift+F10 so the keyboard can reach the slider.
-                -->
-                <Button
-                    x:Name="VolumeButton"
-                    Grid.Column="3"
-                    Click="OnVolumeClick"
-                    Content="&#xE767;"
-                    ContextRequested="OnVolumeContextRequested"
-                    PointerCanceled="OnVolumeButtonPointerExited"
-                    PointerEntered="OnVolumeButtonPointerEntered"
-                    PointerExited="OnVolumeButtonPointerExited"
-                    Style="{StaticResource AetherIconButtonStyle}"
-                    ToolTipService.Placement="Top">
-                    <FlyoutBase.AttachedFlyout>
-                        <Flyout
-                            x:Name="VolumeFlyout"
-                            AllowFocusOnInteraction="False"
-                            Closed="OnVolumeFlyoutClosed"
-                            Opened="OnVolumeFlyoutOpened"
-                            Placement="Top">
-                            <Flyout.FlyoutPresenterStyle>
-                                <!--  Solid dialog fallback over video: in-app Acrylic does not sample the swap chain (ADR-0013).  -->
-                                <Style TargetType="FlyoutPresenter">
-                                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
-                                    <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
-                                    <Setter Property="BorderThickness" Value="1" />
-                                    <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
-                                    <Setter Property="Padding" Value="12,0" />
-                                    <Setter Property="MinWidth" Value="0" />
-                                    <Setter Property="MinHeight" Value="0" />
-                                </Style>
-                            </Flyout.FlyoutPresenterStyle>
-                            <Grid
-                                x:Name="VolumeFlyoutContent"
-                                Background="Transparent"
-                                PointerCanceled="OnVolumeFlyoutPointerExited"
-                                PointerEntered="OnVolumeFlyoutPointerEntered"
-                                PointerExited="OnVolumeFlyoutPointerExited">
-                                <Slider
-                                    x:Name="VolumeSlider"
-                                    Width="{StaticResource AetherSizeVolumeSlider}"
-                                    VerticalAlignment="Center"
+                <!--  Row 2: 1fr / auto / 1fr, so the centre group is truly centred; 4 apart inside each group.  -->
+                <Grid Grid.Row="1" Height="{StaticResource AetherSizeControl}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button
+                            x:Name="OpenButton"
+                            Click="OnOpenFileClick"
+                            Content="&#xE838;"
+                            Style="{StaticResource AetherIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            ToolTipService.ToolTip="Open file (Ctrl+O)" />
+                        <Button
+                            x:Name="SpeedButton"
+                            Click="OnSpeedClick"
+                            Content="1.0×"
+                            Style="{StaticResource AetherSpeedPillButtonStyle}"
+                            ToolTipService.Placement="Top">
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout
+                                    x:Name="SpeedMenu"
+                                    Closed="OnSpeedMenuClosed"
+                                    MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    Opened="OnSpeedMenuOpened"
+                                    Placement="TopEdgeAlignedLeft" />
+                            </FlyoutBase.AttachedFlyout>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel
+                        Grid.Column="1"
+                        Orientation="Horizontal"
+                        Spacing="4">
+                        <Button
+                            x:Name="BackButton"
+                            Click="OnBackClick"
+                            Content="&#xEB9E;"
+                            Style="{StaticResource AetherIconButtonStyle}"
+                            ToolTipService.Placement="Top" />
+                        <Button
+                            x:Name="BackFrameButton"
+                            Click="OnBackFrameClick"
+                            Content="&#xE892;"
+                            Style="{StaticResource AetherIconButtonStyle}"
+                            ToolTipService.Placement="Top" />
+                        <Button
+                            x:Name="PlayPauseButton"
+                            Click="OnPlayPauseClick"
+                            Content="&#xE768;"
+                            Style="{StaticResource AetherPlayButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            ToolTipService.ToolTip="Play (Space)" />
+                        <Button
+                            x:Name="ForwardFrameButton"
+                            Click="OnForwardFrameClick"
+                            Content="&#xE893;"
+                            Style="{StaticResource AetherIconButtonStyle}"
+                            ToolTipService.Placement="Top" />
+                        <Button
+                            x:Name="ForwardButton"
+                            Click="OnForwardClick"
+                            Content="&#xEB9D;"
+                            Style="{StaticResource AetherIconButtonStyle}"
+                            ToolTipService.Placement="Top" />
+                    </StackPanel>
+
+                    <StackPanel
+                        Grid.Column="2"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal"
+                        Spacing="4">
+                        <ToggleButton
+                            x:Name="LoopButton"
+                            Visibility="Collapsed"
+                            Content="&#xE8EE;"
+                            Style="{StaticResource AetherIconToggleButtonStyle}"
+                            ToolTipService.Placement="Top" />
+                        <ToggleButton
+                            x:Name="AlwaysOnTopButton"
+                            Visibility="Collapsed"
+                            Content="&#xE718;"
+                            Style="{StaticResource AetherIconToggleButtonStyle}"
+                            ToolTipService.Placement="Top" />
+                        <!--
+                            Volume lives in a flyout (5.8): 72 px slider, thumb 12 white. Clicking mutes; the
+                            flyout opens on hover, or pinned from right-click or Shift+F10 so the keyboard can
+                            reach the slider.
+                        -->
+                        <Button
+                            x:Name="VolumeButton"
+                            Click="OnVolumeClick"
+                            Content="&#xE767;"
+                            ContextRequested="OnVolumeContextRequested"
+                            PointerCanceled="OnVolumeButtonPointerExited"
+                            PointerEntered="OnVolumeButtonPointerEntered"
+                            PointerExited="OnVolumeButtonPointerExited"
+                            Style="{StaticResource AetherIconButtonStyle}"
+                            ToolTipService.Placement="Top">
+                            <FlyoutBase.AttachedFlyout>
+                                <Flyout
+                                    x:Name="VolumeFlyout"
                                     AllowFocusOnInteraction="False"
-                                    IsThumbToolTipEnabled="False"
-                                    Maximum="100"
-                                    Minimum="0"
-                                    ValueChanged="OnVolumeChanged"
-                                    Value="100">
-                                    <Slider.Resources>
-                                        <SolidColorBrush x:Key="SliderTrackFill" Color="{StaticResource AetherFillRangeColor}" />
-                                        <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="{StaticResource AetherFillRangeColor}" />
-                                        <SolidColorBrush x:Key="SliderTrackFillPressed" Color="{StaticResource AetherFillRangeColor}" />
-                                        <SolidColorBrush x:Key="SliderTrackValueFill" Color="{StaticResource AetherTextPrimaryColor}" />
-                                        <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
-                                        <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="{StaticResource AetherTextPrimaryColor}" />
-                                        <SolidColorBrush x:Key="SliderThumbBackground" Color="{StaticResource AetherTextPrimaryColor}" />
-                                        <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
-                                        <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="{StaticResource AetherTextPrimaryColor}" />
-                                        <SolidColorBrush x:Key="SliderOuterThumbBackground" Color="Transparent" />
-                                        <SolidColorBrush x:Key="SliderThumbBorderBrush" Color="Transparent" />
-                                        <x:Double x:Key="SliderHorizontalThumbWidth">12</x:Double>
-                                        <x:Double x:Key="SliderHorizontalThumbHeight">12</x:Double>
-                                        <x:Double x:Key="SliderInnerThumbWidth">12</x:Double>
-                                        <x:Double x:Key="SliderInnerThumbHeight">12</x:Double>
-                                    </Slider.Resources>
-                                </Slider>
-                            </Grid>
-                        </Flyout>
-                    </FlyoutBase.AttachedFlyout>
-                </Button>
-                <Button
-                    x:Name="FullScreenButton"
-                    Grid.Column="4"
-                    Click="OnFullScreenClick"
-                    Content="&#xE740;"
-                    Style="{StaticResource AetherIconButtonStyle}"
-                    ToolTipService.Placement="Top"
-                    ToolTipService.ToolTip="Full screen (F)" />
+                                    Closed="OnVolumeFlyoutClosed"
+                                    Opened="OnVolumeFlyoutOpened"
+                                    Placement="Top">
+                                    <Flyout.FlyoutPresenterStyle>
+                                        <!--  Solid dialog fallback over video: in-app Acrylic does not sample the swap chain (ADR-0013).  -->
+                                        <Style TargetType="FlyoutPresenter">
+                                            <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+                                            <Setter Property="BorderThickness" Value="1" />
+                                            <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
+                                            <Setter Property="Padding" Value="12,0" />
+                                            <Setter Property="MinWidth" Value="0" />
+                                            <Setter Property="MinHeight" Value="0" />
+                                        </Style>
+                                    </Flyout.FlyoutPresenterStyle>
+                                    <Grid
+                                        x:Name="VolumeFlyoutContent"
+                                        Background="Transparent"
+                                        PointerCanceled="OnVolumeFlyoutPointerExited"
+                                        PointerEntered="OnVolumeFlyoutPointerEntered"
+                                        PointerExited="OnVolumeFlyoutPointerExited">
+                                        <Slider
+                                            x:Name="VolumeSlider"
+                                            Width="{StaticResource AetherSizeVolumeSlider}"
+                                            VerticalAlignment="Center"
+                                            AllowFocusOnInteraction="False"
+                                            IsThumbToolTipEnabled="False"
+                                            Maximum="100"
+                                            Minimum="0"
+                                            ValueChanged="OnVolumeChanged"
+                                            Value="100">
+                                            <Slider.Resources>
+                                                <SolidColorBrush x:Key="SliderTrackFill" Color="{StaticResource AetherFillRangeColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="{StaticResource AetherFillRangeColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackFillPressed" Color="{StaticResource AetherFillRangeColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFill" Color="{StaticResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="{StaticResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderThumbBackground" Color="{StaticResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="{StaticResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderOuterThumbBackground" Color="Transparent" />
+                                                <SolidColorBrush x:Key="SliderThumbBorderBrush" Color="Transparent" />
+                                                <x:Double x:Key="SliderHorizontalThumbWidth">12</x:Double>
+                                                <x:Double x:Key="SliderHorizontalThumbHeight">12</x:Double>
+                                                <x:Double x:Key="SliderInnerThumbWidth">12</x:Double>
+                                                <x:Double x:Key="SliderInnerThumbHeight">12</x:Double>
+                                            </Slider.Resources>
+                                        </Slider>
+                                    </Grid>
+                                </Flyout>
+                            </FlyoutBase.AttachedFlyout>
+                        </Button>
+                        <Button
+                            x:Name="MoreButton"
+                            Click="OnMoreClick"
+                            Content="&#xE712;"
+                            Style="{StaticResource AetherIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed">
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout
+                                    x:Name="MoreMenu"
+                                    MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    Placement="TopEdgeAlignedRight">
+                                    <MenuFlyoutItem
+                                        x:Name="MoreBackFrameItem"
+                                        Click="OnBackFrameClick"
+                                        KeyboardAcceleratorTextOverride=","
+                                        Style="{StaticResource AetherMenuItemStyle}" />
+                                    <MenuFlyoutItem
+                                        x:Name="MoreForwardFrameItem"
+                                        Click="OnForwardFrameClick"
+                                        KeyboardAcceleratorTextOverride="."
+                                        Style="{StaticResource AetherMenuItemStyle}" />
+                                    <ToggleMenuFlyoutItem
+                                        x:Name="MoreLoopItem"
+                                        Visibility="Collapsed"
+                                        KeyboardAcceleratorTextOverride="L"
+                                        Style="{StaticResource AetherToggleMenuItemStyle}" />
+                                    <ToggleMenuFlyoutItem
+                                        x:Name="MoreAlwaysOnTopItem"
+                                        Visibility="Collapsed"
+                                        KeyboardAcceleratorTextOverride="T"
+                                        Style="{StaticResource AetherToggleMenuItemStyle}" />
+                                </MenuFlyout>
+                            </FlyoutBase.AttachedFlyout>
+                        </Button>
+                        <Button
+                            x:Name="FullScreenButton"
+                            Click="OnFullScreenClick"
+                            Content="&#xE740;"
+                            Style="{StaticResource AetherIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            ToolTipService.ToolTip="Full screen (F)" />
+                    </StackPanel>
+                </Grid>
             </Grid>
         </Border>
 

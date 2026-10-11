@@ -69,8 +69,6 @@ public sealed partial class MainPage : Page
     private readonly HoverFlyout _volumeHover = new();
     private DispatcherQueueTimer? _volumeHoverTimer;
     private bool _volumeOpeningPinned;
-    private bool _updatingSeek;
-    private bool _seekDragging;
 
     // Links cannot play until streaming lands, so Play in the dialog reports that instead (4.D5).
     private readonly OpenUrlFlow _openUrl = new(TimeProvider.System, streamingAvailable: false);
@@ -91,10 +89,7 @@ public sealed partial class MainPage : Page
         VolumeFlyoutContent.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(OnVolumeFlyoutReleased), true);
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
-        // The slider handles its own pointer events; listen anyway to know when a drag starts and ends.
-        SeekSlider.AddHandler(PointerPressedEvent, new PointerEventHandler(OnSeekPointerPressed), handledEventsToo: true);
-        SeekSlider.AddHandler(PointerReleasedEvent, new PointerEventHandler(OnSeekPointerReleased), handledEventsToo: true);
-        SeekSlider.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(OnSeekPointerReleased), handledEventsToo: true);
+        InitializeTransport();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -123,7 +118,7 @@ public sealed partial class MainPage : Page
         ToolTipService.SetToolTip(VolumeButton, AppStrings.Get("Transport_Mute"));
         AutomationProperties.SetName(VolumeButton, AppStrings.Get("Transport_Volume"));
         AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
-        AutomationProperties.SetName(SeekSlider, AppStrings.Get("Transport_Seek"));
+        ApplyTransportStrings();
         RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         StatusRenderer.Text = AppStrings.Get("EmptyState_Renderer");
@@ -358,6 +353,9 @@ public sealed partial class MainPage : Page
             case nameof(PlayerViewModel.Volume):
                 SyncVolume();
                 break;
+            case nameof(PlayerViewModel.Speed):
+                ShowSpeed(vm.Speed);
+                break;
             case nameof(PlayerViewModel.VideoWidth):
             case nameof(PlayerViewModel.VideoHeight):
                 FitVideo();
@@ -390,41 +388,13 @@ public sealed partial class MainPage : Page
     private void UpdateClock(PlayerViewModel vm)
     {
         DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
-        if (_seekDragging)
-        {
-            return; // the bar and the time follow the pointer, not playback
-        }
+        SyncClipRange();
+        SeekBar.Duration = vm.Duration;
         double position = TransportState.DisplayPosition(vm.State);
-        PositionText.Text = Timecode.FormatClock(position, vm.Duration);
-        _updatingSeek = true;
-        SeekSlider.Maximum = Math.Max(0, vm.Duration);
-        SeekSlider.Value = Math.Clamp(position, 0, SeekSlider.Maximum);
-        _updatingSeek = false;
-    }
-
-    private void OnSeekChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (_updatingSeek || _session is not { } session || !HasVideo)
+        SeekBar.Position = position;
+        if (!SeekBar.IsDragging)
         {
-            return;
-        }
-        PositionText.Text = Timecode.FormatClock(e.NewValue, session.ViewModel.Duration);
-        TrySend(() => session.Seek(e.NewValue, _seekDragging));
-    }
-
-    private void OnSeekPointerPressed(object sender, PointerRoutedEventArgs e) => _seekDragging = true;
-
-    /// <summary>Release (or a lost capture) ends the drag with an exact seek to where the bar stopped.</summary>
-    private void OnSeekPointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_seekDragging)
-        {
-            return;
-        }
-        _seekDragging = false;
-        if (_session is { } session && HasVideo)
-        {
-            TrySend(() => session.Seek(SeekSlider.Value, dragging: false));
+            PositionText.Text = Timecode.FormatClock(position, vm.Duration); // while dragging it shows the drag time
         }
     }
 

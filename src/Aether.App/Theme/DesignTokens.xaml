@@ -43,6 +43,11 @@
             <SolidColorBrush x:Key="ProgressBarForeground" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="ProgressBarBackground" Color="#1FFFFFFF" />
             <SolidColorBrush x:Key="ProgressRingForegroundThemeBrush" Color="#FFFFFFFF" />
+            <!--  Menu item hover and press on the solid menus (screen 5.4): FillSubtleHover 6%, FillSubtlePressed 4%  -->
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#0AFFFFFF" />
+            <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPointerOver" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPressed" Color="#0AFFFFFF" />
         </ResourceDictionary>
         <!--  Dark: copy the Default block here unchanged if the app ever stops forcing RequestedTheme="Dark".  -->
     </ResourceDictionary.ThemeDictionaries>
@@ -403,6 +408,114 @@
         <Setter Property="Padding" Value="0" />
         <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeIcon}" />
+    </Style>
+    <!--
+        Transport toggles, Loop and Always on top (5.6): rest transparent, hover 6%, pressed 4% with the
+        glyph at 80%; On is FillEmphasisRest with StrokeControl, 18% on hover.
+    -->
+    <Style x:Key="AetherIconToggleButtonStyle" TargetType="ToggleButton">
+        <Setter Property="Width" Value="{StaticResource AetherSizeControl}" />
+        <Setter Property="Height" Value="{StaticResource AetherSizeControl}" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherPillCornerRadius}" />
+        <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherSizeIcon}" />
+        <Setter Property="AllowFocusOnInteraction" Value="False" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="FocusVisualMargin" Value="-3" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                        <Setter Target="ContentPresenter.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="ContentPresenter.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
+                                        <Setter Target="Root.BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisHoverBrush}" />
+                                        <Setter Target="Root.BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisPressedBrush}" />
+                                        <Setter Target="Root.BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+                                        <Setter Target="ContentPresenter.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedDisabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillDisabledBrush}" />
+                                        <Setter Target="ContentPresenter.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!--  Speed pill (5.4): outline, at least 52 wide, Caption 12. Filled with FillEmphasis while its menu is open (set from code).  -->
+    <Style x:Key="AetherSpeedPillButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">
+        <Setter Property="MinWidth" Value="{StaticResource AetherSizeSpeedPill}" />
+        <Setter Property="Height" Value="{StaticResource AetherSizeControl}" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="FontSize" Value="{StaticResource AetherCaptionFontSize}" />
+    </Style>
+    <!--
+        Transport menus (5.4, 5.7): solid dialog fallback over video (ADR-0013), radius 8, StrokeSurface,
+        4 above and below the items. Items are 32 tall, inset 4, radius 4; hover is FillSubtleHover.
+    -->
+    <Style x:Key="AetherMenuFlyoutPresenterStyle" TargetType="MenuFlyoutPresenter">
+        <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
+        <Setter Property="Padding" Value="0,4" />
+    </Style>
+    <Style x:Key="AetherToggleMenuItemStyle" BasedOn="{StaticResource DefaultToggleMenuFlyoutItemStyle}" TargetType="ToggleMenuFlyoutItem">
+        <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+        <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+    </Style>
+    <Style x:Key="AetherMenuItemStyle" BasedOn="{StaticResource DefaultMenuFlyoutItemStyle}" TargetType="MenuFlyoutItem">
+        <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+        <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
     </Style>
     <!--  Title bar gear and Back: 46×32, square, like the caption buttons  -->
     <Style x:Key="AetherTitleBarButtonStyle" BasedOn="{StaticResource AetherIconButtonStyle}" TargetType="Button">

@@ -429,6 +429,15 @@
   <data name="Menu_AlwaysOnTop" xml:space="preserve">
     <value>Always on top</value>
   </data>
+  <data name="Menu_Loop" xml:space="preserve">
+    <value>Loop</value>
+  </data>
+  <data name="Menu_Back1Frame" xml:space="preserve">
+    <value>Back 1 frame</value>
+  </data>
+  <data name="Menu_Forward1Frame" xml:space="preserve">
+    <value>Forward 1 frame</value>
+  </data>
   <data name="Menu_Clips" xml:space="preserve">
     <value>Clips</value>
   </data>
