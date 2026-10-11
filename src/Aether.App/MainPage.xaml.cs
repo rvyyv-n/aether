@@ -3,6 +3,7 @@ using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Recents;
+using Aether.Core.Playback.Resume;
 using Aether_App.Controls;
 using Aether_App.Playback;
 using Microsoft.UI.Dispatching;
@@ -212,6 +213,7 @@ public sealed partial class MainPage : Page
         _copiedTimer?.Stop();
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         App.Recents.Changed -= OnRecentsChanged;
+        SaveResumePosition(background: false);
         CursorVisibility.Show();
         if (_session is { } session)
         {
@@ -331,13 +333,35 @@ public sealed partial class MainPage : Page
         {
             return;
         }
+        SaveResumePosition(background: true);
+        double? startAt = App.Settings.Current.ResumePlayback ? App.Resume.TryGet(path) : null;
         _currentPath = path;
         _fitWindowPending = true;
         _durationRecorded = false;
-        TrySend(() => session.Open(path));
+        TrySend(() => session.Open(path, startAt));
         string name = Path.GetFileName(path);
         _ = Task.Run(() => App.Recents.Add(path, name, DateTimeOffset.Now));
         Render();
+    }
+
+    /// <summary>Remembers where the current file is, for the next time it is opened (5.10).</summary>
+    private void SaveResumePosition(bool background)
+    {
+        if (_currentPath is not { } path || _session?.ViewModel is not { } vm || !HasVideo || !App.Settings.Current.ResumePlayback)
+        {
+            return;
+        }
+        double position = vm.Position;
+        double duration = vm.Duration;
+        DateTimeOffset now = DateTimeOffset.Now;
+        if (background)
+        {
+            _ = Task.Run(() => App.Resume.Save(path, position, duration, now));
+        }
+        else
+        {
+            App.Resume.Save(path, position, duration, now); // on close: a queued write could be lost with the process
+        }
     }
 
     private void TogglePause()

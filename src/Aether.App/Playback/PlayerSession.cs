@@ -80,11 +80,19 @@ public sealed class PlayerSession : IDisposable
         return new PlayerSession(context, surface, keyTarget, queue);
     }
 
-    /// <summary>Opens <paramref name="path"/>, replacing the current file. Non-blocking.</summary>
+    /// <summary>
+    /// Opens <paramref name="path"/>, replacing the current file, from <paramref name="startAt"/> seconds
+    /// when given. Non-blocking.
+    /// </summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
-    public void Open(string path)
+    public void Open(string path, double? startAt = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(path);
+        // <c>start</c> is global and sticks, so every open sets it, to "none" when there is nothing to resume.
+        string start = startAt is { } seconds
+            ? seconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
+            : "none";
+        _context.CommandAsync(new MpvCommand("set", "start", start));
         _context.CommandAsync(new MpvCommand("loadfile", path, "replace"));
     }
 

@@ -1,5 +1,6 @@
 ﻿using Aether.Core.Playback;
 using Aether.Core.Playback.Recents;
+using Aether.Core.Playback.Resume;
 using Aether.Core.Playback.Settings;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -31,7 +32,10 @@ public partial class App : Application
 
     /// <summary>Recently opened files for the empty state. Loaded on the thread pool at launch; empty until then.</summary>
     public static RecentsStore Recents { get; } = new(new FileSettingsStorage(RecentsStore.DefaultPath()));
-    
+
+    /// <summary>Where each file was left, for Resume playback. Loaded on the thread pool at launch; empty until then.</summary>
+    public static ResumeStore Resume { get; } = new(new FileSettingsStorage(ResumeStore.DefaultPath()));
+
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -49,6 +53,7 @@ public partial class App : Application
     {
         _ = Task.Run(Settings.Load);
         _ = Task.Run(Recents.Load);
+        _ = Task.Run(Resume.Load);
         var window = new MainWindow();
         _window = window;
         if (LaunchPath(args) is { } path)
