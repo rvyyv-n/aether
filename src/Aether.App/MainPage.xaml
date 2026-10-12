@@ -18,25 +18,8 @@
     PointerMoved="OnPagePointerMoved"
     mc:Ignorable="d">
 
+    <!--  Escape is fixed. Every other shortcut is added from the shortcut settings (MainPage.Shortcuts.cs).  -->
     <Page.KeyboardAccelerators>
-        <KeyboardAccelerator
-            Key="O"
-            Invoked="OnOpenAccelerator"
-            Modifiers="Control" />
-        <KeyboardAccelerator
-            Key="O"
-            Invoked="OnOpenUrlAccelerator"
-            Modifiers="Control,Shift" />
-        <KeyboardAccelerator Key="Left" Invoked="OnBackAccelerator" />
-        <KeyboardAccelerator Key="Right" Invoked="OnForwardAccelerator" />
-        <KeyboardAccelerator Key="I" Invoked="OnSetInAccelerator" />
-        <KeyboardAccelerator Key="O" Invoked="OnSetOutAccelerator" />
-        <KeyboardAccelerator Key="Space" Invoked="OnPlayPauseAccelerator" />
-        <KeyboardAccelerator Key="F" Invoked="OnFullScreenAccelerator" />
-        <KeyboardAccelerator Key="M" Invoked="OnMuteAccelerator" />
-        <KeyboardAccelerator Key="L" Invoked="OnLoopAccelerator" />
-        <KeyboardAccelerator Key="T" Invoked="OnAlwaysOnTopAccelerator" />
-        <KeyboardAccelerator Key="F11" Invoked="OnFullScreenAccelerator" />
         <KeyboardAccelerator Key="Escape" Invoked="OnEscapeAccelerator" />
     </Page.KeyboardAccelerators>
 
@@ -670,12 +653,10 @@
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreLoopItem"
                                         Click="OnLoopClick"
-                                        KeyboardAcceleratorTextOverride="L"
                                         Style="{StaticResource AetherToggleMenuItemStyle}" />
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreAlwaysOnTopItem"
                                         Click="OnAlwaysOnTopClick"
-                                        KeyboardAcceleratorTextOverride="T"
                                         Style="{StaticResource AetherToggleMenuItemStyle}" />
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>

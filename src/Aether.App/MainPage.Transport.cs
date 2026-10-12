@@ -1,4 +1,5 @@
 using Aether.Core.Playback;
+using Aether.Core.Playback.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -39,27 +40,23 @@ public sealed partial class MainPage
     private void ApplyTransportStrings()
     {
         AutomationProperties.SetName(SeekBar, AppStrings.Get("Transport_Seek"));
-        Label(BackButton, "Transport_Back5s");
-        Label(ForwardButton, "Transport_Forward5s");
         Label(BackFrameButton, "Transport_Back1Frame");
         Label(ForwardFrameButton, "Transport_Forward1Frame");
-        Label(LoopButton, "Transport_Loop");
-        Label(AlwaysOnTopButton, "Transport_AlwaysOnTop");
         Label(MoreButton, "Transport_MoreControls");
         ToolTipService.SetToolTip(SpeedButton, AppStrings.Get("Transport_Speed"));
         MoreBackFrameItem.Text = AppStrings.Get("Menu_Back1Frame");
         MoreForwardFrameItem.Text = AppStrings.Get("Menu_Forward1Frame");
         MoreLoopItem.Text = AppStrings.Get("Menu_Loop");
         MoreAlwaysOnTopItem.Text = AppStrings.Get("Menu_AlwaysOnTop");
+    }
 
-        static void Label(UIElement button, string key)
-        {
-            string text = AppStrings.Get(key);
-            ToolTipService.SetToolTip(button, text);
-            // The tooltip carries the shortcut; the accessible name is the action alone.
-            int shortcut = text.LastIndexOf(" (", StringComparison.Ordinal);
-            AutomationProperties.SetName(button, shortcut > 0 ? text[..shortcut] : text);
-        }
+    private static void Label(UIElement button, string key, ShortcutAction? action = null)
+    {
+        string text = AppStrings.Get(key);
+        // The tooltip carries the shortcut; the accessible name is the action alone.
+        int shortcut = text.LastIndexOf(" (", StringComparison.Ordinal);
+        AutomationProperties.SetName(button, shortcut > 0 ? text[..shortcut] : text);
+        ToolTipService.SetToolTip(button, action is { } a ? App.Shortcuts.Tip(text, a) : text);
     }
 
     /// <summary>Keyframe seeks follow the drag; the release seeks to the exact frame.</summary>

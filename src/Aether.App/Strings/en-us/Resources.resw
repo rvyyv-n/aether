@@ -825,6 +825,18 @@
   <data name="Settings_Shortcuts_SetInOut" xml:space="preserve">
     <value>Set in / Set out</value>
   </data>
+  <data name="Settings_Shortcuts_SetIn" xml:space="preserve">
+    <value>Set in</value>
+  </data>
+  <data name="Settings_Shortcuts_SetOut" xml:space="preserve">
+    <value>Set out</value>
+  </data>
+  <data name="Settings_Shortcuts_Mute" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="Settings_Shortcuts_Loop" xml:space="preserve">
+    <value>Loop</value>
+  </data>
   <data name="Settings_Shortcuts_Window" xml:space="preserve">
     <value>Window</value>
   </data>

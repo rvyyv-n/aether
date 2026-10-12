@@ -4,6 +4,7 @@ using Aether.Core.Playback.Recents;
 using Aether.Core.Playback.Resume;
 using Aether.Core.Playback.Settings;
 using Aether.PvP.Review.Clipping;
+using Aether_App.Input;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -31,6 +32,9 @@ public partial class App : Application
 
     /// <summary>The single settings instance. Loaded on the thread pool at launch; it holds defaults until then.</summary>
     public static SettingsStore Settings { get; } = new(new FileSettingsStorage(FileSettingsStorage.DefaultPath()));
+
+    /// <summary>The configurable shortcut keys, kept in <see cref="Settings"/>.</summary>
+    public static ShortcutSettings Shortcuts { get; } = new(Settings);
 
     /// <summary>Completes once saved settings are read; engine start waits on it so start-only options use the saved values.</summary>
     public static Task SettingsLoaded { get; private set; } = Task.CompletedTask;
