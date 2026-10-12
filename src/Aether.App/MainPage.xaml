@@ -293,19 +293,15 @@
             </StackPanel>
 
             <!--
-                Status strip: reports the engine only. Dot, label and muted detail on the left, the
-                renderer on the right; startup work runs a 2 px bar along the bottom edge.
+                Status footer: reports the engine only, borderless on the backdrop. Dot, label and muted
+                detail; startup work runs a 2 px bar along the bottom edge.
             -->
             <Border
                 Grid.Row="1"
                 Height="40"
-                Margin="{StaticResource AetherPageMargin}"
-                Style="{StaticResource AetherGlassPanelStyle}">
+                Padding="16,12"
+                Margin="{StaticResource AetherPageMargin}">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Ellipse
                             x:Name="StatusDot"
@@ -317,16 +313,9 @@
                             Style="{StaticResource AetherCaptionTextStyle}" />
                         <TextBlock x:Name="StatusDetail" Style="{StaticResource AetherCaptionTextStyle}" />
                     </StackPanel>
-                    <TextBlock
-                        x:Name="StatusRenderer"
-                        Grid.Column="1"
-                        Margin="16,0,0,0"
-                        Style="{StaticResource AetherCaptionTextStyle}"
-                        Text="ANGLE · D3D11" />
                     <!--  The negative margin cancels the strip's padding so the bar sits on its bottom edge.  -->
                     <ProgressBar
                         x:Name="StartupProgress"
-                        Grid.ColumnSpan="2"
                         Height="2"
                         MinHeight="2"
                         Margin="-16,0,-16,-12"
@@ -368,7 +357,7 @@
         </Rectangle>
 
         <!--
-            Title bar: name and badge (the drag region), the gear, then 138 px left clear for the
+            Title bar: name and release label (the drag region), the gear, then 138 px left clear for the
             system caption buttons. The gear sits outside the drag region so it takes clicks.
         -->
         <Grid
@@ -382,8 +371,7 @@
             </Grid.ColumnDefinitions>
             <Grid x:Name="TitleBarDragArea" Background="Transparent">
                 <!--
-                    Shared baseline at y 20: both blocks trim to their baseline and sit on the panel's
-                    bottom edge; the badge's -2 margin cancels its 2 px bottom padding.
+                    Shared baseline at y 20: both texts trim to their baseline and sit on the panel's bottom edge.
                 -->
                 <StackPanel
                     Height="20"
@@ -397,18 +385,14 @@
                         Style="{StaticResource AetherCaptionStrongTextStyle}"
                         Text="Aether"
                         TextLineBounds="TrimToBaseline" />
-                    <Border
+                    <TextBlock
+                        x:Name="TitleBadgeText"
                         MaxWidth="320"
-                        Margin="0,0,0,-2"
                         VerticalAlignment="Bottom"
-                        Style="{StaticResource AetherBadgeStyle}">
-                        <TextBlock
-                            x:Name="TitleBadgeText"
-                            Foreground="{StaticResource AetherTextPrimaryBrush}"
-                            Style="{StaticResource AetherCaptionTextStyle}"
-                            Text="Alpha"
-                            TextLineBounds="TrimToBaseline" />
-                    </Border>
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        Text="Alpha"
+                        TextLineBounds="TrimToBaseline"
+                        TextTrimming="CharacterEllipsis" />
                 </StackPanel>
             </Grid>
             <!--  Disabled until the Settings page exists (Pass 7).  -->

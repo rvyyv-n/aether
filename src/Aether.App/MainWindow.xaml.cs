@@ -47,7 +47,7 @@ public interface IShellWindow
 }
 
 /// <summary>
-/// Borderless shell: content extends into the title bar, the Desktop Acrylic backdrop shows through, and the page's own
+/// Borderless shell: content extends into the title bar, Mica Alt shows through, and the page's own
 /// title bar strip is the drag region. The system still draws the caption buttons.
 /// </summary>
 public sealed partial class MainWindow : Window, IShellWindow

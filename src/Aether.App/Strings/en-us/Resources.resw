@@ -102,9 +102,6 @@
   <data name="EmptyState_EngineReady" xml:space="preserve">
     <value>Ready</value>
   </data>
-  <data name="EmptyState_Renderer" xml:space="preserve">
-    <value>ANGLE · D3D11</value>
-  </data>
   <data name="EmptyState_DetailsSearched" xml:space="preserve">
     <value>Searched</value>
   </data>

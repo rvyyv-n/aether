@@ -123,7 +123,6 @@ public sealed partial class MainPage : Page
         ApplyTransportStrings();
         RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
-        StatusRenderer.Text = AppStrings.Get("EmptyState_Renderer");
     }
 
     public PlayerSession? Session => _session;

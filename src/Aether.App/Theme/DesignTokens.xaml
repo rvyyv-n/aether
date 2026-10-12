@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <!--
     Aether design tokens v2.1, generated from aether.tokens.json (the single source of truth).
-    Dark only, over the Desktop Acrylic backdrop. Colour in the UI itself is reserved for status dots; there is no accent colour.
+    Dark only, over the Mica Alt backdrop. Colour in the UI itself is reserved for status dots; there is no accent colour.
     Merge into App.xaml after XamlControlsResources, and set Application.RequestedTheme="Dark".
     Keys: Aether + role. Colours have a *Color and a *Brush key. Sizes are effective pixels (x:Double).
 -->
@@ -131,7 +131,7 @@
     <x:Double x:Key="AetherBodyLineHeight">20</x:Double>
     <x:Double x:Key="AetherSubtitleFontSize">20</x:Double>
     <x:Double x:Key="AetherSubtitleLineHeight">28</x:Double>
-    <x:Double x:Key="AetherTimecodeFontSize">13</x:Double>
+    <x:Double x:Key="AetherTimecodeFontSize">12</x:Double>
     <x:Double x:Key="AetherTimecodeLineHeight">16</x:Double>
 
     <!--  Spacing  -->
