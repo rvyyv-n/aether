@@ -23,6 +23,9 @@ public enum ChromeHolds
 
     /// <summary>The clip drawer is open, or a clip is being dragged out of it.</summary>
     Drawer = 32,
+
+    /// <summary>The settings view is open.</summary>
+    Settings = 64,
 }
 
 /// <summary>

@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using Aether.Core.Playback.Settings;
 using Xunit;
 
@@ -136,6 +136,37 @@ public class SettingsStoreTests
         Assert.False(store.PendingRestart);
     }
 
+    private sealed class OverlapStorage : ISettingsStorage
+    {
+        private int _writing;
+        public int Overlaps { get; private set; }
+        public string? Read() => null;
+        public void Write(string content)
+        {
+            if (Interlocked.Increment(ref _writing) > 1)
+            {
+                Overlaps++;
+            }
+            Thread.Sleep(1);
+            Interlocked.Decrement(ref _writing);
+        }
+    }
+
+    [Fact]
+    public void Overlapping_Saves_Write_One_At_A_Time()
+    {
+        var storage = new OverlapStorage();
+        var store = new SettingsStore(storage);
+
+        Parallel.For(0, 32, i =>
+        {
+            store.Set(SettingKeys.Brightness, i);
+            store.Save();
+        });
+
+        Assert.Equal(0, storage.Overlaps);
+    }
+
     [Fact]
     public void Save_Then_Load_Round_Trips_Through_Storage()
     {
@@ -184,7 +215,11 @@ public class SettingsStoreTests
         var errors = MpvOptionsValidator.Validate("deband-iterations=2\nvo foo\n\n# comment\n=3\nsub auto=1\nlast=ok\r\nfuzzy");
 
         Assert.Equal([2, 5, 6, 8], errors.Select(e => e.Line));
-        Assert.All(errors, e => Assert.False(string.IsNullOrWhiteSpace(e.Message)));
+        Assert.Equal(MpvOptionErrorKind.MissingEquals, errors[0].Kind);
+        Assert.Equal(MpvOptionErrorKind.MissingName, errors[1].Kind);
+        Assert.Equal(MpvOptionErrorKind.InvalidName, errors[2].Kind);
+        Assert.Equal("sub auto", errors[2].Key);
+        Assert.Equal(MpvOptionErrorKind.MissingEquals, errors[3].Kind);
     }
 
     [Theory]
@@ -279,5 +314,209 @@ public class SettingsStoreTests
         Assert.False(store.IsRestartPending(SettingKeys.HardwareDecoding));
         Assert.Equal(new AetherSettings(), store.Current);
     }
-}
+    [Fact]
+    public void Every_Setting_Default_Value_Round_Trips_Through_Save_And_Load()
+    {
+        var storage = new FakeStorage();
+        var store = new SettingsStore(storage);
+        store.Save();
 
+        var loadedStore = new SettingsStore(storage);
+        loadedStore.Load();
+
+        Assert.Equal(SettingDefinitions.Defaults, loadedStore.Current);
+        foreach (var def in SettingDefinitions.All)
+        {
+            Assert.Equal(def.GetValue(SettingDefinitions.Defaults), def.GetValue(loadedStore.Current));
+            Assert.True(loadedStore.IsDefault(def.Key));
+        }
+    }
+
+    [Fact]
+    public void Reset_And_ResetAll_Restore_Defaults_And_Raise_Changed()
+    {
+        var store = NewStore();
+        var changedKeys = new System.Collections.Generic.List<string>();
+        store.Changed += (_, e) => changedKeys.Add(e.Key);
+
+        Assert.True(store.Reset(SettingKeys.QualityPreset));
+        Assert.Empty(changedKeys);
+
+        store.Set(SettingKeys.QualityPreset, "high");
+        store.Set(SettingKeys.LoopByDefault, true);
+        changedKeys.Clear();
+
+        Assert.True(store.Reset(SettingKeys.QualityPreset));
+        Assert.Equal("balanced", store.Current.QualityPreset);
+        Assert.True(store.IsDefault(SettingKeys.QualityPreset));
+        Assert.Single(changedKeys);
+        Assert.Equal(SettingKeys.QualityPreset, changedKeys[0]);
+
+        changedKeys.Clear();
+        store.ResetAll();
+        Assert.Equal(new AetherSettings(), store.Current);
+        Assert.Contains(SettingKeys.LoopByDefault, changedKeys);
+    }
+
+    [Fact]
+    public void Restart_Flags_For_HardwareDecoding_And_NonRestart_Setting()
+    {
+        var store = NewStore();
+
+        Assert.True(store.RequiresRestart(SettingKeys.HardwareDecoding));
+        Assert.False(store.IsRestartPending(SettingKeys.HardwareDecoding));
+        Assert.False(store.PendingRestart);
+
+        store.Set(SettingKeys.HardwareDecoding, "no");
+        Assert.True(store.IsRestartPending(SettingKeys.HardwareDecoding));
+        Assert.True(store.PendingRestart);
+
+        store.Set(SettingKeys.HardwareDecoding, "auto-safe");
+        Assert.False(store.IsRestartPending(SettingKeys.HardwareDecoding));
+        Assert.False(store.PendingRestart);
+
+        Assert.False(store.RequiresRestart(SettingKeys.LoopByDefault));
+        Assert.False(store.IsRestartPending(SettingKeys.LoopByDefault));
+
+        store.Set(SettingKeys.LoopByDefault, true);
+        Assert.False(store.RequiresRestart(SettingKeys.LoopByDefault));
+        Assert.False(store.IsRestartPending(SettingKeys.LoopByDefault));
+        Assert.False(store.PendingRestart);
+
+        store.Set(SettingKeys.LoopByDefault, false);
+        Assert.False(store.IsRestartPending(SettingKeys.LoopByDefault));
+        Assert.False(store.PendingRestart);
+    }
+
+    [Fact]
+    public void Rejected_Values_Leave_Store_Unchanged()
+    {
+        var store = NewStore();
+        AetherSettings before = store.Current;
+
+        Assert.False(store.Set(SettingKeys.BatterySaver, "true"));
+        Assert.False(store.Set(SettingKeys.BatterySaver, 123));
+
+        Assert.False(store.Set(SettingKeys.Brightness, true));
+        Assert.False(store.Set(SettingKeys.Brightness, "50"));
+
+        Assert.False(store.Set(SettingKeys.QualityPreset, 42));
+
+        Assert.False(store.Set(SettingKeys.QualityPreset, "ultra"));
+        Assert.False(store.Set(SettingKeys.HardwareDecoding, "cuda"));
+        Assert.False(store.Set(SettingKeys.Upscaling, "nearest"));
+        Assert.False(store.Set(SettingKeys.Downscaling, "area"));
+        Assert.False(store.Set(SettingKeys.HdrToneMapping, "unsupported"));
+        Assert.False(store.Set(SettingKeys.SubtitleSize, "gigantic"));
+        Assert.False(store.Set(SettingKeys.StreamingQuality, "8k"));
+
+        Assert.False(store.Set(SettingKeys.Brightness, -101));
+        Assert.False(store.Set(SettingKeys.Brightness, 101));
+        Assert.False(store.Set(SettingKeys.Contrast, -150));
+        Assert.False(store.Set(SettingKeys.Contrast, 200));
+        Assert.False(store.Set(SettingKeys.Gamma, -1000));
+        Assert.False(store.Set(SettingKeys.Gamma, 1000));
+        Assert.False(store.Set(SettingKeys.Saturation, -101));
+        Assert.False(store.Set(SettingKeys.Saturation, 101));
+
+        Assert.Equal(before, store.Current);
+    }
+
+    [Fact]
+    public void Partial_Settings_File_Loads_Defaults_For_Bad_Keys_Only()
+    {
+        string json = """
+        {
+            "playback.loop": true,
+            "video.brightness": 45,
+            "video.hwdec": "invalid-choice",
+            "video.contrast": 999,
+            "audio.exclusive": "not-a-bool",
+            "streaming.quality": "best"
+        }
+        """;
+        var store = NewStore(json);
+
+        Assert.True(store.Current.LoopByDefault);
+        Assert.Equal(45, store.Current.Brightness);
+        Assert.Equal("best", store.Current.StreamingQuality);
+
+        Assert.Equal("auto-safe", store.Current.HardwareDecoding);
+        Assert.Equal(0, store.Current.Contrast);
+        Assert.False(store.Current.ExclusiveMode);
+
+        Assert.True(store.Current.BatterySaver);
+        Assert.True(store.Current.ResumePlayback);
+    }
+
+    [Fact]
+    public void Corrupt_Json_File_Loads_All_Defaults()
+    {
+        string brokenJson = "{ \"video.brightness\": 45, invalid json syntax here... ";
+        var store = NewStore(brokenJson);
+        Assert.Equal(SettingDefinitions.Defaults, store.Current);
+    }
+
+    [Fact]
+    public void MpvOptionsValidator_Handles_All_Error_Kinds()
+    {
+        var errEquals = MpvOptionsValidator.Validate("vo-gpu\nno_equal_here");
+        Assert.Equal(2, errEquals.Count);
+        Assert.All(errEquals, e => Assert.Equal(MpvOptionErrorKind.MissingEquals, e.Kind));
+
+        var errName = MpvOptionsValidator.Validate("=value\n--=value\n   =value");
+        Assert.Equal(3, errName.Count);
+        Assert.All(errName, e => Assert.Equal(MpvOptionErrorKind.MissingName, e.Kind));
+
+        var errInvalid = MpvOptionsValidator.Validate("foo bar=1\nkey$name=2\nbad*key=3");
+        Assert.Equal(3, errInvalid.Count);
+        Assert.All(errInvalid, e => Assert.Equal(MpvOptionErrorKind.InvalidName, e.Kind));
+        Assert.Equal("foo bar", errInvalid[0].Key);
+        Assert.Equal("key$name", errInvalid[1].Key);
+        Assert.Equal("bad*key", errInvalid[2].Key);
+
+        string[] reservedExamples =
+        [
+            "vo=gpu", "wid=123", "gpu-context=d3d11", "gpu-api=d3d11", "hwdec=auto",
+            "config=yes", "config-dir=/path", "include=/path", "input-ipc-server=pipe",
+            "script=test.lua", "scripts=dir", "load-scripts=yes",
+            "--VO=gpu-next", "--HWDEC=no", "--load-SCRIPTS=no"
+        ];
+        var errReserved = MpvOptionsValidator.Validate(string.Join("\n", reservedExamples));
+        Assert.Equal(reservedExamples.Length, errReserved.Count);
+        Assert.All(errReserved, e => Assert.Equal(MpvOptionErrorKind.Reserved, e.Kind));
+
+        var errDup = MpvOptionsValidator.Validate("sub-font=Arial\nsub-font-size=40\nsub-font=Roboto\n--SUB-FONT=Consolas");
+        Assert.Equal(2, errDup.Count);
+        Assert.Equal(3, errDup[0].Line);
+        Assert.Equal(MpvOptionErrorKind.Duplicate, errDup[0].Kind);
+        Assert.Equal("sub-font", errDup[0].Key);
+        Assert.Equal(4, errDup[1].Line);
+        Assert.Equal(MpvOptionErrorKind.Duplicate, errDup[1].Kind);
+        Assert.Equal("SUB-FONT", errDup[1].Key);
+    }
+
+    [Fact]
+    public void MpvOptionsValidator_Handles_Comments_Blank_Lines_CrLf_And_Prefixed_Keys()
+    {
+        string text = "# Header comment\r\n\r\n--cache=yes\r\n   \r\n# Another comment\r\ndemuxer-max-bytes=209715200\r\n--sub-scale=1.5\r\n";
+        var errors = MpvOptionsValidator.Validate(text);
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void HardwareDecodingOptions_Matches_SettingDefinitions()
+    {
+        var def = SettingDefinitions.All.First(d => d.Key == SettingKeys.HardwareDecoding);
+        string[] expectedValues = ["auto-safe", "no", "d3d11va", "d3d11va-copy"];
+
+        Assert.Equal(expectedValues, HardwareDecodingOptions.All.Select(o => o.Value));
+
+        var defaults = SettingDefinitions.Defaults;
+        foreach (var option in HardwareDecodingOptions.All)
+        {
+            Assert.NotNull(def.TryWith(defaults, option.Value));
+            Assert.StartsWith("Settings_HardwareDecoding_", option.ResourceKey);
+        }
+    }
+}

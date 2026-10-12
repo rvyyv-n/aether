@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Aether_App.Settings.Pages.PlaybackPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:settings="using:Aether_App.Settings">
+    <StackPanel Spacing="16">
+        <settings:SettingsGroup>
+            <settings:SettingsRow x:Name="PreciseSeekingRow">
+                <ToggleSwitch x:Name="PreciseSeekingToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="ResumePlaybackRow">
+                <ToggleSwitch x:Name="ResumePlaybackToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="LoopByDefaultRow">
+                <ToggleSwitch x:Name="LoopByDefaultToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="PlayNextInFolderRow">
+                <ToggleSwitch x:Name="PlayNextInFolderToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="RememberWindowSizeRow">
+                <ToggleSwitch x:Name="RememberWindowSizeToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="AlwaysOnTopRow">
+                <ToggleSwitch x:Name="AlwaysOnTopToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
+        </settings:SettingsGroup>
+    </StackPanel>
+</Page>

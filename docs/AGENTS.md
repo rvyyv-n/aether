@@ -23,7 +23,7 @@ Running the app: `Aether.App` is a packaged (MSIX) app. `dotnet run --project sr
 - **Opus**: `Aether.Core.Interop`. Unsafe structs, P/Invoke signatures, DirectX COM wrappers (`ISwapChainPanelNative`), memory lifetimes (verify no unmanaged leaks), MPV event-loop thread safety, and architecture decisions. Use it for 1-3 turns per task, not for file reading or test-fix loops.
 - **Opus (design)**: all design work: custom chrome, Mica, `DesignTokens`, auto-hiding OSD, drag-and-drop, startup/error states, `OverlayHud`, `PrecisionSeekBar`, `ClipDrawer`, the mobile player shell and the QR flyout (roadmap tasks 4.1-4.6, 4.8, 4.9, 5.1-5.4, 6.1, 6.2, 7.1-7.3, 8.1, 9.2, 9.3). Before building any of them it asks the user design questions and requests reference screenshots, then confirms the direction before writing UI code.
 - **Sonnet**: non-design wiring in `Aether.App`, `Aether.Core.Playback`, `Aether.PvP.Review`, `Aether.Server.LanHost`. `MpvVideoSurface`, throttled UI dispatch, `FrameStepper`, `PlayerViewModel`, keyboard accelerators, FFmpeg command builder and export, Kestrel host. Max 8 turns per thread.
-- **Gemini**: scouting and header ingestion (`mpv.h`, `render.h`), test suites and harnesses, build-error loops, CI, multi-file restructuring. Gemini doesn't auto-delegate; it names a fork candidate in its build summary.
+- **Gemini**: scouting and header ingestion (`mpv.h`, `render.h`), Mode D pre-build codebase scout (absorbs wide file reading on Google quota to yield ~40-line specs), test suites and harnesses, build-error loops, CI, first-pass reviews, multi-file restructuring. Gemini doesn't auto-delegate; it names a fork candidate in its build summary.
 
 ## Rules
 1. **P/Invoke**: no `[DllImport]`. Use source-generated `[LibraryImport]` with explicit marshaling (Native AOT).
@@ -40,10 +40,15 @@ Running the app: `Aether.App` is a packaged (MSIX) app. `dotnet run --project sr
   - Fork to Opus for Interop memory safety, P/Invoke signatures and COM wrappers.
   - Fork to Opus for WinUI design, Mica and UI polish (ask the user questions and request reference screenshots first).
   - Fork to Sonnet for MVVM wiring, PvP review plumbing and the Kestrel host.
-- Retire a thread at 8 turns or 150k tokens: commit, then fork or start fresh.
+- **Retire a Claude thread at 8 human turns:** Commit, then `t3_thread_fork` from `latest_stable` or start fresh before context becomes bloated.
+- **Subagent context budget:** Delegated implementation subagents have a generous budget of up to 100k-120k context tokens and ~25-30 tool calls. Subagents should complete their target before auto-compaction triggers; if a subagent ever hits compaction, its scope was too broad.
+- **Scout with Gemini, implement with Sonnet:** Build passes run in a worktree. Before launching Sonnet, run `gemini-handoff` Mode D so Gemini absorbs repo scouting on Google quota, and hand Sonnet a dense specification of ~40 lines.
+- **Targeted reference reading:** Implementation subagents build against the Scout Brief, but may read additional reference files if the brief is deemed insufficient or has specific missing details.
+- **Micro-batching:** Multi-component or multi-page roadmap targets are split into micro-batches of max 2-3 items/pages per subagent.
 - Fork checkpoints replace delegation loops: finish and commit the pass, then fork.
 - Never leave a dev server or file watcher running at the end of a turn.
 - Call `link_pull_request` for every PR you open.
 
 ## Commits
 Author and committer are `rvyyv-n` only. No co-author, generated-by or assistant mentions in commits, PRs or files; the global git hooks reject them. Never `--no-verify`.
+

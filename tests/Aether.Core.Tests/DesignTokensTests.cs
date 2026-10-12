@@ -16,7 +16,10 @@ public class DesignTokensTests
         "SymbolThemeFontFamily",
         "DefaultTextBoxStyle",
         "DefaultMenuFlyoutItemStyle",
-        "DefaultToggleMenuFlyoutItemStyle"
+        "DefaultToggleMenuFlyoutItemStyle",
+        "DefaultToggleSwitchStyle",
+        "DefaultComboBoxStyle",
+        "DefaultSliderStyle"
     ];
 
     private static readonly string[] LegacyAliasKeys =
@@ -116,6 +119,9 @@ public class DesignTokensTests
     {
         var doc = LoadDesignTokens();
         var tokenKeys = ExtractAllKeys(doc).ToHashSet(StringComparer.Ordinal);
+        // The settings controls dictionary is merged app-wide next to the tokens, so its styles resolve everywhere.
+        var settingsControls = XDocument.Load(RepoPath.Get("src", "Aether.App", "Theme", "SettingsControls.xaml"));
+        tokenKeys.UnionWith(ExtractAllKeys(settingsControls));
 
         string appDir = RepoPath.Get("src", "Aether.App");
         var xamlFiles = Directory.GetFiles(appDir, "*.xaml", SearchOption.AllDirectories)
@@ -126,16 +132,19 @@ public class DesignTokensTests
         Assert.NotEmpty(xamlFiles);
 
         var resourceRegex = new Regex(@"\{(?:StaticResource|ThemeResource)\s+([A-Za-z0-9_]+)\}", RegexOptions.Compiled);
+        var localKeyRegex = new Regex(@"x:Key=""([A-Za-z0-9_]+)""", RegexOptions.Compiled);
         var unresolved = new List<string>();
 
         foreach (var xamlFile in xamlFiles)
         {
             string content = File.ReadAllText(xamlFile);
+            // Resources a view declares for itself (item styles, templates) resolve within that file.
+            var localKeys = localKeyRegex.Matches(content).Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
             var matches = resourceRegex.Matches(content);
             foreach (Match match in matches)
             {
                 string key = match.Groups[1].Value;
-                if (!tokenKeys.Contains(key) && !KnownBuiltIns.Contains(key))
+                if (!tokenKeys.Contains(key) && !KnownBuiltIns.Contains(key) && !localKeys.Contains(key))
                 {
                     unresolved.Add($"{Path.GetFileName(xamlFile)} -> {key}");
                 }

@@ -20,6 +20,7 @@ public sealed class SettingsStore(ISettingsStorage storage)
     private const int FileVersion = 1;
 
     private readonly object _gate = new();
+    private readonly object _saveGate = new();
     private AetherSettings _current = new();
     private AetherSettings _loaded = new();
 
@@ -138,7 +139,15 @@ public sealed class SettingsStore(ISettingsStorage storage)
     }
 
     /// <summary>Writes the current settings. Throws if the storage fails, so the caller can report it.</summary>
-    public void Save() => storage.Write(Serialize(Current));
+    public void Save()
+    {
+        // Callers save on pool threads after every change. One write at a time, each taking the snapshot inside the
+        // lock, so overlapping saves cannot share the temp file and the last write always holds the newest values.
+        lock (_saveGate)
+        {
+            storage.Write(Serialize(Current));
+        }
+    }
 
     private string? ReadSafely()
     {

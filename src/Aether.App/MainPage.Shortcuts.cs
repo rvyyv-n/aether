@@ -1,0 +1,116 @@
+using Aether.Core.Playback.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Windows.Foundation;
+
+namespace Aether_App;
+
+/// <summary>
+/// Builds the page's keyboard accelerators from the shortcut settings and keeps the key hints in tooltips and the
+/// More menu in step with them. Escape and the frame-step keys are fixed and live elsewhere. UI thread only.
+/// </summary>
+public sealed partial class MainPage
+{
+    private readonly List<KeyboardAccelerator> _shortcutAccelerators = [];
+
+    /// <summary>Replaces the configurable accelerators with the current bindings and refreshes the key hints.</summary>
+    private void BuildShortcuts()
+    {
+        foreach (KeyboardAccelerator accelerator in _shortcutAccelerators)
+        {
+            KeyboardAccelerators.Remove(accelerator);
+        }
+        _shortcutAccelerators.Clear();
+
+        ShortcutMap map = App.Shortcuts.Map;
+        var taken = new HashSet<KeyCombination>();
+        foreach (ShortcutAction action in ShortcutActions.All)
+        {
+            foreach (KeyCombination combination in map.Get(action))
+            {
+                // Two actions on one combination: the first in the list wins, as ShortcutMap.Find says.
+                if (!taken.Add(combination))
+                {
+                    continue;
+                }
+                var accelerator = new KeyboardAccelerator
+                {
+                    Key = (Windows.System.VirtualKey)combination.Key,
+                    Modifiers = ToModifiers(combination.Modifiers),
+                };
+                accelerator.Invoked += HandlerFor(action);
+                KeyboardAccelerators.Add(accelerator);
+                _shortcutAccelerators.Add(accelerator);
+            }
+        }
+    }
+
+    // The settings change on the thread pool when they load, so the page is updated on its own thread.
+    private void OnShortcutsChanged(object? sender, EventArgs e) => DispatcherQueue.TryEnqueue(() =>
+    {
+        if (!_isLoaded)
+        {
+            return;
+        }
+        BuildShortcuts();
+        ApplyShortcutLabels();
+        SyncVolume();
+        Render();
+    });
+
+    /// <summary>The tooltips and menu hints that name a configurable key.</summary>
+    private void ApplyShortcutLabels()
+    {
+        ToolTipService.SetToolTip(OpenUrlButton, Tip("EmptyState_OpenUrlTooltip", ShortcutAction.OpenUrl));
+        ToolTipService.SetToolTip(OpenButton, Tip("Transport_OpenFile", ShortcutAction.OpenFile));
+        Label(BackButton, "Transport_Back5s", ShortcutAction.SkipBack);
+        Label(ForwardButton, "Transport_Forward5s", ShortcutAction.SkipForward);
+        Label(LoopButton, "Transport_Loop", ShortcutAction.Loop);
+        Label(AlwaysOnTopButton, "Transport_AlwaysOnTop", ShortcutAction.AlwaysOnTop);
+        MoreLoopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Loop);
+        MoreAlwaysOnTopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
+    }
+
+    private static string Tip(string key, ShortcutAction action) => App.Shortcuts.Tip(AppStrings.Get(key), action);
+
+    // The home line names the open-file key as it is now, and falls back to a plain prompt when that action has no key.
+    private static string HomeFilesSubtitle() =>
+        App.Shortcuts.Describe(ShortcutAction.OpenFile) is { Length: > 0 } keys
+            ? AppStrings.Format("EmptyState_SubtitleFilesOnly", keys)
+            : AppStrings.Get("EmptyState_SubtitleFilesOnlyUnbound");
+
+    private TypedEventHandler<KeyboardAccelerator, KeyboardAcceleratorInvokedEventArgs> HandlerFor(ShortcutAction action) => action switch
+    {
+        ShortcutAction.OpenFile => OnOpenAccelerator,
+        ShortcutAction.OpenUrl => OnOpenUrlAccelerator,
+        ShortcutAction.SkipBack => OnBackAccelerator,
+        ShortcutAction.SkipForward => OnForwardAccelerator,
+        ShortcutAction.SetIn => OnSetInAccelerator,
+        ShortcutAction.SetOut => OnSetOutAccelerator,
+        ShortcutAction.PlayPause => OnPlayPauseAccelerator,
+        ShortcutAction.FullScreen => OnFullScreenAccelerator,
+        ShortcutAction.Mute => OnMuteAccelerator,
+        ShortcutAction.Loop => OnLoopAccelerator,
+        ShortcutAction.AlwaysOnTop => OnAlwaysOnTopAccelerator,
+        _ => throw new ArgumentOutOfRangeException(nameof(action)),
+    };
+
+    private static Windows.System.VirtualKeyModifiers ToModifiers(KeyModifiers modifiers)
+    {
+        var result = Windows.System.VirtualKeyModifiers.None;
+        if ((modifiers & KeyModifiers.Ctrl) != 0)
+        {
+            result |= Windows.System.VirtualKeyModifiers.Control;
+        }
+        if ((modifiers & KeyModifiers.Shift) != 0)
+        {
+            result |= Windows.System.VirtualKeyModifiers.Shift;
+        }
+        if ((modifiers & KeyModifiers.Alt) != 0)
+        {
+            result |= Windows.System.VirtualKeyModifiers.Menu;
+        }
+        return result;
+    }
+}

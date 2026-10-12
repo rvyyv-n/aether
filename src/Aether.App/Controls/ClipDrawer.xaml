@@ -17,7 +17,7 @@
         Background="{StaticResource AetherSurfaceOsdBrush}"
         BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
         BorderThickness="1"
-        CornerRadius="20">
+        CornerRadius="16">
         <StackPanel>
             <StackPanel x:Name="DrawerArea" Visibility="Collapsed">
                 <ScrollViewer
@@ -56,6 +56,7 @@
                     x:Name="ExportButton"
                     Height="{StaticResource AetherSizeControl}"
                     Click="OnExportClick"
+                    FontSize="{StaticResource AetherCaptionFontSize}"
                     Style="{StaticResource AetherEmphasisPillButtonStyle}" />
                 <Button
                     x:Name="ClearButton"

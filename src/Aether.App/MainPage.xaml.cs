@@ -2,10 +2,12 @@
 using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
+using Aether.Core.Playback.Input;
 using Aether.Core.Playback.Recents;
 using Aether.Core.Playback.Resume;
 using Aether_App.Controls;
 using Aether_App.Playback;
+using Aether_App.Settings;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -78,6 +80,7 @@ public sealed partial class MainPage : Page
     private DispatcherQueueTimer? _copiedTimer;
     private int _recentsVersion; // bumped to drop a missing-file check that a newer one replaced
     private bool _durationRecorded;
+    private bool _settingsShown;
 
     public MainPage()
     {
@@ -92,6 +95,7 @@ public sealed partial class MainPage : Page
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
         InitializeTransport();
+        BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -102,11 +106,12 @@ public sealed partial class MainPage : Page
         TitleAppName.Text = AppStrings.Get("App_Name");
         ToolTipService.SetToolTip(SettingsButton, AppStrings.Get("TitleBar_SettingsTooltip"));
         AutomationProperties.SetName(SettingsButton, AppStrings.Get("Settings_Title"));
+        ToolTipService.SetToolTip(SettingsBackButton, AppStrings.Get("Settings_Back"));
+        AutomationProperties.SetName(SettingsBackButton, AppStrings.Get("Settings_Back"));
         SearchedKey.Text = AppStrings.Get("EmptyState_DetailsSearched");
         ErrorKey.Text = AppStrings.Get("EmptyState_DetailsError");
         OpenFileLabel.Text = AppStrings.Get("EmptyState_OpenFile");
         OpenUrlLabel.Text = AppStrings.Get("EmptyState_OpenUrl");
-        ToolTipService.SetToolTip(OpenUrlButton, AppStrings.Get("EmptyState_OpenUrlTooltip"));
         StreamCancelButton.Content = AppStrings.Get("Stream_Cancel");
         RecentsHeader.Text = AppStrings.Get("EmptyState_Recent");
         ClearRecentsButton.Content = AppStrings.Get("EmptyState_ClearList");
@@ -115,15 +120,13 @@ public sealed partial class MainPage : Page
         AutomationProperties.SetName(OpenUrlBox, OpenUrlFieldLabel.Text);
         OpenUrlPlayLabel.Text = AppStrings.Get("OpenUrl_Play");
         OpenUrlCancelButton.Content = AppStrings.Get("OpenUrl_Cancel");
-        ToolTipService.SetToolTip(OpenButton, AppStrings.Get("Transport_OpenFile"));
         AutomationProperties.SetName(OpenButton, AppStrings.Get("Menu_OpenFile"));
-        ToolTipService.SetToolTip(VolumeButton, AppStrings.Get("Transport_Mute"));
         AutomationProperties.SetName(VolumeButton, AppStrings.Get("Transport_Volume"));
         AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
         ApplyTransportStrings();
+        ApplyShortcutLabels();
         RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
-        StatusRenderer.Text = AppStrings.Get("EmptyState_Renderer");
     }
 
     public PlayerSession? Session => _session;
@@ -196,6 +199,9 @@ public sealed partial class MainPage : Page
             StartEngine();
         }
         App.Recents.Changed += OnRecentsChanged;
+        App.Shortcuts.Changed += OnShortcutsChanged;
+        BuildShortcuts(); // settings may have finished loading since the constructor
+        ApplyShortcutLabels();
         RefreshRecents();
         Render();
         Focus(FocusState.Programmatic);
@@ -211,11 +217,13 @@ public sealed partial class MainPage : Page
         _copiedTimer?.Stop();
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         App.Recents.Changed -= OnRecentsChanged;
+        App.Shortcuts.Changed -= OnShortcutsChanged;
         SaveResumePosition(background: false);
         CursorVisibility.Show();
         if (_session is { } session)
         {
             session.ViewModel.PropertyChanged -= OnViewModelChanged;
+            session.FileEnded -= OnFileEnded;
             session.Dispose();
             _session = null;
         }
@@ -229,7 +237,7 @@ public sealed partial class MainPage : Page
         Render();
 
         EngineStartupResult<MpvContext> result =
-            await EngineStartup.RunAsync(NativeLibraries.IsMpvAvailable, () => MpvContext.Create());
+            await EngineStartup.RunAsync(NativeLibraries.IsMpvAvailable, () => PlayerSession.CreateEngine());
 
         if (version != _startupVersion || !_isLoaded)
         {
@@ -251,6 +259,7 @@ public sealed partial class MainPage : Page
                     break;
                 }
                 _session.ViewModel.PropertyChanged += OnViewModelChanged;
+                _session.FileEnded += OnFileEnded;
                 _startup = StartupPhase.Ready;
                 _session.ViewModel.IsLooping = App.Settings.Current.LoopByDefault;
                 SyncVolume();
@@ -475,12 +484,12 @@ public sealed partial class MainPage : Page
         }
         bool muted = TransportState.IsMuted(volume);
         VolumeButton.Content = muted ? MuteGlyph : VolumeGlyph;
-        ToolTipService.SetToolTip(VolumeButton, AppStrings.Get(muted ? "Transport_Unmute" : "Transport_Mute"));
+        ToolTipService.SetToolTip(VolumeButton, Tip(muted ? "Transport_Unmute" : "Transport_Mute", ShortcutAction.Mute));
     }
 
     private void OnMuteAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (_session is not null && !IsOpenUrlShown)
+        if (_session is not null && !ArePlayerKeysPaused)
         {
             args.Handled = true;
             ToggleMute();
@@ -489,7 +498,7 @@ public sealed partial class MainPage : Page
 
     private void OnLoopAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (_session is { } session && !IsOpenUrlShown)
+        if (_session is { } session && !ArePlayerKeysPaused)
         {
             args.Handled = true;
             session.ViewModel.ToggleLoop();
@@ -498,7 +507,7 @@ public sealed partial class MainPage : Page
 
     private void OnAlwaysOnTopAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (_host is { } host && !IsOpenUrlShown)
+        if (_host is { } host && !ArePlayerKeysPaused)
         {
             args.Handled = true;
             host.ToggleAlwaysOnTop();
@@ -694,10 +703,11 @@ public sealed partial class MainPage : Page
         }
     }
 
-    // Space, F and M stay text while the Open URL field has focus: unhandled, they reach the field.
+    // Space, F and M stay text while the Open URL field has focus, and belong to the focused control in
+    // settings: unhandled, they pass through.
     private void OnPlayPauseAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (IsOpenUrlShown)
+        if (ArePlayerKeysPaused)
         {
             return;
         }
@@ -707,7 +717,7 @@ public sealed partial class MainPage : Page
 
     private void OnFullScreenAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (IsOpenUrlShown)
+        if (ArePlayerKeysPaused)
         {
             return;
         }
@@ -722,6 +732,11 @@ public sealed partial class MainPage : Page
             args.Handled = true;
             CloseOpenUrl();
         }
+        else if (_settingsShown)
+        {
+            args.Handled = true;
+            SetSettingsShown(false);
+        }
         else if (ClipDrawer.Close())
         {
             args.Handled = true;
@@ -734,6 +749,38 @@ public sealed partial class MainPage : Page
     }
 
     private void OnAnyKeyDown(object sender, KeyRoutedEventArgs e) => NotifyActivity();
+
+    /// <summary>Player keys stand down while the Open URL field or settings has the keyboard.</summary>
+    private bool ArePlayerKeysPaused => IsOpenUrlShown || _settingsShown;
+
+    // ---- Settings (6.1) ----
+
+    private void OnSettingsClick(object sender, RoutedEventArgs e) => SetSettingsShown(!_settingsShown);
+
+    private void OnSettingsBackClick(object sender, RoutedEventArgs e) => SetSettingsShown(false);
+
+    /// <summary>Settings covers the player; playback carries on underneath.</summary>
+    private void SetSettingsShown(bool shown)
+    {
+        if (_settingsShown == shown)
+        {
+            return;
+        }
+        _settingsShown = shown;
+        if (shown)
+        {
+            SettingsHost.Child ??= new SettingsView();
+            _host?.SetFullScreen(false);
+        }
+        SettingsHost.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        SettingsBackButton.Visibility = SettingsHost.Visibility;
+        _chrome.SetHold(ChromeHolds.Settings, shown);
+        Render();
+        if (!shown)
+        {
+            Focus(FocusState.Programmatic);
+        }
+    }
 
     // ---- Open URL (2.5, 2.6, 2.12) ----
 
@@ -1170,7 +1217,7 @@ public sealed partial class MainPage : Page
     /// <summary>Brings every view element in line with the startup, playback, drag and window state.</summary>
     private void Render()
     {
-        bool hasVideo = HasVideo;
+        bool hasVideo = HasVideo && !_settingsShown;
         bool fullScreen = _host?.IsFullScreen == true;
         PlayerViewModel? vm = _session?.ViewModel;
 
@@ -1179,28 +1226,28 @@ public sealed partial class MainPage : Page
         VideoHost.Background = fullScreen && hasVideo
             ? (Brush)Application.Current.Resources["AetherSurfaceLetterboxBrush"]
             : null;
-        HomeView.Visibility = !hasVideo || _dragging ? Visibility.Visible : Visibility.Collapsed;
+        HomeView.Visibility = !_settingsShown && (!hasVideo || _dragging) ? Visibility.Visible : Visibility.Collapsed;
         DropScrim.Visibility = hasVideo && _dragging ? Visibility.Visible : Visibility.Collapsed;
         DropOutline.Visibility = _dragging ? Visibility.Visible : Visibility.Collapsed;
         Osd.Visibility = hasVideo ? Visibility.Visible : Visibility.Collapsed;
         ClipLayer.Visibility = Osd.Visibility;
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
-        TitleBadgeText.Text = hasVideo || vm?.Status == PlaybackStatus.Loading
+        TitleBadgeText.Text = HasVideo || vm?.Status == PlaybackStatus.Loading
             ? Path.GetFileName(_currentPath) ?? AppStrings.Get("App_Badge")
             : AppStrings.Get("App_Badge");
 
         (string glyph, string label) = TransportState.PlayButton(vm?.Status ?? PlaybackStatus.Idle) switch
         {
-            PlayButtonAction.Pause => (PauseGlyph, AppStrings.Get("Transport_Pause")),
-            PlayButtonAction.Replay => (ReplayGlyph, AppStrings.Get("Transport_Replay")),
-            _ => (PlayGlyph, AppStrings.Get("Transport_Play")),
+            PlayButtonAction.Pause => (PauseGlyph, Tip("Transport_Pause", ShortcutAction.PlayPause)),
+            PlayButtonAction.Replay => (ReplayGlyph, Tip("Transport_Replay", ShortcutAction.PlayPause)),
+            _ => (PlayGlyph, Tip("Transport_Play", ShortcutAction.PlayPause)),
         };
         PlayPauseButton.Content = glyph;
         ToolTipService.SetToolTip(PlayPauseButton, label);
         AutomationProperties.SetName(PlayPauseButton, label);
         FullScreenButton.Content = fullScreen ? ExitFullScreenGlyph : FullScreenGlyph;
-        ToolTipService.SetToolTip(FullScreenButton, AppStrings.Get(fullScreen ? "Transport_ExitFullScreen" : "Transport_FullScreen"));
+        ToolTipService.SetToolTip(FullScreenButton, fullScreen ? AppStrings.Get("Transport_ExitFullScreen") : Tip("Transport_FullScreen", ShortcutAction.FullScreen));
 
         RenderHome(vm);
 
@@ -1261,7 +1308,7 @@ public sealed partial class MainPage : Page
         else if (_startup == StartupPhase.Starting)
         {
             busy = true;
-            SetHome(AppStrings.Get("EmptyState_Title"), AppStrings.Get("EmptyState_SubtitleFilesOnly"), null, engine);
+            SetHome(AppStrings.Get("EmptyState_Title"), HomeFilesSubtitle(), null, engine);
         }
         else if (failed)
         {
@@ -1283,7 +1330,7 @@ public sealed partial class MainPage : Page
         }
         else
         {
-            SetHome(AppStrings.Get("EmptyState_Title"), AppStrings.Get("EmptyState_SubtitleFilesOnly"), null, engine);
+            SetHome(AppStrings.Get("EmptyState_Title"), HomeFilesSubtitle(), null, engine);
         }
 
         StartupProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;

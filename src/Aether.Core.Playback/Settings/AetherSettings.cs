@@ -62,4 +62,17 @@ public sealed record AetherSettings
     // Advanced
     /// <summary>Multi-line text, one <c>key=value</c> mpv option per line (see <see cref="MpvOptionsValidator"/>).</summary>
     public string CustomMpvOptions { get; init; } = "";
+
+    // Shortcuts: empty means the default keys, "None" unbound, otherwise e.g. "Ctrl+O" or "F, F11" (see ShortcutMap).
+    public string ShortcutOpenFile { get; init; } = "";
+    public string ShortcutOpenUrl { get; init; } = "";
+    public string ShortcutSkipBack { get; init; } = "";
+    public string ShortcutSkipForward { get; init; } = "";
+    public string ShortcutSetIn { get; init; } = "";
+    public string ShortcutSetOut { get; init; } = "";
+    public string ShortcutPlayPause { get; init; } = "";
+    public string ShortcutFullScreen { get; init; } = "";
+    public string ShortcutMute { get; init; } = "";
+    public string ShortcutLoop { get; init; } = "";
+    public string ShortcutAlwaysOnTop { get; init; } = "";
 }
