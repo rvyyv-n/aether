@@ -5,6 +5,7 @@ using Aether_App.Controls;
 using Aether_App.Input;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.System.Power;
 
 namespace Aether_App.Playback;
 
@@ -26,6 +27,7 @@ public sealed class PlayerSession : IDisposable
     private readonly FrameStepKeyInput _keys;
     private readonly MpvVideoSurface _surface;
     private readonly LoopRestart _loop = new();
+    private readonly MpvSettingsSync _settingsSync;
     private bool _disposed;
 
     private PlayerSession(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
@@ -47,9 +49,16 @@ public sealed class PlayerSession : IDisposable
 
             _keys = new FrameStepKeyInput(keyTarget, _stepper, queue);
             surface.AttachPlayer(_context);
+
+            _settingsSync = new MpvSettingsSync(args => _context.CommandAsync(new MpvCommand(args)));
+            App.Settings.Changed += OnSettingChanged;
+            PowerManager.PowerSourceKindChanged += OnPowerSourceChanged;
+            ApplySettings();
         }
         catch
         {
+            App.Settings.Changed -= OnSettingChanged;
+            PowerManager.PowerSourceKindChanged -= OnPowerSourceChanged;
             _keys?.Dispose();
             _events?.Dispose();
             _context.Dispose();
@@ -61,7 +70,10 @@ public sealed class PlayerSession : IDisposable
 
     public MpvContext Context => _context;
 
-    /// <summary>Worker thread: creates the engine with the saved start-only options (hardware decoding).</summary>
+    /// <summary>
+    /// Worker thread: creates the engine with the saved start-only options (hardware decoding, passthrough, custom
+    /// options). The live settings follow once the session starts.
+    /// </summary>
     public static MpvContext CreateEngine(AetherSettings? settings = null)
     {
         if (settings is null)
@@ -69,10 +81,17 @@ public sealed class PlayerSession : IDisposable
             App.SettingsLoaded.Wait();
         }
         var s = settings ?? App.Settings.Current;
-        return MpvContext.Create(new MpvContextOptions
+        IReadOnlyList<KeyValuePair<string, string>> startOptions = MpvSettingsMap.StartOptions(s);
+        try
         {
-            HardwareDecoder = s.HardwareDecoding,
-        });
+            return MpvContext.Create(new MpvContextOptions { HardwareDecoder = s.HardwareDecoding, AdditionalOptions = startOptions });
+        }
+        catch (MpvException) when (startOptions.Count > 0)
+        {
+            // mpv rejected a start-only option (the validator cannot tell whether mpv knows a custom key), and the
+            // player must still open, so retry with only Aether's own.
+            return MpvContext.Create(new MpvContextOptions { HardwareDecoder = s.HardwareDecoding });
+        }
     }
 
     /// <summary>
@@ -148,6 +167,42 @@ public sealed class PlayerSession : IDisposable
     /// <summary>Releases a held step key, e.g. when the window is deactivated.</summary>
     public void ReleaseKeys() => _keys.ReleaseAll();
 
+    private void OnSettingChanged(object? sender, SettingChangedEventArgs e) => ApplySettings();
+
+    private void OnPowerSourceChanged(object? sender, object e) => ApplySettings();
+
+    /// <summary>
+    /// Any thread: settings change on the UI thread, the power source on a pool thread. Only sends non-blocking
+    /// commands, and what the core refuses is not worth failing for.
+    /// </summary>
+    private void ApplySettings()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        try
+        {
+            _settingsSync.Apply(App.Settings.Current, IsOnBattery());
+        }
+        catch (Exception exception) when (exception is MpvException or ObjectDisposedException)
+        {
+            // The core is shutting down.
+        }
+    }
+
+    private static bool IsOnBattery()
+    {
+        try
+        {
+            return PowerManager.PowerSourceKind == PowerSourceKind.DC;
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            return false;
+        }
+    }
+
     /// <summary>UI thread, once per display refresh while events are pending.</summary>
     private void Flush()
     {
@@ -177,6 +232,8 @@ public sealed class PlayerSession : IDisposable
             return;
         }
         _disposed = true;
+        App.Settings.Changed -= OnSettingChanged;
+        PowerManager.PowerSourceKindChanged -= OnPowerSourceChanged;
         _seekCoalescer.Reset();
         _keys.Dispose();
         _events.Dispose();
