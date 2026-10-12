@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Aether_App.Settings.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Aether_App.Settings">
+
+    <UserControl.Resources>
+        <!--
+            Section list item (6.1): 36 tall, radius 4, 16 px icon. Selected = FillEmphasisRest plus a short
+            white bar on the left edge; no accent colour anywhere.
+        -->
+        <Style x:Key="SectionItemStyle" TargetType="ListViewItem">
+            <Setter Property="Height" Value="{StaticResource AetherSizeNavItem}" />
+            <Setter Property="MinHeight" Value="{StaticResource AetherSizeNavItem}" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Grid
+                            x:Name="Root"
+                            Background="Transparent"
+                            CornerRadius="{StaticResource AetherControlCornerRadius}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
+                                            <Setter Target="SelectionBar.Visibility" Value="Visible" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="PointerOverSelected">
+                                        <VisualState.Setters>
+                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisHoverBrush}" />
+                                            <Setter Target="SelectionBar.Visibility" Value="Visible" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="PressedSelected">
+                                        <VisualState.Setters>
+                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisPressedBrush}" />
+                                            <Setter Target="SelectionBar.Visibility" Value="Visible" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <Rectangle
+                                x:Name="SelectionBar"
+                                Width="3"
+                                Height="16"
+                                HorizontalAlignment="Left"
+                                Fill="{StaticResource AetherTextPrimaryBrush}"
+                                RadiusX="1.5"
+                                RadiusY="1.5"
+                                Visibility="Collapsed" />
+                            <ContentPresenter
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="Center"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="SectionTemplate" x:DataType="local:SettingsSection">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <FontIcon
+                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    FontSize="16"
+                    Glyph="{x:Bind Glyph}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource AetherBodyTextStyle}"
+                    Text="{x:Bind Title}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!--
+        Settings (6.1): a section list on the left and the section's page in a Frame on the right. Below
+        640 px wide the list becomes a picker above the page, so the page holds down to 405 px.
+    -->
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="Compact" />
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource AetherSizeSettingsCompactBreakpoint}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="SectionList.Visibility" Value="Visible" />
+                        <Setter Target="SectionPicker.Visibility" Value="Collapsed" />
+                        <Setter Target="ContentPane.(Grid.Column)" Value="1" />
+                        <Setter Target="ContentPane.(Grid.ColumnSpan)" Value="1" />
+                        <Setter Target="ContentPanel.Padding" Value="24,8,24,24" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <ListView
+            x:Name="SectionList"
+            Width="{StaticResource AetherSizeSettingsNav}"
+            Padding="8,8,8,8"
+            IsItemClickEnabled="False"
+            ItemContainerStyle="{StaticResource SectionItemStyle}"
+            ItemTemplate="{StaticResource SectionTemplate}"
+            SelectionChanged="OnSectionChanged"
+            SelectionMode="Single"
+            Visibility="Collapsed" />
+
+        <Grid
+            x:Name="ContentPane"
+            Grid.Column="0"
+            Grid.ColumnSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ComboBox
+                x:Name="SectionPicker"
+                Margin="16,8,16,0"
+                HorizontalAlignment="Stretch"
+                ItemTemplate="{StaticResource SectionTemplate}"
+                SelectionChanged="OnSectionChanged"
+                MinWidth="200" />
+            <ScrollViewer
+                x:Name="ContentScroller"
+                Grid.Row="1"
+                HorizontalScrollMode="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <StackPanel
+                    x:Name="ContentPanel"
+                    MaxWidth="{StaticResource AetherSizeSettingsContentMax}"
+                    Padding="16,8,16,16"
+                    Spacing="16">
+                    <TextBlock
+                        x:Name="PageTitle"
+                        AutomationProperties.HeadingLevel="Level1"
+                        Style="{StaticResource AetherSubtitleTextStyle}" />
+                    <Frame x:Name="ContentFrame" IsNavigationStackEnabled="False" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

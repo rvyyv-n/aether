@@ -556,6 +556,10 @@
   </data>
 
   <!-- Settings page: sections (Screen 7) -->
+  <data name="Settings_Back" xml:space="preserve">
+    <value>Back</value>
+    <comment>Title bar button that closes settings and returns to the player.</comment>
+  </data>
   <data name="Settings_Title" xml:space="preserve">
     <value>Settings</value>
   </data>

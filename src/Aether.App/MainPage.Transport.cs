@@ -105,10 +105,10 @@ public sealed partial class MainPage
         }
     }
 
-    /// <summary>Playback keys do nothing without a video, and leave the Open URL field its letters.</summary>
+    /// <summary>Playback keys do nothing without a video, and leave the Open URL field and settings their keys.</summary>
     private void OnTransportKey(KeyboardAcceleratorInvokedEventArgs args, Action action)
     {
-        if (!HasVideo || IsOpenUrlShown)
+        if (!HasVideo || ArePlayerKeysPaused)
         {
             return;
         }

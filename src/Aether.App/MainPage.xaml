@@ -357,19 +357,37 @@
         </Rectangle>
 
         <!--
-            Title bar: name and release label (the drag region), the gear, then 138 px left clear for the
-            system caption buttons. The gear sits outside the drag region so it takes clicks.
+            Settings (6.1): fills the window under the title bar, straight on the backdrop. Created on first open.
+        -->
+        <Border
+            x:Name="SettingsHost"
+            Margin="0,32,0,0"
+            Visibility="Collapsed" />
+
+        <!--
+            Title bar: Back (settings only), name and release label (the drag region), the gear, then 138 px
+            left clear for the system caption buttons. The buttons sit outside the drag region so they take clicks.
         -->
         <Grid
             x:Name="TitleBar"
             Height="{StaticResource AetherSizeTitleBar}"
             VerticalAlignment="Top">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Grid x:Name="TitleBarDragArea" Background="Transparent">
+            <Button
+                x:Name="SettingsBackButton"
+                Click="OnSettingsBackClick"
+                Content="&#xE72B;"
+                Style="{StaticResource AetherTitleBarButtonStyle}"
+                Visibility="Collapsed" />
+            <Grid
+                x:Name="TitleBarDragArea"
+                Grid.Column="1"
+                Background="Transparent">
                 <!--
                     Shared baseline at y 20: both texts trim to their baseline and sit on the panel's bottom edge.
                 -->
@@ -395,14 +413,13 @@
                         TextTrimming="CharacterEllipsis" />
                 </StackPanel>
             </Grid>
-            <!--  Disabled until the Settings page exists (Pass 7).  -->
             <Button
                 x:Name="SettingsButton"
-                Grid.Column="1"
+                Grid.Column="2"
+                Click="OnSettingsClick"
                 Content="&#xE713;"
-                IsEnabled="False"
                 Style="{StaticResource AetherTitleBarButtonStyle}" />
-            <Border Grid.Column="2" Width="{StaticResource AetherSizeCaptionButtons}" />
+            <Border Grid.Column="3" Width="{StaticResource AetherSizeCaptionButtons}" />
         </Grid>
 
         <!--
