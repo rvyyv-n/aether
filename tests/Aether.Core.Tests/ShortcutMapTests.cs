@@ -256,4 +256,435 @@ public class ShortcutMapTests
         Assert.Equal([SettingKeys.ShortcutMute, SettingKeys.ShortcutMute], changed);
         Assert.True(store.IsDefault(SettingKeys.ShortcutMute));
     }
+
+    [Fact]
+    public void Open_Url_Has_Ctrl_L_Alternative_And_Other_Actions_Have_None()
+    {
+        Assert.Equal(KeyCombination.Letter('L', KeyModifiers.Ctrl), ShortcutActions.Alternative(ShortcutAction.OpenUrl));
+        foreach (ShortcutAction action in ShortcutActions.All.Where(a => a != ShortcutAction.OpenUrl))
+        {
+            Assert.Null(ShortcutActions.Alternative(action));
+        }
+    }
+
+    [Fact]
+    public void Fixing_A_Conflict_Clears_The_Flag_On_Both_Actions()
+    {
+        ShortcutMap conflicting = ShortcutMap.Defaults.With(ShortcutAction.Mute, [Key("L")]);
+        Assert.True(conflicting.HasConflict(ShortcutAction.Mute));
+        Assert.True(conflicting.HasConflict(ShortcutAction.Loop));
+        Assert.Equal([ShortcutAction.Loop], conflicting.ConflictsOf(ShortcutAction.Mute));
+        Assert.Equal([ShortcutAction.Mute], conflicting.ConflictsOf(ShortcutAction.Loop));
+
+        // Clearing via Reset on the conflicting action
+        ShortcutMap resetMute = conflicting.Reset(ShortcutAction.Mute);
+        Assert.False(resetMute.HasConflict(ShortcutAction.Mute));
+        Assert.False(resetMute.HasConflict(ShortcutAction.Loop));
+        Assert.Empty(resetMute.ConflictsOf(ShortcutAction.Mute));
+        Assert.Empty(resetMute.ConflictsOf(ShortcutAction.Loop));
+
+        // Clearing via Rebind to an unused key
+        ShortcutMap reboundMute = conflicting.With(ShortcutAction.Mute, [Key("N")]);
+        Assert.False(reboundMute.HasConflict(ShortcutAction.Mute));
+        Assert.False(reboundMute.HasConflict(ShortcutAction.Loop));
+        Assert.Empty(reboundMute.ConflictsOf(ShortcutAction.Mute));
+        Assert.Empty(reboundMute.ConflictsOf(ShortcutAction.Loop));
+
+        // Clearing via unbinding
+        ShortcutMap unboundMute = conflicting.With(ShortcutAction.Mute, []);
+        Assert.False(unboundMute.HasConflict(ShortcutAction.Mute));
+        Assert.False(unboundMute.HasConflict(ShortcutAction.Loop));
+        Assert.Empty(unboundMute.ConflictsOf(ShortcutAction.Mute));
+        Assert.Empty(unboundMute.ConflictsOf(ShortcutAction.Loop));
+
+        // Clearing via modifying the other action instead
+        ShortcutMap reboundLoop = conflicting.With(ShortcutAction.Loop, [Key("K")]);
+        Assert.False(reboundLoop.HasConflict(ShortcutAction.Mute));
+        Assert.False(reboundLoop.HasConflict(ShortcutAction.Loop));
+        Assert.Empty(reboundLoop.ConflictsOf(ShortcutAction.Mute));
+        Assert.Empty(reboundLoop.ConflictsOf(ShortcutAction.Loop));
+    }
+
+    [Fact]
+    public void Multi_Action_Conflict_Clearing_Leaves_Remaining_Conflicts_Intact()
+    {
+        ShortcutMap map = ShortcutMap.Defaults
+            .With(ShortcutAction.SetIn, [Key("K")])
+            .With(ShortcutAction.SetOut, [Key("K")])
+            .With(ShortcutAction.Mute, [Key("K")]);
+
+        Assert.True(map.HasConflict(ShortcutAction.SetIn));
+        Assert.True(map.HasConflict(ShortcutAction.SetOut));
+        Assert.True(map.HasConflict(ShortcutAction.Mute));
+
+        // Fixing SetIn leaves SetOut and Mute conflicting with each other
+        ShortcutMap fixedSetIn = map.Reset(ShortcutAction.SetIn);
+        Assert.False(fixedSetIn.HasConflict(ShortcutAction.SetIn));
+        Assert.True(fixedSetIn.HasConflict(ShortcutAction.SetOut));
+        Assert.True(fixedSetIn.HasConflict(ShortcutAction.Mute));
+        Assert.Equal([ShortcutAction.Mute], fixedSetIn.ConflictsOf(ShortcutAction.SetOut));
+        Assert.Equal([ShortcutAction.SetOut], fixedSetIn.ConflictsOf(ShortcutAction.Mute));
+
+        // Fixing SetOut clears the remaining conflict
+        ShortcutMap fixedBoth = fixedSetIn.Reset(ShortcutAction.SetOut);
+        Assert.False(fixedBoth.HasConflict(ShortcutAction.SetOut));
+        Assert.False(fixedBoth.HasConflict(ShortcutAction.Mute));
+    }
+
+    [Fact]
+    public void Clearing_A_Conflict_Redirects_Find_To_The_Remaining_Action()
+    {
+        // OpenFile precedes Mute in declaration order
+        ShortcutMap map = ShortcutMap.Defaults
+            .With(ShortcutAction.OpenFile, [Key("Ctrl+M")])
+            .With(ShortcutAction.Mute, [Key("Ctrl+M")]);
+
+        Assert.Equal(ShortcutAction.OpenFile, map.Find(Key("Ctrl+M")));
+
+        ShortcutMap resolved = map.Reset(ShortcutAction.OpenFile);
+        Assert.Equal(ShortcutAction.Mute, resolved.Find(Key("Ctrl+M")));
+    }
+
+    [Fact]
+    public void Reset_Restores_Single_Action_Without_Touching_Others()
+    {
+        ShortcutMap map = ShortcutMap.Defaults
+            .With(ShortcutAction.OpenFile, [Key("Ctrl+Shift+F")])
+            .With(ShortcutAction.Mute, [Key("N")])
+            .With(ShortcutAction.Loop, [Key("K")])
+            .With(ShortcutAction.AlwaysOnTop, [Key("Alt+A")]);
+
+        ShortcutMap resetMute = map.Reset(ShortcutAction.Mute);
+
+        Assert.True(resetMute.IsDefault(ShortcutAction.Mute));
+        Assert.Equal([Key("M")], resetMute.Get(ShortcutAction.Mute));
+
+        // All other modified actions retain their custom bindings
+        Assert.False(resetMute.IsDefault(ShortcutAction.OpenFile));
+        Assert.Equal([Key("Ctrl+Shift+F")], resetMute.Get(ShortcutAction.OpenFile));
+        Assert.False(resetMute.IsDefault(ShortcutAction.Loop));
+        Assert.Equal([Key("K")], resetMute.Get(ShortcutAction.Loop));
+        Assert.False(resetMute.IsDefault(ShortcutAction.AlwaysOnTop));
+        Assert.Equal([Key("Alt+A")], resetMute.Get(ShortcutAction.AlwaysOnTop));
+    }
+
+    [Fact]
+    public void Reset_All_Restores_Every_Default()
+    {
+        ShortcutMap map = ShortcutMap.Defaults
+            .With(ShortcutAction.OpenFile, [Key("Ctrl+Shift+F")])
+            .With(ShortcutAction.OpenUrl, [])
+            .With(ShortcutAction.FullScreen, [Key("F11")])
+            .With(ShortcutAction.Mute, [Key("N")])
+            .With(ShortcutAction.Loop, [Key("K")]);
+
+        ShortcutMap reset = map.ResetAll();
+
+        Assert.All(ShortcutActions.All, a =>
+        {
+            Assert.True(reset.IsDefault(a), $"Expected default for {a}");
+            Assert.Equal(ShortcutActions.Defaults(a), reset.Get(a));
+        });
+    }
+
+    [Theory]
+    [InlineData("Comma")]
+    [InlineData("Ctrl+Comma")]
+    [InlineData("Shift+Comma")]
+    [InlineData("Alt+Comma")]
+    [InlineData("Ctrl+Shift+Comma")]
+    [InlineData("Ctrl+Alt+Comma")]
+    [InlineData("Alt+Shift+Comma")]
+    [InlineData("Ctrl+Alt+Shift+Comma")]
+    [InlineData("Period")]
+    [InlineData("Ctrl+Period")]
+    [InlineData("Shift+Period")]
+    [InlineData("Alt+Period")]
+    [InlineData("Ctrl+Shift+Period")]
+    [InlineData("Ctrl+Alt+Period")]
+    [InlineData("Alt+Shift+Period")]
+    [InlineData("Ctrl+Alt+Shift+Period")]
+    [InlineData("Escape")]
+    public void Reserved_Combinations_Cannot_Be_Parsed_Or_Validated(string text)
+    {
+        Assert.False(KeyCombination.TryParse(text, out _));
+        Assert.False(ShortcutMap.IsValidText(text));
+    }
+
+    [Fact]
+    public void Comma_And_Period_Are_Reserved_Across_All_Modifiers_While_Modified_Escape_Is_Valid()
+    {
+        KeyModifiers[] allModifiers =
+        [
+            KeyModifiers.None,
+            KeyModifiers.Ctrl,
+            KeyModifiers.Shift,
+            KeyModifiers.Alt,
+            KeyModifiers.Ctrl | KeyModifiers.Shift,
+            KeyModifiers.Ctrl | KeyModifiers.Alt,
+            KeyModifiers.Shift | KeyModifiers.Alt,
+            KeyModifiers.Ctrl | KeyModifiers.Shift | KeyModifiers.Alt,
+        ];
+
+        foreach (KeyModifiers mod in allModifiers)
+        {
+            var comma = new KeyCombination(KeyCombination.OemComma, mod);
+            Assert.True(comma.IsReserved);
+            Assert.False(comma.IsValid);
+
+            var period = new KeyCombination(KeyCombination.OemPeriod, mod);
+            Assert.True(period.IsReserved);
+            Assert.False(period.IsValid);
+        }
+
+        // Plain Escape is reserved, but modifier+Escape is allowed
+        Assert.True(new KeyCombination(KeyCombination.Escape, KeyModifiers.None).IsReserved);
+        Assert.False(new KeyCombination(KeyCombination.Escape, KeyModifiers.None).IsValid);
+        Assert.False(new KeyCombination(KeyCombination.Escape, KeyModifiers.Ctrl).IsReserved);
+        Assert.True(new KeyCombination(KeyCombination.Escape, KeyModifiers.Ctrl).IsValid);
+        Assert.False(new KeyCombination(KeyCombination.Escape, KeyModifiers.Shift).IsReserved);
+        Assert.True(new KeyCombination(KeyCombination.Escape, KeyModifiers.Shift).IsValid);
+    }
+
+    [Fact]
+    public void ShortcutMap_With_Drops_Reserved_Combinations()
+    {
+        // Supplying only reserved combinations unbinds the action
+        ShortcutMap unbound = ShortcutMap.Defaults.With(ShortcutAction.Mute,
+        [
+            new KeyCombination(KeyCombination.Escape, KeyModifiers.None),
+            new KeyCombination(KeyCombination.OemComma, KeyModifiers.None),
+            new KeyCombination(KeyCombination.OemPeriod, KeyModifiers.Ctrl),
+        ]);
+        Assert.Empty(unbound.Get(ShortcutAction.Mute));
+
+        // Supplying a mix of valid and reserved keys keeps only the valid keys
+        ShortcutMap filtered = ShortcutMap.Defaults.With(ShortcutAction.Mute,
+        [
+            Key("N"),
+            new KeyCombination(KeyCombination.OemComma, KeyModifiers.None),
+            new KeyCombination(KeyCombination.OemPeriod, KeyModifiers.Shift),
+        ]);
+        Assert.Equal([Key("N")], filtered.Get(ShortcutAction.Mute));
+    }
+
+    [Fact]
+    public void Settings_Store_Rejects_Reserved_Combinations()
+    {
+        var store = new SettingsStore(new FakeStorage());
+
+        Assert.False(store.Set(SettingKeys.ShortcutMute, "Escape"));
+        Assert.False(store.Set(SettingKeys.ShortcutMute, "Comma"));
+        Assert.False(store.Set(SettingKeys.ShortcutMute, "Period"));
+        Assert.False(store.Set(SettingKeys.ShortcutMute, "Ctrl+Comma"));
+        Assert.False(store.Set(SettingKeys.ShortcutMute, "Shift+Period"));
+    }
+
+    [Fact]
+    public void Empty_Saved_Value_Or_Missing_Key_Restores_Defaults()
+    {
+        var storage = new FakeStorage
+        {
+            Content = """
+                {
+                  "version": 1,
+                  "shortcuts.openFile": "",
+                  "shortcuts.openUrl": "   "
+                }
+                """,
+        };
+        var store = new SettingsStore(storage);
+        store.Load();
+
+        ShortcutMap map = ShortcutMap.From(store.Current);
+
+        Assert.True(map.IsDefault(ShortcutAction.OpenFile));
+        Assert.Equal([Key("Ctrl+O")], map.Get(ShortcutAction.OpenFile));
+
+        // Whitespace-only string safely falls back to default
+        Assert.True(map.IsDefault(ShortcutAction.OpenUrl));
+        Assert.Equal([Key("Ctrl+Shift+O")], map.Get(ShortcutAction.OpenUrl));
+
+        // Unmentioned keys stay default
+        Assert.True(map.IsDefault(ShortcutAction.PlayPause));
+        Assert.Equal([Key("Space")], map.Get(ShortcutAction.PlayPause));
+    }
+
+    [Theory]
+    [InlineData("None")]
+    [InlineData("none")]
+    [InlineData("NONE")]
+    [InlineData("  None  ")]
+    public void None_Saved_Value_Gives_Unbound_Case_Insensitively(string text)
+    {
+        var storage = new FakeStorage
+        {
+            Content = $$"""
+                {
+                  "version": 1,
+                  "shortcuts.mute": "{{text}}"
+                }
+                """,
+        };
+        var store = new SettingsStore(storage);
+        store.Load();
+
+        ShortcutMap map = ShortcutMap.From(store.Current);
+
+        Assert.Empty(map.Get(ShortcutAction.Mute));
+        Assert.False(map.IsDefault(ShortcutAction.Mute));
+        Assert.Equal("None", map.Encode(ShortcutAction.Mute));
+    }
+
+    [Fact]
+    public void Multi_Key_Custom_Binding_Survives_Save_And_Load_Round_Trip()
+    {
+        var storage = new FakeStorage();
+        var store = new SettingsStore(storage);
+        ShortcutMap map = ShortcutMap.Defaults
+            .With(ShortcutAction.Mute, [Key("M"), Key("Ctrl+M")])
+            .With(ShortcutAction.FullScreen, [Key("F11"), Key("F")]);
+
+        map.WriteTo(store);
+        store.Save();
+
+        var reloadedStore = new SettingsStore(storage);
+        reloadedStore.Load();
+        ShortcutMap loaded = ShortcutMap.From(reloadedStore.Current);
+
+        Assert.Equal([Key("M"), Key("Ctrl+M")], loaded.Get(ShortcutAction.Mute));
+        Assert.Equal([Key("F11"), Key("F")], loaded.Get(ShortcutAction.FullScreen));
+        Assert.Equal("M, Ctrl+M", loaded.Encode(ShortcutAction.Mute));
+        Assert.Equal("F11, F", loaded.Encode(ShortcutAction.FullScreen));
+    }
+
+    [Fact]
+    public void Comprehensive_Garbage_Values_Fall_Back_Safely_To_Defaults()
+    {
+        var storage = new FakeStorage
+        {
+            Content = """
+                {
+                  "version": 1,
+                  "shortcuts.openFile": 12345,
+                  "shortcuts.openUrl": true,
+                  "shortcuts.skipBack": ["Left"],
+                  "shortcuts.skipForward": { "key": "Right" },
+                  "shortcuts.setIn": "Ctrl+Banana",
+                  "shortcuts.setOut": "Ctrl+",
+                  "shortcuts.playPause": "+Space",
+                  "shortcuts.fullScreen": "F, UnknownKey",
+                  "shortcuts.mute": "Ctrl+Ctrl+M",
+                  "shortcuts.loop": "Escape",
+                  "shortcuts.alwaysOnTop": "Ctrl+Comma"
+                }
+                """,
+        };
+        var store = new SettingsStore(storage);
+        store.Load();
+
+        ShortcutMap map = ShortcutMap.From(store.Current);
+
+        // Every action with garbage falls back safely to its respective default
+        Assert.True(map.IsDefault(ShortcutAction.OpenFile));
+        Assert.True(map.IsDefault(ShortcutAction.OpenUrl));
+        Assert.True(map.IsDefault(ShortcutAction.SkipBack));
+        Assert.True(map.IsDefault(ShortcutAction.SkipForward));
+        Assert.True(map.IsDefault(ShortcutAction.SetIn));
+        Assert.True(map.IsDefault(ShortcutAction.SetOut));
+        Assert.True(map.IsDefault(ShortcutAction.PlayPause));
+        Assert.True(map.IsDefault(ShortcutAction.FullScreen));
+        Assert.True(map.IsDefault(ShortcutAction.Mute));
+        Assert.True(map.IsDefault(ShortcutAction.Loop));
+        Assert.True(map.IsDefault(ShortcutAction.AlwaysOnTop));
+    }
+
+    [Fact]
+    public void Direct_Settings_Instantiation_With_Garbage_Safely_Falls_Back()
+    {
+        var settings = new AetherSettings
+        {
+            ShortcutOpenFile = "Garbage",
+            ShortcutMute = "Escape",
+            ShortcutLoop = "Space, ???",
+        };
+
+        ShortcutMap map = ShortcutMap.From(settings);
+
+        Assert.True(map.IsDefault(ShortcutAction.OpenFile));
+        Assert.True(map.IsDefault(ShortcutAction.Mute));
+        Assert.True(map.IsDefault(ShortcutAction.Loop));
+    }
+
+    [Theory]
+    [InlineData("", true)]
+    [InlineData("None", true)]
+    [InlineData("none", true)]
+    [InlineData("Ctrl+O", true)]
+    [InlineData("F, F11", true)]
+    [InlineData("Ctrl+O, Ctrl+Shift+O", true)]
+    [InlineData("Banana", false)]
+    [InlineData("Escape", false)]
+    [InlineData("Comma", false)]
+    [InlineData("Period", false)]
+    [InlineData("Ctrl+Comma", false)]
+    [InlineData("Ctrl+Period", false)]
+    [InlineData("   ", false)]
+    [InlineData("Ctrl+O, Banana", false)]
+    public void IsValidText_Validates_Shortcut_Strings_Accurately(string text, bool expected)
+    {
+        Assert.Equal(expected, ShortcutMap.IsValidText(text));
+    }
+
+    [Theory]
+    [InlineData("Shift+Ctrl+O", "Ctrl+Shift+O", new[] { "Ctrl", "Shift", "O" })]
+    [InlineData("Ctrl+Shift+O", "Ctrl+Shift+O", new[] { "Ctrl", "Shift", "O" })]
+    [InlineData("Shift+Alt+Ctrl+O", "Ctrl+Alt+Shift+O", new[] { "Ctrl", "Alt", "Shift", "O" })]
+    [InlineData("Alt+Shift+Ctrl+O", "Ctrl+Alt+Shift+O", new[] { "Ctrl", "Alt", "Shift", "O" })]
+    [InlineData("Ctrl+Alt+Shift+O", "Ctrl+Alt+Shift+O", new[] { "Ctrl", "Alt", "Shift", "O" })]
+    [InlineData("Shift+Alt+O", "Alt+Shift+O", new[] { "Alt", "Shift", "O" })]
+    [InlineData("Alt+Shift+O", "Alt+Shift+O", new[] { "Alt", "Shift", "O" })]
+    [InlineData("Ctrl+Alt+O", "Ctrl+Alt+O", new[] { "Ctrl", "Alt", "O" })]
+    [InlineData("Alt+Ctrl+O", "Ctrl+Alt+O", new[] { "Ctrl", "Alt", "O" })]
+    public void Display_Text_And_Keycaps_Maintain_Stable_Modifier_Order(
+        string input,
+        string expectedDisplay,
+        string[] expectedKeycaps)
+    {
+        KeyCombination combination = Key(input);
+
+        Assert.Equal(expectedDisplay, combination.DisplayText);
+        Assert.Equal(expectedKeycaps, combination.Keycaps);
+        Assert.Equal(expectedDisplay, combination.ToString());
+    }
+
+    [Fact]
+    public void Display_Text_And_Keycaps_For_Directly_Constructed_Modifiers_Are_Stable()
+    {
+        var combo = new KeyCombination('O', KeyModifiers.Shift | KeyModifiers.Ctrl | KeyModifiers.Alt);
+
+        Assert.Equal(["Ctrl", "Alt", "Shift", "O"], combo.Keycaps);
+        Assert.Equal("Ctrl+Alt+Shift+O", combo.DisplayText);
+        Assert.Equal("Ctrl+Alt+Shift+O", combo.ToString());
+    }
+
+    [Theory]
+    [InlineData("Ctrl+Left", "Ctrl+←", new[] { "Ctrl", "←" }, "Ctrl+Left")]
+    [InlineData("Shift+Ctrl+Right", "Ctrl+Shift+→", new[] { "Ctrl", "Shift", "→" }, "Ctrl+Shift+Right")]
+    [InlineData("Alt+Ctrl+Up", "Ctrl+Alt+↑", new[] { "Ctrl", "Alt", "↑" }, "Ctrl+Alt+Up")]
+    [InlineData("Ctrl+Down", "Ctrl+↓", new[] { "Ctrl", "↓" }, "Ctrl+Down")]
+    [InlineData("Shift+PageUp", "Shift+Page Up", new[] { "Shift", "Page Up" }, "Shift+PageUp")]
+    [InlineData("Ctrl+Num5", "Ctrl+Num 5", new[] { "Ctrl", "Num 5" }, "Ctrl+Num5")]
+    public void Display_Text_Uses_Symbols_While_ToString_Uses_Saved_Names_Both_With_Stable_Modifiers(
+        string input,
+        string expectedDisplay,
+        string[] expectedKeycaps,
+        string expectedSavedName)
+    {
+        KeyCombination combination = Key(input);
+
+        Assert.Equal(expectedDisplay, combination.DisplayText);
+        Assert.Equal(expectedKeycaps, combination.Keycaps);
+        Assert.Equal(expectedSavedName, combination.ToString());
+    }
 }
