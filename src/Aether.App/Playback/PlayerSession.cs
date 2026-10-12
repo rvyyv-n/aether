@@ -27,6 +27,7 @@ public sealed class PlayerSession : IDisposable
     private readonly FrameStepKeyInput _keys;
     private readonly MpvVideoSurface _surface;
     private readonly LoopRestart _loop = new();
+    private readonly FileEnd _fileEnd = new();
     private readonly MpvSettingsSync _settingsSync;
     private bool _disposed;
 
@@ -69,6 +70,9 @@ public sealed class PlayerSession : IDisposable
     public PlayerViewModel ViewModel { get; } = new();
 
     public MpvContext Context => _context;
+
+    /// <summary>UI thread: the open file played to its end and is not looping, so nothing else will happen on its own.</summary>
+    public event EventHandler? FileEnded;
 
     /// <summary>
     /// Worker thread: creates the engine with the saved start-only options (hardware decoding, passthrough, custom
@@ -221,6 +225,11 @@ public sealed class PlayerSession : IDisposable
             {
                 // The core is shutting down.
             }
+        }
+        // Tracked on every flush, also while looping, so turning the loop off at the end does not count as an end.
+        if (_fileEnd.Reached(state.IsAtEnd) && !ViewModel.IsLooping)
+        {
+            FileEnded?.Invoke(this, EventArgs.Empty);
         }
     }
 

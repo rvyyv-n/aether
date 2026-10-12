@@ -223,6 +223,7 @@ public sealed partial class MainPage : Page
         if (_session is { } session)
         {
             session.ViewModel.PropertyChanged -= OnViewModelChanged;
+            session.FileEnded -= OnFileEnded;
             session.Dispose();
             _session = null;
         }
@@ -258,6 +259,7 @@ public sealed partial class MainPage : Page
                     break;
                 }
                 _session.ViewModel.PropertyChanged += OnViewModelChanged;
+                _session.FileEnded += OnFileEnded;
                 _startup = StartupPhase.Ready;
                 _session.ViewModel.IsLooping = App.Settings.Current.LoopByDefault;
                 SyncVolume();

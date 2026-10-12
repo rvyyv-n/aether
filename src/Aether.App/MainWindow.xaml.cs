@@ -1,6 +1,7 @@
 ﻿using Aether.Core.Interop.Windowing;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Settings;
+using Aether.Core.Playback.Windowing;
 using Aether_App.Controls;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
@@ -69,6 +70,9 @@ public sealed partial class MainWindow : Window, IShellWindow
     private readonly TimeSpan _chromeHide;
     private bool _captionsVisible = true;
     private Windows.Foundation.Point _lastNonClientPointer = new(double.NaN, double.NaN);
+    private RectInt32? _normalBounds; // where the window sits when neither maximised nor full screen
+    private bool _maximized;
+    private bool _keepRestoredSize; // the first video does not resize a window the user's last size was restored to
 
     public MainWindow()
     {
@@ -117,10 +121,78 @@ public sealed partial class MainWindow : Window, IShellWindow
             App.Settings.Changed -= OnSettingChanged;
         };
         AppWindow.Changed += OnAppWindowChanged;
+        AppWindow.Closing += OnAppWindowClosing;
+        TrackNormalBounds();
     }
 
     /// <summary>Opens this file as soon as the engine is ready (launch from a file or the command line).</summary>
     public void OpenWhenReady(string path) => Shell.OpenWhenReady(path);
+
+    /// <summary>
+    /// Moves and resizes the window to where it was left, on a monitor that is still connected, and maximises it
+    /// again if it was. Call before the first <see cref="Window.Activate"/>.
+    /// </summary>
+    public void RestorePlacement(SavedWindow saved)
+    {
+        var areas = DisplayArea.FindAll();
+        var workAreas = new WindowRect[areas.Count];
+        for (int i = 0; i < workAreas.Length; i++)
+        {
+            workAreas[i] = ToWindowRect(areas[i].WorkArea);
+        }
+        WindowRect fitted = WindowPlacement.Fit(saved.Bounds, workAreas, ToWindowRect(DisplayArea.Primary.WorkArea));
+        AppWindow.MoveAndResize(new RectInt32(fitted.X, fitted.Y, fitted.Width, fitted.Height));
+        if (saved.IsMaximized && AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.Maximize();
+        }
+        _keepRestoredSize = true;
+        TrackNormalBounds();
+    }
+
+    /// <summary>Brings the window to the front and restores it if minimised; for a file handed over by a second launch.</summary>
+    public void BringToFront()
+    {
+        if (AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } presenter)
+        {
+            presenter.Restore();
+        }
+        AppWindow.Show();
+        Activate();
+        ForegroundWindow.Bring(WinRT.Interop.WindowNative.GetWindowHandle(this));
+    }
+
+    private static WindowRect ToWindowRect(RectInt32 rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
+
+    // Minimised windows report an off-screen position and full screen is not the size the user chose, so those
+    // states keep the last normal bounds.
+    private void TrackNormalBounds()
+    {
+        if (AppWindow.Presenter is not OverlappedPresenter presenter)
+        {
+            return;
+        }
+        switch (presenter.State)
+        {
+            case OverlappedPresenterState.Restored:
+                _maximized = false;
+                _normalBounds = new RectInt32(AppWindow.Position.X, AppWindow.Position.Y, AppWindow.Size.Width, AppWindow.Size.Height);
+                break;
+            case OverlappedPresenterState.Maximized:
+                _maximized = true;
+                break;
+        }
+    }
+
+    private void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (!App.Settings.Current.RememberWindowSize || _normalBounds is not { } bounds)
+        {
+            return;
+        }
+        // The process is about to exit, so write now; the file is a few bytes and Save does not throw.
+        App.WindowState.Save(new SavedWindow(ToWindowRect(bounds), _maximized));
+    }
 
     public bool IsFullScreen => AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen;
 
@@ -226,6 +298,11 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     public void FitToVideo(int videoWidth, int videoHeight)
     {
+        if (_keepRestoredSize)
+        {
+            _keepRestoredSize = false;
+            return;
+        }
         if (videoWidth <= 0 || videoHeight <= 0
             || AppWindow.Presenter is not OverlappedPresenter { State: OverlappedPresenterState.Restored })
         {
@@ -261,6 +338,10 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
     {
+        if (args.DidSizeChange || args.DidPositionChange || args.DidPresenterChange)
+        {
+            TrackNormalBounds();
+        }
         if (args.DidPresenterChange)
         {
             ApplyAlwaysOnTop();

@@ -3,8 +3,11 @@ using Aether.Core.Playback.Clips;
 using Aether.Core.Playback.Recents;
 using Aether.Core.Playback.Resume;
 using Aether.Core.Playback.Settings;
+using Aether.Core.Playback.Windowing;
 using Aether.PvP.Review.Clipping;
 using Aether_App.Input;
+using Microsoft.UI.Dispatching;
+using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -28,6 +31,15 @@ namespace Aether_App;
 /// </summary>
 public partial class App : Application
 {
+    // The longest the first window waits for the settings and window files before using the default size.
+    private static readonly TimeSpan RestoreWait = TimeSpan.FromMilliseconds(250);
+
+    private static readonly object RedirectGate = new();
+    private static MainWindow? s_window;
+    private static DispatcherQueue? s_queue;
+    private static string? s_earlyPath; // a file handed over before the window existed
+    private static bool s_earlyActivation;
+
     private Window? _window;
 
     /// <summary>The single settings instance. Loaded on the thread pool at launch; it holds defaults until then.</summary>
@@ -47,6 +59,9 @@ public partial class App : Application
 
     /// <summary>Exported clips for the clip drawer. Loaded on the thread pool at launch; empty until then.</summary>
     public static ClipShelf Clips { get; } = new(new FileSettingsStorage(ClipShelf.DefaultPath()));
+
+    /// <summary>Where the main window was left, for Remember window size. Loaded on the thread pool at launch.</summary>
+    public static WindowStateStore WindowState { get; } = new(new FileSettingsStorage(WindowStateStore.DefaultPath()));
 
     /// <summary>Lossless clip export through FFmpeg on the PATH, pre-warmed by the clip drawer once the page is idle.</summary>
     public static ClipExportService ClipExport { get; } = new();
@@ -70,13 +85,84 @@ public partial class App : Application
         _ = Task.Run(Recents.Load);
         _ = Task.Run(Resume.Load);
         _ = Task.Run(Clips.Load);
+        Task windowLoaded = Task.Run(WindowState.Load);
         var window = new MainWindow();
         _window = window;
-        if (LaunchPath(args) is { } path)
+        RestorePlacement(window, windowLoaded);
+
+        string? launchPath = LaunchPath(args);
+        lock (RedirectGate)
+        {
+            s_window = window;
+            s_queue = window.DispatcherQueue;
+            if (s_earlyActivation)
+            {
+                launchPath = s_earlyPath ?? launchPath;
+                s_earlyPath = null;
+                s_earlyActivation = false;
+            }
+        }
+        if (launchPath is { } path)
         {
             window.OpenWhenReady(path);
         }
         window.Activate();
+    }
+
+    // Both files are a few bytes and normally read by now; if not, the default size beats a slow start.
+    private static void RestorePlacement(MainWindow window, Task windowLoaded)
+    {
+        if (Task.WaitAll([SettingsLoaded, windowLoaded], RestoreWait)
+            && Settings.Current.RememberWindowSize
+            && WindowState.Saved is { } saved)
+        {
+            window.RestorePlacement(saved);
+        }
+    }
+
+    /// <summary>
+    /// Any thread: another launch was handed to this window (Open in the running window). Opens its file, if it
+    /// has one, and brings the window to the front.
+    /// </summary>
+    public static void OnRedirectedActivation(AppActivationArguments arguments)
+    {
+        string? path = LaunchPath(arguments);
+        lock (RedirectGate)
+        {
+            if (s_window is not { } window || s_queue is not { } queue)
+            {
+                s_earlyPath = path;
+                s_earlyActivation = true;
+                return;
+            }
+            queue.TryEnqueue(() =>
+            {
+                if (path is not null)
+                {
+                    window.OpenWhenReady(path);
+                }
+                window.BringToFront();
+            });
+        }
+    }
+
+    private static string? LaunchPath(AppActivationArguments arguments)
+    {
+        try
+        {
+            return arguments.Data switch
+            {
+                Windows.ApplicationModel.Activation.IFileActivatedEventArgs files =>
+                    LaunchArguments.FirstMediaPath(files.Files.Select(f => f.Path)),
+                Windows.ApplicationModel.Activation.ILaunchActivatedEventArgs launch =>
+                    LaunchArguments.FirstMediaPath(LaunchArguments.Split(launch.Arguments)),
+                _ => null,
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     /// <summary>The media file the app was started with: a file activation (double-click) or a command-line argument.</summary>
