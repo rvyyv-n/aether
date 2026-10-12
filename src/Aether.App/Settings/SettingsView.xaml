@@ -144,7 +144,7 @@
                 HorizontalAlignment="Stretch"
                 ItemTemplate="{StaticResource SectionTemplate}"
                 SelectionChanged="OnSectionChanged"
-                MinWidth="200" />
+                Style="{StaticResource AetherSettingsComboStyle}" />
             <ScrollViewer
                 x:Name="ContentScroller"
                 Grid.Row="1"

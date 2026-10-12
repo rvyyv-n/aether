@@ -16,7 +16,10 @@ public class DesignTokensTests
         "SymbolThemeFontFamily",
         "DefaultTextBoxStyle",
         "DefaultMenuFlyoutItemStyle",
-        "DefaultToggleMenuFlyoutItemStyle"
+        "DefaultToggleMenuFlyoutItemStyle",
+        "DefaultToggleSwitchStyle",
+        "DefaultComboBoxStyle",
+        "DefaultSliderStyle"
     ];
 
     private static readonly string[] LegacyAliasKeys =
@@ -116,6 +119,9 @@ public class DesignTokensTests
     {
         var doc = LoadDesignTokens();
         var tokenKeys = ExtractAllKeys(doc).ToHashSet(StringComparer.Ordinal);
+        // The settings controls dictionary is merged app-wide next to the tokens, so its styles resolve everywhere.
+        var settingsControls = XDocument.Load(RepoPath.Get("src", "Aether.App", "Theme", "SettingsControls.xaml"));
+        tokenKeys.UnionWith(ExtractAllKeys(settingsControls));
 
         string appDir = RepoPath.Get("src", "Aether.App");
         var xamlFiles = Directory.GetFiles(appDir, "*.xaml", SearchOption.AllDirectories)
