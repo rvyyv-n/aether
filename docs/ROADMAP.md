@@ -13,7 +13,7 @@ Every task row has a **Model** column. Autonomous runs should follow it without 
 **Rules for every task:**
 - **Design tasks** (4.1–4.6, 4.C3–4.C5, 4.D2–4.D6, 5.1–5.4, 6.1–6.2, 7.1–7.3, 8.1–8.2, 9.2–9.3) run on Opus. Before writing UI code, Opus asks the user design questions and requests reference screenshots, then confirms the direction.
 - **Helpers** get a self-contained brief (goal, files, project rules, what to report). Floor: Sonnet at medium effort. At most three helpers per task.
-- **Threads** retire at 8 turns or 150k tokens: commit, then fork (`t3_thread_fork`) or start fresh.
+- **Threads** retire at 8 human turns: commit, then fork (`t3_thread_fork`) or start fresh before context bloat. Subagents budgeted up to 100k-120k tokens and ~25-30 tool calls without auto-compaction.
 - **Build passes** run in a worktree, not the main folder.
 - **Gates:** `dotnet build AetherPlayer.sln --no-incremental -warnaserror --no-restore -p:NuGetAudit=false` and `dotnet test AetherPlayer.sln --no-restore -p:NuGetAudit=false` must pass before a task is marked done.
 - **Not autonomous:** merges, pushes, version numbers and tags stay with the user.
@@ -122,13 +122,13 @@ Mockups: screen 7 (settings, all pages).
 
 | # | Task | Effort | Model |
 |:---|:---|:---:|:---:|
-| 6.1 | Settings page shell: custom section list plus `Frame` (not `NavigationView`), picker below 640 px, Back button in the title bar | M | Opus |
-| 6.2 | Controls without accent colour: toggle, segmented, combo, slider, keycap, expander rows | M | Opus |
-| 6.3 | Pages and bindings to the settings store: General, Playback, Video, Audio, Subtitles, Streaming, Shortcuts, Advanced, About | M | Sonnet |
-| 6.4 | Hardware decoding combo: Auto (`auto-safe`), Software only (`no`), Direct3D 11 (`d3d11va`), Direct3D 11 copy (`d3d11va-copy`), applied on restart | S | Sonnet |
-| 6.5 | Custom mpv options field (Cascadia Mono, per-line validation) and Streaming page state when yt-dlp is missing | S | Sonnet |
-| 6.6 | Settings tests: defaults, reset, restart flags, invalid option lines | S | Gemini |
-| 6.7 | Configurable keyboard shortcuts on the Shortcuts page: defaults as today, Open URL = `Ctrl+Shift+O` with `Ctrl+L` offered as an alternative; conflicts flagged, per-shortcut reset | S | Sonnet |
+| 6.1 | Settings page shell: custom section list plus `Frame` (not `NavigationView`), picker below 640 px, Back button in the title bar — **Done** | M | Opus |
+| 6.2 | Controls without accent colour: toggle, segmented, combo, slider, keycap, expander rows — **Done** | M | Opus |
+| 6.3 | Pages and bindings to the settings store: General, Playback, Video, Audio, Subtitles, Streaming, Shortcuts, Advanced, About — **Done** | M | Sonnet |
+| 6.4 | Hardware decoding combo: Auto (`auto-safe`), Software only (`no`), Direct3D 11 (`d3d11va`), Direct3D 11 copy (`d3d11va-copy`), applied on restart — **Done** | S | Sonnet |
+| 6.5 | Custom mpv options field (Cascadia Mono, per-line validation) and Streaming page state when yt-dlp is missing — **Done** | S | Sonnet |
+| 6.6 | Settings tests: defaults, reset, restart flags, invalid option lines — **Done** | S | Gemini |
+| 6.7 | Configurable keyboard shortcuts on the Shortcuts page: defaults as today, Open URL = `Ctrl+Shift+O` with `Ctrl+L` offered as an alternative; conflicts flagged, per-shortcut reset — **Done** | S | Sonnet |
 
 **Pass 6 means:** Every setting in the mockups is reachable, persisted and applied, and the page holds at 405 px.
 

@@ -74,6 +74,12 @@ public sealed partial class MainPage
 
     private static string Tip(string key, ShortcutAction action) => App.Shortcuts.Tip(AppStrings.Get(key), action);
 
+    // The home line names the open-file key as it is now, and falls back to a plain prompt when that action has no key.
+    private static string HomeFilesSubtitle() =>
+        App.Shortcuts.Describe(ShortcutAction.OpenFile) is { Length: > 0 } keys
+            ? AppStrings.Format("EmptyState_SubtitleFilesOnly", keys)
+            : AppStrings.Get("EmptyState_SubtitleFilesOnlyUnbound");
+
     private TypedEventHandler<KeyboardAccelerator, KeyboardAcceleratorInvokedEventArgs> HandlerFor(ShortcutAction action) => action switch
     {
         ShortcutAction.OpenFile => OnOpenAccelerator,

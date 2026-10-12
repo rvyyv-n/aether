@@ -1308,7 +1308,7 @@ public sealed partial class MainPage : Page
         else if (_startup == StartupPhase.Starting)
         {
             busy = true;
-            SetHome(AppStrings.Get("EmptyState_Title"), AppStrings.Get("EmptyState_SubtitleFilesOnly"), null, engine);
+            SetHome(AppStrings.Get("EmptyState_Title"), HomeFilesSubtitle(), null, engine);
         }
         else if (failed)
         {
@@ -1330,7 +1330,7 @@ public sealed partial class MainPage : Page
         }
         else
         {
-            SetHome(AppStrings.Get("EmptyState_Title"), AppStrings.Get("EmptyState_SubtitleFilesOnly"), null, engine);
+            SetHome(AppStrings.Get("EmptyState_Title"), HomeFilesSubtitle(), null, engine);
         }
 
         StartupProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;

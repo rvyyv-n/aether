@@ -87,8 +87,8 @@
     <value>Drop a file, paste a link or press Ctrl+O</value>
   </data>
   <data name="EmptyState_SubtitleFilesOnly" xml:space="preserve">
-    <value>Drop a file or press Ctrl+O</value>
-    <comment>Shown until links play (streaming); EmptyState_Subtitle replaces it then</comment>
+    <value>Drop a file or press {0}</value>
+    <comment>Shown until links play (streaming); {0} is the open-file key</comment>
   </data>
   <data name="EmptyState_OpenFile" xml:space="preserve">
     <value>Open file</value>
@@ -1212,5 +1212,59 @@
   </data>
   <data name="Clips_Yesterday" xml:space="preserve">
     <value>Yesterday</value>
+  </data>
+  <data name="Settings_Group_Quality" xml:space="preserve">
+    <value>Quality</value>
+  </data>
+  <data name="Settings_Group_Defaults" xml:space="preserve">
+    <value>Defaults</value>
+  </data>
+  <data name="Settings_Group_Engine" xml:space="preserve">
+    <value>Engine</value>
+  </data>
+  <data name="Settings_Group_Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Settings_Group_Versions" xml:space="preserve">
+    <value>Versions</value>
+  </data>
+  <data name="Settings_Group_Support" xml:space="preserve">
+    <value>Support</value>
+  </data>
+  <data name="Settings_Group_Streams" xml:space="preserve">
+    <value>Streams</value>
+  </data>
+  <data name="Settings_Language_NoPreference" xml:space="preserve">
+    <value>No preference</value>
+  </data>
+  <data name="Settings_Shortcuts_Unbound" xml:space="preserve">
+    <value>Not set</value>
+  </data>
+  <data name="Settings_Shortcuts_Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="Settings_Shortcuts_ResetAll" xml:space="preserve">
+    <value>Reset all shortcuts</value>
+  </data>
+  <data name="Settings_Shortcuts_UseAlternative" xml:space="preserve">
+    <value>Use {0}</value>
+  </data>
+  <data name="Settings_Shortcuts_Reserved" xml:space="preserve">
+    <value>That key is reserved. Try another.</value>
+  </data>
+  <data name="Settings_About_Version" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="Settings_About_Unknown" xml:space="preserve">
+    <value>—</value>
+  </data>
+  <data name="Settings_About_Copied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Settings_Streaming_InstalledAt" xml:space="preserve">
+    <value>Found at {0}</value>
+  </data>
+  <data name="EmptyState_SubtitleFilesOnlyUnbound" xml:space="preserve">
+    <value>Drop a file to play it</value>
   </data>
 </root>
