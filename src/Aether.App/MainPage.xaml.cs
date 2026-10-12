@@ -2,6 +2,7 @@
 using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
+using Aether.Core.Playback.Input;
 using Aether.Core.Playback.Recents;
 using Aether.Core.Playback.Resume;
 using Aether_App.Controls;
@@ -94,6 +95,7 @@ public sealed partial class MainPage : Page
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
         InitializeTransport();
+        BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -110,7 +112,6 @@ public sealed partial class MainPage : Page
         ErrorKey.Text = AppStrings.Get("EmptyState_DetailsError");
         OpenFileLabel.Text = AppStrings.Get("EmptyState_OpenFile");
         OpenUrlLabel.Text = AppStrings.Get("EmptyState_OpenUrl");
-        ToolTipService.SetToolTip(OpenUrlButton, AppStrings.Get("EmptyState_OpenUrlTooltip"));
         StreamCancelButton.Content = AppStrings.Get("Stream_Cancel");
         RecentsHeader.Text = AppStrings.Get("EmptyState_Recent");
         ClearRecentsButton.Content = AppStrings.Get("EmptyState_ClearList");
@@ -119,12 +120,11 @@ public sealed partial class MainPage : Page
         AutomationProperties.SetName(OpenUrlBox, OpenUrlFieldLabel.Text);
         OpenUrlPlayLabel.Text = AppStrings.Get("OpenUrl_Play");
         OpenUrlCancelButton.Content = AppStrings.Get("OpenUrl_Cancel");
-        ToolTipService.SetToolTip(OpenButton, AppStrings.Get("Transport_OpenFile"));
         AutomationProperties.SetName(OpenButton, AppStrings.Get("Menu_OpenFile"));
-        ToolTipService.SetToolTip(VolumeButton, AppStrings.Get("Transport_Mute"));
         AutomationProperties.SetName(VolumeButton, AppStrings.Get("Transport_Volume"));
         AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
         ApplyTransportStrings();
+        ApplyShortcutLabels();
         RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
     }
@@ -199,6 +199,9 @@ public sealed partial class MainPage : Page
             StartEngine();
         }
         App.Recents.Changed += OnRecentsChanged;
+        App.Shortcuts.Changed += OnShortcutsChanged;
+        BuildShortcuts(); // settings may have finished loading since the constructor
+        ApplyShortcutLabels();
         RefreshRecents();
         Render();
         Focus(FocusState.Programmatic);
@@ -214,6 +217,7 @@ public sealed partial class MainPage : Page
         _copiedTimer?.Stop();
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         App.Recents.Changed -= OnRecentsChanged;
+        App.Shortcuts.Changed -= OnShortcutsChanged;
         SaveResumePosition(background: false);
         CursorVisibility.Show();
         if (_session is { } session)
@@ -478,7 +482,7 @@ public sealed partial class MainPage : Page
         }
         bool muted = TransportState.IsMuted(volume);
         VolumeButton.Content = muted ? MuteGlyph : VolumeGlyph;
-        ToolTipService.SetToolTip(VolumeButton, AppStrings.Get(muted ? "Transport_Unmute" : "Transport_Mute"));
+        ToolTipService.SetToolTip(VolumeButton, Tip(muted ? "Transport_Unmute" : "Transport_Mute", ShortcutAction.Mute));
     }
 
     private void OnMuteAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -1233,15 +1237,15 @@ public sealed partial class MainPage : Page
 
         (string glyph, string label) = TransportState.PlayButton(vm?.Status ?? PlaybackStatus.Idle) switch
         {
-            PlayButtonAction.Pause => (PauseGlyph, AppStrings.Get("Transport_Pause")),
-            PlayButtonAction.Replay => (ReplayGlyph, AppStrings.Get("Transport_Replay")),
-            _ => (PlayGlyph, AppStrings.Get("Transport_Play")),
+            PlayButtonAction.Pause => (PauseGlyph, Tip("Transport_Pause", ShortcutAction.PlayPause)),
+            PlayButtonAction.Replay => (ReplayGlyph, Tip("Transport_Replay", ShortcutAction.PlayPause)),
+            _ => (PlayGlyph, Tip("Transport_Play", ShortcutAction.PlayPause)),
         };
         PlayPauseButton.Content = glyph;
         ToolTipService.SetToolTip(PlayPauseButton, label);
         AutomationProperties.SetName(PlayPauseButton, label);
         FullScreenButton.Content = fullScreen ? ExitFullScreenGlyph : FullScreenGlyph;
-        ToolTipService.SetToolTip(FullScreenButton, AppStrings.Get(fullScreen ? "Transport_ExitFullScreen" : "Transport_FullScreen"));
+        ToolTipService.SetToolTip(FullScreenButton, fullScreen ? AppStrings.Get("Transport_ExitFullScreen") : Tip("Transport_FullScreen", ShortcutAction.FullScreen));
 
         RenderHome(vm);
 

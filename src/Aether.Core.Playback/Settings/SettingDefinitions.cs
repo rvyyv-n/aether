@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Aether.Core.Playback.Input;
 
 namespace Aether.Core.Playback.Settings;
 
@@ -37,6 +38,17 @@ public static class SettingKeys
     public const string PreferGpuDecodableFormats = "streaming.preferGpuDecodable";
     public const string YtDlpAutoUpdate = "streaming.ytdlpAutoUpdate";
     public const string CustomMpvOptions = "advanced.customMpvOptions";
+    public const string ShortcutOpenFile = "shortcuts.openFile";
+    public const string ShortcutOpenUrl = "shortcuts.openUrl";
+    public const string ShortcutSkipBack = "shortcuts.skipBack";
+    public const string ShortcutSkipForward = "shortcuts.skipForward";
+    public const string ShortcutSetIn = "shortcuts.setIn";
+    public const string ShortcutSetOut = "shortcuts.setOut";
+    public const string ShortcutPlayPause = "shortcuts.playPause";
+    public const string ShortcutFullScreen = "shortcuts.fullScreen";
+    public const string ShortcutMute = "shortcuts.mute";
+    public const string ShortcutLoop = "shortcuts.loop";
+    public const string ShortcutAlwaysOnTop = "shortcuts.alwaysOnTop";
 }
 
 /// <summary>One setting: key, restart flag, validation and (de)serialisation. No reflection, so it is AOT-safe.</summary>
@@ -111,6 +123,9 @@ public static class SettingDefinitions
     private static SettingDefinition<string> Text(string key, Func<AetherSettings, string> get, Func<AetherSettings, string, AetherSettings> with, bool restart = false) =>
         new() { Key = key, Get = get, With = with, RequiresRestart = restart, IsValid = v => v.Length <= MaxText };
 
+    private static SettingDefinition<string> Shortcut(string key, Func<AetherSettings, string> get, Func<AetherSettings, string, AetherSettings> with) =>
+        new() { Key = key, Get = get, With = with, IsValid = v => v.Length <= MaxText && ShortcutMap.IsValidText(v) };
+
     private static SettingDefinition<int> Adjust(string key, Func<AetherSettings, int> get, Func<AetherSettings, int, AetherSettings> with) =>
         new() { Key = key, Get = get, With = with, IsValid = v => v is >= -100 and <= 100 };
 
@@ -154,6 +169,18 @@ public static class SettingDefinitions
         Flag(SettingKeys.YtDlpAutoUpdate, s => s.YtDlpAutoUpdate, (s, v) => s with { YtDlpAutoUpdate = v }),
 
         Text(SettingKeys.CustomMpvOptions, s => s.CustomMpvOptions, (s, v) => s with { CustomMpvOptions = v }, restart: true),
+
+        Shortcut(SettingKeys.ShortcutOpenFile, s => s.ShortcutOpenFile, (s, v) => s with { ShortcutOpenFile = v }),
+        Shortcut(SettingKeys.ShortcutOpenUrl, s => s.ShortcutOpenUrl, (s, v) => s with { ShortcutOpenUrl = v }),
+        Shortcut(SettingKeys.ShortcutSkipBack, s => s.ShortcutSkipBack, (s, v) => s with { ShortcutSkipBack = v }),
+        Shortcut(SettingKeys.ShortcutSkipForward, s => s.ShortcutSkipForward, (s, v) => s with { ShortcutSkipForward = v }),
+        Shortcut(SettingKeys.ShortcutSetIn, s => s.ShortcutSetIn, (s, v) => s with { ShortcutSetIn = v }),
+        Shortcut(SettingKeys.ShortcutSetOut, s => s.ShortcutSetOut, (s, v) => s with { ShortcutSetOut = v }),
+        Shortcut(SettingKeys.ShortcutPlayPause, s => s.ShortcutPlayPause, (s, v) => s with { ShortcutPlayPause = v }),
+        Shortcut(SettingKeys.ShortcutFullScreen, s => s.ShortcutFullScreen, (s, v) => s with { ShortcutFullScreen = v }),
+        Shortcut(SettingKeys.ShortcutMute, s => s.ShortcutMute, (s, v) => s with { ShortcutMute = v }),
+        Shortcut(SettingKeys.ShortcutLoop, s => s.ShortcutLoop, (s, v) => s with { ShortcutLoop = v }),
+        Shortcut(SettingKeys.ShortcutAlwaysOnTop, s => s.ShortcutAlwaysOnTop, (s, v) => s with { ShortcutAlwaysOnTop = v }),
     ];
 
     private static readonly Dictionary<string, SettingDefinition> ByKey = All.ToDictionary(d => d.Key, StringComparer.Ordinal);
