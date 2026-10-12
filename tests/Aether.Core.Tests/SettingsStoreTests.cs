@@ -136,6 +136,37 @@ public class SettingsStoreTests
         Assert.False(store.PendingRestart);
     }
 
+    private sealed class OverlapStorage : ISettingsStorage
+    {
+        private int _writing;
+        public int Overlaps { get; private set; }
+        public string? Read() => null;
+        public void Write(string content)
+        {
+            if (Interlocked.Increment(ref _writing) > 1)
+            {
+                Overlaps++;
+            }
+            Thread.Sleep(1);
+            Interlocked.Decrement(ref _writing);
+        }
+    }
+
+    [Fact]
+    public void Overlapping_Saves_Write_One_At_A_Time()
+    {
+        var storage = new OverlapStorage();
+        var store = new SettingsStore(storage);
+
+        Parallel.For(0, 32, i =>
+        {
+            store.Set(SettingKeys.Brightness, i);
+            store.Save();
+        });
+
+        Assert.Equal(0, storage.Overlaps);
+    }
+
     [Fact]
     public void Save_Then_Load_Round_Trips_Through_Storage()
     {
