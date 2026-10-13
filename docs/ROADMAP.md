@@ -136,7 +136,7 @@ Numbered from P7.2 because P7.1 is the engine restart above. The design handoff 
 
 | # | Task | Effort |
 |:---|:---|:---:|
-| P7.2 | Glass that shows the video: the card's fill goes from `AetherSurfaceOsdAcrylicBrush` to the plain `AetherSurfaceOsdBrush` (#9E0E1014, 62% ink), which is what every handoff frame draws and what keeps TextPrimary at 5.35:1 over pure white. Keep the 1 px StrokeSurface edge. Retire the Acrylic brush. No bottom scrim: the handoff has none and 62% does not need one. This is also the fallback if P7.6 is dropped | S |
+| P7.2 | Glass that shows the video: the card's fill goes from `AetherSurfaceOsdAcrylicBrush` to the plain `AetherSurfaceOsdBrush` (#9E0E1014, 62% ink), which is what every handoff frame draws and what keeps TextPrimary at 5.35:1 over pure white. Retire the Acrylic brush. No bottom scrim: the handoff has none and 62% does not need one. This is also the fallback if P7.6 is dropped | S |
 | P7.3 | Card shape back to the redline: `AetherTransportCornerRadius` 8 → 24 (16 button radius + 8 padding, concentric); button row 36 → 32, so the card is 84 tall (8 + 32 + 4 + 32 + 8); padding 8 (7 plus the stroke); centre group spacing 8 → 4, like the side groups; drop `AetherSizeTransportPlay` and size the row by `AetherSizeControl`. The chip, drawer and toast offset 120 → 116 (24 + 84 + 8). Width stays min(520, window − 32), so at the 640 px minimum the card is always the full 520 and More controls only appears in picture in picture (Pass 8) | S |
 | P7.4 | Controls as drawn in 5.1 and 5.6. Play/Pause: 32 round, FillEmphasisRest (#24FFFFFF) with a 1 px StrokeControl (#1FFFFFFF), hover FillEmphasisHover, pressed FillEmphasisPressed, white 16 px glyph; remove `AetherFillPlay*` and `AetherTextOnPlay`. Speed: outline pill again, at least 52 wide (`AetherSizeSpeedPill` 40 → 52), padding 0,10, StrokeControl, Caption 12 tabular, FillEmphasisRest while its menu is open. Loop and Always on top when on: FillEmphasisRest plus StrokeControl, FillEmphasisHover on hover. Glyphs: back and forward 5 s use a circular-arrow glyph at 18 px (the current rewind and fast-forward glyphs read as track skip; the numbered Fluent skip glyphs say 10 and 30, so use one without a number); full screen uses the four-corner glyph, not the diagonal arrows. Seek hover line 12 → 16 tall | S |
 | P7.5 | Title bar as in screen 3: the badge gets its SurfaceOsd fill (radius 4, padding 2,6, max 320 for files and 240 for streams); "Alpha" on the empty state stays plain. The gear and Back stay 46×32 and square with a 16 px glyph (the handoff value), but take their colours from the system caption buttons: glyph #D9FFFFFF, #73FFFFFF while the window is inactive, hover #14FFFFFF with a white glyph, pressed #0AFFFFFF, and they fade with the caption glyphs (300 ms out, 150 ms in). Move the caption colours from `MainWindow` into tokens so the gear and the system buttons read one source | S |
@@ -147,13 +147,13 @@ Numbered from P7.2 because P7.1 is the engine restart above. The design handoff 
 
 **Deferred (after the UI):**
 
-- **120 fps playback:** 1080p 120 fps game recordings don't feel like 120 fps with software or hardware decoding; a separate scout is investigating. Its fix will touch the render loop, so it lands after P7.6, never alongside it.
 - **Customisable bar:** choosing and ordering the bar's buttons. Not before the design is matched.
 - **Settings in full screen:** the title bar is hidden there, so the gear is not reachable; the right-click menu (7.1) covers it with Settings Ctrl+,.
+- **Appearance & theme customization:** exploring deeper theme accents and appearance tweaks post-Pass 7 before public release.
 
 ---
 
-### Pass 7: Menus, Toasts & Diagnostics
+### Pass 7: Menus, Toasts, Diagnostics & Playback Engine Polish
 
 Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
 
@@ -162,12 +162,17 @@ Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
 | 7.1 | Right-click `MenuFlyout` with icons, shortcuts, submenus (including Clips and Stream), max height with scroll; tracks and video flyouts | M |
 | 7.2 | Toast control: look, placement, fade, reduced motion, live-region announcement | S |
 | 7.2a | `ToastService`: one visible at a time, queued by priority, a toast with an action is never replaced, duplicates collapse, 4 s / 8 s with an action, pauses on hover and focus | M |
-| 7.3 | Diagnostics panel (Ctrl+I) on a solid surface: decoder, video, frame rate, dropped, cache ("—" when unavailable). No GPU row | S |
-| 7.4 | libmpv property wiring for diagnostics: `hwdec-current`, `video-format`, `video-params/w` and `h`, `container-fps`, `display-fps` (spike first: with `vo=libmpv` it is expected to stay empty, so read the monitor refresh rate via `MonitorFromWindow`/`EnumDisplaySettingsW` and set `display-fps-override`, updating on `WM_DISPLAYCHANGE`), `decoder-frame-drop-count`, `frame-drop-count`, `demuxer-cache-duration` | S |
+| 7.3 | Diagnostics panel (`Ctrl+I`) on a solid surface: decoder, video, frame rate (`container-fps` / `estimated-vf-fps`), display refresh (`display-fps`), dropped frames (`decoder-frame-drop-count` · `frame-drop-count`), cache ("—" when unavailable). No GPU row | S |
+| 7.4 | Auto-detect display refresh rate & smooth motion display sync: query window monitor refresh via `MonitorFromWindow` + `EnumDisplaySettingsW` (or `DwmGetCompositionTimingInfo`), set mpv's `display-fps-override`, and update on `WM_DISPLAYCHANGE` and monitor transitions. Resolves 120 fps video decimation under `video-sync=display-resample` | M |
+| 7.4a | 120 fps / high-refresh render loop pacing & VSync audit: review `MpvRenderLoop` latency wait order; evaluate `DXGI_PRESENT_ALLOW_TEARING` / VRR on 120Hz/144Hz/240Hz monitors to eliminate micro-judder | M |
+| 7.4b | libmpv property wiring for diagnostics: observe `hwdec-current`, `video-format`, `video-params/w` and `h`, `container-fps`, `estimated-vf-fps`, `display-fps`, `decoder-frame-drop-count`, `frame-drop-count`, and `demuxer-cache-duration` in `PlayerEventDispatcher` | S |
 | 7.5 | Wire engine failures, yt-dlp updates, frame copy and export results to the toast service | S |
 | 7.6 | Tests for toast queue rules and diagnostics formatting | S |
+| 7.7 | VLC parity settings (Settings → Video, Streaming, Advanced): deinterlacing (`deinterlace` & mode), frame snapshot settings (`screenshot-directory`, `screenshot-format`, `screenshot-template`), aspect ratio override (`video-aspect-override`), network cache buffer slider (`demuxer-max-bytes`, readahead), HTTP proxy (`http-proxy`), RTSP transport (`rtsp-transport`), corrupt AVI index repair (`index=recreate`), and skip H.264 deblocking (`vd-lavc-skiploopfilter`) | M |
+| 7.8 | High-value playback & audio features: audio pitch correction on playback speed changes (`audio-pitch-correction=yes`), stereo downmix for multi-channel audio tracks, instant copy frame to clipboard (`Ctrl+C`), and display sleep prevention (`DisplayRequest` / `SetThreadExecutionState`) | S |
+| 7.9 | Unit and integration tests for new playback options, settings sync mapping, and display FPS monitor tracking | S |
 
-**Pass 7 means:** Menus, toasts and diagnostics behave as the redline describes, including narrow windows and missing data.
+**Pass 7 means:** Menus, toasts and diagnostics behave as the redline describes, 120 fps and high-refresh recordings play with frame-accurate smoothness, and VLC-parity playback settings are configurable without compromising the minimalist shell.
 
 ---
 

@@ -30,20 +30,20 @@
 - **Status:** Accepted.
 
 ## ADR-0007: ANGLE Is the Primary Render Path
-- **Context:** ADR-0002 preferred a native D3D11 render API "if exposed by libmpv". The libmpv headers at release `v0.41.0` and on `master` (`include/mpv/render.h`, client API 2.5) define only `MPV_RENDER_API_TYPE_OPENGL` (`"opengl"`) and `MPV_RENDER_API_TYPE_SW` (`"sw"`); `mpv_render_context_create` returns `MPV_ERROR_NOT_IMPLEMENTED` for anything else. `vo=libmpv` ignores `gpu-api`, `gpu-context` and the `gpu-next` renderer. Embedding through `--wid` would give mpv its own D3D11 swap chain, but on a child HWND, which brings back the airspace problem ADR-0002 exists to avoid.
+- **Context:** ADR-0002 preferred a native D3D11 render API \"if exposed by libmpv\". The libmpv headers at release `v0.41.0` and on `master` (`include/mpv/render.h`, client API 2.5) define only `MPV_RENDER_API_TYPE_OPENGL` (`\"opengl\"`) and `MPV_RENDER_API_TYPE_SW` (`\"sw\"`); `mpv_render_context_create` returns `MPV_ERROR_NOT_IMPLEMENTED` for anything else. `vo=libmpv` ignores `gpu-api`, `gpu-context` and the `gpu-next` renderer. Embedding through `--wid` would give mpv its own D3D11 swap chain, but on a child HWND, which brings back the airspace problem ADR-0002 exists to avoid.
 - **Decision:**
   - Path 2 (ANGLE) becomes the only GPU path. `AngleBridge` creates an ANGLE EGL display on *our* `ID3D11Device` (`EGL_ANGLE_device_creation` + `EGL_PLATFORM_DEVICE_EXT`) and wraps swap chain buffer 0 as an EGL pbuffer (`EGL_ANGLE_d3d_texture_client_buffer`). mpv renders into GL framebuffer 0 of that pbuffer, which is the swap chain back buffer; DXGI presents it. No copy.
   - `hwdec=d3d11va` stays: mpv's ANGLE interop (`d3d11egl`) queries the D3D11 device from the current EGL display, so decode, render and present all run on the one device created by `D3D11DeviceManager` (which already carries video support and multithread protection).
-  - Task 2.2 ("Path 1") is adapted: `MpvRenderContext` is the API-agnostic render-context wrapper (`Create` takes any parameter block, `CreateOpenGL` is the path in use). If libmpv ever adds a D3D11 render API it slots in there without touching the loop.
+  - Task 2.2 (\"Path 1\") is adapted: `MpvRenderContext` is the API-agnostic render-context wrapper (`Create` takes any parameter block, `CreateOpenGL` is the path in use). If libmpv ever adds a D3D11 render API it slots in there without touching the loop.
   - The `gpu-next` flag from the roadmap is dropped: it has no effect on the render API. Low-latency options that do apply are set by `MpvContext` (`vo=libmpv`, `hwdec=d3d11va`, `demuxer-max-back-bytes=512MiB`, `video-latency-hacks=yes`, except with software decoding, where mpv must keep a frame decoded ahead to avoid stutter).
-  - ANGLE ships next to libmpv as `libEGL.dll` + `libGLESv2.dll`. Aether loads `libEGL.dll` before mpv creates its render context, so mpv's own `LoadLibrary("libEGL.dll")` binds to the same module.
+  - ANGLE ships next to libmpv as `libEGL.dll` + `libGLESv2.dll`. Aether loads `libEGL.dll` before mpv creates its render context, so mpv's own `LoadLibrary(\"libEGL.dll\")` binds to the same module.
   - The `sw` render API (CPU copy into the back buffer) is not implemented; it would only serve machines without ANGLE, and those don't exist once ANGLE ships with the app.
 - **Status:** Accepted.
 
 ## ADR-0008: Render Thread Ownership and Device-Loss Recovery
 - **Context:** ADR-0006 left recovery after device loss to Pass 2. Device loss can surface from DXGI (`Present`, `ResizeBuffers`) or from ANGLE (a context reset), and the swap chain must reach the `SwapChainPanel` on the UI thread without the UI ever waiting on the GPU.
 - **Decision:**
-  - `MpvRenderLoop` owns one dedicated thread ("Aether.Render") and the whole device stack: `D3D11DeviceManager` → `DxgiPresenter` → `IVideoRenderBackend` (ANGLE + mpv render context). The stack is built on that thread, because EGL contexts are bound per thread and mpv needs its GL context current to create and free a render context. It is torn down in reverse order.
+  - `MpvRenderLoop` owns one dedicated thread (\"Aether.Render\") and the whole device stack: `D3D11DeviceManager` → `DxgiPresenter` → `IVideoRenderBackend` (ANGLE + mpv render context). The stack is built on that thread, because EGL contexts are bound per thread and mpv needs its GL context current to create and free a render context. It is torn down in reverse order.
   - Frame: wait on two kernel events (mpv's update callback signals one from native code; resize, redraw and stop requests signal the other) → `mpv_render_context_update` → frame-latency wait → `mpv_render_context_render` → `glFlush` → `Present` → `mpv_render_context_report_swap`. No managed allocation on that path (measured: 0 bytes over 100 frames on both backends).
   - Signal: `DxgiPresenter` latches the first loss in `DeviceLostReason` (the HRESULT, refined by `GetDeviceRemovedReason`); `IsDeviceLost` is a lock-free read, and a lost presenter returns `PresentResult.DeviceLost` without touching the swap chain. Backends report a lost GPU context by returning false from `Render`, and the loop forwards that through `ReportDeviceLost`. No logging-only paths remain.
   - Recovery: notify the host (`OnDeviceLost`), dispose backend, presenter and device, then build a new generation at once. Failed creation retries with exponential backoff (100 ms doubling to 2 s). Each new swap chain travels to the UI in a `SwapChainHandoff` that holds its own COM reference, so a second loss before the UI thread runs cannot leave a dangling pointer. The UI binds only the newest generation.
@@ -54,7 +54,7 @@
 ## ADR-0009: Event Thread, Property Dispatch and Frame Stepping
 - **Context:** Pass 3 needs mpv's events (property changes, command replies, end of file) on the UI without ever blocking the WinUI `DispatcherQueue`, and frame stepping that reacts at once to a held key without flooding mpv. The client API delivers events through `mpv_wait_event`, which blocks; its `mpv_event` memory is reused on the next call.
 - **Decision:**
-  - `MpvEventLoop` (Interop) owns one `TaskCreationOptions.LongRunning` thread ("Aether.MpvEvents") per core, waiting with an infinite timeout. Stop is a flag plus `mpv_wakeup`; mpv latches a wake-up that arrives while nobody waits, so set-flag-then-wake cannot be lost. `Dispose` never blocks; `Stop(timeout)` waits, except on the event thread itself.
+  - `MpvEventLoop` (Interop) owns one `TaskCreationOptions.LongRunning` thread (\"Aether.MpvEvents\") per core, waiting with an infinite timeout. Stop is a flag plus `mpv_wakeup`; mpv latches a wake-up that arrives while nobody waits, so set-flag-then-wake cannot be lost. `Dispose` never blocks; `Stop(timeout)` waits, except on the event thread itself.
   - The loop AddRefs the core's `MpvHandle` from `Start` until the thread exits, so `mpv_terminate_destroy` can never run under `mpv_wait_event`. `MpvContext.Dispose` marks the handle closed first and then calls `mpv_wakeup`, so a parked loop wakes, sees `IsClosed`, and drops its reference; the last reference (context, loop or render context) destroys the core.
   - Events reach one `IMpvEventSink` as `MpvEventView`, a ref struct over mpv's memory: nothing is copied, boxed or marshalled per event, and the view cannot outlive the call. Properties are observed under numeric ids (`reply_userdata`) and dispatched on the id, never by comparing names. A throwing sink is reported through `OnFault` and the loop continues. `MPV_EVENT_SHUTDOWN` ends the loop; `MPV_EVENT_QUEUE_OVERFLOW` is forwarded so the sink can re-read state.
   - Commands sent at key-repeat rate use `MpvCommand` (argv pre-encoded once on the pinned object heap) through `mpv_command_async`, so the UI thread never waits on the core and sending allocates nothing. Results come back as `MPV_EVENT_COMMAND_REPLY` with the caller's id.
@@ -74,19 +74,19 @@
 - **Status:** Accepted. Not yet verified on screen: the packaged app needs Developer Mode to launch from the CLI, and an unpackaged build lacks the merged framework resources.
 
 ## ADR-0011: Settings Store
-- **Context:** The Settings pages (Pass 6) need a model with defaults, per-setting reset and "applies on restart" flags, usable without WinUI.
+- **Context:** The Settings pages (Pass 6) need a model with defaults, per-setting reset and \"applies on restart\" flags, usable without WinUI.
 - **Decision:**
   - `SettingsStore` and `AetherSettings` (an immutable record) live in `Aether.Core.Playback/Settings`. A table of `SettingDefinition`s (key, restart flag, allowed values) drives `Set`, `Reset`, load validation and the JSON file, so the UI binds by key and nothing is written twice.
   - The JSON is read with `JsonDocument` and written with `Utf8JsonWriter`, per key. That is reflection-free (Native AOT) and lets one invalid or unknown value fall back to its own default instead of failing the whole file, which a source-generated whole-object deserialiser cannot do.\n  - Storage is behind `ISettingsStorage`. `FileSettingsStorage` writes `settings.json.tmp` then replaces the file, at `%LOCALAPPDATA%\\Aether\\settings.json` (works packaged and unpackaged). It lives in Core.Playback so the atomic write is tested; `App.Settings` is the one shared instance, loaded on the thread pool at launch.
   - Restart-flagged settings: hardware decoding, passthrough, custom mpv options. `PendingRestart` compares them with the values at the last `Load`.
-  - `MpvOptionsValidator` only checks the `key=value` shape; "unknown option" needs mpv's option list and is left to the Advanced page (6.5).
+  - `MpvOptionsValidator` only checks the `key=value` shape; \"unknown option\" needs mpv's option list and is left to the Advanced page (6.5).
 - **Status:** Accepted.
 
 ## ADR-0012: Label Casing and Shell Strings
-- **Context:** The shell mixed all-caps captions (`SUPPORTED`, `DETAILS`), "press Ctrl O", coloured status text and two names for the renderer. The final design handoff (spec sheet, screen 4) fixes the wording.
+- **Context:** The shell mixed all-caps captions (`SUPPORTED`, `DETAILS`), \"press Ctrl O\", coloured status text and two names for the renderer. The final design handoff (spec sheet, screen 4) fixes the wording.
 - **Decision:**
-  - Sentence case for every label, button, title, tooltip and status; no all-caps, no Title Case. Format names (MP4, WEBM), "URL", "ANGLE · D3D11" and file names keep their own spelling.
-  - Shortcuts are written `Ctrl+O`; tooltips read "Label (Key)". The renderer is always "ANGLE · D3D11". Colour lives in status dots only; status text stays white.
+  - Sentence case for every label, button, title, tooltip and status; no all-caps, no Title Case. Format names (MP4, WEBM), \"URL\", \"ANGLE · D3D11\" and file names keep their own spelling.
+  - Shortcuts are written `Ctrl+O`; tooltips read \"Label (Key)\". The renderer is always \"ANGLE · D3D11\". Colour lives in status dots only; status text stays white.
   - Cascadia Mono only for timecodes. The controls' clock is `mm:ss`, with hours (`h:mm:ss`) only for clips of an hour or more.
   - Shell text comes from `Strings/en-us/Resources.resw` through `AppStrings` (`ResourceLoader`). Keys stay `Area_Name`, so `x:Uid` (which needs `Name.Text` keys) is not used; a test checks every key the app reads exists.
 - **Status:** Accepted.
@@ -113,6 +113,14 @@
 - **Decision:**
   - Provide `run.ps1` (and `tools/run.ps1`) for fast incremental builds (`-p:Platform=x64 --no-restore -warnaserror -p:NuGetAudit=false`) and in-place Developer Mode loose package registration (`Add-AppxPackage -Register AppxManifest.xml`). Once registered, subsequent incremental builds update in ~2-3 seconds and run directly from disk.
   - Launch using the application AUMID (`55AF92B1-5987-459F-B55A-89F4EE8B1B81_1z32rh13vfry6!App`).
-  - Provide `tools/dev-host` (`.\run.ps1 -Host "path\to\video"`) to run `KestrelStreamServer` standalone on `localhost:8443` for web browser preview testing without opening the WinUI app.
-  - Subagents and human developers can run `.\run.ps1` or `.\run.ps1 -NoBuild` during iterative passes to verify visual elements, layouts, and shortcuts.
+  - Provide `tools/dev-host` (`.\\run.ps1 -Host \"path\\to\\video\"`) to run `KestrelStreamServer` standalone on `localhost:8443` for web browser preview testing without opening the WinUI app.
+  - Subagents and human developers can run `.\\run.ps1` or `.\\run.ps1 -NoBuild` during iterative passes to verify visual elements, layouts, and shortcuts.
+- **Status:** Accepted.
+
+## ADR-0016: Unified Utility Suite, Proprietary Licensing & LGPL Architecture
+- **Context:** Aether is transitioning from a standalone player into part of a unified, high-craft Windows 11 utility suite alongside companion performance tools (including system debloating and tuning utilities). The suite shares core architectural tenets: zero-allocation hot paths, WinUI 3 with native Mica Alt styling (`DesignTokens.xaml`), and near-zero idle resource consumption. The project requires protection against unauthorized forks and distribution while remaining strictly compliant with third-party open-source libraries.
+- **Decision:**
+  - Distribution: Aether and companion utilities are distributed under a single parent suite/studio banner, sharing unified design tokens, typography ramp, and installer packaging.
+  - Licensing & fork protection: The application shell, presentation layer, C# playback logic, and companion utilities are proprietary / source-available with a restrictive license prohibiting unauthorized commercial redistribution, re-branding, or closed forks.
+  - LGPL compliance: `libmpv` is consumed exclusively as an unmanaged shared library (`libmpv-2.dll`) via standard C-ABI dynamic linking (`[LibraryImport]` / source-generated P/Invoke in `Aether.Core.Interop`). In accordance with LGPL v2.1+ requirements, the application dynamically links the library, allowing end users to inspect and replace `libmpv-2.dll` with alternative compatible builds without requiring the host C# application code to be GPL/LGPL licensed.
 - **Status:** Accepted.

@@ -150,3 +150,12 @@ dotnet test AetherPlayer.sln -c Debug -p:Platform=x64 --no-build
 dotnet run --project src/Aether.App -p:Platform=x64
 ```
 *(Requires Windows Developer Mode enabled under **Settings → System → For developers**).*
+
+---
+
+## Suite Architecture & Licensing
+
+Aether is part of a unified suite of Windows 11 performance utilities (including system debloating and tuning tools) sharing core design tokens (`DesignTokens.xaml`), Mica Alt aesthetics, and zero-allocation performance principles (see [ADR-0016](docs/DECISIONS.md#adr-0016-unified-utility-suite-proprietary-licensing--lgpl-architecture)).
+
+- **Application Code & Assets:** Proprietary / All rights reserved. Unauthorized reproduction, forking, redistribution, or modification of the application shell, suite components, and binaries is prohibited.
+- **Third-Party Libraries:** Incorporates [libmpv](https://mpv.io) under LGPL v2.1+ via dynamic C-ABI loading (`libmpv-2.dll`), and [ANGLE](https://chromium.googlesource.com/angle/angle) under BSD. End users may replace `libmpv-2.dll` with compatible builds per LGPL terms.
