@@ -10,10 +10,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml"><img src="https://img.shields.io/github/actions/workflow/status/rvyyv-n/aether/build-aot.yml?branch=master&style=flat-square&label=build&labelColor=1b1b2f" alt="Build status" /></a>
-  <img src="https://img.shields.io/badge/tests-846_passing-3fb950?style=flat-square&labelColor=1b1b2f" alt="846 tests passing" />
-  <img src="https://img.shields.io/badge/windows-11-8ab4f8?style=flat-square&labelColor=1b1b2f" alt="Windows 11" />
-  <img src="https://img.shields.io/badge/native_aot-ready-b39ddb?style=flat-square&labelColor=1b1b2f" alt="Native AOT ready" />
+  <a href="#key-features">Features</a> &nbsp;·&nbsp;
+  <a href="#keyboard-shortcuts">Shortcuts</a> &nbsp;·&nbsp;
+  <a href="#building--running">Build</a> &nbsp;·&nbsp;
+  <a href="docs/ROADMAP.md">Roadmap</a> &nbsp;·&nbsp;
+  <a href="docs/CHANGELOG.md">Changelog</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml"><img src="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml/badge.svg" alt="Build status" /></a>
 </p>
 
 ---
