@@ -21,6 +21,7 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
 {
     private MpvRenderLoop? _loop;
     private int _boundGeneration;
+    private readonly BackdropSource _backdrop = new();
 
     public MpvVideoSurface()
     {
@@ -80,6 +81,30 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
     /// <summary>The running loop, or null while unloaded.</summary>
     public MpvRenderLoop? RenderLoop => _loop;
 
+    /// <summary>
+    /// Any thread. Where the player card sits over the video (swap-chain pixels, relative to this
+    /// surface) so the render thread can blur behind it; redraws even when playback is paused.
+    /// </summary>
+    public void PostBackdrop(in BackdropRegion region)
+    {
+        _backdrop.Post(region);
+        _loop?.RequestRedraw();
+    }
+
+    /// <summary>UI thread. Turns the blur on or off (off: no video, settings, picture in picture).</summary>
+    public void SetBackdropActive(bool active)
+    {
+        _backdrop.SetActive(active);
+        _loop?.RequestRedraw();
+    }
+
+    /// <summary>UI thread. Fades the blur with the card; a zero duration is instant.</summary>
+    public void FadeBackdrop(bool visible, double durationMilliseconds)
+    {
+        _backdrop.Fade(visible, durationMilliseconds);
+        _loop?.RequestRedraw();
+    }
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         if (_loop is not null)
@@ -108,9 +133,9 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
 
     private void StartLoop()
     {
-        IVideoRenderBackendFactory? factory = BackendFactory ?? (_player is { } player ? new AngleMpvRenderBackendFactory(player) : null);
+        IVideoRenderBackendFactory? factory = BackendFactory ?? (_player is { } player ? new AngleMpvRenderBackendFactory(player, _backdrop) : null);
         var host = new Host(this, DispatcherQueue);
-        var loop = new MpvRenderLoop(factory, host);
+        var loop = new MpvRenderLoop(factory, host, new MpvRenderLoopOptions { Backdrop = _backdrop });
         host.Loop = loop; // published to the render thread by Start
         _loop = loop;
         _boundGeneration = 0;

@@ -100,6 +100,8 @@ public sealed partial class MainPage : Page
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
+        LayoutUpdated += (_, _) => PostBackdropRegion();
+        VideoSurface.CompositionScaleChanged += (_, _) => PostBackdropRegion();
     }
 
     /// <summary>Labels that never change, from the strings file (the XAML text is only a design-time stand-in).</summary>
@@ -1142,6 +1144,7 @@ public sealed partial class MainPage : Page
             _fader.Fade(TopScrim, visible);
             _fader.Fade(TitleBar, visible);
             _fader.Fade(Osd, visible);
+            VideoSurface.FadeBackdrop(visible, _fader.DurationMilliseconds(visible));
             Osd.IsHitTestVisible = visible;
             _fader.Fade(ClipLayer, visible);
             ClipLayer.IsHitTestVisible = visible;
@@ -1246,6 +1249,8 @@ public sealed partial class MainPage : Page
         DropOutline.Visibility = _dragging ? Visibility.Visible : Visibility.Collapsed;
         Osd.Visibility = hasVideo ? Visibility.Visible : Visibility.Collapsed;
         ClipLayer.Visibility = Osd.Visibility;
+        VideoSurface.SetBackdropActive(hasVideo);
+        PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         TitleBadgeText.Text = HasVideo || vm?.Status == PlaybackStatus.Loading

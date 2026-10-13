@@ -250,6 +250,9 @@ public sealed unsafe class AngleBridge : IDisposable
 
     private nint Live() => _display != 0 ? _display : throw new ObjectDisposedException(nameof(AngleBridge));
 
+    /// <summary>A GL entry point of the current context by name, or null.</summary>
+    internal void* GlProc(ReadOnlySpan<byte> name) => Proc(name);
+
     private void* Proc(ReadOnlySpan<byte> name)
     {
         fixed (byte* p = name)

@@ -14,14 +14,22 @@ internal sealed class ChromeFader
 {
     private readonly ScalarKeyFrameAnimation _show;
     private readonly ScalarKeyFrameAnimation _hide;
+    private readonly TimeSpan _showDuration;
+    private readonly TimeSpan _hideDuration;
 
     public ChromeFader(Compositor compositor, TimeSpan showDuration, TimeSpan hideDuration)
     {
         ArgumentNullException.ThrowIfNull(compositor);
+        _showDuration = showDuration;
+        _hideDuration = hideDuration;
         CubicBezierEasingFunction easeOut = compositor.CreateCubicBezierEasingFunction(new Vector2(0.1f, 0.9f), new Vector2(0.2f, 1f));
         _show = Create(compositor, 1f, showDuration, easeOut);
         _hide = Create(compositor, 0f, hideDuration, easeOut);
     }
+
+    /// <summary>How long <see cref="Fade"/> takes right now: zero with Windows animations off.</summary>
+    public double DurationMilliseconds(bool visible) =>
+        Motion.AnimationsEnabled ? (visible ? _showDuration : _hideDuration).TotalMilliseconds : 0;
 
     /// <summary>Fades <paramref name="element"/> in or out from wherever its opacity is now.</summary>
     public void Fade(UIElement element, bool visible)

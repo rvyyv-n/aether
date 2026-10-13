@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Aether.Core.Interop.Angle;
 using Aether.Core.Interop.DirectX;
 using Aether.Core.Interop.Mpv;
@@ -10,26 +11,30 @@ namespace Aether.Core.Interop.Rendering;
 /// render context draws into it. With <paramref name="mpv"/> null it clears through ANGLE instead
 /// (same device sharing and resize sequence, no libmpv needed).
 /// </summary>
-public sealed class AngleMpvRenderBackendFactory(MpvContext? mpv) : IVideoRenderBackendFactory
+public sealed class AngleMpvRenderBackendFactory(MpvContext? mpv, BackdropSource? backdrop = null) : IVideoRenderBackendFactory
 {
     public bool CachesDeviceState => true;
 
     public IVideoRenderBackend Create(D3D11DeviceManager device, DxgiPresenter presenter, nint frameReadyEvent) =>
-        AngleMpvRenderBackend.Create(device, presenter, mpv, frameReadyEvent);
+        AngleMpvRenderBackend.Create(device, presenter, mpv, backdrop, frameReadyEvent);
 }
 
 internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
 {
     private readonly AngleBridge _bridge;
     private readonly MpvRenderContext? _render;
+    private readonly BackdropSource? _backdropSource;
+    private readonly BackdropBlurPass? _backdrop;
 
-    private AngleMpvRenderBackend(AngleBridge bridge, MpvRenderContext? render)
+    private AngleMpvRenderBackend(AngleBridge bridge, MpvRenderContext? render, BackdropSource? backdropSource, BackdropBlurPass? backdrop)
     {
         _bridge = bridge;
         _render = render;
+        _backdropSource = backdropSource;
+        _backdrop = backdrop;
     }
 
-    public static AngleMpvRenderBackend Create(D3D11DeviceManager device, DxgiPresenter presenter, MpvContext? mpv, nint frameReadyEvent)
+    public static AngleMpvRenderBackend Create(D3D11DeviceManager device, DxgiPresenter presenter, MpvContext? mpv, BackdropSource? backdropSource, nint frameReadyEvent)
     {
         // Loads libEGL.dll first, so mpv's own LoadLibrary("libEGL.dll") binds to this module.
         AngleBridge bridge = AngleBridge.Create(device, presenter);
@@ -39,7 +44,9 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
             MpvRenderContext? render = mpv is null
                 ? null
                 : MpvRenderContext.CreateOpenGL(mpv, AngleBridge.GetProcAddressCallback, bridge.GetProcAddressContext, frameReadyEvent);
-            return new AngleMpvRenderBackend(bridge, render);
+            // Only a video frame has a card to blur behind; a null pass leaves the plain tint.
+            BackdropBlurPass? backdrop = render is not null && backdropSource is not null ? BackdropBlurPass.Create(bridge) : null;
+            return new AngleMpvRenderBackend(bridge, render, backdropSource, backdrop);
         }
         catch
         {
@@ -63,6 +70,10 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
         else
         {
             MpvException.ThrowIfError(_render.RenderOpenGL(0, (int)width, (int)height, AngleBridge.RenderFlipY), "mpv_render_context_render");
+            if (_backdrop is not null && _backdropSource!.TryGetFrame(Stopwatch.GetTimestamp(), out BackdropFrame frame))
+            {
+                _backdrop.Draw(frame, width, height);
+            }
         }
         _bridge.Flush();
         return !_bridge.IsContextLost;
@@ -76,6 +87,7 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
         {
             // mpv frees its GL objects through the context, so it must be current (surfaceless is fine).
             _bridge.MakeContextCurrent();
+            _backdrop?.Dispose();
             _render?.Dispose();
         }
         finally

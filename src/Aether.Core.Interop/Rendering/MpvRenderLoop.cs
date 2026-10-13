@@ -11,6 +11,9 @@ public sealed class MpvRenderLoopOptions
 {
     public D3D11DeviceOptions Device { get; init; } = new();
 
+    /// <summary>Keeps the loop redrawing (without new video frames) while its fade runs. Optional.</summary>
+    public BackdropSource? Backdrop { get; init; }
+
     /// <summary>Swap chain template. Width/Height come from <see cref="MpvRenderLoop.SetTargetSize"/>; ClearStateOnResize from the backend.</summary>
     public DxgiPresenterOptions Presenter { get; init; } = new();
 
@@ -282,7 +285,7 @@ public sealed unsafe class MpvRenderLoop : IDisposable
                     {
                         backend.ReportSwap();
                         Interlocked.Increment(ref _framesPresented);
-                        force = false;
+                        force = _options.Backdrop?.NeedsFrame == true;
                     }
 
                     if (presenter.IsDeviceLost)
