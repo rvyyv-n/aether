@@ -34,12 +34,19 @@ public sealed partial class ShortcutsPage : Page
     {
         InitializeComponent();
         var binder = new SettingsPageBinder(this);
-        foreach (ShortcutEntry entry in App.Shortcuts.Entries)
-        {
-            RowParts parts = CreateRow(entry);
-            _rows.Add(parts);
-            ShortcutGroup.Children.Add(parts.Row);
-        }
+        PlaybackHeading.Text = AppStrings.Get("Settings_NavPlayback");
+        NavigationHeading.Text = AppStrings.Get("Settings_Shortcuts_Navigation");
+        WindowHeading.Text = AppStrings.Get("Settings_Shortcuts_Window");
+
+        // Fixed keys (frame steps, Escape) are listed with the ones that can be changed, in the order of 6.7.
+        Add(PlaybackGroup, ShortcutAction.PlayPause, ShortcutAction.SkipBack, ShortcutAction.SkipForward);
+        PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Back1Frame", ","));
+        PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Forward1Frame", "."));
+        Add(PlaybackGroup, ShortcutAction.Mute, ShortcutAction.Loop);
+        Add(NavigationGroup, ShortcutAction.OpenFile, ShortcutAction.OpenUrl, ShortcutAction.SetIn, ShortcutAction.SetOut);
+        Add(WindowGroup, ShortcutAction.FullScreen);
+        WindowGroup.Children.Add(FixedRow("Settings_Shortcuts_LeaveFullScreen", "Esc"));
+        Add(WindowGroup, ShortcutAction.AlwaysOnTop);
 
         ResetAllButton.Content = AppStrings.Get("Settings_Shortcuts_ResetAll");
         ResetAllButton.Click += (_, _) =>
@@ -52,6 +59,29 @@ public sealed partial class ShortcutsPage : Page
         // The recorder has to see Escape and the other keys before the settings view does (Escape closes settings).
         PreviewKeyDown += OnPreviewKeyDown;
         binder.Track(Refresh);
+    }
+
+    private void Add(SettingsGroup group, params ShortcutAction[] actions)
+    {
+        foreach (ShortcutAction action in actions)
+        {
+            RowParts parts = CreateRow(App.Shortcuts.Get(action));
+            _rows.Add(parts);
+            group.Children.Add(parts.Row);
+        }
+    }
+
+    private static SettingsRow FixedRow(string nameKey, string key) => Compact(new SettingsRow
+    {
+        Header = AppStrings.Get(nameKey),
+        Content = new KeycapStrip { Keys = [key] },
+    });
+
+    private static SettingsRow Compact(SettingsRow row)
+    {
+        row.MinHeight = 36;
+        row.Padding = new Thickness(16, 6, 16, 6);
+        return row;
     }
 
     private RowParts CreateRow(ShortcutEntry entry)
@@ -73,7 +103,11 @@ public sealed partial class ShortcutsPage : Page
             Foreground = (Brush)resources["AetherTextSecondaryBrush"],
             Visibility = Visibility.Collapsed,
         };
-        var change = new Button { Style = (Style)resources["AetherOutlinePillButtonStyle"] };
+        // The keycaps are the button: clicking them records new keys, clicking again (or Escape) gives up.
+        var capsAndPrompt = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        capsAndPrompt.Children.Add(keys);
+        capsAndPrompt.Children.Add(prompt);
+        var change = new Button { Style = (Style)resources["AetherKeycapButtonStyle"], Content = capsAndPrompt };
         var useAlternative = new Button { Style = (Style)resources["AetherOutlinePillButtonStyle"], Visibility = Visibility.Collapsed };
         var reset = new Button
         {
@@ -88,16 +122,14 @@ public sealed partial class ShortcutsPage : Page
 
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         content.Children.Add(dot);
-        content.Children.Add(keys);
-        content.Children.Add(prompt);
-        content.Children.Add(change);
         content.Children.Add(useAlternative);
         content.Children.Add(reset);
+        content.Children.Add(change);
 
         var parts = new RowParts
         {
             Action = entry.Action,
-            Row = new SettingsRow { Header = entry.Name, Content = content },
+            Row = Compact(new SettingsRow { Header = entry.Name, Content = content }),
             ConflictDot = dot,
             Keys = keys,
             Prompt = prompt,
@@ -159,7 +191,7 @@ public sealed partial class ShortcutsPage : Page
             parts.Prompt.Visibility = recording || entry.IsUnbound ? Visibility.Visible : Visibility.Collapsed;
             parts.Keys.Visibility = recording ? Visibility.Collapsed : Visibility.Visible;
 
-            parts.Change.Content = AppStrings.Get(recording ? "Common_Cancel" : "Settings_Shortcuts_Change");
+            ToolTipService.SetToolTip(parts.Change, AppStrings.Get(recording ? "Common_Cancel" : "Settings_Shortcuts_Change"));
             parts.Reset.Visibility = entry.IsDefault ? Visibility.Collapsed : Visibility.Visible;
 
             if (entry.Alternative is { } alternative)

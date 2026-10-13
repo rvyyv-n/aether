@@ -42,7 +42,7 @@ It is made for people who review footage, cut clips, and want a player that stay
 - ⏱️ **Frame-Accurate Scrubbing & Stepping:** Bidirectional frame stepping (`,` and `.`), seek coalescing, and smooth timeline scrubbing with sub-millisecond precision.
 - ✂️ **Lossless Sub-Second Trimming:** Instant In/Out mark trimming (`I` / `O`) with sub-300ms FFmpeg stream-copy (`-c copy`) export, preserving native stream quality without re-encoding.
 - 🪟 **Minimalist Windows 11 Shell:** Borderless window chrome, native Windows 11 Mica Alt backdrop blending behind letterboxing, aspect-ratio snapping, and auto-hiding OSD and cursor on idle.
-- 📂 **Folder Playlists & Resume:** Opening a video queues the rest of its folder and plays the next one automatically. Aether remembers where you left the window, and opening a file while Aether is running reuses the open window.
+- 📁 **Folder Playlists & Resume:** Opening a video queues the rest of its folder and plays the next one automatically. Aether remembers where you left the window, and opening a file while Aether is running reuses the open window.
 - ⚙️ **Comprehensive Settings & Keybinds:** Nine dedicated preference pages (Video, Audio, Subtitles, Playback, Shortcuts, Streaming, Advanced, General, About) with live shortcut conflict detection.
 - 📡 **Instant LAN Mobile Streaming:** Embedded in-memory Kestrel HTTP 206 partial-content server with instant QR-code mobile pairing—scan to continue playback on any phone or tablet on your network.
 - 🏎️ **Native AOT & Zero-Allocation Hot Path:** Built on C# 13 and .NET 10/9 with source-generated `[LibraryImport]` P/Invoke bindings and zero managed allocations on the render loop.
@@ -112,6 +112,25 @@ aether/
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) and .NET 9 SDK
 - [Windows App SDK 1.6+](https://learn.microsoft.com/windows/apps/windows-app-sdk/)
 
+### Fast Developer Workflow
+
+To build incrementally and launch the app immediately without packaging an MSIX bundle:
+
+```powershell
+# Fast build (~2-3s) and launch desktop app
+.\run.ps1
+
+# Launch with a specific video file
+.\run.ps1 "path\to\video.mp4"
+
+# Launch instantly without rebuilding
+.\run.ps1 -NoBuild
+
+# Locally host a video via Kestrel HTTP 206 for browser / mobile testing
+.\run.ps1 -Host "path\to\video.mp4"
+```
+*(Registers the loose layout in-place with Windows Developer Mode on first run; no installer needed).*
+
 ### Build & Test Gate
 
 ```powershell
@@ -125,9 +144,9 @@ dotnet build AetherPlayer.sln -c Debug -p:Platform=x64 --no-restore -warnaserror
 dotnet test AetherPlayer.sln -c Debug -p:Platform=x64 --no-build
 ```
 
-### Running the App
-`Aether.App` is an MSIX-packaged application. Run with:
+### Running the App via dotnet CLI
+`Aether.App` can also be launched with:
 ```powershell
 dotnet run --project src/Aether.App -p:Platform=x64
 ```
-*(Requires Windows Developer Mode enabled under **Settings → System → For developers**, or launch directly from Visual Studio via F5).*
+*(Requires Windows Developer Mode enabled under **Settings → System → For developers**).*

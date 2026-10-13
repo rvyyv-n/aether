@@ -6,22 +6,22 @@
     xmlns:settings="using:Aether_App.Settings">
     <StackPanel Spacing="16">
         <settings:SettingsGroup>
-            <settings:SettingsRow x:Name="PreciseSeekingRow">
+            <settings:SettingsRow x:Name="PreciseSeekingRow" Glyph="&#xE72A;">
                 <ToggleSwitch x:Name="PreciseSeekingToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
-            <settings:SettingsRow x:Name="ResumePlaybackRow">
+            <settings:SettingsRow x:Name="ResumePlaybackRow" Glyph="&#xE777;">
                 <ToggleSwitch x:Name="ResumePlaybackToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
-            <settings:SettingsRow x:Name="LoopByDefaultRow">
+            <settings:SettingsRow x:Name="LoopByDefaultRow" Glyph="&#xE8EE;">
                 <ToggleSwitch x:Name="LoopByDefaultToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
-            <settings:SettingsRow x:Name="PlayNextInFolderRow">
+            <settings:SettingsRow x:Name="PlayNextInFolderRow" Glyph="&#xE893;">
                 <ToggleSwitch x:Name="PlayNextInFolderToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
-            <settings:SettingsRow x:Name="RememberWindowSizeRow">
+            <settings:SettingsRow x:Name="RememberWindowSizeRow" Glyph="&#xE740;">
                 <ToggleSwitch x:Name="RememberWindowSizeToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
-            <settings:SettingsRow x:Name="AlwaysOnTopRow">
+            <settings:SettingsRow x:Name="AlwaysOnTopRow" Glyph="&#xE718;">
                 <ToggleSwitch x:Name="AlwaysOnTopToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
         </settings:SettingsGroup>

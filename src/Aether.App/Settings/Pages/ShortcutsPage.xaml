@@ -4,8 +4,13 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:settings="using:Aether_App.Settings">
-    <StackPanel Spacing="16">
-        <settings:SettingsGroup x:Name="ShortcutGroup" />
-        <Button x:Name="ResetAllButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
+    <StackPanel Spacing="8">
+        <TextBlock x:Name="PlaybackHeading" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+        <settings:SettingsGroup x:Name="PlaybackGroup" Divided="True" />
+        <TextBlock x:Name="NavigationHeading" Margin="0,8,0,0" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+        <settings:SettingsGroup x:Name="NavigationGroup" Divided="True" />
+        <TextBlock x:Name="WindowHeading" Margin="0,8,0,0" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+        <settings:SettingsGroup x:Name="WindowGroup" Divided="True" />
+        <Button x:Name="ResetAllButton" Margin="0,8,0,0" Style="{StaticResource AetherOutlinePillButtonStyle}" />
     </StackPanel>
 </Page>

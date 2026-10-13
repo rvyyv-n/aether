@@ -10,6 +10,6 @@ public sealed partial class GeneralPage : Page
         InitializeComponent();
         var binder = new SettingsPageBinder(this);
         binder.Toggle(BatterySaverRow, BatterySaverToggle, SettingKeys.BatterySaver, "Settings_BatterySaver_Title", "Settings_BatterySaver_Description");
-        binder.Toggle(OpenInRunningWindowRow, OpenInRunningWindowToggle, SettingKeys.OpenInRunningWindow, "Settings_OpenInRunningWindow_Title", "Settings_OpenInRunningWindow_Description");
+        binder.Toggle(OpenInRunningWindowRow, OpenInRunningWindowToggle, SettingKeys.OpenInRunningWindow, "Settings_SingleInstance_Title", "Settings_SingleInstance_Description");
     }
 }

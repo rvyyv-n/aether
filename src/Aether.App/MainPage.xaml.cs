@@ -73,6 +73,8 @@ public sealed partial class MainPage : Page
     private readonly HoverFlyout _volumeHover = new();
     private DispatcherQueueTimer? _volumeHoverTimer;
     private bool _volumeOpeningPinned;
+    private bool _volumeFlyoutShowing;
+    private string? _volumeTip;
 
     // Links cannot play until streaming lands, so Play in the dialog reports that instead (4.D5).
     private readonly OpenUrlFlow _openUrl = new(TimeProvider.System, streamingAvailable: false);
@@ -484,7 +486,11 @@ public sealed partial class MainPage : Page
         }
         bool muted = TransportState.IsMuted(volume);
         VolumeButton.Content = muted ? MuteGlyph : VolumeGlyph;
-        ToolTipService.SetToolTip(VolumeButton, Tip(muted ? "Transport_Unmute" : "Transport_Mute", ShortcutAction.Mute));
+        _volumeTip = Tip(muted ? "Transport_Unmute" : "Transport_Mute", ShortcutAction.Mute);
+        if (!_volumeFlyoutShowing)
+        {
+            ToolTipService.SetToolTip(VolumeButton, _volumeTip);
+        }
     }
 
     private void OnMuteAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -612,6 +618,9 @@ public sealed partial class MainPage : Page
     private void ShowVolumeFlyout(bool pinned)
     {
         _volumeOpeningPinned = pinned;
+        // The button's tooltip opens above it, right across the slider, so it stays off while the flyout is up.
+        _volumeFlyoutShowing = true;
+        ToolTipService.SetToolTip(VolumeButton, null);
         // Transient: a hover-opened flyout must not take focus from the page's playback keys.
         VolumeFlyout.ShowAt(VolumeButton, new FlyoutShowOptions
         {
@@ -636,6 +645,8 @@ public sealed partial class MainPage : Page
     {
         _volumeHover.Closed();
         ArmVolumeHover();
+        _volumeFlyoutShowing = false;
+        ToolTipService.SetToolTip(VolumeButton, _volumeTip);
         _chrome.SetHold(ChromeHolds.Flyout, false);
         ApplyChrome();
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
@@ -774,6 +785,7 @@ public sealed partial class MainPage : Page
         }
         SettingsHost.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
         SettingsBackButton.Visibility = SettingsHost.Visibility;
+        SettingsButton.Visibility = shown ? Visibility.Collapsed : Visibility.Visible;
         _chrome.SetHold(ChromeHolds.Settings, shown);
         Render();
         if (!shown)
@@ -1236,6 +1248,9 @@ public sealed partial class MainPage : Page
         TitleBadgeText.Text = HasVideo || vm?.Status == PlaybackStatus.Loading
             ? Path.GetFileName(_currentPath) ?? AppStrings.Get("App_Badge")
             : AppStrings.Get("App_Badge");
+        // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
+        TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
+        TitleBadgeText.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
 
         (string glyph, string label) = TransportState.PlayButton(vm?.Status ?? PlaybackStatus.Idle) switch
         {

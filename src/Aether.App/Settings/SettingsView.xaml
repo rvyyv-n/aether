@@ -7,8 +7,7 @@
 
     <UserControl.Resources>
         <!--
-            Section list item (6.1): 36 tall, radius 4, 16 px icon. Selected = FillEmphasisRest plus a short
-            white bar on the left edge; no accent colour anywhere.
+            Section list item (6.1): 36 tall, radius 4, 16 px icon. Selected = FillEmphasisRest; no accent colour anywhere.
         -->
         <Style x:Key="SectionItemStyle" TargetType="ListViewItem">
             <Setter Property="Height" Value="{StaticResource AetherSizeNavItem}" />
@@ -40,32 +39,20 @@
                                     <VisualState x:Name="Selected">
                                         <VisualState.Setters>
                                             <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
-                                            <Setter Target="SelectionBar.Visibility" Value="Visible" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="PointerOverSelected">
                                         <VisualState.Setters>
                                             <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisHoverBrush}" />
-                                            <Setter Target="SelectionBar.Visibility" Value="Visible" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="PressedSelected">
                                         <VisualState.Setters>
                                             <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisPressedBrush}" />
-                                            <Setter Target="SelectionBar.Visibility" Value="Visible" />
                                         </VisualState.Setters>
                                     </VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
-                            <Rectangle
-                                x:Name="SelectionBar"
-                                Width="3"
-                                Height="16"
-                                HorizontalAlignment="Left"
-                                Fill="{StaticResource AetherTextPrimaryBrush}"
-                                RadiusX="1.5"
-                                RadiusY="1.5"
-                                Visibility="Collapsed" />
                             <ContentPresenter
                                 Padding="{TemplateBinding Padding}"
                                 HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
@@ -107,21 +94,20 @@
                     <VisualState.Setters>
                         <Setter Target="SectionList.Visibility" Value="Visible" />
                         <Setter Target="SectionPicker.Visibility" Value="Collapsed" />
-                        <Setter Target="ContentPane.(Grid.Column)" Value="1" />
-                        <Setter Target="ContentPane.(Grid.ColumnSpan)" Value="1" />
+                        <Setter Target="NavColumn.Width" Value="{StaticResource AetherSizeSettingsNav}" />
                         <Setter Target="ContentPanel.Padding" Value="24,8,24,24" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition x:Name="NavColumn" Width="0" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <ListView
             x:Name="SectionList"
-            Width="{StaticResource AetherSizeSettingsNav}"
+            HorizontalAlignment="Stretch"
             Padding="8,8,8,8"
             IsItemClickEnabled="False"
             ItemContainerStyle="{StaticResource SectionItemStyle}"
@@ -132,8 +118,7 @@
 
         <Grid
             x:Name="ContentPane"
-            Grid.Column="0"
-            Grid.ColumnSpan="2">
+            Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -148,19 +133,25 @@
             <ScrollViewer
                 x:Name="ContentScroller"
                 Grid.Row="1"
+                HorizontalScrollBarVisibility="Disabled"
                 HorizontalScrollMode="Disabled"
                 VerticalScrollBarVisibility="Auto">
-                <StackPanel
-                    x:Name="ContentPanel"
-                    MaxWidth="{StaticResource AetherSizeSettingsContentMax}"
-                    Padding="16,8,16,16"
-                    Spacing="16">
-                    <TextBlock
-                        x:Name="PageTitle"
-                        AutomationProperties.HeadingLevel="Level1"
-                        Style="{StaticResource AetherSubtitleTextStyle}" />
-                    <Frame x:Name="ContentFrame" IsNavigationStackEnabled="False" />
-                </StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!--  One capped column: the cards fill the pane up to the cap and stay left-aligned beyond it.  -->
+                        <ColumnDefinition Width="*" MaxWidth="{StaticResource AetherSizeSettingsContentMax}" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel
+                        x:Name="ContentPanel"
+                        Padding="16,8,16,16"
+                        Spacing="16">
+                        <TextBlock
+                            x:Name="PageTitle"
+                            AutomationProperties.HeadingLevel="Level1"
+                            Style="{StaticResource AetherSubtitleTextStyle}" />
+                        <Frame x:Name="ContentFrame" IsNavigationStackEnabled="False" />
+                    </StackPanel>
+                </Grid>
             </ScrollViewer>
         </Grid>
     </Grid>

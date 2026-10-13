@@ -4,6 +4,8 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Documents;
+using Microsoft.Windows.AppLifecycle;
 
 namespace Aether_App.Settings;
 
@@ -81,14 +83,20 @@ internal sealed class SettingsPageBinder
     {
         Describe(row, titleKey, descriptionKey);
         AutomationProperties.SetName(toggle, row.Header);
+        void ShowState() => row.StateText = AppStrings.Get(toggle.IsOn ? "Common_On" : "Common_Off");
         toggle.Toggled += (_, _) =>
         {
+            ShowState();
             if (!_updating)
             {
                 Write(key, toggle.IsOn);
             }
         };
-        Track(() => toggle.IsOn = App.Settings.Get(key) is true);
+        Track(() =>
+        {
+            toggle.IsOn = App.Settings.Get(key) is true;
+            ShowState();
+        });
     }
 
     /// <summary>
@@ -132,21 +140,11 @@ internal sealed class SettingsPageBinder
         });
     }
 
-    /// <summary>A -100..100 slider with its value beside it and a reset button that shows only when it differs from the default.</summary>
-    public void Slider(
-        SettingsRow row,
-        Slider slider,
-        TextBlock valueText,
-        Button reset,
-        string key,
-        string titleKey,
-        string? descriptionKey = null)
+    /// <summary>A -100..100 slider with its signed value beside it (+6, 0, -12).</summary>
+    public void Slider(SettingsRow row, Slider slider, TextBlock valueText, string key, string titleKey, string? descriptionKey = null)
     {
         Describe(row, titleKey, descriptionKey);
         AutomationProperties.SetName(slider, row.Header);
-        string resetLabel = AppStrings.Get("Settings_ResetToDefault");
-        AutomationProperties.SetName(reset, resetLabel);
-        ToolTipService.SetToolTip(reset, resetLabel);
         slider.ValueChanged += (_, e) =>
         {
             if (!_updating)
@@ -154,6 +152,40 @@ internal sealed class SettingsPageBinder
                 Write(key, (int)Math.Round(e.NewValue));
             }
         };
+        Track(() =>
+        {
+            int value = App.Settings.Get(key) is int stored ? stored : 0;
+            bool changed = !App.Settings.IsDefault(key);
+            slider.Value = value;
+            valueText.Text = value > 0 ? "+" + value.ToString(CultureInfo.CurrentCulture) : value.ToString(CultureInfo.CurrentCulture);
+            AutomationProperties.SetHelpText(slider, changed ? AppStrings.Get("Settings_ChangedFromDefault") : "");
+        });
+    }
+
+    /// <summary>A button that puts every one of the settings back to its default; it is off while they all are.</summary>
+    public void ResetButton(Button reset, string label, params string[] keys)
+    {
+        AutomationProperties.SetName(reset, label);
+        reset.Click += (_, _) =>
+        {
+            foreach (string key in keys)
+            {
+                App.Settings.Reset(key);
+            }
+            SettingsSaver.Save();
+        };
+        Track(() => reset.IsEnabled = !keys.All(App.Settings.IsDefault));
+    }
+
+    /// <summary>
+    /// While the setting differs from its default the row says so in place of its description, and a Reset button
+    /// beside the control puts it back.
+    /// </summary>
+    public void ChangedHint(SettingsRow row, Button reset, string key)
+    {
+        string? description = row.Description;
+        reset.Content = AppStrings.Get("Settings_Reset");
+        AutomationProperties.SetName(reset, $"{AppStrings.Get("Settings_ResetToDefault")}: {row.Header}");
         reset.Click += (_, _) =>
         {
             App.Settings.Reset(key);
@@ -161,57 +193,43 @@ internal sealed class SettingsPageBinder
         };
         Track(() =>
         {
-            int value = App.Settings.Get(key) is int stored ? stored : 0;
             bool changed = !App.Settings.IsDefault(key);
-            slider.Value = value;
-            valueText.Text = value.ToString(CultureInfo.CurrentCulture);
+            row.Description = changed ? AppStrings.Get("Settings_ChangedFromDefault") : description;
             reset.Visibility = changed ? Visibility.Visible : Visibility.Collapsed;
-            AutomationProperties.SetHelpText(slider, changed ? AppStrings.Get("Settings_ChangedFromDefault") : "");
         });
     }
 
-    /// <summary>A one-line text setting, written when the box loses focus or Enter is pressed. A blank box restores the default.</summary>
-    public void Text(SettingsRow row, TextBox box, string key, string titleKey, string? descriptionKey = null)
-    {
-        Describe(row, titleKey, descriptionKey);
-        AutomationProperties.SetName(box, row.Header);
-        void Commit()
-        {
-            string text = box.Text.Trim();
-            if (text.Length == 0)
-            {
-                App.Settings.Reset(key);
-                SettingsSaver.Save();
-            }
-            else
-            {
-                Write(key, text);
-            }
-            Run(() => box.Text = App.Settings.Get(key) as string ?? "");
-        }
-        box.LostFocus += (_, _) => Commit();
-        box.KeyDown += (_, e) =>
-        {
-            if (e.Key == Windows.System.VirtualKey.Enter)
-            {
-                e.Handled = true;
-                Commit();
-            }
-        };
-        Track(() =>
-        {
-            if (!box.FocusState.HasFlag(FocusState.Keyboard) && !box.FocusState.HasFlag(FocusState.Pointer))
-            {
-                box.Text = App.Settings.Get(key) as string ?? "";
-            }
-        });
-    }
-
-    /// <summary>Shows "Restart Aether to apply" while any of the settings differs from the value the app started with.</summary>
+    /// <summary>
+    /// Shows "Applies on restart · Restart engine" while any of the settings differs from the value the app started
+    /// with. The link restarts Aether, which starts the engine again with the new values.
+    /// </summary>
     public void RestartNote(TextBlock note, params string[] keys)
     {
-        note.Text = AppStrings.Get("Settings_RestartAetherToApply");
+        var link = new Hyperlink
+        {
+            UnderlineStyle = UnderlineStyle.Single,
+            Foreground = SettingsGroup.Resource<Microsoft.UI.Xaml.Media.Brush>("AetherTextPrimaryBrush"),
+        };
+        link.Inlines.Add(new Run { Text = AppStrings.Get("Settings_RestartEngine") });
+        link.Click += (_, _) => RestartApp();
+        note.Inlines.Clear();
+        note.Inlines.Add(new Run { Text = AppStrings.Get("Settings_AppliesOnRestart") + " · " });
+        note.Inlines.Add(link);
         Track(() => note.Visibility = keys.Any(App.Settings.IsRestartPending) ? Visibility.Visible : Visibility.Collapsed);
+    }
+
+    private static void RestartApp()
+    {
+        // The background saver would be cut off by the restart, so the change is written here first.
+        try
+        {
+            App.Settings.Save();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return;
+        }
+        AppInstance.Restart("");
     }
 
     private static void Write<T>(string key, T value)

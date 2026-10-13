@@ -32,6 +32,16 @@ public static class MpvSettingsMap
         return options;
     }
 
+    /// <summary>
+    /// Whether to start the core with <c>video-latency-hacks</c>. The hacks stop mpv decoding a frame ahead; a GPU
+    /// decoder keeps up regardless, but a software decoder then delivers every slow frame late and playback stutters.
+    /// </summary>
+    public static bool VideoLatencyHacks(AetherSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return settings.HardwareDecoding != "no";
+    }
+
     /// <summary>The valid <c>key=value</c> lines of <paramref name="text"/>, in order, without a leading <c>--</c>.</summary>
     public static IReadOnlyList<KeyValuePair<string, string>> CustomOptions(string? text)
     {

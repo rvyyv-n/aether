@@ -7,6 +7,7 @@ namespace Aether_App.Settings;
 internal static class ExternalTools
 {
     private static readonly TimeSpan VersionTimeout = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan UpdateTimeout = TimeSpan.FromMinutes(2);
 
     /// <summary>The yt-dlp that streaming would use: next to the app, else the first one on PATH. Null when there is none.</summary>
     public static string? FindYtDlp()
@@ -67,6 +68,47 @@ internal static class ExternalTools
         catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Runs <c>yt-dlp -U</c>, which replaces the program with the latest release. False when it fails, takes over
+    /// two minutes, or was installed by a package manager that has to update it instead.
+    /// </summary>
+    public static async Task<bool> UpdateYtDlpAsync(string path)
+    {
+        try
+        {
+            var start = new ProcessStartInfo(path, "-U")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            using Process? process = Process.Start(start);
+            if (process is null)
+            {
+                return false;
+            }
+            using var timeout = new CancellationTokenSource(UpdateTimeout);
+            try
+            {
+                // Both streams are drained so a chatty update cannot fill a pipe and stall.
+                Task<string> output = process.StandardOutput.ReadToEndAsync(timeout.Token);
+                Task<string> error = process.StandardError.ReadToEndAsync(timeout.Token);
+                await Task.WhenAll(output, error, process.WaitForExitAsync(timeout.Token)).ConfigureAwait(false);
+                return process.ExitCode == 0;
+            }
+            catch (OperationCanceledException)
+            {
+                process.Kill(entireProcessTree: true);
+                return false;
+            }
+        }
+        catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
+        {
+            return false;
         }
     }
 

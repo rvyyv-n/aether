@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Aether.Core.Playback.Settings;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
@@ -12,6 +13,8 @@ public sealed partial class AboutPage : Page
     private static readonly Uri Issues = new("https://github.com/rvyyv-n/aether/issues");
 
     private readonly string _appVersion;
+    private readonly string _decoder;
+    private readonly string _renderer = AppStrings.Get("Settings_About_RendererValue");
     private string _mpvVersion = AppStrings.Get("Settings_About_Unknown");
     private string _ytDlpVersion = AppStrings.Get("Settings_About_Unknown");
 
@@ -21,33 +24,45 @@ public sealed partial class AboutPage : Page
         Version? version = typeof(App).Assembly.GetName().Version;
         _appVersion = version is null ? AppStrings.Get("Settings_About_Unknown") : $"{version.Major}.{version.Minor}.{version.Build}";
 
-        AppName.Text = AppStrings.Get("App_Name");
-        AppBadge.Text = AppStrings.Get("App_Badge");
-        AppVersion.Text = AppStrings.Format("Settings_About_Version", _appVersion);
-        VersionsHeading.Text = AppStrings.Get("Settings_Group_Versions");
-        SupportHeading.Text = AppStrings.Get("Settings_Group_Support");
+        AppRow.Header = AppStrings.Get("App_Name");
+        AppRow.Description = $"{AppStrings.Get("App_Badge")} {_appVersion}";
 
-        SettingsPageBinder.Describe(MpvRow, "Settings_About_MpvVersion", null);
-        SettingsPageBinder.Describe(YtDlpRow, "Settings_About_YtDlpVersion", null);
-        MpvVersionText.Text = _mpvVersion;
-        YtDlpVersionText.Text = _ytDlpVersion;
-        AutomationProperties.SetName(MpvVersionText, $"{MpvRow.Header}: {_mpvVersion}");
-        AutomationProperties.SetName(YtDlpVersionText, $"{YtDlpRow.Header}: {_ytDlpVersion}");
+        // The engine is not asked what it settled on; the decoder shown is the one chosen in Video settings.
+        string hwdec = App.Settings.Get(SettingKeys.HardwareDecoding) as string ?? "";
+        _decoder = HardwareDecodingOptions.All.FirstOrDefault(o => o.Value == hwdec) is { } option
+            ? AppStrings.Get(option.ResourceKey)
+            : hwdec;
 
-        SettingsPageBinder.Describe(DiagnosticsRow, "Settings_About_CopyDiagnostics", null);
-        CopyDiagnosticsButton.Content = AppStrings.Get("Settings_About_CopyDiagnostics");
+        EngineRow.Header = AppStrings.Get("Settings_About_Engine");
+        ShowValue(DecoderLabel, DecoderText, "Settings_About_Decoder", _decoder);
+        ShowValue(RendererLabel, RendererText, "Settings_About_Renderer", _renderer);
+        ShowValue(MpvLabel, MpvVersionText, "Settings_About_MpvVersion", _mpvVersion);
+        ShowValue(YtDlpLabel, YtDlpVersionText, "Settings_About_YtDlpVersion", _ytDlpVersion);
+
+        CopyDiagnosticsText.Text = AppStrings.Get("Settings_About_CopyDiagnostics");
+        AutomationProperties.SetName(CopyDiagnosticsButton, AppStrings.Get("Settings_About_CopyDiagnostics"));
         CopyDiagnosticsButton.Click += async (_, _) => await CopyDiagnosticsAsync();
 
-        SettingsPageBinder.Describe(LicencesRow, "Settings_About_Licences", "Settings_About_LicencesDescription");
-        LicencesButton.Content = AppStrings.Get("Settings_About_Licences");
+        LicencesTitle.Text = AppStrings.Get("Settings_About_Licences");
+        LicencesDescription.Text = AppStrings.Get("Settings_About_LicencesDescription");
         AutomationProperties.SetName(LicencesButton, AppStrings.Get("Settings_About_Licences"));
+        AutomationProperties.SetHelpText(LicencesButton, LicencesDescription.Text);
         LicencesButton.Click += async (_, _) => await Launcher.LaunchUriAsync(Repository);
 
-        SettingsPageBinder.Describe(ReportIssueRow, "Settings_About_ReportIssue", null);
-        ReportIssueButton.Content = AppStrings.Get("Settings_About_ReportIssue");
+        ReportIssueTitle.Text = AppStrings.Get("Settings_About_ReportIssue");
+        ReportIssueDescription.Text = AppStrings.Get("Settings_About_ReportIssueDescription");
+        AutomationProperties.SetName(ReportIssueButton, ReportIssueTitle.Text);
+        AutomationProperties.SetHelpText(ReportIssueButton, ReportIssueDescription.Text);
         ReportIssueButton.Click += async (_, _) => await Launcher.LaunchUriAsync(Issues);
 
         _ = LoadVersionsAsync();
+    }
+
+    private static void ShowValue(TextBlock label, TextBlock value, string labelKey, string text)
+    {
+        label.Text = AppStrings.Get(labelKey);
+        value.Text = text;
+        AutomationProperties.SetName(value, $"{label.Text}: {text}");
     }
 
     private async Task LoadVersionsAsync()
@@ -56,15 +71,13 @@ public sealed partial class AboutPage : Page
         if (mpv is not null)
         {
             _mpvVersion = mpv;
-            MpvVersionText.Text = mpv;
-            AutomationProperties.SetName(MpvVersionText, $"{MpvRow.Header}: {mpv}");
+            ShowValue(MpvLabel, MpvVersionText, "Settings_About_MpvVersion", mpv);
         }
         string? ytDlp = await Task.Run(async () => ExternalTools.FindYtDlp() is { } path ? await ExternalTools.YtDlpVersionAsync(path) : null);
         if (ytDlp is not null)
         {
             _ytDlpVersion = ytDlp;
-            YtDlpVersionText.Text = ytDlp;
-            AutomationProperties.SetName(YtDlpVersionText, $"{YtDlpRow.Header}: {ytDlp}");
+            ShowValue(YtDlpLabel, YtDlpVersionText, "Settings_About_YtDlpVersion", ytDlp);
         }
     }
 
@@ -72,6 +85,8 @@ public sealed partial class AboutPage : Page
     {
         string text = string.Join(Environment.NewLine,
             $"{AppStrings.Get("App_Name")} {_appVersion}",
+            $"{AppStrings.Get("Settings_About_Decoder")}: {_decoder}",
+            $"{AppStrings.Get("Settings_About_Renderer")}: {_renderer}",
             $"{AppStrings.Get("Settings_About_MpvVersion")}: {_mpvVersion}",
             $"{AppStrings.Get("Settings_About_YtDlpVersion")}: {_ytDlpVersion}",
             $"Windows: {RuntimeInformation.OSDescription}",
@@ -81,8 +96,8 @@ public sealed partial class AboutPage : Page
         Clipboard.SetContent(package);
 
         string label = AppStrings.Get("Settings_About_CopyDiagnostics");
-        CopyDiagnosticsButton.Content = AppStrings.Get("Settings_About_Copied");
+        CopyDiagnosticsText.Text = AppStrings.Get("Settings_About_Copied");
         await Task.Delay(TimeSpan.FromSeconds(2));
-        CopyDiagnosticsButton.Content = label;
+        CopyDiagnosticsText.Text = label;
     }
 }

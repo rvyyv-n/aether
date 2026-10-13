@@ -693,4 +693,9 @@
         x:Key="AetherSelectedPillButtonStyle"
         BasedOn="{StaticResource AetherEmphasisPillButtonStyle}"
         TargetType="Button" />
+
+    <!--  Tooltips never take pointer hits, so one sitting over a flyout cannot block its controls.  -->
+    <Style TargetType="ToolTip">
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
 </ResourceDictionary>

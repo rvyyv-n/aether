@@ -905,11 +905,14 @@
   <data name="Settings_About_LicencesDescription" xml:space="preserve">
     <value>libmpv, FFmpeg, yt-dlp, ANGLE and fonts</value>
   </data>
-  <data name="Settings_About_Footer" xml:space="preserve">
-    <value>Aether is open source · github.com/rvyyv-n/aether · Report an issue</value>
-  </data>
   <data name="Settings_About_ReportIssue" xml:space="preserve">
     <value>Report an issue</value>
+  </data>
+  <data name="Settings_About_ReportIssueDescription" xml:space="preserve">
+    <value>Opens the issue tracker on GitHub</value>
+  </data>
+  <data name="Settings_About_Footer" xml:space="preserve">
+    <value>Aether is open source · github.com/rvyyv-n/aether · Report an issue</value>
   </data>
 
   <!-- Settings: Page Titles -->
@@ -942,110 +945,17 @@
   </data>
 
   <!-- Settings: Additional Setting Titles and Descriptions -->
-  <data name="Settings_OpenInRunningWindow_Title" xml:space="preserve">
-    <value>Open files in running window</value>
-  </data>
-  <data name="Settings_OpenInRunningWindow_Description" xml:space="preserve">
-    <value>Reuse the existing window instead of creating a new one</value>
-  </data>
-  <data name="Settings_ResumePlayback_Title" xml:space="preserve">
-    <value>Resume playback</value>
-  </data>
-  <data name="Settings_ResumePlayback_Description" xml:space="preserve">
-    <value>Pick up where you left off for played files</value>
-  </data>
-  <data name="Settings_LoopByDefault_Description" xml:space="preserve">
-    <value>Loop media continuously when playing</value>
-  </data>
-  <data name="Settings_PlayNextInFolder_Title" xml:space="preserve">
-    <value>Play next in folder</value>
-  </data>
-  <data name="Settings_PlayNextInFolder_Description" xml:space="preserve">
-    <value>Automatically play the next file in the folder</value>
-  </data>
-  <data name="Settings_RememberWindowSize_Description" xml:space="preserve">
-    <value>Restore window size and position on launch</value>
-  </data>
-  <data name="Settings_QualityPreset_Description" xml:space="preserve">
-    <value>Default video rendering quality preset</value>
-  </data>
   <data name="Settings_QualityPreset_High" xml:space="preserve">
     <value>High quality</value>
-  </data>
-  <data name="Settings_HardwareDecoding_Description" xml:space="preserve">
-    <value>Hardware video decoding using your graphics card</value>
-  </data>
-  <data name="Settings_Upscaling_Description" xml:space="preserve">
-    <value>Scaling filter when enlarging video</value>
-  </data>
-  <data name="Settings_Downscaling_Description" xml:space="preserve">
-    <value>Scaling filter when shrinking video</value>
-  </data>
-  <data name="Settings_Debanding_Description" xml:space="preserve">
-    <value>Smooth color gradients and reduce banding</value>
-  </data>
-  <data name="Settings_HdrToneMapping_Description" xml:space="preserve">
-    <value>Tone mapping algorithm for HDR on SDR displays</value>
-  </data>
-  <data name="Settings_Brightness_Description" xml:space="preserve">
-    <value>Adjust video brightness</value>
-  </data>
-  <data name="Settings_Contrast_Description" xml:space="preserve">
-    <value>Adjust video contrast</value>
-  </data>
-  <data name="Settings_Gamma_Description" xml:space="preserve">
-    <value>Adjust video gamma</value>
-  </data>
-  <data name="Settings_Saturation_Description" xml:space="preserve">
-    <value>Adjust colour saturation</value>
   </data>
   <data name="Settings_AudioOutputDevice_Title" xml:space="preserve">
     <value>Audio output device</value>
   </data>
-  <data name="Settings_AudioOutputDevice_Description" xml:space="preserve">
-    <value>Select audio output device</value>
-  </data>
-  <data name="Settings_ShowSubtitles_Title" xml:space="preserve">
-    <value>Show subtitles by default</value>
-  </data>
-  <data name="Settings_ShowSubtitles_Description" xml:space="preserve">
-    <value>Display subtitles automatically when present</value>
-  </data>
-  <data name="Settings_PreferredAudioLanguage_Title" xml:space="preserve">
-    <value>Preferred audio language</value>
-  </data>
-  <data name="Settings_PreferredAudioLanguage_Description" xml:space="preserve">
-    <value>Language code for audio track preference (e.g. en)</value>
-  </data>
-  <data name="Settings_PreferredSubtitleLanguage_Title" xml:space="preserve">
-    <value>Preferred subtitle language</value>
-  </data>
-  <data name="Settings_PreferredSubtitleLanguage_Description" xml:space="preserve">
-    <value>Language code for subtitle track preference (e.g. en)</value>
-  </data>
   <data name="Settings_SubtitleFont_Title" xml:space="preserve">
     <value>Subtitle font</value>
   </data>
-  <data name="Settings_SubtitleFont_Description" xml:space="preserve">
-    <value>Font used for subtitle rendering</value>
-  </data>
   <data name="Settings_SubtitleSize_Title" xml:space="preserve">
     <value>Subtitle size</value>
-  </data>
-  <data name="Settings_SubtitleSize_Description" xml:space="preserve">
-    <value>Relative text size of subtitles</value>
-  </data>
-  <data name="Settings_PreferGpuDecodableFormats_Title" xml:space="preserve">
-    <value>Prefer formats GPU can decode</value>
-  </data>
-  <data name="Settings_PreferGpuDecodableFormats_Description" xml:space="preserve">
-    <value>Choose stream formats compatible with GPU hardware decoding</value>
-  </data>
-  <data name="Settings_YtDlpAutoUpdate_Title" xml:space="preserve">
-    <value>Update yt-dlp automatically</value>
-  </data>
-  <data name="Settings_YtDlpAutoUpdate_Description" xml:space="preserve">
-    <value>Check for yt-dlp updates once a day</value>
   </data>
   <data name="Settings_CustomMpvOptions_Title" xml:space="preserve">
     <value>Custom mpv options</value>
@@ -1140,9 +1050,6 @@
   </data>
 
   <!-- Settings: Notices and Actions -->
-  <data name="Settings_RestartAetherToApply" xml:space="preserve">
-    <value>Restart Aether to apply</value>
-  </data>
   <data name="Settings_ResetToDefault" xml:space="preserve">
     <value>Reset to default</value>
   </data>
@@ -1213,27 +1120,6 @@
   <data name="Clips_Yesterday" xml:space="preserve">
     <value>Yesterday</value>
   </data>
-  <data name="Settings_Group_Quality" xml:space="preserve">
-    <value>Quality</value>
-  </data>
-  <data name="Settings_Group_Defaults" xml:space="preserve">
-    <value>Defaults</value>
-  </data>
-  <data name="Settings_Group_Engine" xml:space="preserve">
-    <value>Engine</value>
-  </data>
-  <data name="Settings_Group_Reset" xml:space="preserve">
-    <value>Reset</value>
-  </data>
-  <data name="Settings_Group_Versions" xml:space="preserve">
-    <value>Versions</value>
-  </data>
-  <data name="Settings_Group_Support" xml:space="preserve">
-    <value>Support</value>
-  </data>
-  <data name="Settings_Group_Streams" xml:space="preserve">
-    <value>Streams</value>
-  </data>
   <data name="Settings_Language_NoPreference" xml:space="preserve">
     <value>No preference</value>
   </data>
@@ -1266,5 +1152,17 @@
   </data>
   <data name="EmptyState_SubtitleFilesOnlyUnbound" xml:space="preserve">
     <value>Drop a file to play it</value>
+  </data>
+  <data name="Settings_AppliesOnRestart" xml:space="preserve">
+    <value>Applies on restart</value>
+  </data>
+  <data name="Settings_About_RendererValue" xml:space="preserve">
+    <value>ANGLE · D3D11</value>
+  </data>
+  <data name="Settings_YtDlp_Updating" xml:space="preserve">
+    <value>Updating…</value>
+  </data>
+  <data name="Settings_YtDlp_UpdateFailed" xml:space="preserve">
+    <value>Couldn’t update. If you installed yt-dlp with a package manager, update it there.</value>
   </data>
 </root>

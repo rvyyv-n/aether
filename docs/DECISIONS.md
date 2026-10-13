@@ -35,7 +35,7 @@
   - Path 2 (ANGLE) becomes the only GPU path. `AngleBridge` creates an ANGLE EGL display on *our* `ID3D11Device` (`EGL_ANGLE_device_creation` + `EGL_PLATFORM_DEVICE_EXT`) and wraps swap chain buffer 0 as an EGL pbuffer (`EGL_ANGLE_d3d_texture_client_buffer`). mpv renders into GL framebuffer 0 of that pbuffer, which is the swap chain back buffer; DXGI presents it. No copy.
   - `hwdec=d3d11va` stays: mpv's ANGLE interop (`d3d11egl`) queries the D3D11 device from the current EGL display, so decode, render and present all run on the one device created by `D3D11DeviceManager` (which already carries video support and multithread protection).
   - Task 2.2 ("Path 1") is adapted: `MpvRenderContext` is the API-agnostic render-context wrapper (`Create` takes any parameter block, `CreateOpenGL` is the path in use). If libmpv ever adds a D3D11 render API it slots in there without touching the loop.
-  - The `gpu-next` flag from the roadmap is dropped: it has no effect on the render API. Low-latency options that do apply are set by `MpvContext` (`vo=libmpv`, `hwdec=d3d11va`, `demuxer-max-back-bytes=512MiB`, `video-latency-hacks=yes`).
+  - The `gpu-next` flag from the roadmap is dropped: it has no effect on the render API. Low-latency options that do apply are set by `MpvContext` (`vo=libmpv`, `hwdec=d3d11va`, `demuxer-max-back-bytes=512MiB`, `video-latency-hacks=yes`, except with software decoding, where mpv must keep a frame decoded ahead to avoid stutter).
   - ANGLE ships next to libmpv as `libEGL.dll` + `libGLESv2.dll`. Aether loads `libEGL.dll` before mpv creates its render context, so mpv's own `LoadLibrary("libEGL.dll")` binds to the same module.
   - The `sw` render API (CPU copy into the back buffer) is not implemented; it would only serve machines without ANGLE, and those don't exist once ANGLE ships with the app.
 - **Status:** Accepted.
@@ -77,8 +77,7 @@
 - **Context:** The Settings pages (Pass 6) need a model with defaults, per-setting reset and "applies on restart" flags, usable without WinUI.
 - **Decision:**
   - `SettingsStore` and `AetherSettings` (an immutable record) live in `Aether.Core.Playback/Settings`. A table of `SettingDefinition`s (key, restart flag, allowed values) drives `Set`, `Reset`, load validation and the JSON file, so the UI binds by key and nothing is written twice.
-  - The JSON is read with `JsonDocument` and written with `Utf8JsonWriter`, per key. That is reflection-free (Native AOT) and lets one invalid or unknown value fall back to its own default instead of failing the whole file, which a source-generated whole-object deserialiser cannot do.
-  - Storage is behind `ISettingsStorage`. `FileSettingsStorage` writes `settings.json.tmp` then replaces the file, at `%LOCALAPPDATA%\Aether\settings.json` (works packaged and unpackaged). It lives in Core.Playback so the atomic write is tested; `App.Settings` is the one shared instance, loaded on the thread pool at launch.
+  - The JSON is read with `JsonDocument` and written with `Utf8JsonWriter`, per key. That is reflection-free (Native AOT) and lets one invalid or unknown value fall back to its own default instead of failing the whole file, which a source-generated whole-object deserialiser cannot do.\n  - Storage is behind `ISettingsStorage`. `FileSettingsStorage` writes `settings.json.tmp` then replaces the file, at `%LOCALAPPDATA%\\Aether\\settings.json` (works packaged and unpackaged). It lives in Core.Playback so the atomic write is tested; `App.Settings` is the one shared instance, loaded on the thread pool at launch.
   - Restart-flagged settings: hardware decoding, passthrough, custom mpv options. `PendingRestart` compares them with the values at the last `Load`.
   - `MpvOptionsValidator` only checks the `key=value` shape; "unknown option" needs mpv's option list and is left to the Advanced page (6.5).
 - **Status:** Accepted.
@@ -103,7 +102,16 @@
 ## ADR-0014: Open Paths, Loop, Always on Top and Resume (Pass 5)
 - **Context:** Pass 5 adds opening from the command line or Explorer, looping, a topmost window and resuming where a file was left (roadmap 5.7-5.10).
 - **Decision:**
-  - Resume positions are kept in `ResumeStore` (`%LOCALAPPDATA%\Aether\resume.json`), keyed by case-insensitive path, at most 200 entries (oldest pruned), and not kept within the first 5 s or last 10 s. The position is applied through mpv's global `start` option, set before every `loadfile` (to `none` when there is nothing to resume).
+  - Resume positions are kept in `ResumeStore` (`%LOCALAPPDATA%\\Aether\\resume.json`), keyed by case-insensitive path, at most 200 entries (oldest pruned), and not kept within the first 5 s or last 10 s. The position is applied through mpv's global `start` option, set before every `loadfile` (to `none` when there is nothing to resume).
   - The app handles file activation and command-line arguments itself (`App.OnLaunched`, `LaunchArguments`) rather than redirecting to a single running instance, so the `OpenInRunningWindow` setting is not honoured yet.
   - Loop restarts once when `eof-reached` turns true, through the existing replay commands. `IsLooping` lives on `PlayerViewModel`, outside `PlayerState`.
 - **Status:** Accepted. Needs an on-screen check in the packaged app: double-click and command-line launch, resume seeking (including `start=none`), loop restart and always-on-top after full screen.
+
+## ADR-0015: Fast Developer & Agent App Execution (`run.ps1` & `dev-host`)
+- **Context:** On-screen verification against design specs previously required either full MSIX packaging (`dist/Aether_Installer/Install.ps1`), launching through Visual Studio, or unpackaged builds (`WindowsPackageType=None`) which fail to render WinUI 3 XAML resources (black window). Furthermore, invoking `dotnet run` triggers NuGet package vulnerability audits and floating version resolution against `api.nuget.org`, failing in offline or sandboxed environments (`NU1301`/`NU1900`).
+- **Decision:**
+  - Provide `run.ps1` (and `tools/run.ps1`) for fast incremental builds (`-p:Platform=x64 --no-restore -warnaserror -p:NuGetAudit=false`) and in-place Developer Mode loose package registration (`Add-AppxPackage -Register AppxManifest.xml`). Once registered, subsequent incremental builds update in ~2-3 seconds and run directly from disk.
+  - Launch using the application AUMID (`55AF92B1-5987-459F-B55A-89F4EE8B1B81_1z32rh13vfry6!App`).
+  - Provide `tools/dev-host` (`.\run.ps1 -Host "path\to\video"`) to run `KestrelStreamServer` standalone on `localhost:8443` for web browser preview testing without opening the WinUI app.
+  - Subagents and human developers can run `.\run.ps1` or `.\run.ps1 -NoBuild` during iterative passes to verify visual elements, layouts, and shortcuts.
+- **Status:** Accepted.

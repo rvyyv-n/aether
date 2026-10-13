@@ -9,14 +9,13 @@ public sealed partial class StreamingPage : Page
 {
     private static readonly Uri YtDlpReleases = new("https://github.com/yt-dlp/yt-dlp/releases/latest");
 
+    private string? _ytDlpPath;
+
     public StreamingPage()
     {
         InitializeComponent();
-        YtDlpHeading.Text = AppStrings.Get("Settings_YtDlp_Title");
-        StreamsHeading.Text = AppStrings.Get("Settings_Group_Streams");
         var binder = new SettingsPageBinder(this);
 
-        binder.Toggle(YtDlpAutoUpdateRow, YtDlpAutoUpdateToggle, SettingKeys.YtDlpAutoUpdate, "Settings_YtDlpAutoUpdate_Title", "Settings_YtDlpAutoUpdate_Description");
         binder.Choose(StreamingQualityRow, StreamingQualityCombo, SettingKeys.StreamingQuality,
             [
                 new("480p", AppStrings.Get("Settings_StreamingQuality_480p")),
@@ -28,32 +27,54 @@ public sealed partial class StreamingPage : Page
             ],
             "Settings_StreamingQuality_Title", "Settings_StreamingQuality_Description");
         binder.Toggle(PreferGpuDecodableFormatsRow, PreferGpuDecodableFormatsToggle, SettingKeys.PreferGpuDecodableFormats,
-            "Settings_PreferGpuDecodableFormats_Title", "Settings_PreferGpuDecodableFormats_Description");
+            "Settings_PreferHardwareDecode_Title", "Settings_PreferHardwareDecode_Description");
+        binder.Toggle(YtDlpAutoUpdateRow, YtDlpAutoUpdateToggle, SettingKeys.YtDlpAutoUpdate,
+            "Settings_YtDlp_UpdateAutomatically_Title", "Settings_YtDlp_UpdateAutomatically_Description");
 
         YtDlpRow.Header = AppStrings.Get("Settings_YtDlp_Title");
-        YtDlpDownloadButton.Content = AppStrings.Get("Settings_YtDlp_Download");
-        YtDlpDownloadButton.Click += async (_, _) => await Launcher.LaunchUriAsync(YtDlpReleases);
+        YtDlpActionButton.Click += async (_, _) => await OnYtDlpActionAsync();
         YtDlpMissingNote.Text = AppStrings.Get("Settings_Streaming_YtDlpMissing");
         _ = LoadYtDlpAsync();
     }
 
     private async Task LoadYtDlpAsync()
     {
-        string? path = await Task.Run(ExternalTools.FindYtDlp);
-        if (path is null)
+        _ytDlpPath = await Task.Run(ExternalTools.FindYtDlp);
+        if (_ytDlpPath is null)
         {
             ShowYtDlp(missing: true, AppStrings.Get("Settings_YtDlp_MissingMessage"));
             return;
         }
-        string? version = await ExternalTools.YtDlpVersionAsync(path);
-        ShowYtDlp(missing: false, version ?? AppStrings.Format("Settings_Streaming_InstalledAt", path));
+        string? version = await ExternalTools.YtDlpVersionAsync(_ytDlpPath);
+        ShowYtDlp(missing: false, version is null
+            ? AppStrings.Format("Settings_Streaming_InstalledAt", _ytDlpPath)
+            : AppStrings.Format("Settings_About_Version", version));
+    }
+
+    private async Task OnYtDlpActionAsync()
+    {
+        if (_ytDlpPath is null)
+        {
+            await Launcher.LaunchUriAsync(YtDlpReleases);
+            return;
+        }
+        YtDlpActionButton.IsEnabled = false;
+        YtDlpActionButton.Content = AppStrings.Get("Settings_YtDlp_Updating");
+        bool updated = await ExternalTools.UpdateYtDlpAsync(_ytDlpPath);
+        YtDlpActionButton.IsEnabled = true;
+        await LoadYtDlpAsync();
+        if (!updated)
+        {
+            YtDlpRow.Description = AppStrings.Get("Settings_YtDlp_UpdateFailed");
+        }
     }
 
     // A missing yt-dlp switches the streaming settings off, since there is nothing for them to act on.
     private void ShowYtDlp(bool missing, string description)
     {
         YtDlpRow.Description = description;
-        YtDlpDownloadButton.Visibility = missing ? Visibility.Visible : Visibility.Collapsed;
+        YtDlpActionButton.Content = AppStrings.Get(missing ? "Settings_YtDlp_Download" : "Settings_YtDlp_UpdateNow");
+        YtDlpActionButton.Visibility = Visibility.Visible;
         YtDlpMissingNote.Visibility = missing ? Visibility.Visible : Visibility.Collapsed;
         foreach (Control row in new Control[] { YtDlpAutoUpdateRow, StreamingQualityRow, PreferGpuDecodableFormatsRow })
         {
