@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/Aether.App/Assets/Square150x150Logo.scale-200.png" width="128" alt="Aether logo" />
+  <img src="docs/assets/aether-icon.png" width="128" alt="Aether logo" />
 </p>
 
 <h1 align="center">Aether</h1>
@@ -15,9 +15,6 @@
   </a>
   <img src="https://img.shields.io/badge/Tests-846%20Passing-brightgreen?logo=xunit&logoColor=white" alt="846 Tests Passing" />
   <img src="https://img.shields.io/badge/Platform-Windows_11-0078D4?logo=windows11&logoColor=white" alt="Windows 11" />
-  <img src="https://img.shields.io/badge/UI-WinUI_3_%7C_Mica_Alt-005FB8?logo=windows&logoColor=white" alt="WinUI 3" />
-  <img src="https://img.shields.io/badge/Engine-libmpv_%2B_Direct3D_11-5B2C6F" alt="libmpv" />
-  <img src="https://img.shields.io/badge/.NET-10.0_%2F_9.0-512BD4?logo=dotnet&logoColor=white" alt=".NET" />
   <img src="https://img.shields.io/badge/AOT-Native_AOT_Ready-brightgreen" alt="Native AOT" />
 </p>
 
