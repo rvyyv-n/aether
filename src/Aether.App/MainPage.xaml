@@ -492,7 +492,7 @@
                             x:Name="OpenButton"
                             Click="OnOpenFileClick"
                             Content="&#xE838;"
-                            Style="{StaticResource AetherIconButtonStyle}"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
                             ToolTipService.Placement="Top"
                             ToolTipService.ToolTip="Open file (Ctrl+O)" />
                         <Button
@@ -521,18 +521,18 @@
                             Click="OnBackClick"
                             Content="&#xE777;"
                             FontSize="18"
-                            Style="{StaticResource AetherIconButtonStyle}"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
                             ToolTipService.Placement="Top" />
                         <Button
                             x:Name="BackFrameButton"
                             Click="OnBackFrameClick"
                             Content="&#xE892;"
-                            Style="{StaticResource AetherIconButtonStyle}"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
                             ToolTipService.Placement="Top" />
                         <Button
                             x:Name="PlayPauseButton"
                             Click="OnPlayPauseClick"
-                            Content="&#xE768;"
+                            Content="&#xF5B0;"
                             Style="{StaticResource AetherPlayButtonStyle}"
                             ToolTipService.Placement="Top"
                             ToolTipService.ToolTip="Play (Space)" />
@@ -540,14 +540,14 @@
                             x:Name="ForwardFrameButton"
                             Click="OnForwardFrameClick"
                             Content="&#xE893;"
-                            Style="{StaticResource AetherIconButtonStyle}"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
                             ToolTipService.Placement="Top" />
                         <Button
                             x:Name="ForwardButton"
                             Click="OnForwardClick"
                             Content="&#xE72C;"
                             FontSize="18"
-                            Style="{StaticResource AetherIconButtonStyle}"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
                             ToolTipService.Placement="Top" />
                     </StackPanel>
 
@@ -561,13 +561,13 @@
                             x:Name="LoopButton"
                             Click="OnLoopClick"
                             Content="&#xE8EE;"
-                            Style="{StaticResource AetherIconToggleButtonStyle}"
+                            Style="{StaticResource AetherTransportToggleButtonStyle}"
                             ToolTipService.Placement="Top" />
                         <ToggleButton
                             x:Name="AlwaysOnTopButton"
                             Click="OnAlwaysOnTopClick"
                             Content="&#xE718;"
-                            Style="{StaticResource AetherIconToggleButtonStyle}"
+                            Style="{StaticResource AetherTransportToggleButtonStyle}"
                             ToolTipService.Placement="Top" />
                         <!--
                             Volume lives in a flyout (5.8): 72 px slider, thumb 12 white. Clicking mutes; the
@@ -582,7 +582,7 @@
                             PointerCanceled="OnVolumeButtonPointerExited"
                             PointerEntered="OnVolumeButtonPointerEntered"
                             PointerExited="OnVolumeButtonPointerExited"
-                            Style="{StaticResource AetherIconButtonStyle}"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
                             ToolTipService.Placement="Top">
                             <FlyoutBase.AttachedFlyout>
                                 <Flyout
@@ -645,7 +645,7 @@
                             x:Name="MoreButton"
                             Click="OnMoreClick"
                             Content="&#xE712;"
-                            Style="{StaticResource AetherIconButtonStyle}"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
                             ToolTipService.Placement="Top"
                             Visibility="Collapsed">
                             <FlyoutBase.AttachedFlyout>
@@ -678,7 +678,7 @@
                             x:Name="FullScreenButton"
                             Click="OnFullScreenClick"
                             Content="&#xE9A6;"
-                            Style="{StaticResource AetherIconButtonStyle}"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
                             ToolTipService.Placement="Top"
                             ToolTipService.ToolTip="Full screen (F)" />
                     </StackPanel>
