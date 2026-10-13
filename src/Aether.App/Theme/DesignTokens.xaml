@@ -96,16 +96,6 @@
     <SolidColorBrush x:Key="AetherTextDisabledBrush" Color="{StaticResource AetherTextDisabledColor}" />
     <SolidColorBrush x:Key="AetherSurfaceGlassBrush" Color="{StaticResource AetherSurfaceGlassColor}" />
     <SolidColorBrush x:Key="AetherSurfaceOsdBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
-    <!--
-        Transport card: in-app Acrylic tinted like SurfaceOsd. Over video it may sample nothing (ADR-0013), in which
-        case the tint alone still reads as the 62% ink surface; over Mica it blurs like the system flyouts.
-    -->
-    <AcrylicBrush
-        x:Key="AetherSurfaceOsdAcrylicBrush"
-        FallbackColor="{StaticResource AetherSurfaceOsdColor}"
-        TintColor="#FF0E1014"
-        TintLuminosityOpacity="0.62"
-        TintOpacity="0.62" />
     <SolidColorBrush x:Key="AetherSurfaceLetterboxBrush" Color="{StaticResource AetherSurfaceLetterboxColor}" />
     <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="{StaticResource AetherSurfaceScrimColor}" />
     <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="{StaticResource AetherSurfaceDialogColor}" />

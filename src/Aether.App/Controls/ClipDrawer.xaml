@@ -14,7 +14,7 @@
         HorizontalAlignment="Right"
         VerticalAlignment="Bottom"
         Padding="3"
-        Background="{StaticResource AetherSurfaceOsdAcrylicBrush}"
+        Background="{StaticResource AetherSurfaceOsdBrush}"
         BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
         BorderThickness="1"
         CornerRadius="12">

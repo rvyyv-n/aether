@@ -424,7 +424,7 @@
         <!--
             Transport card: the seek row, then the buttons, 4 apart. min(520, window - 32) wide and 88 tall:
             padding 8 (7 here, the 1 px stroke is the eighth), a 32 px seek row and a 36 px button row sized
-            by the round play button. Acrylic with a hairline edge and radius 8, like the system flyouts.
+            by the round play button. A plain 62% ink tint with a hairline edge and radius 8.
             24 above the bottom.
             Below a 520 px pill, frame step, loop and always on top move into More controls (5.7).
         -->
@@ -434,7 +434,7 @@
             Margin="16,0,16,24"
             Padding="7"
             VerticalAlignment="Bottom"
-            Background="{StaticResource AetherSurfaceOsdAcrylicBrush}"
+            Background="{StaticResource AetherSurfaceOsdBrush}"
             BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource AetherTransportCornerRadius}"
