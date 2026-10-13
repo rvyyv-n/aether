@@ -1,6 +1,13 @@
-# Aether
+<p align="center">
+  <img src="src/Aether.App/Assets/Square150x150Logo.scale-200.png" width="128" alt="Aether logo" />
+</p>
 
-> Ultra-low-latency, minimalist Windows 11 media player powered by libmpv and WinUI 3.
+<h1 align="center">Aether</h1>
+
+<p align="center">
+  <b>The video player Windows 11 deserved.</b><br />
+  Instant, frame-accurate playback with a native look, lossless clipping, and one-scan streaming to your phone.
+</p>
 
 <p align="center">
   <a href="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml">
@@ -16,11 +23,15 @@
 
 ---
 
-## Overview
+## Why Aether
 
-**Aether** is a modern, high-performance media player built from the ground up for Windows 11. It eliminates the sluggishness of Electron wrappers and bloated legacy players in favor of raw C-ABI bindings, a direct Direct3D 11 flip-model presentation pipeline, and native WinUI 3 controls seamlessly integrated with Windows 11 Mica Alt.
+Most players are either heavy and slow to respond, or fast but dated. Aether is neither. It is a small, native Windows 11 player built on libmpv and WinUI 3, with no web layer in between. Seeking, scrubbing and frame stepping feel immediate, even on 144–360 Hz game recordings.
 
-Designed specifically for demanding workflows—from analyzing fast 144Hz–360Hz game recordings with millisecond frame precision to fluid 4K HDR playback and sub-second lossless clip export—Aether delivers instant responsiveness and zero UI lag.
+It is made for people who review footage, cut clips, and want a player that stays out of the way:
+
+- **Look closely:** step one frame at a time in either direction and scrub smoothly.
+- **Cut fast:** mark In and Out, and export a clip in a fraction of a second without re-encoding.
+- **Keep watching anywhere:** press `S`, scan the QR code, and carry on on your phone over your home network.
 
 ---
 
@@ -31,7 +42,8 @@ Designed specifically for demanding workflows—from analyzing fast 144Hz–360H
 - ⏱️ **Frame-Accurate Scrubbing & Stepping:** Bidirectional frame stepping (`,` and `.`), seek coalescing, and smooth timeline scrubbing with sub-millisecond precision.
 - ✂️ **Lossless Sub-Second Trimming:** Instant In/Out mark trimming (`I` / `O`) with sub-300ms FFmpeg stream-copy (`-c copy`) export, preserving native stream quality without re-encoding.
 - 🪟 **Minimalist Windows 11 Shell:** Borderless window chrome, native Windows 11 Mica Alt backdrop blending behind letterboxing, aspect-ratio snapping, and auto-hiding OSD and cursor on idle.
-- ⚙️ **Comprehensive Settings & Keybinds:** Nine dedicated preference pages (Video, Audio, Subtitles, Playback, Shortcuts, Streaming, Advanced, General, About) with live shortcut conflict detection and single-instance window routing.
+- 📂 **Folder Playlists & Resume:** Opening a video queues the rest of its folder and plays the next one automatically. Aether remembers where you left the window, and opening a file while Aether is running reuses the open window.
+- ⚙️ **Comprehensive Settings & Keybinds:** Nine dedicated preference pages (Video, Audio, Subtitles, Playback, Shortcuts, Streaming, Advanced, General, About) with live shortcut conflict detection.
 - 📡 **Instant LAN Mobile Streaming:** Embedded in-memory Kestrel HTTP 206 partial-content server with instant QR-code mobile pairing—scan to continue playback on any phone or tablet on your network.
 - 🏎️ **Native AOT & Zero-Allocation Hot Path:** Built on C# 13 and .NET 10/9 with source-generated `[LibraryImport]` P/Invoke bindings and zero managed allocations on the render loop.
 
@@ -76,7 +88,7 @@ Aether is structured into modular, decoupled subsystems:
 ## Project Structure
 
 ```text
-AetherPlayer/
+aether/
 ├── .github/workflows/          # CI and Native AOT Release build pipelines
 ├── docs/                       # Architecture specs, decision logs, and roadmaps
 ├── src/
