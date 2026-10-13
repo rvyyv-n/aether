@@ -83,7 +83,8 @@
 
         <!--
             Time bubble, 16 above the pill (BubbleLift is measured from the bar's top). Solid dialog
-            fallback: in-app Acrylic would not sample the swap chain under it (ADR-0013).
+            fallback: in-app Acrylic would not sample the swap chain under it (ADR-0013). Padding 4,8
+            less the hairline.
         -->
         <Popup
             x:Name="BubblePopup"
@@ -93,8 +94,10 @@
             ShouldConstrainToRootBounds="True">
             <Border
                 x:Name="Bubble"
-                Padding="8,4"
+                Padding="7,3"
                 Background="{StaticResource AetherSurfaceDialogFallbackBrush}"
+                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                BorderThickness="1"
                 CornerRadius="{StaticResource AetherControlCornerRadius}"
                 IsHitTestVisible="False">
                 <TextBlock x:Name="BubbleText" Style="{StaticResource AetherTimecodeTextStyle}" />

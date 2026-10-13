@@ -139,7 +139,7 @@
     <x:Double x:Key="AetherBodyLineHeight">20</x:Double>
     <x:Double x:Key="AetherSubtitleFontSize">20</x:Double>
     <x:Double x:Key="AetherSubtitleLineHeight">28</x:Double>
-    <x:Double x:Key="AetherTimecodeFontSize">12</x:Double>
+    <x:Double x:Key="AetherTimecodeFontSize">13</x:Double>
     <x:Double x:Key="AetherTimecodeLineHeight">16</x:Double>
 
     <!--  Spacing  -->
@@ -270,7 +270,7 @@
     </Style>
     <!--  Timecodes only. Tabular digits come with the monospace face.  -->
     <Style x:Key="AetherTimecodeTextStyle" BasedOn="{StaticResource AetherBodyTextStyle}" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
+        <Setter Property="FontFamily" Value="{StaticResource AetherMonoFont}" />
         <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
         <Setter Property="FontSize" Value="{StaticResource AetherTimecodeFontSize}" />
         <Setter Property="LineHeight" Value="{StaticResource AetherTimecodeLineHeight}" />
