@@ -68,10 +68,6 @@
     <Color x:Key="AetherFillEmphasisRestColor">#24FFFFFF</Color>  <!-- 14%. Primary pill, play button, selected rail item. Was Active -->
     <Color x:Key="AetherFillEmphasisHoverColor">#2EFFFFFF</Color>  <!-- 18% -->
     <Color x:Key="AetherFillEmphasisPressedColor">#1AFFFFFF</Color>  <!-- 10% -->
-    <Color x:Key="AetherFillPlayRestColor">#FFFFFFFF</Color>  <!-- Transport play/pause, the one solid control on the pill (the app's accent is white) -->
-    <Color x:Key="AetherFillPlayHoverColor">#E6FFFFFF</Color>  <!-- Fluent AccentFillSecondary -->
-    <Color x:Key="AetherFillPlayPressedColor">#CCFFFFFF</Color>  <!-- Fluent AccentFillTertiary -->
-    <Color x:Key="AetherTextOnPlayColor">#FF0E1014</Color>  <!-- Glyph on the white play button -->
     <Color x:Key="AetherFillSubtleHoverColor">#0FFFFFFF</Color>  <!-- 6%. Icon buttons, rows, outline pill. Fluent SubtleFillSecondary -->
     <Color x:Key="AetherFillSubtlePressedColor">#0AFFFFFF</Color>  <!-- 4%. Fluent SubtleFillTertiary. Was #08 -->
     <Color x:Key="AetherFillDisabledColor">#0BFFFFFF</Color>  <!-- Fluent ControlFillDisabled -->
@@ -105,10 +101,6 @@
     <SolidColorBrush x:Key="AetherFillEmphasisRestBrush" Color="{StaticResource AetherFillEmphasisRestColor}" />
     <SolidColorBrush x:Key="AetherFillEmphasisHoverBrush" Color="{StaticResource AetherFillEmphasisHoverColor}" />
     <SolidColorBrush x:Key="AetherFillEmphasisPressedBrush" Color="{StaticResource AetherFillEmphasisPressedColor}" />
-    <SolidColorBrush x:Key="AetherFillPlayRestBrush" Color="{StaticResource AetherFillPlayRestColor}" />
-    <SolidColorBrush x:Key="AetherFillPlayHoverBrush" Color="{StaticResource AetherFillPlayHoverColor}" />
-    <SolidColorBrush x:Key="AetherFillPlayPressedBrush" Color="{StaticResource AetherFillPlayPressedColor}" />
-    <SolidColorBrush x:Key="AetherTextOnPlayBrush" Color="{StaticResource AetherTextOnPlayColor}" />
     <SolidColorBrush x:Key="AetherFillSubtleHoverBrush" Color="{StaticResource AetherFillSubtleHoverColor}" />
     <SolidColorBrush x:Key="AetherFillSubtlePressedBrush" Color="{StaticResource AetherFillSubtlePressedColor}" />
     <SolidColorBrush x:Key="AetherFillDisabledBrush" Color="{StaticResource AetherFillDisabledColor}" />
@@ -195,7 +187,7 @@
     <x:Double x:Key="AetherSizeClipThumbWidth">64</x:Double>  <!-- Clip row thumbnail, 16:9, radius 4 -->
     <x:Double x:Key="AetherSizeClipThumbHeight">36</x:Double>
     <x:Double x:Key="AetherSizeMenuItem">32</x:Double>  <!-- Menu items: 4 px inset, radius 4, check column 16, gap 12, hover fill.subtle.hover; menus on surface -->
-    <x:Double x:Key="AetherSizeSpeedPill">40</x:Double>  <!-- Min width of the speed button: plain text, 32 tall, Caption 12 tabular -->
+    <x:Double x:Key="AetherSizeSpeedPill">52</x:Double>  <!-- Min width of the speed button: outline pill, 32 tall, Caption 12 tabular -->
     <x:Double x:Key="AetherSizeTransportCompactBreakpoint">520</x:Double>  <!-- Below this pill width, frame step, loop and always on top move into More controls (…) -->
     <x:Double x:Key="AetherSizeRailWidth">56</x:Double>  <!-- Hover rail: 8 from the left edge, from 8 below the title bar to 8 above the pill, padding 8, Surface -->
     <x:Double x:Key="AetherSizeRailItem">40</x:Double>  <!-- Rail items 40×40, radius 8, gap 4, 20 px icons; active = FillEmphasisRest + StrokeControl; labels as -->
@@ -415,38 +407,37 @@
         <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeIcon}" />
     </Style>
-    <!--  Play/pause: solid white 32 circle with an ink glyph, the single emphasised control on the pill  -->
+    <!--  Play/pause: 32 round translucent circle with a hairline, the same emphasis as the Open file pill  -->
     <Style x:Key="AetherPlayButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">
         <Setter Property="Width" Value="{StaticResource AetherSizeControl}" />
         <Setter Property="Height" Value="{StaticResource AetherSizeControl}" />
         <Setter Property="Padding" Value="0" />
-        <Setter Property="Background" Value="{StaticResource AetherFillPlayRestBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource AetherTextOnPlayBrush}" />
-        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
         <Setter Property="CornerRadius" Value="16" />
         <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeIcon}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Grid x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                    <Grid x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
                         <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" />
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal" />
                                 <VisualState x:Name="PointerOver">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillPlayHoverBrush}" />
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisHoverBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillPlayPressedBrush}" />
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisPressedBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <VisualState.Setters>
                                         <Setter Target="Root.Background" Value="{StaticResource AetherFillDisabledBrush}" />
+                                        <Setter Target="Root.BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
                                         <Setter Target="ContentPresenter.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
@@ -459,7 +450,7 @@
     </Style>
     <!--
         Transport toggles, Loop and Always on top (5.6): rest transparent, hover 6%, pressed 4% with the
-        glyph at 80%; On is FillEmphasisRest, 18% on hover. No outline, so only play stands out.
+        glyph at 80%; On is FillEmphasisRest with a StrokeControl outline, 18% on hover.
     -->
     <Style x:Key="AetherIconToggleButtonStyle" TargetType="ToggleButton">
         <Setter Property="Width" Value="{StaticResource AetherSizeControl}" />
@@ -502,16 +493,19 @@
                                 <VisualState x:Name="Checked">
                                     <VisualState.Setters>
                                         <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
+                                        <Setter Target="Root.BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="CheckedPointerOver">
                                     <VisualState.Setters>
                                         <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisHoverBrush}" />
+                                        <Setter Target="Root.BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="CheckedPressed">
                                     <VisualState.Setters>
                                         <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisPressedBrush}" />
+                                        <Setter Target="Root.BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
                                         <Setter Target="ContentPresenter.Opacity" Value="0.8" />
                                     </VisualState.Setters>
                                 </VisualState>
@@ -528,12 +522,11 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <!--  Speed (5.4): plain text, at least 40 wide, Caption 12, hover fill only; keeps the hover fill while its menu is open (set from code).  -->
+    <!--  Speed (5.4): outline pill, at least 52 wide, Caption 12; takes FillEmphasisRest while its menu is open (set from code).  -->
     <Style x:Key="AetherSpeedPillButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">
         <Setter Property="MinWidth" Value="{StaticResource AetherSizeSpeedPill}" />
         <Setter Property="Height" Value="{StaticResource AetherSizeControl}" />
-        <Setter Property="Padding" Value="8,0" />
-        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Padding" Value="10,0" />
         <Setter Property="FontSize" Value="{StaticResource AetherCaptionFontSize}" />
     </Style>
     <!--

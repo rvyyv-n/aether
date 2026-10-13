@@ -514,7 +514,8 @@
                         <Button
                             x:Name="BackButton"
                             Click="OnBackClick"
-                            Content="&#xEB9E;"
+                            Content="&#xE777;"
+                            FontSize="18"
                             Style="{StaticResource AetherIconButtonStyle}"
                             ToolTipService.Placement="Top" />
                         <Button
@@ -539,7 +540,8 @@
                         <Button
                             x:Name="ForwardButton"
                             Click="OnForwardClick"
-                            Content="&#xEB9D;"
+                            Content="&#xE72C;"
+                            FontSize="18"
                             Style="{StaticResource AetherIconButtonStyle}"
                             ToolTipService.Placement="Top" />
                     </StackPanel>
@@ -670,7 +672,7 @@
                         <Button
                             x:Name="FullScreenButton"
                             Click="OnFullScreenClick"
-                            Content="&#xE740;"
+                            Content="&#xE9A6;"
                             Style="{StaticResource AetherIconButtonStyle}"
                             ToolTipService.Placement="Top"
                             ToolTipService.ToolTip="Full screen (F)" />

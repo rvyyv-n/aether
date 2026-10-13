@@ -33,7 +33,7 @@ public sealed partial class MainPage : Page
     private const string PlayGlyph = "";
     private const string PauseGlyph = "";
     private const string ReplayGlyph = ""; // UpdateRestore: the counter-clockwise arrow of frame 3.4
-    private const string FullScreenGlyph = "";
+    private const string FullScreenGlyph = "";
     private const string ExitFullScreenGlyph = "";
     private const string VolumeGlyph = "";
     private const string MuteGlyph = "";

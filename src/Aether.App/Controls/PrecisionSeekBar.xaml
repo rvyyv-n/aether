@@ -8,7 +8,7 @@
     <!--
         Seek row bar (screen 5): the whole 32 px row is the hit area, the 4 px track is centred in it.
         Back to front: in/out band (20 px, FillRange, radius 4), track (ProgressTrack 12%), buffered
-        (FillRange 20%), played (white), in/out ticks (2×24 white), pointer line (1×12 TextSecondary),
+        (FillRange 20%), played (white), in/out ticks (2×24 white), pointer line (1×16 TextSecondary),
         thumb (12 white with a black 20% ring, 16 while dragging). Positions are set from code.
     -->
     <Grid
@@ -66,9 +66,9 @@
                 Visibility="Collapsed" />
             <Rectangle
                 x:Name="HoverLine"
-                Canvas.Top="10"
+                Canvas.Top="8"
                 Width="1"
-                Height="12"
+                Height="16"
                 Fill="{StaticResource AetherTextSecondaryBrush}"
                 Visibility="Collapsed" />
             <Ellipse
