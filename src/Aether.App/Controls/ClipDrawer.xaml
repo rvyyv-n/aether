@@ -5,8 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Export chip (s5-03) and clip drawer (5.3, 5.4). The chip is a 40 tall SurfaceOsd pill: padding 3 plus
-        the 1 px stroke around 32 px controls, radius 20. Opening the drawer grows the same surface upward to
+        Export chip (s5-03) and clip drawer (5.3, 5.4). The chip is a 40 tall pill on the transport card's
+        Acrylic: padding 3 plus the 1 px stroke around 32 px controls, radius 12 (the 8 px buttons plus the inset). Opening the drawer grows the same surface upward to
         360 wide: three 52 px rows (more scroll), a quiet "Show all in folder" link, a divider, then the chip.
     -->
     <Border
@@ -14,10 +14,10 @@
         HorizontalAlignment="Right"
         VerticalAlignment="Bottom"
         Padding="3"
-        Background="{StaticResource AetherSurfaceOsdBrush}"
+        Background="{StaticResource AetherSurfaceOsdAcrylicBrush}"
         BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
         BorderThickness="1"
-        CornerRadius="16">
+        CornerRadius="12">
         <StackPanel>
             <StackPanel x:Name="DrawerArea" Visibility="Collapsed">
                 <ScrollViewer

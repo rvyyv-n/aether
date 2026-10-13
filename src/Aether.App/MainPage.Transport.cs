@@ -169,7 +169,7 @@ public sealed partial class MainPage
 
     private void OnSpeedMenuOpened(object sender, object e)
     {
-        SpeedButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        SpeedButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillSubtleHoverBrush"];
         HoldForMenu(true);
     }
 
