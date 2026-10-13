@@ -147,6 +147,8 @@ Numbered from P7.2 because P7.1 is the engine restart above. The design handoff 
 
 **Deferred (after the UI):**
 
+- **Minimal bar that opens on interaction:** while a video plays, show the one-row pill from screen 3 (Open, Play, times around the seek bar, Mute, Full screen) and grow it into the full card on hover or click. Open question: shrink back after a few idle seconds. Opus plans it first, Sonnet builds it. Builds on the blur once P7.6 is settled.
+- **Modern fonts:** revisit the app's typefaces once the visual changes and the blur are in. The tokens hold every font, so it is mostly a token change plus a check that nothing clips or reflows (timecodes, badge, menus).
 - **Customisable bar:** choosing and ordering the bar's buttons. Not before the design is matched.
 - **Settings in full screen:** the title bar is hidden there, so the gear is not reachable; the right-click menu (7.1) covers it with Settings Ctrl+,.
 - **Appearance & theme customization:** exploring deeper theme accents and appearance tweaks post-Pass 7 before public release.
