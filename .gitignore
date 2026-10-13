@@ -29,10 +29,13 @@ TestResults/
 *.coverage
 *.coveragexml
 
-# AI / IDE tooling (per repo hooks)
+# Local tooling
 CLAUDE.md
-.claude/
 GEMINI.md
+AGENTS.md
+docs/AGENTS.md
+aether-spec.md
+.claude/
 .gemini/
 .vs/
 .idea/

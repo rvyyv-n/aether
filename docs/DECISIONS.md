@@ -15,11 +15,6 @@
 - **Decision:** No heap allocations on frame rendering or high-frequency event pump loops. Struct-backed view models, preallocated parameter blocks, and `GCSettings.LatencyMode = SustainedLowLatency` during playback.
 - **Status:** Accepted.
 
-## ADR-0004: Multi-Model Agent Specialization in T3 Code
-- **Context:** Complex systems require different reasoning depths and velocities across low-level interop vs. XAML UI vs. architectural refactoring.
-- **Decision:** T3 Code orchestration will delegate low-level interop (`Aether.Core.Interop`) to Claude Opus 5.5, high-velocity UX and features (`Aether.App`, `Aether.PvP.Review`, `Aether.Server.LanHost`) to Claude Sonnet 5.5, and cross-repo context, header ingestion, scaffolding, and test generation to Gemini.
-- **Status:** Accepted.
-
 ## ADR-0005: DirectX COM Through Raw Vtable Calls
 - **Context:** The D3D11/DXGI surface used per frame (`Present`, `ClearRenderTargetView`, `ResizeBuffers`, the latency wait) must not allocate, and Native AOT rules out runtime-generated COM wrappers. `[GeneratedComInterface]` still routes calls through `ComWrappers` and managed object identity.
 - **Decision:** `Aether.Core.Interop.DirectX` holds DirectX objects as bare `nint` COM pointers and calls them through `delegate* unmanaged[Stdcall]` vtable slots (`Native/Com.cs`). Each wrapper owns exactly the references it AddRef'd, releases them in `Dispose` (with a finalizer backstop; D3D11/DXGI objects are free-threaded), and checks every `HRESULT`. `ISwapChainPanelNative` is reached the same way (`SwapChainPanelNative.SetSwapChain`), from the panel pointer the app passes in. Only flat C exports (`D3D11CreateDevice`, `WaitForSingleObjectEx`) use `[LibraryImport]`.

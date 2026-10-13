@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Repository initialization and multi-agent workflow setup.
+- Repository initialization.
 - Architecture blueprints for WinUI 3 SwapChainPanel and libmpv D3D11 interop.
 - PvP analysis toolset design specifications (Frame stepping, tick HUD, lossless trimming).
 - Embedded Kestrel streaming host architecture with local QR code generation.
