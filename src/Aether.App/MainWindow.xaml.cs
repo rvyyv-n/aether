@@ -58,10 +58,12 @@ public sealed partial class MainWindow : Window, IShellWindow
     private static readonly Color CaptionHover = Color.FromArgb(0x14, 0xFF, 0xFF, 0xFF);
     private static readonly Color CaptionPressed = Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF);
 
-    // A video opens at one video pixel per screen pixel, within this share of the work area, and
-    // no narrower than this (DIPs) so the controls fit.
+    // The smallest client area (DIPs) that still fits the control bar and the empty-state buttons.
+    private const double MinClientWidth = 640;
+    private const double MinClientHeight = 400;
+
+    // A video opens at one video pixel per screen pixel, within this share of the work area.
     private const double FitMaxWorkAreaFraction = 0.9;
-    private const double FitMinClientWidth = 640;
 
     private readonly AspectRatioLock? _aspectLock;
     private readonly CaptionGlyphFade _captionFade = new();
@@ -98,11 +100,14 @@ public sealed partial class MainWindow : Window, IShellWindow
 
         try
         {
-            _aspectLock = new AspectRatioLock(WinRT.Interop.WindowNative.GetWindowHandle(this));
+            _aspectLock = new AspectRatioLock(WinRT.Interop.WindowNative.GetWindowHandle(this))
+            {
+                MinimumClientSize = (MinClientWidth, MinClientHeight),
+            };
         }
         catch (InvalidOperationException)
         {
-            _aspectLock = null; // the window still works, just without the drag-resize aspect lock
+            _aspectLock = null; // the window still works, just without the drag-resize aspect lock and minimum size
         }
 
         InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
@@ -317,10 +322,12 @@ public sealed partial class MainWindow : Window, IShellWindow
         int frameHeight = size.Height - client.Height;
         double scale = Shell.XamlRoot?.RasterizationScale ?? 1;
 
+        // Wide enough for both minimums at the video's aspect, so the window never opens below either.
+        double minWidth = Math.Max(MinClientWidth, MinClientHeight * videoWidth / videoHeight);
         PixelRect workArea = new(work.X, work.Y, work.X + work.Width, work.Y + work.Height);
         (int clientWidth, int clientHeight) = WindowGeometry.FitClient(
             videoWidth, videoHeight, workArea, frameWidth, frameHeight,
-            FitMaxWorkAreaFraction, (int)Math.Round(FitMinClientWidth * scale));
+            FitMaxWorkAreaFraction, (int)Math.Ceiling(minWidth * scale));
         int width = clientWidth + frameWidth;
         int height = clientHeight + frameHeight;
         (int x, int y) = WindowGeometry.Recentre(

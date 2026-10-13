@@ -107,6 +107,21 @@ public class WindowGeometryTests
     }
 
     [Fact]
+    public void ConstrainToAspect_BelowMinimumWidth_GrowsToTheMinimumAtTheAspect()
+    {
+        // Dragging the right edge to a 500px client: grows back to 640x360, then to 400 tall (711x400).
+        PixelRect result = WindowGeometry.ConstrainToAspect(new PixelRect(100, 50, 614, 400), SizingEdge.Right, 16.0 / 9, 14, 7, 640, 400);
+        Assert.Equal(new PixelRect(100, 50, 100 + 711 + 14, 50 + 400 + 7), result);
+    }
+
+    [Fact]
+    public void ConstrainToAspect_BelowMinimum_TopLeftCorner_KeepsTheBottomRightCorner()
+    {
+        PixelRect result = WindowGeometry.ConstrainToAspect(new PixelRect(500, 500, 1014, 807), SizingEdge.TopLeft, 16.0 / 9, 14, 7, 640, 400);
+        Assert.Equal(new PixelRect(1014 - 711 - 14, 807 - 400 - 7, 1014, 807), result);
+    }
+
+    [Fact]
     public void ConstrainToAspect_DegenerateClient_LeavesTheRectangle()
     {
         PixelRect proposed = new(10, 20, 20, 25);

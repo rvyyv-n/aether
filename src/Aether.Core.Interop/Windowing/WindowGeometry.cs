@@ -75,10 +75,13 @@ public static class WindowGeometry
     /// Adjusts a proposed window rectangle during a drag so its client area has <paramref name="aspect"/>
     /// (width / height). Side drags keep the dragged dimension and move the far side of the other
     /// one; corner drags follow whichever dimension the pointer asks to make larger and keep the
-    /// opposite corner fixed. Returns <paramref name="proposed"/> unchanged when there is nothing to keep.
+    /// opposite corner fixed. The client area then grows, still at the aspect, until it is at least
+    /// <paramref name="minClientWidth"/> × <paramref name="minClientHeight"/>. Returns
+    /// <paramref name="proposed"/> unchanged when there is nothing to keep.
     /// </summary>
     public static PixelRect ConstrainToAspect(
-        PixelRect proposed, SizingEdge edge, double aspect, int frameWidth, int frameHeight)
+        PixelRect proposed, SizingEdge edge, double aspect, int frameWidth, int frameHeight,
+        int minClientWidth = 0, int minClientHeight = 0)
     {
         int clientWidth = proposed.Width - frameWidth;
         int clientHeight = proposed.Height - frameHeight;
@@ -93,31 +96,45 @@ public static class WindowGeometry
             SizingEdge.Top or SizingEdge.Bottom => false,
             _ => clientWidth / aspect >= clientHeight,
         };
-
-        int left = proposed.Left, top = proposed.Top, right = proposed.Right, bottom = proposed.Bottom;
         if (widthDrives)
         {
-            int height = Math.Max(1, (int)Math.Round(clientWidth / aspect)) + frameHeight;
-            if (edge is SizingEdge.TopLeft or SizingEdge.TopRight)
-            {
-                top = bottom - height;
-            }
-            else
-            {
-                bottom = top + height;
-            }
+            clientHeight = Math.Max(1, (int)Math.Round(clientWidth / aspect));
         }
         else
         {
-            int width = Math.Max(1, (int)Math.Round(clientHeight * aspect)) + frameWidth;
-            if (edge is SizingEdge.TopLeft or SizingEdge.BottomLeft)
-            {
-                left = right - width;
-            }
-            else
-            {
-                right = left + width;
-            }
+            clientWidth = Math.Max(1, (int)Math.Round(clientHeight * aspect));
+        }
+
+        // Growing to the minimum width can only make the height larger, so the height check comes second.
+        if (clientWidth < minClientWidth)
+        {
+            clientWidth = minClientWidth;
+            clientHeight = Math.Max(1, (int)Math.Round(clientWidth / aspect));
+        }
+        if (clientHeight < minClientHeight)
+        {
+            clientHeight = minClientHeight;
+            clientWidth = Math.Max(1, (int)Math.Round(clientHeight * aspect));
+        }
+
+        int width = clientWidth + frameWidth;
+        int height = clientHeight + frameHeight;
+        int left = proposed.Left, top = proposed.Top, right = proposed.Right, bottom = proposed.Bottom;
+        if (edge is SizingEdge.Left or SizingEdge.TopLeft or SizingEdge.BottomLeft)
+        {
+            left = right - width;
+        }
+        else
+        {
+            right = left + width;
+        }
+        if (edge is SizingEdge.Top or SizingEdge.TopLeft or SizingEdge.TopRight)
+        {
+            top = bottom - height;
+        }
+        else
+        {
+            bottom = top + height;
         }
         return new PixelRect(left, top, right, bottom);
     }
