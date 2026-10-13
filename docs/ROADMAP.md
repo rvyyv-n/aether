@@ -130,6 +130,29 @@ Mockups: screen 7 (settings, all pages).
 
 ---
 
+### Pre-Pass 7: Player UI polish (match the design)
+
+Numbered from P7.2 because P7.1 is the engine restart above. The design handoff (screens 3, 5 and 9, `aether.tokens.json`) is the target; values below are from the screen 5 redline. The recent restyle (radius 8, solid white 36 px play, plain-text speed, no outline on toggles) is reverted where it departs from it; the 640×400 minimum window stays. The bar looks like a solid slab today because the in-app Acrylic brush cannot see the swap chain (ADR-0013) and paints its own opaque luminosity layer; the handoff draws the pill as a plain 62% tint, which already lets the video through.
+
+| # | Task | Effort |
+|:---|:---|:---:|
+| P7.2 | Glass that shows the video: the card's fill goes from `AetherSurfaceOsdAcrylicBrush` to the plain `AetherSurfaceOsdBrush` (#9E0E1014, 62% ink), which is what every handoff frame draws and what keeps TextPrimary at 5.35:1 over pure white. Keep the 1 px StrokeSurface edge. Retire the Acrylic brush. No bottom scrim: the handoff has none and 62% does not need one. This is also the fallback if P7.6 is dropped | S |
+| P7.3 | Card shape back to the redline: `AetherTransportCornerRadius` 8 → 24 (16 button radius + 8 padding, concentric); button row 36 → 32, so the card is 84 tall (8 + 32 + 4 + 32 + 8); padding 8 (7 plus the stroke); centre group spacing 8 → 4, like the side groups; drop `AetherSizeTransportPlay` and size the row by `AetherSizeControl`. The chip, drawer and toast offset 120 → 116 (24 + 84 + 8). Width stays min(520, window − 32), so at the 640 px minimum the card is always the full 520 and More controls only appears in picture in picture (Pass 8) | S |
+| P7.4 | Controls as drawn in 5.1 and 5.6. Play/Pause: 32 round, FillEmphasisRest (#24FFFFFF) with a 1 px StrokeControl (#1FFFFFFF), hover FillEmphasisHover, pressed FillEmphasisPressed, white 16 px glyph; remove `AetherFillPlay*` and `AetherTextOnPlay`. Speed: outline pill again, at least 52 wide (`AetherSizeSpeedPill` 40 → 52), padding 0,10, StrokeControl, Caption 12 tabular, FillEmphasisRest while its menu is open. Loop and Always on top when on: FillEmphasisRest plus StrokeControl, FillEmphasisHover on hover. Glyphs: back and forward 5 s use a circular-arrow glyph at 18 px (the current rewind and fast-forward glyphs read as track skip; the numbered Fluent skip glyphs say 10 and 30, so use one without a number); full screen uses the four-corner glyph, not the diagonal arrows. Seek hover line 12 → 16 tall | S |
+| P7.5 | Title bar as in screen 3: the badge gets its SurfaceOsd fill (radius 4, padding 2,6, max 320 for files and 240 for streams); "Alpha" on the empty state stays plain. The gear and Back stay 46×32 and square with a 16 px glyph (the handoff value), but take their colours from the system caption buttons: glyph #D9FFFFFF, #73FFFFFF while the window is inactive, hover #14FFFFFF with a white glyph, pressed #0AFFFFFF, and they fade with the caption glyphs (300 ms out, 150 ms in). Move the caption colours from `MainWindow` into tokens so the gear and the system buttons read one source | S |
+| P7.6 | Real blur of the video behind the card (spike first). After mpv renders into the back buffer, the render thread runs one more pass in the same ANGLE GL context: copy the card's rectangle (plus 24 px for the shadow) into a quarter-size texture, blur it in two passes, and draw it back clipped to the card's radius 24 shape, then draw the OSD shadow (0 8 24, black 32%) around it, before present. The XAML card keeps its 62% tint on top, so contrast does not change. The UI thread posts the card's rectangle in pixels, its visibility and the fade start time, like the swap-chain size; the render thread fades the blur over the same 300 ms / 150 ms (instant with reduced motion). While paused, any change to the card (show, hide, move, resize) asks for a redraw, and the fade forces redraws until it ends. Small textures are rebuilt per device generation. Off in picture in picture and with no card. Keep it in its own class that the loop calls once per frame, so the loop itself changes by a few lines. Record the outcome in ADR-0013. If the spike shows tearing between the card and the blur, or the pass costs more than about 0.3 ms at 1080p, stop and keep P7.2 | M |
+| P7.7 | On-screen check at 640×400, 1280×720 and full screen, over a bright and a dark clip, playing and paused: card 520 × 84 with radius 24; play matches the handoff; the blur follows the video, fades with the card and stays put while paused; gear the same weight and hover as minimise; timecodes readable over white | S |
+
+**Pre-Pass 7 means:** The player bar matches the screen 5 design: a soft rounded card that lets the video show through, blurred behind it, with a title bar that reads as one Windows 11 strip.
+
+**Deferred (after the UI):**
+
+- **120 fps playback:** 1080p 120 fps game recordings don't feel like 120 fps with software or hardware decoding; a separate scout is investigating. Its fix will touch the render loop, so it lands after P7.6, never alongside it.
+- **Customisable bar:** choosing and ordering the bar's buttons. Not before the design is matched.
+- **Settings in full screen:** the title bar is hidden there, so the gear is not reachable; the right-click menu (7.1) covers it with Settings Ctrl+,.
+
+---
+
 ### Pass 7: Menus, Toasts & Diagnostics
 
 Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
