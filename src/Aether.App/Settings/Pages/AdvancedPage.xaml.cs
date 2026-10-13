@@ -2,6 +2,8 @@ using Aether.Core.Playback.Settings;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Shapes;
 
 namespace Aether_App.Settings.Pages;
 
@@ -12,8 +14,6 @@ public sealed partial class AdvancedPage : Page
     public AdvancedPage()
     {
         InitializeComponent();
-        EngineHeading.Text = AppStrings.Get("Settings_Group_Engine");
-        ResetHeading.Text = AppStrings.Get("Settings_Group_Reset");
         _binder = new SettingsPageBinder(this);
 
         SettingsPageBinder.Describe(CustomOptionsRow, "Settings_CustomOptions_Title", "Settings_CustomOptions_Description");
@@ -32,8 +32,7 @@ public sealed partial class AdvancedPage : Page
         _binder.RestartNote(CustomOptionsRestartNote, SettingKeys.CustomMpvOptions);
 
         SettingsPageBinder.Describe(ResetAllRow, "Settings_ResetAllSettings_Title", "Settings_ResetAllSettings_Description");
-        ResetAllButton.Content = AppStrings.Get("Common_Reset");
-        AutomationProperties.SetName(ResetAllButton, AppStrings.Get("Settings_ResetAllSettings_Title"));
+        ResetAllButton.Content = AppStrings.Get("Settings_ResetAllSettings");
         ResetAllButton.Click += async (_, _) => await ConfirmResetAsync();
     }
 
@@ -52,17 +51,31 @@ public sealed partial class AdvancedPage : Page
                 MpvOptionErrorKind.Reserved => "Settings_MpvOptions_Error_Reserved",
                 _ => "Settings_MpvOptions_Error_Duplicate",
             };
-            CustomOptionsErrors.Children.Add(new TextBlock
-            {
-                Text = AppStrings.Format(key, error.Line, error.Key ?? ""),
-                Style = (Style)Application.Current.Resources["AetherCaptionTextStyle"],
-                TextWrapping = TextWrapping.Wrap,
-            });
+            CustomOptionsErrors.Children.Add(ErrorLine(AppStrings.Format(key, error.Line, error.Key ?? "")));
         }
         if (errors.Count == 0 && App.Settings.Set(SettingKeys.CustomMpvOptions, text))
         {
             SettingsSaver.Save();
         }
+    }
+
+    private static StackPanel ErrorLine(string message)
+    {
+        var resources = Application.Current.Resources;
+        var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        line.Children.Add(new Ellipse
+        {
+            Style = (Style)resources["AetherStatusDotStyle"],
+            Margin = new Thickness(0, 5, 0, 0),
+            Fill = (Brush)resources["AetherStatusWarningBrush"],
+        });
+        line.Children.Add(new TextBlock
+        {
+            Text = message,
+            Style = (Style)resources["AetherCaptionTextStyle"],
+            TextWrapping = TextWrapping.Wrap,
+        });
+        return line;
     }
 
     private async Task ConfirmResetAsync()
@@ -83,8 +96,8 @@ public sealed partial class AdvancedPage : Page
             DefaultButton = ContentDialogButton.Close,
             PrimaryButtonStyle = (Style)resources["AetherEmphasisPillButtonStyle"],
             CloseButtonStyle = (Style)resources["AetherOutlinePillButtonStyle"],
-            Background = (Microsoft.UI.Xaml.Media.Brush)resources["AetherSurfaceDialogFallbackBrush"],
-            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)resources["AetherStrokeSurfaceBrush"],
+            Background = (Brush)resources["AetherSurfaceDialogFallbackBrush"],
+            BorderBrush = (Brush)resources["AetherStrokeSurfaceBrush"],
             CornerRadius = (CornerRadius)resources["AetherOverlayCornerRadius"],
             RequestedTheme = RequestedTheme,
         };

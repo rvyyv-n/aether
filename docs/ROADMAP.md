@@ -61,7 +61,7 @@ Mockups: screens 2 (shell states), 3 (playing) and 4 (spec sheet). Screens 1–1
 | 4.5 | Drag-and-drop listener on main window for `.mp4`, `.mkv`, `.mov`, `.webm` | S |
 | 4.6 | `StartupState`: off-UI-thread core initialization, loading transition, and missing binary/init failure presentation | M |
 | 4.7 | `InputPolish`: fast-tap frame step queue/drop arbitration, window blur repeat release | S |
-| 4.C1 | Carry-over: on-screen check of every shell state (empty, starting, failure, drag-over, playing, full screen) against the design; needs the packaged app (Developer Mode or Visual Studio) plus libmpv and a sample clip. User check: shell states and window behaviour pass; playback findings moved to 4.C2–4.C5 | S |
+| 4.C1 | Carry-over: on-screen check of every shell state (empty, starting, failure, drag-over, playing, full screen) against the design; needs the packaged app (run `.\run.ps1` in Developer Mode or launch from Visual Studio) plus libmpv and a sample clip. User check: shell states and window behaviour pass; playback findings moved to 4.C2–4.C5 | S |
 | 4.C2 | Bug: playback does not replay. At end of file (`eof-reached`, `keep-open`) the play button and Space do nothing; fix so Play on an ended file seeks to 0 and unpauses (`PlayerSession.TogglePause` / `MainPage.TogglePause`, `HasVideo` gate), and check the restart path with a test | S |
 | 4.C3 | Bug: no clickable open control. Files open only via `Ctrl+O` and drag-and-drop. Add a visible Open button (controls bar and empty-state panel) that calls the same picker as the accelerator; placement and look need design approval first — **Done** (per handoff 2A and screen 3: "Open file" emphasis pill on the empty state, disabled while the engine starts and hidden on failure or drag-over; Open icon button first in the controls pill with the "Open file (Ctrl+O)" tooltip; both share the Ctrl+O picker. Open URL waits for streaming. Not yet checked on screen) | S |
 | 4.C4 | Bug: label alignment and capitalisation. Known items: hint text reads "press Ctrl O" (should be `Ctrl+O`); panel captions mix `SUPPORTED` / `DETAILS` (all caps) with sentence-case labels (`Formats`, `Renderer`, `Searched`); status text mixes cases (`Engine ready`, `Starting`). Full audit of every label with the user's list before fixing; The casing rule is confirmed first — **Done** (spec sheet wording through `Resources.resw`; failure details tile on a 72/* grid; `mm:ss` clock; ADR-0012. Not yet checked on screen) | S |
@@ -117,6 +117,16 @@ Mockups: screen 7 (settings, all pages).
 | 6.7 | Configurable keyboard shortcuts on the Shortcuts page: defaults as today, Open URL = `Ctrl+Shift+O` with `Ctrl+L` offered as an alternative; conflicts flagged, per-shortcut reset — **Done** | S |
 
 **Pass 6 means:** Every setting in the mockups is reachable, persisted and applied, and the page holds at 405 px.
+
+---
+
+### Pre-Pass 7: Engine Restart Without Relaunch
+
+| # | Task | Effort |
+|:---|:---|:---:|
+| P7.1 | Restart the playback engine in place when a restart-only setting changes (hardware decoding, audio passthrough and the like) instead of asking for an app relaunch: tear down and recreate the mpv context and render loop on the same swap chain, then reopen the current file at the same position with the same pause, volume, speed and track choices | M |
+
+**Pre-Pass 7 means:** Changing a restart-only setting applies straight away and playback resumes where it was, with the window still open.
 
 ---
 

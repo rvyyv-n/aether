@@ -77,6 +77,13 @@ public class MpvSettingsMapTests
     }
 
     [Theory]
+    [InlineData("auto-safe", true)]
+    [InlineData("d3d11va", true)]
+    [InlineData("no", false)]
+    public void Software_Decoding_Keeps_The_Frame_Decoded_Ahead(string hwdec, bool expected) =>
+        Assert.Equal(expected, MpvSettingsMap.VideoLatencyHacks(new AetherSettings { HardwareDecoding = hwdec }));
+
+    [Theory]
     [InlineData("small", "40")]
     [InlineData("medium", "55")]
     [InlineData("large", "75")]

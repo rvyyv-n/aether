@@ -21,7 +21,7 @@
                         VerticalContentAlignment="Center"
                         Background="{TemplateBinding Background}"
                         Content="{TemplateBinding Content}"
-                        CornerRadius="12">
+                        CornerRadius="{StaticResource AetherOverlayCornerRadius}">
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal" />
@@ -56,11 +56,17 @@
         </Setter>
     </Style>
 
-    <!--  Row: 20 px icon, title Body, description Caption secondary, control on the right; min 60, padding 16,12  -->
+    <!--
+        Row: 16 px icon in a 20 px slot, title Body, description Caption secondary, control on the right; min 60,
+        padding 16,12. Rows with tall notes set VerticalContentAlignment Top to keep the icon and control by the title.
+        A toggle's On/Off word (StateText) sits just left of the control. Note holds extra lines
+        under the description, such as "Applies on restart · Restart engine". The card comes from SettingsGroup.
+    -->
     <Style TargetType="settings:SettingsRow">
         <Setter Property="MinHeight" Value="{StaticResource AetherSizeSettingsRow}" />
         <Setter Property="Padding" Value="16,12" />
         <Setter Property="HorizontalContentAlignment" Value="Right" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="IsTabStop" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
@@ -68,19 +74,21 @@
                     <Grid
                         MinHeight="{TemplateBinding MinHeight}"
                         Padding="{TemplateBinding Padding}"
+                        Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
-                        ColumnSpacing="16">
+                        ColumnSpacing="16"
+                        CornerRadius="{TemplateBinding CornerRadius}">
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="LayoutStates">
                                 <VisualState x:Name="Wide" />
                                 <VisualState x:Name="Narrow">
                                     <VisualState.Setters>
-                                        <Setter Target="ControlPresenter.(Grid.Row)" Value="1" />
-                                        <Setter Target="ControlPresenter.(Grid.Column)" Value="1" />
-                                        <Setter Target="ControlPresenter.(Grid.ColumnSpan)" Value="2" />
-                                        <Setter Target="ControlPresenter.HorizontalAlignment" Value="Left" />
-                                        <Setter Target="ControlPresenter.Margin" Value="0,8,0,0" />
+                                        <Setter Target="ControlArea.(Grid.Row)" Value="1" />
+                                        <Setter Target="ControlArea.(Grid.Column)" Value="1" />
+                                        <Setter Target="ControlArea.(Grid.ColumnSpan)" Value="2" />
+                                        <Setter Target="ControlArea.HorizontalAlignment" Value="Left" />
+                                        <Setter Target="ControlArea.Margin" Value="0,8,0,0" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
@@ -97,32 +105,44 @@
                         <FontIcon
                             x:Name="Icon"
                             Width="20"
-                            VerticalAlignment="Center"
+                            Height="20"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                             FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                            FontSize="20"
+                            FontSize="16"
                             Glyph="{TemplateBinding Glyph}" />
-                        <StackPanel
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            Spacing="2">
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock
                                 Style="{StaticResource AetherBodyTextStyle}"
                                 Text="{TemplateBinding Header}"
                                 TextWrapping="Wrap" />
                             <TextBlock
                                 x:Name="DescriptionText"
+                                Margin="0,2,0,0"
                                 Foreground="{StaticResource AetherTextSecondaryBrush}"
                                 Style="{StaticResource AetherCaptionTextStyle}"
                                 Text="{TemplateBinding Description}"
                                 TextWrapping="Wrap" />
+                            <ContentPresenter x:Name="NotePresenter" Content="{TemplateBinding Note}" />
                         </StackPanel>
-                        <ContentPresenter
-                            x:Name="ControlPresenter"
+                        <StackPanel
+                            x:Name="ControlArea"
                             Grid.Column="2"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                            VerticalAlignment="Center"
-                            Content="{TemplateBinding Content}"
-                            ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Orientation="Horizontal"
+                            Spacing="12">
+                            <TextBlock
+                                x:Name="StateTextBlock"
+                                VerticalAlignment="Center"
+                                AutomationProperties.AccessibilityView="Raw"
+                                Foreground="{StaticResource AetherTextSecondaryBrush}"
+                                Style="{StaticResource AetherBodyTextStyle}"
+                                Text="{TemplateBinding StateText}" />
+                            <ContentPresenter
+                                VerticalAlignment="Center"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" />
+                        </StackPanel>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
@@ -130,8 +150,7 @@
     </Style>
 
     <!--
-        Expander: the header is the whole row and toggles the sub-rows. Its hover fill is inset 4 px with radius 12
-        so it never pokes past the card's 16 px corners.
+        Expander: the header is the whole row and toggles the sub-rows. Its hover fill shares the card's 8 px corners.
     -->
     <Style TargetType="settings:SettingsExpander">
         <Setter Property="IsTabStop" Value="False" />
@@ -145,12 +164,15 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="settings:SettingsExpander">
-                    <StackPanel BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                    <StackPanel
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
                         <Grid MinHeight="{StaticResource AetherSizeSettingsRow}">
                             <ToggleButton
                                 x:Name="HeaderButton"
-                                Margin="4"
-                                Padding="12,8,48,8"
+                                Padding="16,8,48,8"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -165,7 +187,7 @@
                                         Width="20"
                                         VerticalAlignment="Center"
                                         FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                                        FontSize="20"
+                                        FontSize="16"
                                         Glyph="{TemplateBinding Glyph}" />
                                     <StackPanel
                                         Grid.Column="1"
@@ -207,7 +229,7 @@
         </Setter>
     </Style>
 
-    <!--  Toggle 40×20: white track and ink knob when on (theme brushes in DesignTokens); no On/Off text  -->
+    <!--  Toggle 40×20: white track and ink knob when on (theme brushes in DesignTokens). The On/Off word is the row's StateText  -->
     <Style
         x:Key="AetherSettingsToggleStyle"
         BasedOn="{StaticResource DefaultToggleSwitchStyle}"
@@ -342,6 +364,28 @@
         BasedOn="{StaticResource DefaultSliderStyle}"
         TargetType="Slider">
         <Setter Property="Width" Value="200" />
+    </Style>
+
+    <!--  Quiet text button beside a control, such as Reset on a sub-row that differs from its default  -->
+    <Style
+        x:Key="AetherSettingsTextButtonStyle"
+        BasedOn="{StaticResource AetherOutlinePillButtonStyle}"
+        TargetType="Button">
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextSecondaryBrush}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherCaptionFontSize}" />
+        <Setter Property="Padding" Value="8,0" />
+    </Style>
+
+    <!--  Keycaps that start recording a new shortcut when clicked: no frame of their own, hover fill only  -->
+    <Style
+        x:Key="AetherKeycapButtonStyle"
+        BasedOn="{StaticResource AetherOutlinePillButtonStyle}"
+        TargetType="Button">
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="2" />
     </Style>
 
     <!--  Keycap: 24 tall, min 24 wide, padding 8,0, FillInput, StrokeControl, radius 4, Caption  -->

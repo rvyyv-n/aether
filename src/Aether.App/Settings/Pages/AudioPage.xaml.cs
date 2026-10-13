@@ -13,7 +13,7 @@ public sealed partial class AudioPage : Page
         // The engine's device list is not available without starting it, so the list holds the system default plus whatever device is saved.
         binder.Choose(AudioOutputDeviceRow, AudioOutputDeviceCombo, SettingKeys.AudioOutputDevice,
             [new("", AppStrings.Get("Settings_OutputDevice_SystemDefault"))],
-            "Settings_OutputDevice_Title", "Settings_AudioOutputDevice_Description", allowCustom: true);
+            "Settings_OutputDevice_Title", allowCustom: true);
         binder.Toggle(ExclusiveModeRow, ExclusiveModeToggle, SettingKeys.ExclusiveMode, "Settings_ExclusiveMode_Title", "Settings_ExclusiveMode_Description");
         binder.Toggle(PassthroughRow, PassthroughToggle, SettingKeys.Passthrough, "Settings_Passthrough_Title", "Settings_Passthrough_Description");
         binder.RestartNote(PassthroughRestartNote, SettingKeys.Passthrough);

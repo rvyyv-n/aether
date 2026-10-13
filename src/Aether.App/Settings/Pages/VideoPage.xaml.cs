@@ -8,8 +8,6 @@ public sealed partial class VideoPage : Page
     public VideoPage()
     {
         InitializeComponent();
-        QualityHeading.Text = AppStrings.Get("Settings_Group_Quality");
-        ScalingHeading.Text = AppStrings.Get("Settings_ScalingAndFilters_Title");
         var binder = new SettingsPageBinder(this);
 
         binder.Choose(QualityPresetRow, QualityPresetSegmented, SettingKeys.QualityPreset,
@@ -18,15 +16,17 @@ public sealed partial class VideoPage : Page
                 new("balanced", AppStrings.Get("Settings_QualityPreset_Balanced")),
                 new("high", AppStrings.Get("Settings_QualityPreset_HighQuality")),
             ],
-            "Settings_QualityPreset_Title", "Settings_QualityPreset_Description");
+            "Settings_QualityPreset_Title");
 
         binder.Choose(HardwareDecodingRow, HardwareDecodingCombo, SettingKeys.HardwareDecoding,
             [.. HardwareDecodingOptions.All.Select(o => new Choice(o.Value, AppStrings.Get(o.ResourceKey)))],
-            "Settings_HardwareDecoding_Title", "Settings_HardwareDecoding_Description");
+            "Settings_HardwareDecoding_Title");
         binder.RestartNote(HardwareDecodingRestartNote, SettingKeys.HardwareDecoding);
 
         binder.Toggle(SmoothMotionRow, SmoothMotionToggle, SettingKeys.SmoothMotion, "Settings_SmoothMotion_Title", "Settings_SmoothMotion_Description");
 
+        ScalingExpander.Header = AppStrings.Get("Settings_ScalingAndFilters_Title");
+        ScalingExpander.Description = AppStrings.Get("Settings_ScalingAndFilters_Description");
         binder.Choose(UpscalingRow, UpscalingCombo, SettingKeys.Upscaling,
             [
                 new("bilinear", AppStrings.Get("Settings_Upscaling_Bilinear")),
@@ -34,7 +34,8 @@ public sealed partial class VideoPage : Page
                 new("lanczos", AppStrings.Get("Settings_Upscaling_Lanczos")),
                 new("ewa_lanczos", AppStrings.Get("Settings_Upscaling_EwaLanczos")),
             ],
-            "Settings_Upscaling_Title", "Settings_Upscaling_Description");
+            "Settings_Upscaling_Title");
+        binder.ChangedHint(UpscalingRow, UpscalingReset, SettingKeys.Upscaling);
 
         binder.Choose(DownscalingRow, DownscalingCombo, SettingKeys.Downscaling,
             [
@@ -43,9 +44,10 @@ public sealed partial class VideoPage : Page
                 new("mitchell", AppStrings.Get("Settings_Downscaling_Mitchell")),
                 new("lanczos", AppStrings.Get("Settings_Downscaling_Lanczos")),
             ],
-            "Settings_Downscaling_Title", "Settings_Downscaling_Description");
+            "Settings_Downscaling_Title");
+        binder.ChangedHint(DownscalingRow, DownscalingReset, SettingKeys.Downscaling);
 
-        binder.Toggle(DebandingRow, DebandingToggle, SettingKeys.Debanding, "Settings_Debanding_Title", "Settings_Debanding_Description");
+        binder.Toggle(DebandingRow, DebandingToggle, SettingKeys.Debanding, "Settings_Debanding_Title");
 
         binder.Choose(HdrToneMappingRow, HdrToneMappingCombo, SettingKeys.HdrToneMapping,
             [
@@ -55,17 +57,22 @@ public sealed partial class VideoPage : Page
                 new("hable", AppStrings.Get("Settings_HdrToneMapping_Hable")),
                 new("clip", AppStrings.Get("Settings_HdrToneMapping_Clip")),
             ],
-            "Settings_HdrToneMapping_Title", "Settings_HdrToneMapping_Description");
+            "Settings_HdrToneMapping_Title");
+        binder.ChangedHint(HdrToneMappingRow, HdrToneMappingReset, SettingKeys.HdrToneMapping);
 
         AdjustmentsExpander.Header = AppStrings.Get("Settings_Adjustments_Title");
         AdjustmentsExpander.Description = AppStrings.Get("Settings_Adjustments_Description");
-        binder.Slider(BrightnessRow, BrightnessSlider, BrightnessValue, BrightnessReset, SettingKeys.Brightness, "Settings_Brightness_Title", "Settings_Brightness_Description");
-        binder.Slider(ContrastRow, ContrastSlider, ContrastValue, ContrastReset, SettingKeys.Contrast, "Settings_Contrast_Title", "Settings_Contrast_Description");
-        binder.Slider(GammaRow, GammaSlider, GammaValue, GammaReset, SettingKeys.Gamma, "Settings_Gamma_Title", "Settings_Gamma_Description");
-        binder.Slider(SaturationRow, SaturationSlider, SaturationValue, SaturationReset, SettingKeys.Saturation, "Settings_Saturation_Title", "Settings_Saturation_Description");
+        binder.Slider(BrightnessRow, BrightnessSlider, BrightnessValue, SettingKeys.Brightness, "Settings_Brightness_Title");
+        binder.Slider(ContrastRow, ContrastSlider, ContrastValue, SettingKeys.Contrast, "Settings_Contrast_Title");
+        binder.Slider(GammaRow, GammaSlider, GammaValue, SettingKeys.Gamma, "Settings_Gamma_Title");
+        binder.Slider(SaturationRow, SaturationSlider, SaturationValue, SettingKeys.Saturation, "Settings_Saturation_Title");
+        string[] adjustments = [SettingKeys.Brightness, SettingKeys.Contrast, SettingKeys.Gamma, SettingKeys.Saturation];
+        AdjustmentsReset.Content = AppStrings.Get("Common_Reset");
+        binder.ResetButton(AdjustmentsReset, $"{AppStrings.Get("Common_Reset")}: {AdjustmentsExpander.Header}", adjustments);
 
-        // An adjustment that is not at its default stays in view rather than hiding in a closed expander.
-        AdjustmentsExpander.IsExpanded = new[] { SettingKeys.Brightness, SettingKeys.Contrast, SettingKeys.Gamma, SettingKeys.Saturation }
+        // A setting that is not at its default stays in view rather than hiding in a closed expander.
+        AdjustmentsExpander.IsExpanded = adjustments.Any(key => !App.Settings.IsDefault(key));
+        ScalingExpander.IsExpanded = new[] { SettingKeys.Upscaling, SettingKeys.Downscaling, SettingKeys.Debanding, SettingKeys.HdrToneMapping }
             .Any(key => !App.Settings.IsDefault(key));
     }
 }

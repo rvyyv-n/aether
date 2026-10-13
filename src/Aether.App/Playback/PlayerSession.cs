@@ -88,13 +88,22 @@ public sealed class PlayerSession : IDisposable
         IReadOnlyList<KeyValuePair<string, string>> startOptions = MpvSettingsMap.StartOptions(s);
         try
         {
-            return MpvContext.Create(new MpvContextOptions { HardwareDecoder = s.HardwareDecoding, AdditionalOptions = startOptions });
+            return MpvContext.Create(new MpvContextOptions
+            {
+                HardwareDecoder = s.HardwareDecoding,
+                VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
+                AdditionalOptions = startOptions,
+            });
         }
         catch (MpvException) when (startOptions.Count > 0)
         {
             // mpv rejected a start-only option (the validator cannot tell whether mpv knows a custom key), and the
             // player must still open, so retry with only Aether's own.
-            return MpvContext.Create(new MpvContextOptions { HardwareDecoder = s.HardwareDecoding });
+            return MpvContext.Create(new MpvContextOptions
+            {
+                HardwareDecoder = s.HardwareDecoding,
+                VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
+            });
         }
     }
 

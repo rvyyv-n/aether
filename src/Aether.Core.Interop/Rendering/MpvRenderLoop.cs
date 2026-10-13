@@ -100,7 +100,13 @@ public sealed unsafe class MpvRenderLoop : IDisposable
         _wakeEvent = Kernel32.CreateAutoResetEvent();
         _frameEventRaw = _frameEvent.DangerousGetHandle();
         _wakeEventRaw = _wakeEvent.DangerousGetHandle();
-        _thread = new Thread(static state => ((MpvRenderLoop)state!).Run()) { IsBackground = true, Name = "Aether.Render" };
+        // Above the decoder: software decoding keeps every core busy, and a render thread queued behind it misses vsync.
+        _thread = new Thread(static state => ((MpvRenderLoop)state!).Run())
+        {
+            IsBackground = true,
+            Name = "Aether.Render",
+            Priority = ThreadPriority.Highest,
+        };
     }
 
     public RenderLoopState State => _state;
