@@ -406,13 +406,13 @@
         </Grid>
 
         <!--
-            Export chip and clip drawer (s5-03, 5.3): 8 above the 88 px pill (24 + 88 + 8 = 120), right-aligned
+            Export chip and clip drawer (s5-03, 5.3): 8 above the 84 px card (24 + 84 + 8 = 116), right-aligned
             to it by sharing its width and margins. Fades with the controls.
         -->
         <Grid
             x:Name="ClipLayer"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
-            Margin="16,0,16,120"
+            Margin="16,0,16,116"
             VerticalAlignment="Bottom"
             PointerCanceled="OnOsdPointerExited"
             PointerEntered="OnOsdPointerEntered"
@@ -422,9 +422,9 @@
         </Grid>
 
         <!--
-            Transport card: the seek row, then the buttons, 4 apart. min(520, window - 32) wide and 88 tall:
-            padding 8 (7 here, the 1 px stroke is the eighth), a 32 px seek row and a 36 px button row sized
-            by the round play button. A plain 62% ink tint with a hairline edge and radius 8.
+            Transport card: the seek row, then the buttons, 4 apart. min(520, window - 32) wide and 84 tall:
+            padding 8 (7 here, the 1 px stroke is the eighth), a 32 px seek row and a 32 px button row.
+            A plain 62% ink tint with a hairline edge and radius 24 (16 button radius + 8 padding).
             24 above the bottom.
             Below a 520 px pill, frame step, loop and always on top move into More controls (5.7).
         -->
@@ -472,7 +472,7 @@
                 </Grid>
 
                 <!--  Row 2: 1fr / auto / 1fr, so the centre group is truly centred; 4 apart inside each group.  -->
-                <Grid Grid.Row="1" Height="{StaticResource AetherSizeTransportPlay}">
+                <Grid Grid.Row="1" Height="{StaticResource AetherSizeControl}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -510,7 +510,7 @@
                     <StackPanel
                         Grid.Column="1"
                         Orientation="Horizontal"
-                        Spacing="8">
+                        Spacing="4">
                         <Button
                             x:Name="BackButton"
                             Click="OnBackClick"
