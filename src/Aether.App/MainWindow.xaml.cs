@@ -53,11 +53,6 @@ public interface IShellWindow
 /// </summary>
 public sealed partial class MainWindow : Window, IShellWindow
 {
-    private static readonly Color CaptionForeground = Color.FromArgb(0xD9, 0xFF, 0xFF, 0xFF);
-    private static readonly Color CaptionInactiveForeground = Color.FromArgb(0x73, 0xFF, 0xFF, 0xFF);
-    private static readonly Color CaptionHover = Color.FromArgb(0x14, 0xFF, 0xFF, 0xFF);
-    private static readonly Color CaptionPressed = Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF);
-
     // The smallest client area (DIPs) that still fits the control bar and the empty-state buttons.
     private const double MinClientWidth = 640;
     private const double MinClientHeight = 400;
@@ -65,6 +60,11 @@ public sealed partial class MainWindow : Window, IShellWindow
     // A video opens at one video pixel per screen pixel, within this share of the work area.
     private const double FitMaxWorkAreaFraction = 0.9;
 
+    // The caption colours live in the design tokens so the title-bar gear and Back read the same values.
+    private readonly Color _captionForeground;
+    private readonly Color _captionInactiveForeground;
+    private readonly Color _captionHover;
+    private readonly Color _captionPressed;
     private readonly AspectRatioLock? _aspectLock;
     private readonly CaptionGlyphFade _captionFade = new();
     private readonly DispatcherQueueTimer _captionTimer;
@@ -80,6 +80,12 @@ public sealed partial class MainWindow : Window, IShellWindow
     {
         InitializeComponent();
 
+        var resources = Application.Current.Resources;
+        _captionForeground = (Color)resources["AetherCaptionGlyphColor"];
+        _captionInactiveForeground = (Color)resources["AetherCaptionGlyphInactiveColor"];
+        _captionHover = (Color)resources["AetherCaptionHoverColor"];
+        _captionPressed = (Color)resources["AetherCaptionPressedColor"];
+
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(Shell.TitleBarDragRegion);
         AppWindow.SetIcon("Assets/AppIcon.ico");
@@ -90,7 +96,6 @@ public sealed partial class MainWindow : Window, IShellWindow
         titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
         ApplyCaptionGlyphs(1);
 
-        var resources = Application.Current.Resources;
         _chromeShow = TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeShowMilliseconds"]);
         _chromeHide = TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeHideMilliseconds"]);
         _captionTimer = DispatcherQueue.CreateTimer();
@@ -289,11 +294,11 @@ public sealed partial class MainWindow : Window, IShellWindow
     private void ApplyCaptionGlyphs(double opacity)
     {
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
-        titleBar.ButtonForegroundColor = Scale(CaptionForeground, opacity);
-        titleBar.ButtonInactiveForegroundColor = Scale(CaptionInactiveForeground, opacity);
+        titleBar.ButtonForegroundColor = Scale(_captionForeground, opacity);
+        titleBar.ButtonInactiveForegroundColor = Scale(_captionInactiveForeground, opacity);
         // Hover and press fade too, so an invisible button doesn't light up under the pointer.
-        titleBar.ButtonHoverBackgroundColor = Scale(CaptionHover, opacity);
-        titleBar.ButtonPressedBackgroundColor = Scale(CaptionPressed, opacity);
+        titleBar.ButtonHoverBackgroundColor = Scale(_captionHover, opacity);
+        titleBar.ButtonPressedBackgroundColor = Scale(_captionPressed, opacity);
         titleBar.ButtonHoverForegroundColor = Scale(Colors.White, opacity);
         titleBar.ButtonPressedForegroundColor = Scale(Colors.White, opacity);
     }

@@ -163,6 +163,9 @@ public sealed partial class MainPage : Page
     public void OnWindowActivationChanged(bool active)
     {
         _windowActive = active;
+        Brush glyph = (Brush)Application.Current.Resources[active ? "AetherCaptionGlyphBrush" : "AetherCaptionGlyphInactiveBrush"];
+        SettingsButton.Foreground = glyph;
+        SettingsBackButton.Foreground = glyph;
         if (!active)
         {
             _session?.ReleaseKeys();
@@ -1250,7 +1253,11 @@ public sealed partial class MainPage : Page
             : AppStrings.Get("App_Badge");
         // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
         TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
-        TitleBadgeText.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
+        TitleBadge.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
+        // Only a playing title sits on the SurfaceOsd fill; "Alpha" on the empty state stays plain.
+        TitleBadge.Background = hasVideo ? (Brush)Application.Current.Resources["AetherSurfaceOsdBrush"] : null;
+        TitleBadge.Padding = hasVideo ? new Thickness(6, 2, 6, 2) : new Thickness(0);
+        TitleBadge.Margin = hasVideo ? new Thickness(0, 0, 0, -2) : new Thickness(0);
 
         (string glyph, string label) = TransportState.PlayButton(vm?.Status ?? PlaybackStatus.Idle) switch
         {

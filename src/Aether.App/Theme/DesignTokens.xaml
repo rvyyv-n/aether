@@ -82,6 +82,10 @@
     <Color x:Key="AetherStrokeDividerColor">#14FFFFFF</Color>  <!-- 8%. Dividers inside a surface -->
     <Color x:Key="AetherStrokeDropTargetColor">#33FFFFFF</Color>  <!-- 20%. Inner window border while dragging -->
     <Color x:Key="AetherStrokeInputFocusColor">#FFFFFFFF</Color>  <!-- [screen 2] 2 px bottom edge of a focused text field. White, since there is no accent -->
+    <Color x:Key="AetherCaptionGlyphColor">#D9FFFFFF</Color>  <!-- 85%. Glyphs of the system caption buttons and the title-bar gear and Back; MainWindow reads the same value -->
+    <Color x:Key="AetherCaptionGlyphInactiveColor">#73FFFFFF</Color>  <!-- 45%. Same glyphs while the window is inactive -->
+    <Color x:Key="AetherCaptionHoverColor">#14FFFFFF</Color>  <!-- 8%. Hover fill of a caption button; the glyph turns white -->
+    <Color x:Key="AetherCaptionPressedColor">#0AFFFFFF</Color>  <!-- 4%. Pressed fill of a caption button; the glyph stays white -->
     <Color x:Key="AetherStatusReadyColor">#FF4ADE80</Color>  <!-- Dots only, always beside a word -->
     <Color x:Key="AetherStatusWarningColor">#FFF2A35E</Color>  <!-- Failed, unsupported -->
     <Color x:Key="AetherStatusNeutralColor">#80FFFFFF</Color>  <!-- Starting, idle -->
@@ -115,6 +119,10 @@
     <SolidColorBrush x:Key="AetherStrokeDividerBrush" Color="{StaticResource AetherStrokeDividerColor}" />
     <SolidColorBrush x:Key="AetherStrokeDropTargetBrush" Color="{StaticResource AetherStrokeDropTargetColor}" />
     <SolidColorBrush x:Key="AetherStrokeInputFocusBrush" Color="{StaticResource AetherStrokeInputFocusColor}" />
+    <SolidColorBrush x:Key="AetherCaptionGlyphBrush" Color="{StaticResource AetherCaptionGlyphColor}" />
+    <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="{StaticResource AetherCaptionGlyphInactiveColor}" />
+    <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="{StaticResource AetherCaptionHoverColor}" />
+    <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="{StaticResource AetherCaptionPressedColor}" />
     <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="{StaticResource AetherStatusReadyColor}" />
     <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="{StaticResource AetherStatusWarningColor}" />
     <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="{StaticResource AetherStatusNeutralColor}" />
@@ -556,11 +564,41 @@
         <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
         <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
     </Style>
-    <!--  Title bar gear and Back: 46×32, square, like the caption buttons  -->
+    <!--
+        Title bar gear and Back: 46×32 and square like the system caption buttons, and coloured like them:
+        glyph at 85%, white on hover and press, 8% and 4% fills. The page dims the glyph while the window is inactive.
+    -->
     <Style x:Key="AetherTitleBarButtonStyle" BasedOn="{StaticResource AetherIconButtonStyle}" TargetType="Button">
         <Setter Property="Width" Value="{StaticResource AetherSizeTitleBarButton}" />
         <Setter Property="Height" Value="{StaticResource AetherSizeTitleBar}" />
         <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource AetherCaptionGlyphBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="Root" Background="{TemplateBinding Background}">
+                        <ContentPresenter x:Name="ContentPresenter" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherCaptionHoverBrush}" />
+                                        <Setter Target="ContentPresenter.Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{StaticResource AetherCaptionPressedBrush}" />
+                                        <Setter Target="ContentPresenter.Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <!--  Recents row (2.10): the whole row is the target; glass card, radius 8, content left-aligned (the pill template centres it)  -->
     <Style x:Key="AetherRecentRowButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">

@@ -386,14 +386,19 @@
                         Style="{StaticResource AetherCaptionStrongTextStyle}"
                         Text="Aether"
                         TextLineBounds="TrimToBaseline" />
-                    <TextBlock
-                        x:Name="TitleBadgeText"
+                    <!--  The fill and padding appear once a video is playing; the -2 bottom margin keeps the baseline shared with the name.  -->
+                    <Border
+                        x:Name="TitleBadge"
                         MaxWidth="320"
                         VerticalAlignment="Bottom"
-                        Style="{StaticResource AetherCaptionTextStyle}"
-                        Text="Alpha"
-                        TextLineBounds="TrimToBaseline"
-                        TextTrimming="CharacterEllipsis" />
+                        CornerRadius="{StaticResource AetherControlCornerRadius}">
+                        <TextBlock
+                            x:Name="TitleBadgeText"
+                            Style="{StaticResource AetherCaptionTextStyle}"
+                            Text="Alpha"
+                            TextLineBounds="TrimToBaseline"
+                            TextTrimming="CharacterEllipsis" />
+                    </Border>
                 </StackPanel>
             </Grid>
             <Button
