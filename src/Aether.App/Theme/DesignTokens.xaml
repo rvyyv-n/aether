@@ -170,6 +170,8 @@
     <x:Double x:Key="AetherSizeIconLarge">20</x:Double>
     <!--  The handoff's 16 px transport icons draw about 12 px of ink; Segoe Fluent fills its whole em, so 12 matches them  -->
     <x:Double x:Key="AetherSizeTransportIcon">12</x:Double>
+    <x:Double x:Key="AetherSizeTransportSkipIcon">14</x:Double>  <!-- The skip-5 ring; its circle is centred in the em, so the "5" centres on the button -->
+    <x:Double x:Key="AetherSizeTransportSkipDigit">8</x:Double>
     <x:Double x:Key="AetherSizeHeroTile">96</x:Double>
     <x:Double x:Key="AetherSizeHeroGlyph">40</x:Double>
     <x:Double x:Key="AetherSizeStatusDot">6</x:Double>  <!-- Top-aligned. Top margin 5 on caption lines (16), 7 on body lines (20), 11 on subtitle lines (28, pro -->
@@ -419,6 +421,15 @@
     </Style>
     <Style x:Key="AetherTransportIconButtonStyle" BasedOn="{StaticResource AetherIconButtonStyle}" TargetType="Button">
         <Setter Property="FontSize" Value="{StaticResource AetherSizeTransportIcon}" />
+    </Style>
+    <!--  Tight line bounds so the digit's ink, not its line box, is what gets centred in the ring  -->
+    <Style x:Key="AetherSkipDigitTextStyle" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherSizeTransportSkipDigit}" />
+        <Setter Property="TextLineBounds" Value="Tight" />
+        <Setter Property="IsTextScaleFactorEnabled" Value="False" />
     </Style>
     <!--  Play/pause: 32 round translucent circle with a hairline, the same emphasis as the Open file pill  -->
     <Style x:Key="AetherPlayButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">

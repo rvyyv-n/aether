@@ -512,6 +512,7 @@
                         </Button>
                     </StackPanel>
 
+                    <!--  Skip 5 s is Segoe Fluent's circular arrow with a "5" set inside it; the numbered Fluent skip glyphs only come as 10 and 30.  -->
                     <StackPanel
                         Grid.Column="1"
                         Orientation="Horizontal"
@@ -519,10 +520,13 @@
                         <Button
                             x:Name="BackButton"
                             Click="OnBackClick"
-                            Content="&#xE777;"
-                            FontSize="18"
                             Style="{StaticResource AetherTransportIconButtonStyle}"
-                            ToolTipService.Placement="Top" />
+                            ToolTipService.Placement="Top">
+                            <Grid>
+                                <FontIcon FontSize="{StaticResource AetherSizeTransportSkipIcon}" Glyph="&#xE777;" />
+                                <TextBlock Style="{StaticResource AetherSkipDigitTextStyle}" Text="5" />
+                            </Grid>
+                        </Button>
                         <Button
                             x:Name="BackFrameButton"
                             Click="OnBackFrameClick"
@@ -545,10 +549,13 @@
                         <Button
                             x:Name="ForwardButton"
                             Click="OnForwardClick"
-                            Content="&#xE72C;"
-                            FontSize="18"
                             Style="{StaticResource AetherTransportIconButtonStyle}"
-                            ToolTipService.Placement="Top" />
+                            ToolTipService.Placement="Top">
+                            <Grid>
+                                <FontIcon FontSize="{StaticResource AetherSizeTransportSkipIcon}" Glyph="&#xE72C;" />
+                                <TextBlock Style="{StaticResource AetherSkipDigitTextStyle}" Text="5" />
+                            </Grid>
+                        </Button>
                     </StackPanel>
 
                     <StackPanel
