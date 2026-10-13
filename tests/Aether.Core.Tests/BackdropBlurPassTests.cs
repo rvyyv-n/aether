@@ -86,11 +86,11 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
             Disable(GL_SCISSOR_TEST);
         }
 
-        /// <summary>Red channel at a UI (top-left origin) pixel.</summary>
+        /// <summary>Red channel at a UI (top-left origin) pixel; GL row 0 is the top row here.</summary>
         public int Red(int x, int yFromTop)
         {
             byte* pixel = stackalloc byte[4];
-            ReadPixels(x, (int)H - 1 - yFromTop, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+            ReadPixels(x, yFromTop, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
             return pixel[0];
         }
 

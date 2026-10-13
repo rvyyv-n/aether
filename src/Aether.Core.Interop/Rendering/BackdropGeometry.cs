@@ -42,7 +42,8 @@ public static class BackdropGeometry
 
     /// <summary>
     /// Maps the card onto a back buffer of <paramref name="bufferWidth"/> × <paramref name="bufferHeight"/>
-    /// pixels, flipping Y into GL space. False when there is nothing to draw.
+    /// pixels. No Y flip: the back buffer is a client-buffer pbuffer, so GL row 0 is the top row
+    /// (see <see cref="Angle.AngleBridge.RenderFlipY"/>). False when there is nothing to draw.
     /// </summary>
     public static bool TryLayout(in BackdropRegion region, uint bufferWidth, uint bufferHeight, out BackdropLayout layout)
     {
@@ -58,10 +59,8 @@ public static class BackdropGeometry
 
         float x0 = region.X * sx;
         float x1 = x0 + (region.Width * sx);
-        float top = region.Y * sy;
-        float bottom = top + (region.Height * sy);
-        float y0 = bufferHeight - bottom;
-        float y1 = bufferHeight - top;
+        float y0 = region.Y * sy;
+        float y1 = y0 + (region.Height * sy);
 
         float scale = region.Scale * uniform;
         float margin = MathF.Ceiling(CopyMarginDips * scale);

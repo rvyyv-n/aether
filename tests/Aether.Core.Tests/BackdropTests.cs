@@ -13,13 +13,12 @@ public class BackdropTests
     private static long Ms(double milliseconds) => (long)(milliseconds * Stopwatch.Frequency / 1000.0);
 
     [Fact]
-    public void Layout_FlipsYIntoGlSpace()
+    public void Layout_KeepsUiRows_SinceGlRowZeroIsTheTop()
     {
         Assert.True(BackdropGeometry.TryLayout(Card(), 720, 400, out BackdropLayout l));
 
-        // UI rows 200..284 of 400 are GL rows 116..200.
-        Assert.Equal(116f, l.CardY0);
-        Assert.Equal(200f, l.CardY1);
+        Assert.Equal(200f, l.CardY0);
+        Assert.Equal(284f, l.CardY1);
         Assert.Equal(100f, l.CardX0);
         Assert.Equal(620f, l.CardX1);
     }
@@ -30,13 +29,13 @@ public class BackdropTests
         Assert.True(BackdropGeometry.TryLayout(Card(), 720, 400, out BackdropLayout l));
 
         Assert.Equal(76, l.CopyX);
-        Assert.Equal(92, l.CopyY);
+        Assert.Equal(176, l.CopyY);
         Assert.Equal(568, l.CopyWidth);
         Assert.Equal(132, l.CopyHeight);
 
         Assert.True(BackdropGeometry.TryLayout(Card(x: 4, y: 330, surfaceH: 400), 720, 400, out BackdropLayout edge));
         Assert.Equal(0, edge.CopyX);
-        Assert.Equal(0, edge.CopyY); // card touches the bottom: the margin stops at row 0
+        Assert.Equal(400, edge.CopyY + edge.CopyHeight); // card runs past the bottom: the copy stops at the last row
     }
 
     [Fact]
@@ -47,8 +46,8 @@ public class BackdropTests
 
         Assert.Equal(200f, l.CardX0);
         Assert.Equal(1240f, l.CardX1);
-        Assert.Equal(232f, l.CardY0);
-        Assert.Equal(400f, l.CardY1);
+        Assert.Equal(400f, l.CardY0);
+        Assert.Equal(568f, l.CardY1);
         Assert.Equal(48f, l.Radius);
         Assert.Equal(2f, l.Scale);
     }

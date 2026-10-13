@@ -108,7 +108,7 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
             vec2 p = gl_FragCoord.xy - centre;
             float cover = clamp(0.5 - box(p, ext, uShape.x), 0.0, 1.0);
             // A Gaussian-blurred edge is close to a logistic curve over the distance to the shape.
-            float d = box(p - vec2(0.0, -uShape.z), ext, uShape.x) / uShape.y;
+            float d = box(p - vec2(0.0, uShape.z), ext, uShape.x) / uShape.y;
             float shadow = uShadow / (1.0 + exp(min(1.702 * d, 30.0))) * (1.0 - cover);
             vec3 blur = texture(uTex, (gl_FragCoord.xy - uCopy.xy) / uCopy.zw).rgb;
             float a = uShape.w;
