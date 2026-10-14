@@ -89,8 +89,8 @@ public sealed partial class AboutPage : Page
             $"{AppStrings.Get("Settings_About_Renderer")}: {_renderer}",
             $"{AppStrings.Get("Settings_About_MpvVersion")}: {_mpvVersion}",
             $"{AppStrings.Get("Settings_About_YtDlpVersion")}: {_ytDlpVersion}",
-            $"Windows: {RuntimeInformation.OSDescription}",
-            $"Architecture: {RuntimeInformation.OSArchitecture}");
+            $"{AppStrings.Get("Settings_About_Windows")}: {RuntimeInformation.OSDescription}",
+            $"{AppStrings.Get("Settings_About_Architecture")}: {RuntimeInformation.OSArchitecture}");
         var package = new DataPackage();
         package.SetText(text);
         Clipboard.SetContent(package);

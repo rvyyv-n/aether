@@ -231,10 +231,6 @@
          When UISettings.AnimationsEnabled is false, every fade and slide is instant; delays stay.  -->
     <x:Double x:Key="AetherMotionChromeShowMilliseconds">150</x:Double>
     <x:Double x:Key="AetherMotionChromeHideMilliseconds">300</x:Double>
-    <x:Double x:Key="AetherMotionChromeIdleDelayMilliseconds">2000</x:Double>
-    <x:Double x:Key="AetherMotionToastDurationMilliseconds">4000</x:Double>
-    <x:Double x:Key="AetherMotionReducedMotionMilliseconds">0</x:Double>
-    <x:Double x:Key="AetherMotionToastWithActionMilliseconds">8000</x:Double>
 
 
     <!--
@@ -299,26 +295,10 @@
         <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
         <Setter Property="Padding" Value="16,12" />
     </Style>
-    <!--  Controls pill, toasts, anything over video. TextPrimary only on it.  -->
-    <Style x:Key="AetherOsdPanelStyle" BasedOn="{StaticResource AetherGlassPanelStyle}" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource AetherSurfaceOsdBrush}" />
-        <Setter Property="Padding" Value="8" />
-    </Style>
     <!--  Diagnostics: solid 95% so secondary text holds about 7:1 over bright video  -->
     <Style x:Key="AetherOverlayStrongPanelStyle" BasedOn="{StaticResource AetherGlassPanelStyle}" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource AetherSurfaceOverlayStrongBrush}" />
         <Setter Property="Padding" Value="16,8,8,12" />
-    </Style>
-    <!--  Settings row card: min 60, padding 12,16, 20 px icon, control on the right, 4 between cards  -->
-    <Style x:Key="AetherSettingsRowStyle" BasedOn="{StaticResource AetherGlassPanelStyle}" TargetType="Border">
-        <Setter Property="MinHeight" Value="{StaticResource AetherSizeSettingsRow}" />
-        <Setter Property="Padding" Value="16,12" />
-    </Style>
-    <Style x:Key="AetherBadgeStyle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource AetherSurfaceOsdBrush}" />
-        <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
-        <Setter Property="Padding" Value="6,2" />
-        <Setter Property="MaxWidth" Value="{StaticResource AetherSizeBadgeMaxWidth}" />
     </Style>
     <!--  Status dot: 6 px, top-aligned; Margin top 5 on caption lines, 7 on body lines, 11 on subtitle lines  -->
     <Style x:Key="AetherStatusDotStyle" TargetType="Ellipse">

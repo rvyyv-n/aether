@@ -22,7 +22,7 @@
                 </StackPanel>
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="HttpProxyRow" Glyph="&#xE774;">
-                <TextBox x:Name="HttpProxyBox" Style="{StaticResource AetherSettingsTextBoxStyle}" PlaceholderText="http://host:port" />
+                <TextBox x:Name="HttpProxyBox" Style="{StaticResource AetherSettingsTextBoxStyle}" />
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="RtspTransportRow" Glyph="&#xE968;">
                 <ComboBox x:Name="RtspTransportCombo" Style="{StaticResource AetherSettingsComboStyle}" />

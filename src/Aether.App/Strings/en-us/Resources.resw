@@ -69,15 +69,6 @@
   <data name="TitleBar_SettingsTooltip" xml:space="preserve">
     <value>Settings (Ctrl+,)</value>
   </data>
-  <data name="TitleBar_Close" xml:space="preserve">
-    <value>Close</value>
-  </data>
-  <data name="TitleBar_Minimize" xml:space="preserve">
-    <value>Minimize</value>
-  </data>
-  <data name="TitleBar_Maximize" xml:space="preserve">
-    <value>Maximize</value>
-  </data>
 
   <!-- Empty state (Screens 1 and 2A) -->
   <data name="EmptyState_Title" xml:space="preserve">
@@ -578,32 +569,8 @@
   <data name="Settings_Title" xml:space="preserve">
     <value>Settings</value>
   </data>
-  <data name="Settings_NavGeneral" xml:space="preserve">
-    <value>General</value>
-  </data>
   <data name="Settings_NavPlayback" xml:space="preserve">
     <value>Playback</value>
-  </data>
-  <data name="Settings_NavVideo" xml:space="preserve">
-    <value>Video</value>
-  </data>
-  <data name="Settings_NavAudio" xml:space="preserve">
-    <value>Audio</value>
-  </data>
-  <data name="Settings_NavSubtitles" xml:space="preserve">
-    <value>Subtitles</value>
-  </data>
-  <data name="Settings_NavStreaming" xml:space="preserve">
-    <value>Streaming</value>
-  </data>
-  <data name="Settings_NavShortcuts" xml:space="preserve">
-    <value>Shortcuts</value>
-  </data>
-  <data name="Settings_NavAdvanced" xml:space="preserve">
-    <value>Advanced</value>
-  </data>
-  <data name="Settings_NavAbout" xml:space="preserve">
-    <value>About</value>
   </data>
 
   <!-- Settings: General (Screen 7.1) -->
@@ -679,9 +646,6 @@
   </data>
   <data name="Settings_HardwareDecoding_Direct3D11Copy" xml:space="preserve">
     <value>Direct3D 11 copy</value>
-  </data>
-  <data name="Settings_RestartNotice" xml:space="preserve">
-    <value>Applies on restart · Restart engine</value>
   </data>
   <data name="Settings_RestartEngine" xml:space="preserve">
     <value>Restart engine</value>
@@ -806,9 +770,6 @@
   <data name="Settings_YtDlp_UpdateAutomatically_Description" xml:space="preserve">
     <value>Checks once a day</value>
   </data>
-  <data name="Settings_YtDlp_AvailableOnceInstalled" xml:space="preserve">
-    <value>Available once yt-dlp is installed</value>
-  </data>
 
   <!-- Settings: Shortcuts (Screen 7.8) -->
   <data name="Settings_Shortcuts_PlayPause" xml:space="preserve">
@@ -837,9 +798,6 @@
   </data>
   <data name="Settings_Shortcuts_PlayCopiedLink" xml:space="preserve">
     <value>Play a copied link</value>
-  </data>
-  <data name="Settings_Shortcuts_SetInOut" xml:space="preserve">
-    <value>Set in / Set out</value>
   </data>
   <data name="Settings_Shortcuts_SetIn" xml:space="preserve">
     <value>Set in</value>
@@ -926,9 +884,6 @@
   <data name="Settings_About_ReportIssueDescription" xml:space="preserve">
     <value>Opens the issue tracker on GitHub</value>
   </data>
-  <data name="Settings_About_Footer" xml:space="preserve">
-    <value>Aether is open source · github.com/rvyyv-n/aether · Report an issue</value>
-  </data>
 
   <!-- Settings: Page Titles -->
   <data name="Settings_Page_General" xml:space="preserve">
@@ -963,20 +918,11 @@
   <data name="Settings_QualityPreset_High" xml:space="preserve">
     <value>High quality</value>
   </data>
-  <data name="Settings_AudioOutputDevice_Title" xml:space="preserve">
-    <value>Audio output device</value>
-  </data>
   <data name="Settings_SubtitleFont_Title" xml:space="preserve">
     <value>Subtitle font</value>
   </data>
   <data name="Settings_SubtitleSize_Title" xml:space="preserve">
     <value>Subtitle size</value>
-  </data>
-  <data name="Settings_CustomMpvOptions_Title" xml:space="preserve">
-    <value>Custom mpv options</value>
-  </data>
-  <data name="Settings_CustomMpvOptions_Description" xml:space="preserve">
-    <value>Advanced custom mpv options, one key=value per line</value>
   </data>
 
   <!-- Settings: Choice Values -->
@@ -1090,17 +1036,11 @@
   <data name="Common_Off" xml:space="preserve">
     <value>Off</value>
   </data>
-  <data name="Common_Auto" xml:space="preserve">
-    <value>Auto</value>
-  </data>
   <data name="Common_Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
   <data name="Common_Cancel" xml:space="preserve">
     <value>Cancel</value>
-  </data>
-  <data name="Common_Retry" xml:space="preserve">
-    <value>Retry</value>
   </data>
   <data name="Clips_Clips" xml:space="preserve">
     <value>Clips</value>
@@ -1342,5 +1282,23 @@
   </data>
   <data name="Settings_SubtitlePosition_Top" xml:space="preserve">
     <value>Top</value>
+  </data>
+  <data name="Diagnostics_Software" xml:space="preserve">
+    <value>Software</value>
+  </data>
+  <data name="Diagnostics_Hardware" xml:space="preserve">
+    <value>Hardware ({0})</value>
+  </data>
+  <data name="Diagnostics_Playing" xml:space="preserve">
+    <value>playing</value>
+  </data>
+  <data name="Settings_HttpProxy_Placeholder" xml:space="preserve">
+    <value>http://host:port</value>
+  </data>
+  <data name="Settings_About_Windows" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="Settings_About_Architecture" xml:space="preserve">
+    <value>Architecture</value>
   </data>
 </root>

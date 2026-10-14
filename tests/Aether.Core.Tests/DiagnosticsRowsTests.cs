@@ -5,12 +5,14 @@ namespace Aether.Core.Tests;
 
 public class DiagnosticsRowsTests
 {
+    private static readonly DiagnosticsWording Wording = new("Software", "Hardware ({0})", "playing");
+
     private static readonly string[] Labels = ["Decoder", "Video", "Frame rate", "Display", "Dropped", "Cache"];
 
     [Fact]
     public void NothingReported_ShowsDashesAndZeroDrops()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial);
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial, Wording);
 
         Assert.Equal(DiagnosticsRows.Unavailable, rows.Decoder);
         Assert.Equal(DiagnosticsRows.Unavailable, rows.Video);
@@ -37,7 +39,7 @@ public class DiagnosticsRowsTests
             CacheDuration = 8.25,
         };
 
-        DiagnosticsRows rows = DiagnosticsRows.From(state);
+        DiagnosticsRows rows = DiagnosticsRows.From(state, Wording);
 
         Assert.Equal("Hardware (d3d11va)", rows.Decoder);
         Assert.Equal("h264 · 1920×1080", rows.Video);
@@ -50,7 +52,7 @@ public class DiagnosticsRowsTests
     [Fact]
     public void SoftwareDecoding_IsNamedPlainly()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { Decoder = "no" });
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { Decoder = "no" }, Wording);
 
         Assert.Equal("Software", rows.Decoder);
     }
@@ -61,7 +63,7 @@ public class DiagnosticsRowsTests
     [InlineData(0, 0, "—")]
     public void FrameRate_UsesWhicheverRateIsKnown(double container, double estimated, string expected)
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { FramesPerSecond = container, EstimatedFps = estimated });
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { FramesPerSecond = container, EstimatedFps = estimated }, Wording);
 
         Assert.Equal(expected, rows.FrameRate);
     }
@@ -69,7 +71,7 @@ public class DiagnosticsRowsTests
     [Fact]
     public void FrameRate_BothContainerAndEstimated_FormatsFpsAndPlayingStyle()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { FramesPerSecond = 23.976, EstimatedFps = 23.976 });
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { FramesPerSecond = 23.976, EstimatedFps = 23.976 }, Wording);
 
         Assert.Equal("23.976 fps · 24 playing", rows.FrameRate);
     }
@@ -77,15 +79,15 @@ public class DiagnosticsRowsTests
     [Fact]
     public void Decoder_EmptyOrNamedHardware_FormatsCorrectly()
     {
-        Assert.Equal(DiagnosticsRows.Unavailable, DiagnosticsRows.From(PlayerState.Initial with { Decoder = "" }).Decoder);
-        Assert.Equal("Hardware (nvdec)", DiagnosticsRows.From(PlayerState.Initial with { Decoder = "nvdec" }).Decoder);
-        Assert.Equal("Hardware (vaapi)", DiagnosticsRows.From(PlayerState.Initial with { Decoder = "vaapi" }).Decoder);
+        Assert.Equal(DiagnosticsRows.Unavailable, DiagnosticsRows.From(PlayerState.Initial with { Decoder = "" }, Wording).Decoder);
+        Assert.Equal("Hardware (nvdec)", DiagnosticsRows.From(PlayerState.Initial with { Decoder = "nvdec" }, Wording).Decoder);
+        Assert.Equal("Hardware (vaapi)", DiagnosticsRows.From(PlayerState.Initial with { Decoder = "vaapi" }, Wording).Decoder);
     }
 
     [Fact]
     public void Video_WithoutSize_ShowsTheCodecAlone()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "av1" });
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "av1" }, Wording);
 
         Assert.Equal("av1", rows.Video);
     }
@@ -93,7 +95,7 @@ public class DiagnosticsRowsTests
     [Fact]
     public void Video_SizeWithoutCodec_ShowsDimensionsAlone()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { CodedWidth = 3840, CodedHeight = 2160 });
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { CodedWidth = 3840, CodedHeight = 2160 }, Wording);
 
         Assert.Equal("3840×2160", rows.Video);
     }
@@ -102,18 +104,18 @@ public class DiagnosticsRowsTests
     public void Video_InvalidDimensions_ShowsCodecAloneOrUnavailable()
     {
         // Incomplete dimension ignores size
-        DiagnosticsRows codecOnly = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "hevc", CodedWidth = 1920, CodedHeight = 0 });
+        DiagnosticsRows codecOnly = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "hevc", CodedWidth = 1920, CodedHeight = 0 }, Wording);
         Assert.Equal("hevc", codecOnly.Video);
 
         // Neither format nor valid dimensions yields unavailable dash
-        DiagnosticsRows empty = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "", CodedWidth = 0, CodedHeight = 0 });
+        DiagnosticsRows empty = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "", CodedWidth = 0, CodedHeight = 0 }, Wording);
         Assert.Equal(DiagnosticsRows.Unavailable, empty.Video);
     }
 
     [Fact]
     public void Dropped_FormatsDecoderThenOutputDrops()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { DecoderDroppedFrames = 15, DroppedFrames = 3 });
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { DecoderDroppedFrames = 15, DroppedFrames = 3 }, Wording);
 
         Assert.Equal("15 · 3", rows.Dropped);
     }
@@ -121,7 +123,7 @@ public class DiagnosticsRowsTests
     [Fact]
     public void Cache_ZeroIsAValueNotMissing()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { CacheDuration = 0 });
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { CacheDuration = 0 }, Wording);
 
         Assert.Equal("0.0 s", rows.Cache);
     }
@@ -129,7 +131,7 @@ public class DiagnosticsRowsTests
     [Fact]
     public void Cache_NegativeDuration_ShowsUnavailable()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { CacheDuration = -1.0 });
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { CacheDuration = -1.0 }, Wording);
 
         Assert.Equal(DiagnosticsRows.Unavailable, rows.Cache);
     }
@@ -137,17 +139,17 @@ public class DiagnosticsRowsTests
     [Fact]
     public void Display_FractionalRate_FormatsHzWithDecimals()
     {
-        DiagnosticsRows fractional = DiagnosticsRows.From(PlayerState.Initial with { DisplayFps = 59.94 });
+        DiagnosticsRows fractional = DiagnosticsRows.From(PlayerState.Initial with { DisplayFps = 59.94 }, Wording);
         Assert.Equal("59.94 Hz", fractional.Display);
 
-        DiagnosticsRows zero = DiagnosticsRows.From(PlayerState.Initial with { DisplayFps = 0 });
+        DiagnosticsRows zero = DiagnosticsRows.From(PlayerState.Initial with { DisplayFps = 0 }, Wording);
         Assert.Equal(DiagnosticsRows.Unavailable, zero.Display);
     }
 
     [Fact]
     public void ToText_ListsTitleThenLabelledRows()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { Decoder = "no" });
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { Decoder = "no" }, Wording);
 
         string[] lines = rows.ToText("Diagnostics", Labels).Split(Environment.NewLine);
 
@@ -157,6 +159,6 @@ public class DiagnosticsRowsTests
     [Fact]
     public void ToText_WrongLabelCount_Throws()
     {
-        Assert.Throws<ArgumentException>(() => DiagnosticsRows.From(PlayerState.Initial).ToText("Diagnostics", ["Decoder"]));
+        Assert.Throws<ArgumentException>(() => DiagnosticsRows.From(PlayerState.Initial, Wording).ToText("Diagnostics", ["Decoder"]));
     }
 }

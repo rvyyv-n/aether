@@ -35,6 +35,7 @@ public sealed partial class StreamingPage : Page
             "Settings_NetworkCache_Title", "Settings_NetworkCache_Description",
             megabytes => AppStrings.Format("Settings_NetworkCache_Value", megabytes));
         binder.RestartNote(NetworkCacheRestartNote, SettingKeys.NetworkCacheMegabytes);
+        HttpProxyBox.PlaceholderText = AppStrings.Get("Settings_HttpProxy_Placeholder");
         binder.TextEntry(HttpProxyRow, HttpProxyBox, SettingKeys.HttpProxy, "Settings_HttpProxy_Title", "Settings_HttpProxy_Description");
         binder.Choose(RtspTransportRow, RtspTransportCombo, SettingKeys.RtspTransport,
             [

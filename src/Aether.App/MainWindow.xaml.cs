@@ -80,6 +80,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     public MainWindow()
     {
         InitializeComponent();
+        Title = AppStrings.Get("App_Name");
 
         var resources = Application.Current.Resources;
         _captionForeground = (Color)resources["AetherCaptionGlyphColor"];

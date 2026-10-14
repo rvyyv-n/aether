@@ -8,11 +8,13 @@ namespace Aether_App.Controls;
 /// <summary>The diagnostics overlay (Ctrl+I): playback facts from mpv as six rows, with a Copy button. UI thread only.</summary>
 public sealed partial class DiagnosticsPanel : UserControl
 {
-    private DiagnosticsRows _rows = DiagnosticsRows.From(PlayerState.Initial);
+    private readonly DiagnosticsWording _wording = new(AppStrings.Get("Diagnostics_Software"), AppStrings.Get("Diagnostics_Hardware"), AppStrings.Get("Diagnostics_Playing"));
+    private DiagnosticsRows _rows;
 
     public DiagnosticsPanel()
     {
         InitializeComponent();
+        _rows = DiagnosticsRows.From(PlayerState.Initial, _wording);
         TitleText.Text = AppStrings.Get("Diagnostics_Title");
         CopyButton.Content = AppStrings.Get("Diagnostics_Copy");
         DecoderLabel.Text = AppStrings.Get("Diagnostics_Decoder");
@@ -26,7 +28,7 @@ public sealed partial class DiagnosticsPanel : UserControl
 
     public void Update(in PlayerState state)
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(state);
+        DiagnosticsRows rows = DiagnosticsRows.From(state, _wording);
         if (rows != _rows)
         {
             Show(rows);

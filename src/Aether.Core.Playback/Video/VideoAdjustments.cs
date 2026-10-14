@@ -23,7 +23,6 @@ public sealed record VideoAdjustments(
     public const int DefaultZoom = 100;
     public const int MinZoom = 25;
     public const int MaxZoom = 400;
-    public const int ZoomStep = 5;
     public const int ColourLimit = 100;
     public const string AutoAspect = "auto";
 

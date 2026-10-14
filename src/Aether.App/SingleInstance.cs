@@ -12,7 +12,6 @@ internal static partial class SingleInstance
 {
     private const string MainKey = "main";
     private const uint RedirectTimeoutMs = 5000;
-    private const uint Infinite = 0xFFFFFFFF;
 
     [LibraryImport("kernel32.dll", EntryPoint = "CreateEventW", StringMarshalling = StringMarshalling.Utf16)]
     private static partial nint CreateEvent(nint attributes, [MarshalAs(UnmanagedType.Bool)] bool manualReset, [MarshalAs(UnmanagedType.Bool)] bool initialState, string? name);
