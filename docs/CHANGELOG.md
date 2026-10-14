@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Roadmap: link playback (yt-dlp) is now Pass 9 and precise re-encode clip export Pass 10; the LAN streamer and release work moved to Pass 11.
 - Repository initialization.
 - Architecture blueprints for WinUI 3 SwapChainPanel and libmpv D3D11 interop.
 - PvP analysis toolset design specifications (Frame stepping, tick HUD, lossless trimming).

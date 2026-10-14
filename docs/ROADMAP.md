@@ -213,25 +213,52 @@ Mockups: screens 8.3–8.4.
 
 ---
 
-### Pass 9: Embedded Kestrel LAN Streamer & Release Verification
+### Pass 9: Link Playback (yt-dlp)
+
+Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for streaming.
 
 | # | Task | Effort |
 |:---|:---|:---:|
-| 9.1 | `KestrelStreamServer`: lightweight HTTP 206 partial content server with session token auth | M |
-| 9.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding | S |
-| 9.3 | `QrPairingService`: in-memory SVG/PNG QR code generator with local LAN IP flyout (`S` key) | S |
-| 9.4 | Release hardening: Native AOT build (`dotnet publish -c Release -r win-x64`); fix the Release build's IL2104 trim warnings from `WinRT.Runtime` / `Microsoft.Windows.SDK.NET`, then move CI from Debug to Release | M |
-| 9.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations | M |
-| 9.6 | `EngineResilience`: attach/detach context cleanup, attached core disposal device-loss safety, queue overflow resync, background core destruction | M |
-| 9.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S |
+| 9.1 | Play a pasted link: resolve it through yt-dlp, hand the stream to mpv, and make Play in the Open URL dialog start it (`OpenUrlFlow` takes `streamingAvailable`) | M |
+| 9.2 | Getting stream / still working (10 s) states in the hero, link-failure frames, cancel while resolving, and engine restart keeping the link | M |
+| 9.3 | Empty-state hint switches to "Drop a file, paste a link or press Ctrl+O"; recents store links with their title | S |
+| 9.4 | Clip and frame export from a streamed link, or a clear "save the file first" message | S |
+| 9.5 | Tests for link resolving, failure mapping and the dialog flow | S |
 
-**Pass 9 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
+**Pass 9 means:** Paste a YouTube or other supported link and watch it with the same controls as a local file.
+
+---
+
+### Pass 10: Precise Clip Export (re-encode)
+
+| # | Task | Effort |
+|:---|:---|:---:|
+| 10.1 | Export mode choice in the clip drawer: Fast (stream copy, keyframe cuts, as today) or Precise (re-encode) | S |
+| 10.2 | Re-encode pipeline with hardware encoders (NVENC / QSV / AMF) and an x264 fallback; frame-accurate in and out points | L |
+| 10.3 | Optional size limit for a clip, progress, cancel and cleanup of partial files | M |
+| 10.4 | Tests for encoder selection, fallback and cancel | S |
+
+**Pass 10 means:** Clips can start and end on any frame, not just keyframes, and can be sized to fit a limit.
+
+---
+
+### Pass 11: Embedded Kestrel LAN Streamer & Release Verification
+
+| # | Task | Effort |
+|:---|:---|:---:|
+| 11.1 | `KestrelStreamServer`: lightweight HTTP 206 partial content server with session token auth | M |
+| 11.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding | S |
+| 11.3 | `QrPairingService`: in-memory SVG/PNG QR code generator with local LAN IP flyout (`S` key) | S |
+| 11.4 | Release hardening: Native AOT build (`dotnet publish -c Release -r win-x64`); fix the Release build's IL2104 trim warnings from `WinRT.Runtime` / `Microsoft.Windows.SDK.NET`, then move CI from Debug to Release | M |
+| 11.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations | M |
+| 11.6 | `EngineResilience`: attach/detach context cleanup, attached core disposal device-loss safety, queue overflow resync, background core destruction | M |
+| 11.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S |
+
+**Pass 11 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
 
 ---
 
 ### Parked
 
 - **Hover rail (screen 6):** now task 7.21 in Pass 7. Clips and Stream also stay in the right-click menu and shortcuts.
-- **Re-encode export (NVENC / QSV / AMF / x264):** not planned. Export is stream copy only. Revisit for non-keyframe cuts or size-limited exports.
 - **GPU timing row in Diagnostics:** libmpv doesn't expose it. Would need our own D3D11 timestamp queries.
-- **Link playback (yt-dlp streaming):** not scheduled yet. When it lands, the empty-state hint must switch to "Drop a file, paste a link or press Ctrl+O", and Play in the Open URL dialog must start the stream instead of showing "Links can’t be played yet." (`OpenUrlFlow` takes `streamingAvailable`).
