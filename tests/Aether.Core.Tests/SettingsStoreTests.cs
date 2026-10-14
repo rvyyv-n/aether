@@ -136,6 +136,26 @@ public class SettingsStoreTests
         Assert.False(store.PendingRestart);
     }
 
+    [Fact]
+    public void MarkStarted_Clears_PendingRestart_For_The_Started_Values_Only()
+    {
+        var store = NewStore();
+        int started = 0;
+        store.Started += (_, _) => started++;
+
+        store.Set(SettingKeys.HardwareDecoding, "no");
+        AetherSettings snapshot = store.Current;
+        store.Set(SettingKeys.Passthrough, true); // changed after the engine took its snapshot
+        store.MarkStarted(snapshot);
+
+        Assert.Equal(1, started);
+        Assert.False(store.IsRestartPending(SettingKeys.HardwareDecoding));
+        Assert.True(store.IsRestartPending(SettingKeys.Passthrough));
+
+        store.Set(SettingKeys.HardwareDecoding, "auto-safe");
+        Assert.True(store.IsRestartPending(SettingKeys.HardwareDecoding)); // the engine runs with "no" now
+    }
+
     private sealed class OverlapStorage : ISettingsStorage
     {
         private int _writing;

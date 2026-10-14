@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Documents;
-using Microsoft.Windows.AppLifecycle;
 
 namespace Aether_App.Settings;
 
@@ -200,8 +199,8 @@ internal sealed class SettingsPageBinder
     }
 
     /// <summary>
-    /// Shows "Applies on restart · Restart engine" while any of the settings differs from the value the app started
-    /// with. The link restarts Aether, which starts the engine again with the new values.
+    /// Shows "Applies on restart · Restart engine" while any of the settings differs from the value the engine started
+    /// with. The link restarts the engine in place with the new values; the open file carries on where it was.
     /// </summary>
     public void RestartNote(TextBlock note, params string[] keys)
     {
@@ -211,25 +210,11 @@ internal sealed class SettingsPageBinder
             Foreground = SettingsGroup.Resource<Microsoft.UI.Xaml.Media.Brush>("AetherTextPrimaryBrush"),
         };
         link.Inlines.Add(new Run { Text = AppStrings.Get("Settings_RestartEngine") });
-        link.Click += (_, _) => RestartApp();
+        link.Click += (_, _) => App.RestartEngine();
         note.Inlines.Clear();
         note.Inlines.Add(new Run { Text = AppStrings.Get("Settings_AppliesOnRestart") + " · " });
         note.Inlines.Add(link);
         Track(() => note.Visibility = keys.Any(App.Settings.IsRestartPending) ? Visibility.Visible : Visibility.Collapsed);
-    }
-
-    private static void RestartApp()
-    {
-        // The background saver would be cut off by the restart, so the change is written here first.
-        try
-        {
-            App.Settings.Save();
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            return;
-        }
-        AppInstance.Restart("");
     }
 
     private static void Write<T>(string key, T value)
@@ -266,13 +251,21 @@ internal sealed class SettingsPageBinder
     {
         App.Settings.Changed -= OnChanged;
         App.Settings.Changed += OnChanged;
+        App.Settings.Started -= OnStarted;
+        App.Settings.Started += OnStarted;
         RefreshAll();
     }
 
-    private void OnUnloaded(object sender, RoutedEventArgs e) => App.Settings.Changed -= OnChanged;
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        App.Settings.Changed -= OnChanged;
+        App.Settings.Started -= OnStarted;
+    }
+
+    private void OnStarted(object? sender, EventArgs e) => OnChanged(sender, null);
 
     // Settings can change on a background thread (the first load, a reset); the controls are only touched on the UI thread.
-    private void OnChanged(object? sender, SettingChangedEventArgs e)
+    private void OnChanged(object? sender, SettingChangedEventArgs? e)
     {
         if (_page.DispatcherQueue.HasThreadAccess)
         {

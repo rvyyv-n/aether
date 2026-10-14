@@ -155,6 +155,10 @@ public sealed class PlayerSession : IDisposable
         }
     }
 
+    /// <summary>Pauses. Non-blocking.</summary>
+    /// <exception cref="MpvException">The core is shutting down.</exception>
+    public void Pause() => _context.CommandAsync(new MpvCommand("set", "pause", "yes"));
+
     public SeekCoalescer SeekCoalescer => _seekCoalescer;
 
     /// <summary>Seeks from the seek bar; see <see cref="TransportState.Seek"/>. Non-blocking, coalesced.</summary>

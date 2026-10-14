@@ -146,6 +146,9 @@ public partial class App : Application
         }
     }
 
+    /// <summary>UI thread: starts the playback engine again with the current settings, keeping the open file.</summary>
+    public static void RestartEngine() => s_window?.RestartEngine();
+
     private static string? LaunchPath(AppActivationArguments arguments)
     {
         try

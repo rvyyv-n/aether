@@ -5,6 +5,7 @@ using Aether.Core.Playback;
 using Aether.Core.Playback.Input;
 using Aether.Core.Playback.Recents;
 using Aether.Core.Playback.Resume;
+using Aether.Core.Playback.Settings;
 using Aether_App.Controls;
 using Aether_App.Playback;
 using Aether_App.Settings;
@@ -59,6 +60,7 @@ public sealed partial class MainPage : Page
 
     private string? _currentPath;
     private string? _pendingOpen; // a file from the command line, opened once the engine and video output are up
+    private PlaybackCarryOver? _carryOver; // what an engine restart puts back once the new engine is up
     private bool _fitWindowPending; // the next video size resizes the window (set per opened file)
     private bool _windowSyncQueued;
     private bool _dragging;
@@ -237,7 +239,11 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private async void StartEngine()
+    /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
+    private sealed record PlaybackCarryOver(string? Path, double? Position, bool Paused, double Volume, double Speed, bool Looping);
+
+    /// <param name="settings">The settings to start with, or null to wait for the saved ones (first start).</param>
+    private async void StartEngine(AetherSettings? settings = null)
     {
         int version = ++_startupVersion;
         _startup = StartupPhase.Starting;
@@ -245,7 +251,7 @@ public sealed partial class MainPage : Page
         Render();
 
         EngineStartupResult<MpvContext> result =
-            await EngineStartup.RunAsync(NativeLibraries.IsMpvAvailable, () => PlayerSession.CreateEngine());
+            await EngineStartup.RunAsync(NativeLibraries.IsMpvAvailable, () => PlayerSession.CreateEngine(settings));
 
         if (version != _startupVersion || !_isLoaded)
         {
@@ -269,7 +275,24 @@ public sealed partial class MainPage : Page
                 _session.ViewModel.PropertyChanged += OnViewModelChanged;
                 _session.FileEnded += OnFileEnded;
                 _startup = StartupPhase.Ready;
-                _session.ViewModel.IsLooping = App.Settings.Current.LoopByDefault;
+                if (settings is not null)
+                {
+                    App.Settings.MarkStarted(settings);
+                }
+                _session.ViewModel.IsLooping = _carryOver?.Looping ?? App.Settings.Current.LoopByDefault;
+                if (_carryOver is { } carry)
+                {
+                    PlayerSession session = _session;
+                    TrySend(() =>
+                    {
+                        session.SetVolume(carry.Volume);
+                        session.SetSpeed(carry.Speed);
+                    });
+                    if (carry.Path is null)
+                    {
+                        _carryOver = null;
+                    }
+                }
                 SyncVolume();
                 OpenPending();
                 break;
@@ -296,8 +319,35 @@ public sealed partial class MainPage : Page
         if (_pendingOpen is { } pending && _session is not null && VideoSurface.IsPlayerReady)
         {
             _pendingOpen = null;
-            Open(pending);
+            // Another file opened during the restart replaces the one that was playing, without its position.
+            PlaybackCarryOver? carry = _carryOver?.Path == pending ? _carryOver : null;
+            _carryOver = null;
+            Open(pending, carry);
         }
+    }
+
+    /// <summary>
+    /// Replaces the engine with one built from the current settings (Restart engine in Settings), so restart-only
+    /// settings apply without relaunching. The open file comes back where it was, with its pause, volume, speed and
+    /// loop; mpv picks the same default tracks again.
+    /// </summary>
+    public void RestartEngine()
+    {
+        if (_session is { } session)
+        {
+            PlayerViewModel vm = session.ViewModel;
+            string? path = _pendingOpen ?? _currentPath;
+            bool playing = HasVideo && _pendingOpen is null;
+            _carryOver = new PlaybackCarryOver(
+                path, playing ? vm.Position : null, playing && vm.IsPaused, vm.Volume, vm.Speed, vm.IsLooping);
+            _pendingOpen = path;
+            SaveResumePosition(background: true);
+            session.ViewModel.PropertyChanged -= OnViewModelChanged;
+            session.FileEnded -= OnFileEnded;
+            session.Dispose();
+            _session = null;
+        }
+        StartEngine(App.Settings.Current);
     }
 
     private void OnRetryClick(object sender, RoutedEventArgs e)
@@ -341,18 +391,25 @@ public sealed partial class MainPage : Page
 
     // ---- Playback ----
 
-    private void Open(string path)
+    private void Open(string path, PlaybackCarryOver? carry = null)
     {
         if (_session is not { } session)
         {
             return;
         }
         SaveResumePosition(background: true);
-        double? startAt = App.Settings.Current.ResumePlayback ? App.Resume.TryGet(path) : null;
+        double? startAt = carry?.Position ?? (App.Settings.Current.ResumePlayback ? App.Resume.TryGet(path) : null);
         _currentPath = path;
-        _fitWindowPending = true;
+        _fitWindowPending = carry is null; // after a restart the window keeps the size it has
         _durationRecorded = false;
-        TrySend(() => session.Open(path, startAt));
+        TrySend(() =>
+        {
+            if (carry is { Paused: true })
+            {
+                session.Pause(); // a new core starts unpaused
+            }
+            session.Open(path, startAt);
+        });
         string name = Path.GetFileName(path);
         _ = Task.Run(() => App.Recents.Add(path, name, DateTimeOffset.Now));
         Render();

@@ -13,7 +13,7 @@ public sealed class SettingChangedEventArgs(string key) : EventArgs
 /// Holds the current <see cref="AetherSettings"/>, loads and saves them as JSON through an <see cref="ISettingsStorage"/>.
 /// Thread-safe. Loading never throws: a missing or corrupt file gives defaults, and an invalid value falls back to the
 /// default for that setting only. Settings flagged as needing a restart set <see cref="PendingRestart"/> when they
-/// differ from the value present at the last <see cref="Load"/>.
+/// differ from the value present at the last <see cref="Load"/> or <see cref="MarkStarted"/>.
 /// </summary>
 public sealed class SettingsStore(ISettingsStorage storage)
 {
@@ -136,6 +136,23 @@ public sealed class SettingsStore(ISettingsStorage storage)
             _loaded = loaded;
         }
         RaiseDifferences(before, loaded);
+    }
+
+    /// <summary>Raised after <see cref="MarkStarted"/>, on the calling thread, so restart notes can hide.</summary>
+    public event EventHandler? Started;
+
+    /// <summary>
+    /// The engine was restarted with <paramref name="started"/>: restart-flagged settings now compare against those
+    /// values, so <see cref="PendingRestart"/> stays true only for changes made since.
+    /// </summary>
+    public void MarkStarted(AetherSettings started)
+    {
+        ArgumentNullException.ThrowIfNull(started);
+        lock (_gate)
+        {
+            _loaded = started;
+        }
+        Started?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>Writes the current settings. Throws if the storage fails, so the caller can report it.</summary>
