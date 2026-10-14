@@ -67,6 +67,22 @@ public class DiagnosticsRowsTests
     }
 
     [Fact]
+    public void FrameRate_BothContainerAndEstimated_FormatsFpsAndPlayingStyle()
+    {
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { FramesPerSecond = 23.976, EstimatedFps = 23.976 });
+
+        Assert.Equal("23.976 fps · 24 playing", rows.FrameRate);
+    }
+
+    [Fact]
+    public void Decoder_EmptyOrNamedHardware_FormatsCorrectly()
+    {
+        Assert.Equal(DiagnosticsRows.Unavailable, DiagnosticsRows.From(PlayerState.Initial with { Decoder = "" }).Decoder);
+        Assert.Equal("Hardware (nvdec)", DiagnosticsRows.From(PlayerState.Initial with { Decoder = "nvdec" }).Decoder);
+        Assert.Equal("Hardware (vaapi)", DiagnosticsRows.From(PlayerState.Initial with { Decoder = "vaapi" }).Decoder);
+    }
+
+    [Fact]
     public void Video_WithoutSize_ShowsTheCodecAlone()
     {
         DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "av1" });
@@ -75,11 +91,57 @@ public class DiagnosticsRowsTests
     }
 
     [Fact]
+    public void Video_SizeWithoutCodec_ShowsDimensionsAlone()
+    {
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { CodedWidth = 3840, CodedHeight = 2160 });
+
+        Assert.Equal("3840×2160", rows.Video);
+    }
+
+    [Fact]
+    public void Video_InvalidDimensions_ShowsCodecAloneOrUnavailable()
+    {
+        // Incomplete dimension ignores size
+        DiagnosticsRows codecOnly = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "hevc", CodedWidth = 1920, CodedHeight = 0 });
+        Assert.Equal("hevc", codecOnly.Video);
+
+        // Neither format nor valid dimensions yields unavailable dash
+        DiagnosticsRows empty = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "", CodedWidth = 0, CodedHeight = 0 });
+        Assert.Equal(DiagnosticsRows.Unavailable, empty.Video);
+    }
+
+    [Fact]
+    public void Dropped_FormatsDecoderThenOutputDrops()
+    {
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { DecoderDroppedFrames = 15, DroppedFrames = 3 });
+
+        Assert.Equal("15 · 3", rows.Dropped);
+    }
+
+    [Fact]
     public void Cache_ZeroIsAValueNotMissing()
     {
         DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { CacheDuration = 0 });
 
         Assert.Equal("0.0 s", rows.Cache);
+    }
+
+    [Fact]
+    public void Cache_NegativeDuration_ShowsUnavailable()
+    {
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { CacheDuration = -1.0 });
+
+        Assert.Equal(DiagnosticsRows.Unavailable, rows.Cache);
+    }
+
+    [Fact]
+    public void Display_FractionalRate_FormatsHzWithDecimals()
+    {
+        DiagnosticsRows fractional = DiagnosticsRows.From(PlayerState.Initial with { DisplayFps = 59.94 });
+        Assert.Equal("59.94 Hz", fractional.Display);
+
+        DiagnosticsRows zero = DiagnosticsRows.From(PlayerState.Initial with { DisplayFps = 0 });
+        Assert.Equal(DiagnosticsRows.Unavailable, zero.Display);
     }
 
     [Fact]
