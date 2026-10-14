@@ -30,6 +30,9 @@
                 </StackPanel>
             </settings:SettingsRow.Note>
         </settings:SettingsRow>
+        <settings:SettingsRow x:Name="MotionStyleRow" Glyph="&#xE916;">
+            <ComboBox x:Name="MotionStyleCombo" Style="{StaticResource AetherSettingsComboStyle}" />
+        </settings:SettingsRow>
         <settings:SettingsRow x:Name="ResetAllRow" Glyph="&#xE777;">
             <Button x:Name="ResetAllButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
         </settings:SettingsRow>

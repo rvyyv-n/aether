@@ -5,6 +5,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using Windows.Storage;
 using Windows.System;
@@ -29,6 +30,7 @@ public sealed partial class ClipDrawer : UserControl
     private double _duration;
     private bool _ffmpegChecked;
     private bool _open;
+    private ChromeFader? _fader;
 
     public ClipDrawer()
     {
@@ -163,12 +165,32 @@ public sealed partial class ClipDrawer : UserControl
         ToolTipService.SetToolTip(ClipsToggle, label);
         AutomationProperties.SetName(ClipsToggle, label);
         DrawerArea.Visibility = Show(open);
+        if (open)
+        {
+            AnimateOpen();
+        }
         double width = (double)Application.Current.Resources["AetherSizeClipDrawerWidth"];
         Panel.Width = open ? Math.Min(width, ActualWidth > 0 ? ActualWidth : width) : double.NaN; // narrow windows
 
         RowsScroller.ChangeView(null, 0, null, disableAnimation: true);
         RenderChip();
         HoldChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>The rows fade and slide up into the grown chip (7.15); closing is immediate.</summary>
+    private void AnimateOpen()
+    {
+        if (_fader is null)
+        {
+            var resources = Application.Current.Resources;
+            _fader = new ChromeFader(
+                ElementCompositionPreview.GetElementVisual(this).Compositor,
+                TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeShowMilliseconds"]),
+                TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeHideMilliseconds"]));
+        }
+        ElementCompositionPreview.GetElementVisual(DrawerArea).Opacity = 0;
+        _fader.Fade(DrawerArea, true);
+        _fader.Slide(DrawerArea, true);
     }
 
     // ---- Export ----

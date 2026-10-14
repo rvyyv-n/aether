@@ -81,7 +81,47 @@ public class ChromeVisibilityTests
         time.Advance(TimeSpan.FromSeconds(1));
         Assert.False(chrome.Tick());
         time.Advance(TimeSpan.FromSeconds(1));
+        Assert.False(chrome.Tick()); // the card shrinks first
+        Assert.False(chrome.IsExpanded);
+        Assert.True(chrome.IsVisible);
+        time.Advance(Delay);
         Assert.True(chrome.Tick());
+    }
+
+    [Fact]
+    public void Hold_ExpandsCard_ActivityAloneDoesNot()
+    {
+        var time = new ManualTimeProvider();
+        var chrome = new ChromeVisibility(time, Delay);
+        Assert.False(chrome.IsExpanded);
+
+        chrome.NotifyActivity();
+        Assert.False(chrome.IsExpanded);
+
+        chrome.SetHold(ChromeHolds.KeyboardFocus, true);
+        Assert.True(chrome.IsExpanded);
+        time.Advance(TimeSpan.FromMinutes(1));
+        Assert.False(chrome.Tick());
+        Assert.True(chrome.IsExpanded);
+    }
+
+    [Fact]
+    public void CardShrinks_OnTime_WhileThePointerMovesElsewhere()
+    {
+        var time = new ManualTimeProvider();
+        var chrome = new ChromeVisibility(time, Delay);
+        chrome.SetHold(ChromeHolds.NotPlaying, true);
+        chrome.SetHold(ChromeHolds.NotPlaying, false);
+
+        time.Advance(TimeSpan.FromSeconds(1.5));
+        chrome.NotifyActivity();
+        Assert.Equal(TimeSpan.FromSeconds(0.5), chrome.DueIn);
+        time.Advance(TimeSpan.FromSeconds(0.5));
+        Assert.False(chrome.Tick());
+        Assert.False(chrome.IsExpanded);
+
+        // The chrome then hides a full idle delay after the shrink.
+        Assert.Equal(Delay, chrome.DueIn);
     }
 
     [Fact]

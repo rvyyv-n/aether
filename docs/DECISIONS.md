@@ -155,3 +155,8 @@
   - No VRR/tearing change. The swap chain is a composition swap chain presented through DWM, so `DXGI_PRESENT_ALLOW_TEARING` has no dependable effect (tearing and VRR need an independent-flip swap chain that owns the screen, which a XAML panel is not), and a video player wants fixed vblank cadence: `display-resample` plans frame repeats against that cadence. The swap chain keeps the tearing capability flag but `VSync` stays on (`SyncInterval` 1).
 - **Limits:** `EnumDisplaySettingsW` returns whole hertz, so a 59.94 Hz or 119.88 Hz mode reads as 59/60 or 119/120 and mpv plans against that. This is not a problem for the 120 fps case on a 120 Hz display. Exact rates would need `QueryDisplayConfig` (rational vSync frequency). Not checked on 120/144/240 Hz hardware.
 - **Status:** Accepted. Needs an on-screen check on a high-refresh display: play a 120 fps clip with Smooth motion on, watch `display-fps` in the diagnostics panel and the dropped-frame count, and drag the window to a monitor with another rate.
+
+## ADR-0019: Plain-text file name in the title bar (7.14)
+- **Context:** Screen 3 put the file name in a SurfaceOsd pill beside "Aether". In the build the pill read as a stray grey chip: its padding sat unevenly around text trimmed to the baseline, and it competed with the caption buttons.
+- **Decision:** No pill. "Aether", a muted middle dot, then the file name in TextSecondary, all Caption on one baseline and trimmed with an ellipsis at 320. The empty state still reads "Aether Alpha" with no dot. The top scrim keeps the text readable over bright video.
+- **Status:** Accepted (owner's choice in the Pass 7 UI finish).

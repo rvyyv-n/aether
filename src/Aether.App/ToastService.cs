@@ -12,9 +12,8 @@ namespace Aether_App;
 /// </summary>
 internal sealed class ToastService
 {
-    private const double AboveControlsMargin = 116; // 8 above the 84 px pill, which sits 24 up
-    private const double BottomMargin = 24;
-    private const double ChipGap = 8;
+    private const double BottomMargin = 24; // the card's own margin too
+    private const double Gap = 8; // above the card, and above the chip
 
     private readonly ToastQueue _queue;
     private readonly Toast _toast;
@@ -24,6 +23,7 @@ internal sealed class ToastService
     private readonly DispatcherQueueTimer _timer;
     private readonly DispatcherQueueTimer _hideTimer;
     private bool _focused;
+    private bool _shown;
 
     /// <param name="layer">The overlay holding <paramref name="toast"/>: bottom aligned, with 16 side margins.</param>
     /// <param name="returnFocus">Puts keyboard focus back on the page when a toast that had it goes away.</param>
@@ -87,13 +87,14 @@ internal sealed class ToastService
     }
 
     /// <summary>
-    /// Sits 8 above the pill while the controls show, 24 from the bottom once they hide.
-    /// <paramref name="chipHeight"/> is the export chip or clip drawer between the two, which the toast clears by 8.
+    /// Sits 8 above the card while the controls show, 24 from the bottom once they hide. <paramref name="controlsHeight"/>
+    /// is the card as it is drawn now (slim, full or growing); <paramref name="chipHeight"/> is the export chip or clip
+    /// drawer between the two, which the toast clears by 8.
     /// </summary>
-    public void SetControlsShown(bool shown, double chipHeight = 0)
+    public void SetControlsShown(bool shown, double controlsHeight, double chipHeight = 0)
     {
         Thickness margin = _layer.Margin;
-        double bottom = shown ? AboveControlsMargin + (chipHeight > 0 ? chipHeight + ChipGap : 0) : BottomMargin;
+        double bottom = shown ? BottomMargin + controlsHeight + Gap + (chipHeight > 0 ? chipHeight + Gap : 0) : BottomMargin;
         _layer.Margin = new Thickness(margin.Left, margin.Top, margin.Right, bottom);
     }
 
@@ -116,11 +117,18 @@ internal sealed class ToastService
             _toast.Present(request);
             _layer.Visibility = Visibility.Visible;
             _fader.Fade(_layer, true);
+            if (!_shown)
+            {
+                _shown = true;
+                _fader.Slide(_toast, true); // a message replacing one on screen stays put
+            }
         }
         else
         {
             _focused = false;
+            _shown = false;
             _fader.Fade(_layer, false);
+            _fader.Slide(_toast, false);
             // Collapsed once the fade is done, so the invisible toast takes no clicks and is left out of the tab order.
             double fade = _fader.DurationMilliseconds(false);
             _hideTimer.Interval = TimeSpan.FromMilliseconds(Math.Max(fade, 1));

@@ -587,19 +587,22 @@
                         Style="{StaticResource AetherCaptionStrongTextStyle}"
                         Text="Aether"
                         TextLineBounds="TrimToBaseline" />
-                    <!--  The fill and padding appear once a video is playing; the -2 bottom margin keeps the baseline shared with the name.  -->
-                    <Border
-                        x:Name="TitleBadge"
+                    <!--  Plain text, no pill (7.14): a muted dot and file name while a video is open, "Alpha" otherwise.  -->
+                    <TextBlock
+                        x:Name="TitleSeparator"
+                        VerticalAlignment="Bottom"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        Text="·"
+                        TextLineBounds="TrimToBaseline"
+                        Visibility="Collapsed" />
+                    <TextBlock
+                        x:Name="TitleBadgeText"
                         MaxWidth="320"
                         VerticalAlignment="Bottom"
-                        CornerRadius="{StaticResource AetherControlCornerRadius}">
-                        <TextBlock
-                            x:Name="TitleBadgeText"
-                            Style="{StaticResource AetherCaptionTextStyle}"
-                            Text="Alpha"
-                            TextLineBounds="TrimToBaseline"
-                            TextTrimming="CharacterEllipsis" />
-                    </Border>
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        Text="Alpha"
+                        TextLineBounds="TrimToBaseline"
+                        TextTrimming="CharacterEllipsis" />
                 </StackPanel>
             </Grid>
             <Button
@@ -608,7 +611,11 @@
                 Click="OnSettingsClick"
                 Content="&#xE713;"
                 Style="{StaticResource AetherTitleBarButtonStyle}" />
-            <Border Grid.Column="3" Width="{StaticResource AetherSizeCaptionButtons}" />
+            <!--  The window sets the width to the system's real caption-button inset; 138 is the 100% default.  -->
+            <Border
+                x:Name="CaptionReserve"
+                Grid.Column="3"
+                Width="{StaticResource AetherSizeCaptionButtons}" />
         </Grid>
 
         <!--  Diagnostics (Ctrl+I): top-left, 16 in from the edge and under the 32 px title bar.  -->
@@ -620,13 +627,14 @@
             Visibility="Collapsed" />
 
         <!--
-            Export chip and clip drawer (s5-03, 5.3): 8 above the 84 px card (24 + 84 + 8 = 116), right-aligned
-            to it by sharing its width and margins. Fades with the controls.
+            Export chip and clip drawer (s5-03, 5.3): 8 above the card (24 + 88 + 8 = 120 over the full card, 80 over
+            the slim pill; the page moves it as the card grows), right-aligned to it by sharing its width and margins.
+            Fades with the controls.
         -->
         <Grid
             x:Name="ClipLayer"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
-            Margin="16,0,16,116"
+            Margin="16,0,16,120"
             VerticalAlignment="Bottom"
             PointerCanceled="OnOsdPointerExited"
             PointerEntered="OnOsdPointerEntered"
@@ -636,14 +644,16 @@
         </Grid>
 
         <!--
-            Transport card: the seek row, then the buttons, 4 apart. min(520, window - 32) wide and 84 tall:
-            padding 8 (7 here, the 1 px stroke is the eighth), a 32 px seek row and a 32 px button row.
-            A plain 62% ink tint with a hairline edge and radius 24 (16 button radius + 8 padding).
-            24 above the bottom.
-            Below a 520 px pill, frame step, loop and always on top move into More controls (5.7).
+            Transport card: the seek row, then the buttons, 4 apart. min(520, window - 32) wide and 88 tall:
+            padding 8 (7 here, the 1 px stroke is the eighth), a 32 px seek row and a 36 px button row.
+            A plain 62% ink tint with a hairline edge and radius 24. 24 above the bottom.
+            While a video plays it shrinks to the 48 px slim pill (7.11, s5-08): padding 6, and the seek row slides down
+            between Play and Mute while the other buttons fade (MainPage.Bar.cs). Both rows overlap in one grid for that.
+            min(520, window - 32) fits every button at any width, so there is no narrow layout any more (5.7 retired).
         -->
         <Border
             x:Name="Osd"
+            Height="{StaticResource AetherSizeOsdHeight}"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
             Margin="16,0,16,24"
             Padding="7"
@@ -652,41 +662,24 @@
             BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource AetherTransportCornerRadius}"
+            GettingFocus="OnOsdGettingFocus"
+            LosingFocus="OnOsdLosingFocus"
             PointerEntered="OnOsdPointerEntered"
             PointerExited="OnOsdPointerExited"
             PointerCanceled="OnOsdPointerExited"
             PointerCaptureLost="OnOsdPointerExited"
             SizeChanged="OnOsdSizeChanged"
             Visibility="Collapsed">
-            <Grid RowSpacing="4">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <!--  Row 1: current time, bar, duration, 12 apart and 8 in from the padding. TextPrimary only on the pill.  -->
-                <Grid Padding="8,0" ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
-                        x:Name="PositionText"
-                        VerticalAlignment="Center"
-                        Style="{StaticResource AetherTimecodeTextStyle}"
-                        Text="00:00" />
-                    <controls:PrecisionSeekBar x:Name="SeekBar" Grid.Column="1" />
-                    <TextBlock
-                        x:Name="DurationText"
-                        Grid.Column="2"
-                        VerticalAlignment="Center"
-                        Style="{StaticResource AetherTimecodeTextStyle}"
-                        Text="00:00" />
-                </Grid>
-
-                <!--  Row 2: 1fr / auto / 1fr, so the centre group is truly centred; 4 apart inside each group.  -->
-                <Grid Grid.Row="1" Height="{StaticResource AetherSizeControl}">
+            <Grid>
+                <!--
+                    Row 2, on the bottom edge: 1fr / auto / 1fr, so the centre group is truly centred; 4 apart inside each group.
+                    Left: Open, Speed. Centre: Back 5 s, Play, Forward 5 s. Right: Mute, More, Full screen. Frame steps, Loop and
+                    Always on top live in More (owner's call, Pass 7: the row read as crowded with them out).
+                -->
+                <Grid
+                    x:Name="ButtonRow"
+                    Height="{StaticResource AetherSizeTransportButton}"
+                    VerticalAlignment="Bottom">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -694,6 +687,7 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel
+                        x:Name="LeftGroup"
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Spacing="4">
@@ -723,6 +717,7 @@
 
                     <!--  Skip 5 s is Segoe Fluent's circular arrow with a "5" set inside it; the numbered Fluent skip glyphs only come as 10 and 30.  -->
                     <StackPanel
+                        x:Name="CentreGroup"
                         Grid.Column="1"
                         Orientation="Horizontal"
                         Spacing="4">
@@ -737,24 +732,12 @@
                             </Grid>
                         </Button>
                         <Button
-                            x:Name="BackFrameButton"
-                            Click="OnBackFrameClick"
-                            Content="&#xE892;"
-                            Style="{StaticResource AetherTransportIconButtonStyle}"
-                            ToolTipService.Placement="Top" />
-                        <Button
                             x:Name="PlayPauseButton"
                             Click="OnPlayPauseClick"
                             Content="&#xF5B0;"
                             Style="{StaticResource AetherPlayButtonStyle}"
                             ToolTipService.Placement="Top"
                             ToolTipService.ToolTip="Play (Space)" />
-                        <Button
-                            x:Name="ForwardFrameButton"
-                            Click="OnForwardFrameClick"
-                            Content="&#xE893;"
-                            Style="{StaticResource AetherTransportIconButtonStyle}"
-                            ToolTipService.Placement="Top" />
                         <Button
                             x:Name="ForwardButton"
                             Click="OnForwardClick"
@@ -768,23 +751,12 @@
                     </StackPanel>
 
                     <StackPanel
+                        x:Name="RightGroup"
                         Grid.Column="2"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Spacing="4">
-                        <ToggleButton
-                            x:Name="LoopButton"
-                            Click="OnLoopClick"
-                            Content="&#xE8EE;"
-                            Style="{StaticResource AetherTransportToggleButtonStyle}"
-                            ToolTipService.Placement="Top" />
-                        <ToggleButton
-                            x:Name="AlwaysOnTopButton"
-                            Click="OnAlwaysOnTopClick"
-                            Content="&#xE718;"
-                            Style="{StaticResource AetherTransportToggleButtonStyle}"
-                            ToolTipService.Placement="Top" />
                         <!--
                             Volume lives in a flyout (5.8): 72 px slider, thumb 12 white. Clicking mutes; the
                             flyout opens on hover, or pinned from right-click or Shift+F10 so the keyboard can
@@ -862,12 +834,13 @@
                             Click="OnMoreClick"
                             Content="&#xE712;"
                             Style="{StaticResource AetherTransportIconButtonStyle}"
-                            ToolTipService.Placement="Top"
-                            Visibility="Collapsed">
+                            ToolTipService.Placement="Top">
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="MoreMenu"
+                                    Closed="OnMoreMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    Opened="OnMoreMenuOpened"
                                     Placement="TopEdgeAlignedRight">
                                     <MenuFlyoutItem
                                         x:Name="MoreBackFrameItem"
@@ -898,6 +871,35 @@
                             ToolTipService.Placement="Top"
                             ToolTipService.ToolTip="Full screen (F)" />
                     </StackPanel>
+                </Grid>
+
+                <!--
+                    Row 1: current time, bar, duration, 12 apart and 8 in from the padding. TextPrimary only on the pill.
+                    Last, so it stays on top of the buttons it slides between in the slim pill.
+                -->
+                <Grid
+                    x:Name="SeekRow"
+                    Height="{StaticResource AetherSizeSeekHitArea}"
+                    Padding="8,0"
+                    VerticalAlignment="Top"
+                    ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="PositionText"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherTimecodeTextStyle}"
+                        Text="00:00" />
+                    <controls:PrecisionSeekBar x:Name="SeekBar" Grid.Column="1" />
+                    <TextBlock
+                        x:Name="DurationText"
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherTimecodeSecondaryTextStyle}"
+                        Text="00:00" />
                 </Grid>
             </Grid>
         </Border>

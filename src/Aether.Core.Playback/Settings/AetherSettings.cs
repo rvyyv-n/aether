@@ -93,6 +93,8 @@ public sealed record AetherSettings
     public bool RepairAviIndex { get; init; }
     /// <summary>mpv <c>vd-lavc-skiploopfilter</c>: <c>default</c>, <c>nonref</c>, <c>nonkey</c> or <c>all</c>.</summary>
     public string SkipDeblocking { get; init; } = "default";
+    /// <summary>Motion style preview (7.15): <c>quick</c> or <c>springy</c>. Temporary, until the owner picks one.</summary>
+    public string MotionStyle { get; init; } = "quick";
 
     // Shortcuts: empty means the default keys, "None" unbound, otherwise e.g. "Ctrl+O" or "F, F11" (see ShortcutMap).
     public string ShortcutOpenFile { get; init; } = "";

@@ -365,6 +365,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         {
             TrackNormalBounds();
             DisplaySync.OnWindowMoved();
+            UpdateCaptionInset();
         }
         if (args.DidPresenterChange)
         {
@@ -373,6 +374,19 @@ public sealed partial class MainWindow : Window, IShellWindow
         }
     }
 
-    private void OnActivated(object sender, WindowActivatedEventArgs args) =>
+    private void OnActivated(object sender, WindowActivatedEventArgs args)
+    {
         Shell.OnWindowActivationChanged(args.WindowActivationState != WindowActivationState.Deactivated);
+        UpdateCaptionInset();
+    }
+
+    // RightInset is in physical pixels and changes with the display scale; the page lays out in DIPs.
+    private void UpdateCaptionInset()
+    {
+        double scale = Shell.XamlRoot?.RasterizationScale ?? 0;
+        if (scale > 0)
+        {
+            Shell.SetCaptionInset(AppWindow.TitleBar.RightInset / scale);
+        }
+    }
 }

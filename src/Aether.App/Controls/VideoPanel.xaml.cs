@@ -15,7 +15,9 @@ public sealed partial class VideoPanel : UserControl
 {
     private readonly (Slider Slider, TextBlock Value)[] _colours = new (Slider, TextBlock)[4];
     private VideoAdjustments _current = new();
-    private bool _showing; // Show sets the controls, which must not read back as the user's change
+    // Show sets the controls, which must not read back as the user's change. True from the start: the zoom slider
+    // reports a change while its XAML loads (Minimum lifts its value to 25), before the other controls exist.
+    private bool _showing = true;
 
     public VideoPanel()
     {
@@ -47,6 +49,7 @@ public sealed partial class VideoPanel : UserControl
         {
             ColourRows.Children.Add(BuildColourRow(i, AppStrings.Get(names[i])));
         }
+        Show(_current);
     }
 
     /// <summary>The user changed something; the page applies the new state to mpv.</summary>

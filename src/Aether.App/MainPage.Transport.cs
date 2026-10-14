@@ -1,4 +1,4 @@
-using Aether.Core.Playback;
+﻿using Aether.Core.Playback;
 using Aether.Core.Playback.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -10,7 +10,7 @@ namespace Aether_App;
 
 /// <summary>
 /// The Pass 5 transport pill (screen 5): seek bar, skip and frame-step buttons, the speed menu, In/Out
-/// points and the compact layout below a 520 px pill. Kept apart from the shell so each pass's wiring
+/// points and the compact layout below a 560 px card. Kept apart from the shell so each pass's wiring
 /// stays in one place. UI thread only.
 /// </summary>
 public sealed partial class MainPage
@@ -37,15 +37,13 @@ public sealed partial class MainPage
         ShowSpeed(PlaybackSpeed.Normal);
         foreach (Button button in new[]
         {
-            OpenButton, SpeedButton, BackButton, BackFrameButton, PlayPauseButton, ForwardFrameButton,
-            ForwardButton, MoreButton, FullScreenButton,
+            OpenButton, SpeedButton, BackButton, PlayPauseButton, ForwardButton,
+            VolumeButton, MoreButton, FullScreenButton,
         })
         {
             button.PointerExited += OnTipOwnerPointerExited;
             button.PointerCanceled += OnTipOwnerPointerExited;
         }
-        LoopButton.PointerExited += OnTipOwnerPointerExited;
-        AlwaysOnTopButton.PointerExited += OnTipOwnerPointerExited;
     }
 
     /// <summary>
@@ -94,8 +92,6 @@ public sealed partial class MainPage
     private void ApplyTransportStrings()
     {
         AutomationProperties.SetName(SeekBar, AppStrings.Get("Transport_Seek"));
-        Label(BackFrameButton, "Transport_Back1Frame");
-        Label(ForwardFrameButton, "Transport_Forward1Frame");
         Label(MoreButton, "Transport_MoreControls");
         ToolTipService.SetToolTip(SpeedButton, AppStrings.Get("Transport_Speed"));
         MoreBackFrameItem.Text = AppStrings.Get("Menu_Back1Frame");
@@ -169,9 +165,14 @@ public sealed partial class MainPage
 
     // Speed (5.4): the pill names the current speed; its menu checks it.
 
+    private double _speed = PlaybackSpeed.Normal;
+    private bool _speedMenuOpen;
+
     private void ShowSpeed(double speed)
     {
+        _speed = speed;
         SpeedButton.Content = PlaybackSpeed.Format(speed);
+        ApplySpeedLook();
         AutomationProperties.SetName(SpeedButton, $"{AppStrings.Get("Transport_Speed")} {PlaybackSpeed.Format(speed)}");
         foreach (MenuFlyoutItemBase item in SpeedMenu.Items.Concat(CtxSpeed.Items))
         {
@@ -195,17 +196,53 @@ public sealed partial class MainPage
 
     private void OnSpeedMenuOpened(object sender, object e)
     {
-        SpeedButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        _speedMenuOpen = true;
+        ApplySpeedLook();
         HoldForMenu(true);
     }
 
     private void OnSpeedMenuClosed(object sender, object e)
     {
-        SpeedButton.ClearValue(BackgroundProperty);
+        _speedMenuOpen = false;
+        ApplySpeedLook();
         HoldForMenu(false);
     }
 
+    // Filled while its menu is open; filled and outlined, like Loop when on, while the speed is not 1x.
+    private void ApplySpeedLook()
+    {
+        bool changed = !PlaybackSpeed.IsCurrent(PlaybackSpeed.Normal, _speed);
+        if (changed || _speedMenuOpen)
+        {
+            SpeedButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        }
+        else
+        {
+            SpeedButton.ClearValue(BackgroundProperty);
+        }
+        if (changed)
+        {
+            SpeedButton.BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherStrokeControlBrush"];
+        }
+        else
+        {
+            SpeedButton.ClearValue(BorderBrushProperty);
+        }
+    }
+
     private void OnMoreClick(object sender, RoutedEventArgs e) => FlyoutBase.ShowAttachedFlyout(MoreButton);
+
+    private void OnMoreMenuOpened(object sender, object e)
+    {
+        MoreButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        HoldForMenu(true);
+    }
+
+    private void OnMoreMenuClosed(object sender, object e)
+    {
+        MoreButton.ClearValue(BackgroundProperty);
+        HoldForMenu(false);
+    }
 
     private void HoldForMenu(bool open)
     {
@@ -213,18 +250,9 @@ public sealed partial class MainPage
         ApplyChrome();
     }
 
-    /// <summary>Below a 520 px pill (5.7), frame step, loop and always on top move into More controls.</summary>
+    /// <summary>Below a 560 px card (5.7), frame step, loop and always on top move into More controls; the slim pill hides them anyway.</summary>
     private void OnOsdSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        bool compact = TransportState.IsCompact(e.NewSize.Width);
-        Visibility full = compact ? Visibility.Collapsed : Visibility.Visible;
-        BackFrameButton.Visibility = full;
-        ForwardFrameButton.Visibility = full;
-        LoopButton.Visibility = full;
-        AlwaysOnTopButton.Visibility = full;
-        MoreLoopItem.Visibility = compact ? Visibility.Visible : Visibility.Collapsed;
-        MoreAlwaysOnTopItem.Visibility = MoreLoopItem.Visibility;
-        MoreButton.Visibility = compact ? Visibility.Visible : Visibility.Collapsed;
     }
 
     // Loop and Always on top: the buttons and their More items follow the state, whoever changed it.
@@ -241,7 +269,6 @@ public sealed partial class MainPage
     private void SyncLoop()
     {
         bool looping = _session?.ViewModel.IsLooping ?? false;
-        LoopButton.IsChecked = looping;
         MoreLoopItem.IsChecked = looping;
     }
 
@@ -256,7 +283,6 @@ public sealed partial class MainPage
     private void SyncAlwaysOnTop()
     {
         bool onTop = _host?.IsAlwaysOnTop ?? false;
-        AlwaysOnTopButton.IsChecked = onTop;
         MoreAlwaysOnTopItem.IsChecked = onTop;
         CtxAlwaysOnTop.IsChecked = onTop;
     }

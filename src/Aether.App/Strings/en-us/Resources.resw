@@ -1235,6 +1235,18 @@
   <data name="Settings_SkipDeblocking_All" xml:space="preserve">
     <value>All frames</value>
   </data>
+  <data name="Settings_MotionStyle_Title" xml:space="preserve">
+    <value>Motion style (preview)</value>
+  </data>
+  <data name="Settings_MotionStyle_Description" xml:space="preserve">
+    <value>How the controls and toasts move. Temporary, to compare the two styles</value>
+  </data>
+  <data name="Settings_MotionStyle_Quick" xml:space="preserve">
+    <value>Quick</value>
+  </data>
+  <data name="Settings_MotionStyle_Springy" xml:space="preserve">
+    <value>Springy</value>
+  </data>
   <data name="Tracks_None" xml:space="preserve">
     <value>None</value>
   </data>

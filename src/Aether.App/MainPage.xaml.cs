@@ -99,6 +99,7 @@ public sealed partial class MainPage : Page
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
         InitializeTransport();
+        InitializeBar();
         InitializeContextMenu();
         InitializeTracks();
         InitializeVideo();
@@ -164,6 +165,15 @@ public sealed partial class MainPage : Page
                 _host.AlwaysOnTopChanged += OnAlwaysOnTopChanged;
             }
             SyncAlwaysOnTop();
+        }
+    }
+
+    /// <summary>Keeps the gear flush with the system caption buttons, whatever their width at this display scale.</summary>
+    public void SetCaptionInset(double width)
+    {
+        if (width > 0)
+        {
+            CaptionReserve.Width = width;
         }
     }
 
@@ -1202,6 +1212,8 @@ public sealed partial class MainPage : Page
             return;
         }
         _lastPointer = position;
+        // Back on the mouse: a transport button left with Tab focus must not keep the card up for good.
+        _chrome.SetHold(ChromeHolds.KeyboardFocus, false);
         NotifyActivity();
     }
 
@@ -1255,6 +1267,7 @@ public sealed partial class MainPage : Page
             ClipLayer.IsHitTestVisible = visible;
             _host?.SetCaptionButtonsVisible(visible);
         }
+        SyncBar();
         UpdateCursor();
         UpdateToastPlacement();
         _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog)) != 0);
@@ -1275,12 +1288,12 @@ public sealed partial class MainPage : Page
         }
     }
 
-    /// <summary>The toast shares the spot above the pill with the export chip and clip drawer, and sits above them.</summary>
+    /// <summary>The toast shares the spot above the card with the export chip and clip drawer, and sits above them.</summary>
     private void UpdateToastPlacement()
     {
         bool controls = _chrome.IsVisible && Osd.Visibility == Visibility.Visible;
         double chip = ClipLayer.Visibility == Visibility.Visible ? ClipLayer.ActualHeight : 0;
-        _toasts?.SetControlsShown(controls, chip);
+        _toasts?.SetControlsShown(controls, Osd.Height, chip);
     }
 
     private void UpdateCursor()
@@ -1368,16 +1381,12 @@ public sealed partial class MainPage : Page
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
-        TitleBadgeText.Text = HasVideo || vm?.Status == PlaybackStatus.Loading
-            ? Path.GetFileName(_currentPath) ?? AppStrings.Get("App_Badge")
-            : AppStrings.Get("App_Badge");
+        string? fileName = HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null;
+        TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");
         // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
         TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
-        TitleBadge.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
-        // Only a playing title sits on the SurfaceOsd fill; "Alpha" on the empty state stays plain.
-        TitleBadge.Background = hasVideo ? (Brush)Application.Current.Resources["AetherSurfaceOsdBrush"] : null;
-        TitleBadge.Padding = hasVideo ? new Thickness(6, 2, 6, 2) : new Thickness(0);
-        TitleBadge.Margin = hasVideo ? new Thickness(0, 0, 0, -2) : new Thickness(0);
+        TitleBadgeText.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
+        TitleSeparator.Visibility = fileName is not null && !_settingsShown ? Visibility.Visible : Visibility.Collapsed;
 
         (string glyph, string label) = TransportState.PlayButton(vm?.Status ?? PlaybackStatus.Idle) switch
         {

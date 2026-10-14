@@ -43,6 +43,13 @@ public sealed partial class AdvancedPage : Page
         });
         _binder.RestartNote(CustomOptionsRestartNote, SettingKeys.CustomMpvOptions);
 
+        _binder.Choose(MotionStyleRow, MotionStyleCombo, SettingKeys.MotionStyle,
+            [
+                new("quick", AppStrings.Get("Settings_MotionStyle_Quick")),
+                new("springy", AppStrings.Get("Settings_MotionStyle_Springy")),
+            ],
+            "Settings_MotionStyle_Title", "Settings_MotionStyle_Description");
+
         SettingsPageBinder.Describe(ResetAllRow, "Settings_ResetAllSettings_Title", "Settings_ResetAllSettings_Description");
         ResetAllButton.Content = AppStrings.Get("Settings_ResetAllSettings");
         ResetAllButton.Click += async (_, _) => await ConfirmResetAsync();

@@ -54,6 +54,7 @@ public static class SettingKeys
     public const string RepairAviIndex = "advanced.repairAviIndex";
     public const string SkipDeblocking = "advanced.skipDeblocking";
     public const string CustomMpvOptions = "advanced.customMpvOptions";
+    public const string MotionStyle = "advanced.motionStyle";
     public const string ShortcutOpenFile = "shortcuts.openFile";
     public const string ShortcutOpenUrl = "shortcuts.openUrl";
     public const string ShortcutSkipBack = "shortcuts.skipBack";
@@ -208,6 +209,7 @@ public static class SettingDefinitions
         Flag(SettingKeys.RepairAviIndex, s => s.RepairAviIndex, (s, v) => s with { RepairAviIndex = v }, restart: true),
         Choice(SettingKeys.SkipDeblocking, s => s.SkipDeblocking, (s, v) => s with { SkipDeblocking = v }, true, "default", "nonref", "nonkey", "all"),
         Text(SettingKeys.CustomMpvOptions, s => s.CustomMpvOptions, (s, v) => s with { CustomMpvOptions = v }, restart: true),
+        Choice(SettingKeys.MotionStyle, s => s.MotionStyle, (s, v) => s with { MotionStyle = v }, false, "quick", "springy"),
 
         Shortcut(SettingKeys.ShortcutOpenFile, s => s.ShortcutOpenFile, (s, v) => s with { ShortcutOpenFile = v }),
         Shortcut(SettingKeys.ShortcutOpenUrl, s => s.ShortcutOpenUrl, (s, v) => s with { ShortcutOpenUrl = v }),
