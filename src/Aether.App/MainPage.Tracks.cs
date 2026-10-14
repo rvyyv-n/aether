@@ -25,6 +25,11 @@ public sealed partial class MainPage
     private int _tracksVersion; // bumped per read, so a slow one never overwrites a newer one
     private bool _showTracksAfterMenu;
 
+    // What the user picked for the open file, kept for an engine restart (null: mpv's own picks). Set from what mpv
+    // reports after each change, so a subtitle file added with "select" is recorded under the id it was given.
+    private TrackChoices? _trackChoices;
+    private TrackChoices? _restoreTracks; // waiting for the restarted engine to finish loading the file
+
     private void InitializeTracks()
     {
         // Light dismiss would otherwise swallow the first click on the pill, as for the volume flyout.
@@ -124,9 +129,55 @@ public sealed partial class MainPage
         {
             _trackWork.Release();
         }
-        if (version == _tracksVersion && _isLoaded && _session == session && TracksFlyout.IsOpen)
+        if (_isLoaded && _session == session)
         {
-            ApplyTracks(snapshot);
+            _trackChoices = TrackChoices.From(snapshot);
+            if (version == _tracksVersion && TracksFlyout.IsOpen)
+            {
+                ApplyTracks(snapshot);
+            }
+        }
+    }
+
+    /// <summary>
+    /// After an engine restart, once the file has loaded: loads the subtitle files again, then puts back the audio and
+    /// subtitle track and both delays. Runs through the same queue as the flyout's changes.
+    /// </summary>
+    private void RestoreTracksOnceLoaded()
+    {
+        if (_restoreTracks is not { } choices || !HasVideo || _session is null)
+        {
+            return;
+        }
+        _restoreTracks = null;
+        _ = ChangeTracks(context =>
+        {
+            TrackSnapshot current = TrackSnapshot.Read(context);
+            IReadOnlyList<string> missing = choices.MissingFiles(current.Tracks);
+            foreach (string file in missing)
+            {
+                Send(context, "sub-add", file, "auto"); // loaded without taking over; the choice below decides
+            }
+            if (missing.Count > 0)
+            {
+                current = TrackSnapshot.Read(context);
+            }
+            foreach (string[] command in choices.Select(current))
+            {
+                Send(context, command);
+            }
+        });
+    }
+
+    /// <summary>One command from a restore; a file that has gone or a track mpv refuses must not stop the rest.</summary>
+    private static void Send(MpvContext context, params string[] command)
+    {
+        try
+        {
+            context.Command(command);
+        }
+        catch (MpvException)
+        {
         }
     }
 

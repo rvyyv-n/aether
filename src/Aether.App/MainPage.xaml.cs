@@ -6,6 +6,7 @@ using Aether.Core.Playback.Input;
 using Aether.Core.Playback.Recents;
 using Aether.Core.Playback.Resume;
 using Aether.Core.Playback.Settings;
+using Aether.Core.Playback.Tracks;
 using Aether_App.Controls;
 using Aether_App.Playback;
 using Aether_App.Settings;
@@ -245,7 +246,8 @@ public sealed partial class MainPage : Page
     }
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
-    private sealed record PlaybackCarryOver(string? Path, double? Position, bool Paused, double Volume, double Speed, bool Looping);
+    private sealed record PlaybackCarryOver(
+        string? Path, double? Position, bool Paused, double Volume, double Speed, bool Looping, TrackChoices? Tracks);
 
     /// <param name="settings">The settings to start with, or null to wait for the saved ones (first start).</param>
     private async void StartEngine(AetherSettings? settings = null)
@@ -335,7 +337,7 @@ public sealed partial class MainPage : Page
     /// <summary>
     /// Replaces the engine with one built from the current settings (Restart engine in Settings), so restart-only
     /// settings apply without relaunching. The open file comes back where it was, with its pause, volume, speed and
-    /// loop; mpv picks the same default tracks again.
+    /// loop, and the tracks and delays picked in the tracks flyout.
     /// </summary>
     public void RestartEngine()
     {
@@ -345,7 +347,7 @@ public sealed partial class MainPage : Page
             string? path = _pendingOpen ?? _currentPath;
             bool playing = HasVideo && _pendingOpen is null;
             _carryOver = new PlaybackCarryOver(
-                path, playing ? vm.Position : null, playing && vm.IsPaused, vm.Volume, vm.Speed, vm.IsLooping);
+                path, playing ? vm.Position : null, playing && vm.IsPaused, vm.Volume, vm.Speed, vm.IsLooping, _trackChoices);
             _pendingOpen = path;
             SaveResumePosition(background: true);
             session.ViewModel.PropertyChanged -= OnViewModelChanged;
@@ -408,6 +410,8 @@ public sealed partial class MainPage : Page
         _currentPath = path;
         _fitWindowPending = carry is null; // after a restart the window keeps the size it has
         _durationRecorded = false;
+        _trackChoices = carry?.Tracks; // another file starts on mpv's own picks
+        _restoreTracks = carry?.Tracks;
         TrySend(() =>
         {
             if (carry is { Paused: true })
@@ -497,6 +501,7 @@ public sealed partial class MainPage : Page
             case nameof(PlayerViewModel.Status):
                 UpdateClock(vm); // an ended file reads its full duration
                 RecordDuration(vm);
+                RestoreTracksOnceLoaded();
                 Render();
                 break;
             case nameof(PlayerViewModel.IsPaused):
