@@ -58,7 +58,7 @@ public sealed partial class MainPage : Page
     private bool _isLoaded;
 
     private string? _currentPath;
-    private string? _pendingOpen; // a file from the command line, opened once the engine is up
+    private string? _pendingOpen; // a file from the command line, opened once the engine and video output are up
     private bool _fitWindowPending; // the next video size resizes the window (set per opened file)
     private bool _windowSyncQueued;
     private bool _dragging;
@@ -102,6 +102,7 @@ public sealed partial class MainPage : Page
         Unloaded += OnUnloaded;
         LayoutUpdated += (_, _) => PostBackdropRegion();
         VideoSurface.CompositionScaleChanged += (_, _) => PostBackdropRegion();
+        VideoSurface.PlayerReady += (_, _) => OpenPending();
     }
 
     /// <summary>Labels that never change, from the strings file (the XAML text is only a design-time stand-in).</summary>
@@ -270,11 +271,7 @@ public sealed partial class MainPage : Page
                 _startup = StartupPhase.Ready;
                 _session.ViewModel.IsLooping = App.Settings.Current.LoopByDefault;
                 SyncVolume();
-                if (_pendingOpen is { } pending)
-                {
-                    _pendingOpen = null;
-                    Open(pending);
-                }
+                OpenPending();
                 break;
             case EngineStartupStatus.MissingBinary:
                 _startup = StartupPhase.MissingBinary;
@@ -287,16 +284,19 @@ public sealed partial class MainPage : Page
         Render();
     }
 
-    /// <summary>Opens the file now if the engine is running, otherwise once it has started.</summary>
+    /// <summary>Opens the file now if the engine and its video output are up, otherwise once they are.</summary>
     public void OpenWhenReady(string path)
     {
-        if (_session is not null)
+        _pendingOpen = path;
+        OpenPending();
+    }
+
+    private void OpenPending()
+    {
+        if (_pendingOpen is { } pending && _session is not null && VideoSurface.IsPlayerReady)
         {
-            Open(path);
-        }
-        else
-        {
-            _pendingOpen = path;
+            _pendingOpen = null;
+            Open(pending);
         }
     }
 

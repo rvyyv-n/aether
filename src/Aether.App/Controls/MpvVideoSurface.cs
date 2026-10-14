@@ -78,6 +78,15 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
     /// <summary>A render-thread step failed; the loop retries on its own. Raised on the UI thread.</summary>
     public event EventHandler<Exception>? RenderFault;
 
+    /// <summary>
+    /// True once the attached player's render context exists (its loop has bound a swap chain).
+    /// mpv sets up video output when a file loads, so a file loaded before this plays without a picture.
+    /// </summary>
+    public bool IsPlayerReady { get; private set; }
+
+    /// <summary>Raised on the UI thread when <see cref="IsPlayerReady"/> turns true.</summary>
+    public event EventHandler? PlayerReady;
+
     /// <summary>The running loop, or null while unloaded.</summary>
     public MpvRenderLoop? RenderLoop => _loop;
 
@@ -139,6 +148,7 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
         host.Loop = loop; // published to the render thread by Start
         _loop = loop;
         _boundGeneration = 0;
+        IsPlayerReady = false;
         loop.SetTargetSize(ActualWidth, ActualHeight, CompositionScaleX, CompositionScaleY);
         loop.Start();
     }
@@ -151,6 +161,7 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
             return; // Unloaded before Loaded, or twice
         }
         _loop = null;
+        IsPlayerReady = false;
 
         // Non-blocking: the render thread releases device, swap chain and backend as it exits.
         // The panel holds its own reference to the bound swap chain until it is detached here.
@@ -180,6 +191,12 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
             SwapChainPanelNative.SetSwapChain(PanelPointer, handoff.SwapChain);
             GC.KeepAlive(this);
             _boundGeneration = handoff.Generation;
+        }
+        // The loop creates its backend, and with it the mpv render context, before handing off a swap chain.
+        if (!IsPlayerReady && _player is not null)
+        {
+            IsPlayerReady = true;
+            PlayerReady?.Invoke(this, EventArgs.Empty);
         }
     }
 
