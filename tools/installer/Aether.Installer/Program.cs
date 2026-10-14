@@ -336,7 +336,8 @@ internal static partial class Program
             Console.ResetColor();
         }
 
-        if (Directory.Exists(targetDir) && !IsAetherInstall(targetDir))
+        // A missing folder counts too: a mistyped --target must not de-register the real install.
+        if (!IsAetherInstall(targetDir))
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"[Error] {targetDir} is not an {AppName} install, so nothing was removed.");

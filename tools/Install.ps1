@@ -79,8 +79,8 @@ function Update-ShellAssociations {
 
 # --- UNINSTALL MODE ---
 if ($Uninstall) {
-    # Uninstall deletes the whole folder, so only touch one that holds Aether.
-    if ((Test-Path $TargetDir) -and -not (Test-Path (Join-Path $TargetDir $MainExe))) {
+    # Uninstall deletes the whole folder, so only touch one that holds Aether; a missing folder must not de-register the real install.
+    if (-not (Test-Path (Join-Path $TargetDir $MainExe))) {
         Write-Err "[Error] $TargetDir is not an $AppName install, so nothing was removed."
         exit 1
     }
