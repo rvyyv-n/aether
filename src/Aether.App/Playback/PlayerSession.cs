@@ -253,7 +253,12 @@ public sealed class PlayerSession : IDisposable
         }
         try
         {
-            string targetFps = "0"; if (App.Settings.Current.SmoothMotion && int.TryParse(_display.Current, out int hz) && hz is > 0 and <= 60) { targetFps = _display.Current; } _context.CommandAsync(new MpvCommand("set", DisplayFpsOverride, targetFps));
+            string targetFps = "0";
+            if (App.Settings.Current.SmoothMotion && int.TryParse(_display.Current, out int hz) && hz is > 0 and <= 60)
+            {
+                targetFps = _display.Current;
+            }
+            _context.CommandAsync(new MpvCommand("set", DisplayFpsOverride, targetFps));
         }
         catch (Exception exception) when (exception is MpvException or ObjectDisposedException)
         {

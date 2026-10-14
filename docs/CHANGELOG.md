@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Playback & high-refresh display pacing: bypassed forced display-fps-override on high-refresh displays (>60 Hz), restoring native presentation timing ("0") to prevent GPU 3D engine starvation under display-resample and spline36 on high-refresh displays (120/144/180 Hz).
+- Playback performance: software decoding fallback under auto-safe now retains full frame readahead queue (fix R2); XAML layout updates and string allocations for clock and seek bar gated while controls are hidden (fix R3).
+- UI finish: More (…) menu items now feature Segoe Fluent Icons (Back 1 frame, Forward 1 frame, Loop, Always on top); Springy and Quick motion profiles tuned for smooth, refined transitions.
 - Housekeeping: the window title, About diagnostics lines, proxy hint and Diagnostics wording now come from the language file; unused language entries and design tokens, dead constants, the packaged-app manifest and logo images moved to `retired/`; native libraries for every architecture are ignored by git; the README no longer presents phone streaming as working before Pass 11.
 - Roadmap: task 7.25 for the approved review fixes (R1-R7); review findings report added.
 - Roadmap: task 7.24 for the broken edge-to-edge video.
