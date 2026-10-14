@@ -98,7 +98,7 @@ Mockups: screen 5 (transport).
 | 5.11 | `PerformanceLoop`: async seek coalescing, zero-drop GPU decode verification, smooth 60fps+ UI under high-bitrate 1440p/4K load — **Done** (`SeekCoalescer`, `CompositeCommandReplyHandler`, exact landing preservation; gate green, 627 core tests) | M |
 | 5.12 | Tests for 5.7–5.10: argument and extension parsing, loop wrap, resume store round-trip and pruning, speed bounds 0.1–4.0 — **Done** | S |
 
-**Pass 5 means:** Real-time game tick HUD, the full transport with visual in/out bounds, and sub-300ms lossless clip generation draggable directly into Discord.
+**Pass 5 means:** The full transport with visual in/out bounds, and sub-300ms lossless clip generation draggable directly into Discord.
 
 ---
 
@@ -196,6 +196,8 @@ Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
 | 7.19 | Copy frame and Save frame (Ctrl+C, Ctrl+Shift+S) — the menu entries in 9.1 need the engine work behind them — **Done** (Copy frame puts the picture, with captions and without the on-screen display, on the clipboard; Save frame writes it to the snapshot folder, format and file name from Settings → Video, or Pictures\Aether when no folder is set, and the toast offers Show in folder; both keys can be changed in Settings → Shortcuts and Ctrl+C is left to a text box that has focus) | S |
 | 7.20 | Wire the 9.1 menu items that are still missing: Recent, Audio and Subtitles (open the tracks flyout), Video, Picture in picture (Pass 8, shown disabled until then), Settings Ctrl+, | S |
 | 7.21 | Hover rail (screen 6, unparked): 4 px hot zone on the left edge, 4 px FillRange peek, opens after 150 ms of hover or on click; 56 wide, items Player, Clips, Stream and Settings pinned at the bottom; hides with the controls, Esc closes it, never opens during a drag; solid SurfaceOverlayStrong fallback if Acrylic cannot blur the swap chain. Spec in the handoff (6.1–6.4). Opus plans and asks questions first | M |
+| 7.22 | Ctrl+E exports the marked clip (in and out set), with a toast when nothing is marked; added to the Shortcuts page | S |
+| 7.23 | Seek modifiers on the arrow keys: Shift skips 1 s, Ctrl skips 30 s, plain arrows stay 5 s; shown in the Shortcuts page | S |
 
 ---
 
@@ -237,6 +239,7 @@ Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for st
 | 10.2 | Re-encode pipeline with hardware encoders (NVENC / QSV / AMF) and an x264 fallback; frame-accurate in and out points | L |
 | 10.3 | Optional size limit for a clip, progress, cancel and cleanup of partial files | M |
 | 10.4 | Tests for encoder selection, fallback and cancel | S |
+| 10.5 | Keyframe markers on the In and Out points in Fast mode, showing where a lossless cut will really land | S |
 
 **Pass 10 means:** Clips can start and end on any frame, not just keyframes, and can be sized to fit a limit.
 
@@ -247,12 +250,13 @@ Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for st
 | # | Task | Effort |
 |:---|:---|:---:|
 | 11.1 | `KestrelStreamServer`: lightweight HTTP 206 partial content server with session token auth | M |
-| 11.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding | S |
+| 11.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding, plus a notice when the phone browser can’t play the file (HEVC or MKV) | S |
 | 11.3 | `QrPairingService`: in-memory SVG/PNG QR code generator with local LAN IP flyout (`S` key) | S |
 | 11.4 | Release hardening: Native AOT build (`dotnet publish -c Release -r win-x64`); fix the Release build's IL2104 trim warnings from `WinRT.Runtime` / `Microsoft.Windows.SDK.NET`, then move CI from Debug to Release | M |
-| 11.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations | M |
+| 11.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations; confirm the low-pause GC settings (workstation, non-concurrent, SustainedLowLatency) are really configured | M |
 | 11.6 | `EngineResilience`: attach/detach context cleanup, attached core disposal device-loss safety, queue overflow resync, background core destruction | M |
 | 11.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S |
+| 11.8 | `THIRD_PARTY.md` licence and attribution file for libmpv, FFmpeg, yt-dlp, ANGLE and the other bundled parts, included in the installer and portable zip | S |
 
 **Pass 11 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
 
@@ -262,3 +266,5 @@ Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for st
 
 - **Hover rail (screen 6):** now task 7.21 in Pass 7. Clips and Stream also stay in the right-click menu and shortcuts.
 - **GPU timing row in Diagnostics:** libmpv doesn't expose it. Would need our own D3D11 timestamp queries.
+- **10-bit HDR swap chain output** (`R10G10B10A2_UNORM`): after v1. Playback tone-maps to 8-bit today.
+- **Automated UI tests (FlaUI):** after v1. Screens are checked by hand for now.
