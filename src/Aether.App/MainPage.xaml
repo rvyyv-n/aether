@@ -474,6 +474,60 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
+                <StackPanel
+                    x:Name="StreamFailureActions"
+                    Margin="0,24,0,0"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Visibility="Collapsed">
+                    <Button
+                        x:Name="StreamRetryButton"
+                        MinWidth="120"
+                        Click="OnStreamRetryClick"
+                        Style="{StaticResource AetherEmphasisPillButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="{StaticResource AetherSizeIcon}"
+                                Glyph="&#xE72C;" />
+                            <TextBlock x:Name="StreamRetryLabel" Text="Retry" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="StreamEditLinkButton"
+                        MinWidth="120"
+                        Click="OnStreamEditLinkClick"
+                        Style="{StaticResource AetherOutlinePillButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="{StaticResource AetherSizeIcon}"
+                                Glyph="&#xE70F;" />
+                            <TextBlock x:Name="StreamEditLinkLabel" Text="Edit link" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="StreamOpenInBrowserButton"
+                        MinWidth="150"
+                        Click="OnStreamOpenInBrowserClick"
+                        Style="{StaticResource AetherOutlinePillButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="{StaticResource AetherSizeIcon}"
+                                Glyph="&#xE774;" />
+                            <TextBlock x:Name="StreamOpenInBrowserLabel" Text="Open in browser" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="StreamFailureCancelButton"
+                        MinWidth="100"
+                        Click="OnStreamFailureCancelClick"
+                        Style="{StaticResource AetherOutlinePillButtonStyle}">
+                        <TextBlock x:Name="StreamFailureCancelLabel" Text="Cancel" />
+                    </Button>
+                </StackPanel>
             </StackPanel>
 
             <!--

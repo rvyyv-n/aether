@@ -227,11 +227,11 @@ Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for st
 
 | # | Task | Effort |
 |:---|:---|:---:|
-| 9.1 | Play a pasted link: resolve it through yt-dlp, hand the stream to mpv, and make Play in the Open URL dialog start it (`OpenUrlFlow` takes `streamingAvailable`) | M |
-| 9.2 | Getting stream / still working (10 s) states in the hero, link-failure frames, cancel while resolving, and engine restart keeping the link | M |
-| 9.3 | Empty-state hint switches to "Drop a file, paste a link or press Ctrl+O"; recents store links with their title | S |
-| 9.4 | Clip and frame export from a streamed link, or a clear "save the file first" message | S |
-| 9.5 | Tests for link resolving, failure mapping and the dialog flow | S |
+| 9.1 | Play a pasted link: resolve it through yt-dlp, hand the stream to mpv, and make Play in the Open URL dialog start it (`OpenUrlFlow` takes `streamingAvailable`) — **Done** (resolved with yt-dlp `--dump-json`, passing stream URL and http headers to mpv `loadfile`, `OpenUrlFlow` set to `streamingAvailable: true`) | M |
+| 9.2 | Getting stream / still working (10 s) states in the hero, link-failure frames, cancel while resolving, and engine restart keeping the link — **Done** (hero loading spinner with hostname and 10 s "still working" note, failure actions: Retry, Edit link, Open in browser, Cancel; process tree kill on cancel, engine restart preserves original WebLink in PlaybackCarryOver) | M |
+| 9.3 | Empty-state hint switches to "Drop a file, paste a link or press Ctrl+O"; recents store links with their title — **Done** (empty-state subtitle updated, Ctrl+V pastes and resolves links directly on home screen, recents store web URLs with video title & duration) | S |
+| 9.4 | Clip and frame export from a streamed link, or a clear "save the file first" message — **Done** (clip export blocked for stream sources with neutral toast "Save the file first to export clips"; frame copy Ctrl+C and save Ctrl+Shift+S work via mpv screenshot) | S |
+| 9.5 | Tests for link resolving, failure mapping and the dialog flow — **Done** (unit tests for YtDlpArgumentsBuilder, YtDlpErrorClassifier, and YtDlpStreamResolver; all 1066 core tests pass) | S |
 
 **Pass 9 means:** Paste a YouTube or other supported link and watch it with the same controls as a local file.
 

@@ -164,3 +164,26 @@
 - **Context:** Screen 3 put the file name in a SurfaceOsd pill beside "Aether". In the build the pill read as a stray grey chip: its padding sat unevenly around text trimmed to the baseline, and it competed with the caption buttons.
 - **Decision:** No pill. "Aether", a muted middle dot, then the file name in TextSecondary, all Caption on one baseline and trimmed with an ellipsis at 320. The empty state still reads "Aether Alpha" with no dot. The top scrim keeps the text readable over bright video.
 - **Status:** Accepted (owner's choice in the Pass 7 UI finish).
+
+## ADR-0020: Link Playback Resolution, Error Classification & Process Isolation (Pass 9)
+- **Context:** Pass 9 adds web link playback (YouTube, Vimeo, Twitch, and 1000+ yt-dlp supported sites) directly into Aether. Resolving remote media URLs requires spawning `yt-dlp` CLI out-of-process. Previous mockups and dialogs had placeholders (`streamingAvailable: false`) and lacked robust process-tree cancellation, retry/edit UX, stderr classification for private/geo-blocked/unsupported streams, and direct empty-state clipboard pasting.
+- **Decision:**
+  - **Two-Stage Playback Architecture:**
+    - Instead of handing raw web links to libmpv's built-in ytdl hook (which blocks mpv event loop and obscures error specifics), Aether uses `IYtDlpStreamResolver` (`YtDlpStreamResolver`) to resolve the webpage URL ahead of time via `yt-dlp --dump-json --no-playlist`.
+    - Direct media URL, format ID, webpage title, duration, and HTTP request headers (User-Agent, Referer, Cookies, etc.) are extracted and supplied to `MpvPlaybackCore.LoadFile(streamUrl, httpHeaders)`.
+    - `OriginalWebLink` is preserved across engine re-initialization and `PlaybackCarryOver` to enable seamless reload and diagnostics.
+  - **Error Classification & User Agency:**
+    - `YtDlpErrorClassifier` parses stderr output and exit codes into typed `StreamFailureReason` (`PrivateVideo`, `SignInRequired`, `RegionBlocked`, `LiveNotStarted`, `Offline`, `SiteNotSupported`, `YtDlpMissing`, `Unknown`).
+    - Error messages are humanized with actionable remedies in the Hero failure frame: Retry, Edit link, Open in browser, and Cancel.
+  - **Process Isolation & Cancellation Lifecycle:**
+    - `IProcessRunner` / `DefaultProcessRunner` asynchronously drains stdout and stderr concurrently via `Task.WhenAll`.
+    - Upon user cancellation or timeout (default 30s), `process.Kill(entireProcessTree: true)` terminates python/yt-dlp worker subprocesses cleanly without leaking zombie processes.
+    - 10-second timer transitions hero loading spinner to informative "Still working..." note.
+  - **Clipboard & Home Integration:**
+    - Home screen empty-state subtitle updated to "Drop a file, paste a link or press Ctrl+O".
+    - `Ctrl+V` on the home screen detects clipboard web URLs and initiates resolution immediately without manual dialog navigation.
+    - Resolved remote streams persist to `RecentFiles` with resolved video title, duration, and web badge.
+  - **Safety & Export Boundaries:**
+    - Lossless clip export for remote streams is gracefully prevented via "Save the file first to export clips" toast.
+    - Frame copy (`Ctrl+C`) and frame snapshot (`Ctrl+Shift+S`) remain fully functional via mpv screenshot commands.
+- **Status:** Accepted.

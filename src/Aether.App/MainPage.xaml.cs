@@ -1,3 +1,4 @@
+using Aether.Core.Playback.Streams;
 ﻿using System.ComponentModel;
 using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
@@ -79,7 +80,15 @@ public sealed partial class MainPage : Page
     private bool _volumeOpeningPinned;
 
     // Links cannot play until streaming lands, so Play in the dialog reports that instead (4.D5).
-    private readonly OpenUrlFlow _openUrl = new(TimeProvider.System, streamingAvailable: false);
+    private readonly OpenUrlFlow _openUrl = new(TimeProvider.System, streamingAvailable: true);
+    private readonly IYtDlpStreamResolver _streamResolver = new YtDlpStreamResolver();
+    private CancellationTokenSource? _streamResolutionCts;
+    private StreamFailureState? _streamFailure;
+    private string? _failedStreamLink;
+    private string? _currentWebLink;
+    private string? _streamTitle;
+
+    private sealed record StreamFailureState(StreamFailureReason Reason, string Title, string Subtitle, string Link);
     private DispatcherQueueTimer? _openUrlTimer;
     private DispatcherQueueTimer? _copiedTimer;
     private int _recentsVersion; // bumped to drop a missing-file check that a newer one replaced
@@ -124,6 +133,10 @@ public sealed partial class MainPage : Page
         OpenFileLabel.Text = AppStrings.Get("EmptyState_OpenFile");
         OpenUrlLabel.Text = AppStrings.Get("EmptyState_OpenUrl");
         StreamCancelButton.Content = AppStrings.Get("Stream_Cancel");
+        StreamRetryLabel.Text = AppStrings.Get("Stream_Retry");
+        StreamEditLinkLabel.Text = AppStrings.Get("Stream_EditLink");
+        StreamOpenInBrowserLabel.Text = AppStrings.Get("Stream_OpenInBrowser");
+        StreamFailureCancelLabel.Text = AppStrings.Get("Stream_Cancel");
         RecentsHeader.Text = AppStrings.Get("EmptyState_Recent");
         ClearRecentsButton.Content = AppStrings.Get("EmptyState_ClearList");
         OpenUrlTitle.Text = AppStrings.Get("OpenUrl_Title");
@@ -258,7 +271,7 @@ public sealed partial class MainPage : Page
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
     private sealed record PlaybackCarryOver(
-        string? Path, double? Position, bool Paused, double Volume, double Speed, bool Looping, TrackChoices? Tracks);
+        string? Path, double? Position, bool Paused, double Volume, double Speed, bool Looping, TrackChoices? Tracks, string? OriginalWebLink = null);
 
     /// <param name="settings">The settings to start with, or null to wait for the saved ones (first start).</param>
     private async void StartEngine(AetherSettings? settings = null)
@@ -341,7 +354,14 @@ public sealed partial class MainPage : Page
             // Another file opened during the restart replaces the one that was playing, without its position.
             PlaybackCarryOver? carry = _carryOver?.Path == pending ? _carryOver : null;
             _carryOver = null;
-            Open(pending, carry);
+            if (carry?.OriginalWebLink is { } originalLink && WebLink.IsValid(originalLink))
+            {
+                StartResolvingStream(originalLink, carry);
+            }
+            else
+            {
+                Open(pending, carry);
+            }
         }
     }
 
@@ -357,8 +377,9 @@ public sealed partial class MainPage : Page
             PlayerViewModel vm = session.ViewModel;
             string? path = _pendingOpen ?? _currentPath;
             bool playing = HasVideo && _pendingOpen is null;
+            string? webLink = _currentWebLink;
             _carryOver = new PlaybackCarryOver(
-                path, playing ? vm.Position : null, playing && vm.IsPaused, vm.Volume, vm.Speed, vm.IsLooping, _trackChoices);
+                path, playing ? vm.Position : null, playing && vm.IsPaused, vm.Volume, vm.Speed, vm.IsLooping, _trackChoices, webLink);
             _pendingOpen = path;
             SaveResumePosition(background: true);
             session.ViewModel.PropertyChanged -= OnViewModelChanged;
@@ -432,8 +453,12 @@ public sealed partial class MainPage : Page
             }
             session.Open(path, startAt);
         });
-        string name = Path.GetFileName(path);
-        _ = Task.Run(() => App.Recents.Add(path, name, DateTimeOffset.Now));
+        if (_currentWebLink is null)
+        {
+            _streamTitle = null;
+            string name = Path.GetFileName(path);
+            _ = Task.Run(() => App.Recents.Add(path, name, DateTimeOffset.Now));
+        }
         Render();
     }
 
@@ -931,13 +956,13 @@ public sealed partial class MainPage : Page
     private void OnOpenUrlClick(object sender, RoutedEventArgs e) => ShowOpenUrl();
 
     /// <summary>Opens the dialog prefilled from the clipboard (a link only) with the text selected.</summary>
-    private async void ShowOpenUrl()
+    private async void ShowOpenUrl(string? prefill = null)
     {
         if (_session is null || _openUrl.Stage != OpenUrlStage.Closed)
         {
             return;
         }
-        string? clipboard = null;
+        string? clipboard = prefill;
         try
         {
             DataPackageView content = Clipboard.GetContent();
@@ -996,9 +1021,12 @@ public sealed partial class MainPage : Page
     {
         if (_openUrl.Submit() == OpenUrlSubmitResult.Started)
         {
+            string? link = _openUrl.Link;
             HideOpenUrlDialog();
-            ArmOpenUrlTimer();
-            Render();
+            if (link is not null)
+            {
+                StartResolvingStream(link);
+            }
         }
         else
         {
@@ -1026,8 +1054,179 @@ public sealed partial class MainPage : Page
 
     private void OnStreamCancelClick(object sender, RoutedEventArgs e)
     {
+        _streamResolutionCts?.Cancel();
+        _streamResolutionCts = null;
+        _openUrl.Close();
+        _streamFailure = null;
+        ArmOpenUrlTimer();
+        Render();
+    }
+
+    private async void StartResolvingStream(string link, PlaybackCarryOver? carry = null)
+    {
+        if (_session is null)
+        {
+            return;
+        }
+
+        _streamResolutionCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _streamResolutionCts = cts;
+
+        _streamFailure = null;
+        _failedStreamLink = null;
+
+        _openUrl.Open(link);
+        _openUrl.Submit();
+        ArmOpenUrlTimer();
+        Render();
+
+        string? ytDlpPath = ExternalTools.FindYtDlp();
+        var options = new StreamResolutionOptions(
+            YtDlpPath: ytDlpPath,
+            StreamingQuality: App.Settings.Current.StreamingQuality,
+            PreferGpuDecodableFormats: App.Settings.Current.PreferGpuDecodableFormats,
+            HttpProxy: string.IsNullOrWhiteSpace(App.Settings.Current.HttpProxy) ? null : App.Settings.Current.HttpProxy,
+            Timeout: TimeSpan.FromSeconds(30));
+
+        try
+        {
+            ResolvedStream resolved = await _streamResolver.ResolveAsync(link, options, cts.Token);
+            if (cts.IsCancellationRequested || !_isLoaded)
+            {
+                return;
+            }
+
+            _openUrl.Close();
+            ArmOpenUrlTimer();
+
+            _currentWebLink = link;
+            _streamTitle = string.IsNullOrWhiteSpace(resolved.Title) ? WebLink.Host(link) : resolved.Title;
+
+            if (resolved.HttpHeaders is { Count: > 0 } headers)
+            {
+                string headerFields = string.Join(",", headers.Select(kv => string.Concat(kv.Key, ": ", kv.Value)));
+                TrySend(() => _session.Context.SetProperty("http-header-fields", headerFields));
+            }
+
+            Open(resolved.StreamUrl, carry);
+
+            string displayName = _streamTitle ?? WebLink.Host(link) ?? link;
+            _ = Task.Run(() =>
+            {
+                App.Recents.Add(link, displayName, DateTimeOffset.Now);
+                if (resolved.DurationSeconds is { } dur && dur > 0)
+                {
+                    App.Recents.SetDuration(link, dur);
+                }
+            });
+
+            Render();
+        }
+        catch (OperationCanceledException)
+        {
+            if (!cts.IsCancellationRequested)
+            {
+                HandleStreamFailure(link, StreamFailureReason.Offline, "Stream resolution timed out.");
+            }
+        }
+        catch (StreamResolutionException ex)
+        {
+            HandleStreamFailure(link, ex.Reason, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            HandleStreamFailure(link, StreamFailureReason.Unknown, ex.Message);
+        }
+        finally
+        {
+            if (_streamResolutionCts == cts)
+            {
+                _streamResolutionCts = null;
+            }
+        }
+    }
+
+    private void HandleStreamFailure(string link, StreamFailureReason reason, string detail)
+    {
+        if (!_isLoaded)
+        {
+            return;
+        }
         _openUrl.Close();
         ArmOpenUrlTimer();
+
+        (string title, string subtitle) = reason switch
+        {
+            StreamFailureReason.PrivateVideo => (
+                AppStrings.Get("Stream_UnavailableTitle"),
+                AppStrings.Get("Stream_UnavailablePrivate")),
+
+            StreamFailureReason.Offline => (
+                AppStrings.Get("Stream_OfflineTitle"),
+                AppStrings.Get("Stream_OfflineMessage")),
+
+            StreamFailureReason.SignInRequired => (
+                AppStrings.Get("Stream_SignInRequiredTitle"),
+                AppStrings.Get("Stream_SignInRequiredMessage")),
+
+            StreamFailureReason.RegionBlocked => (
+                AppStrings.Get("Stream_RegionBlockedTitle"),
+                AppStrings.Get("Stream_RegionBlockedMessage")),
+
+            StreamFailureReason.LiveNotStarted => (
+                AppStrings.Get("Stream_LiveNotStartedTitle"),
+                AppStrings.Get("Stream_LiveNotStartedMessage")),
+
+            StreamFailureReason.SiteNotSupported => (
+                AppStrings.Get("Stream_SiteNotSupportedTitle"),
+                AppStrings.Get("Stream_SiteNotSupportedMessage")),
+
+            StreamFailureReason.YtDlpMissing => (
+                AppStrings.Get("Stream_UnavailableTitle"),
+                AppStrings.Get("Settings_Streaming_YtDlpMissing")),
+
+            _ => (
+                AppStrings.Get("Stream_UnavailableTitle"),
+                string.IsNullOrWhiteSpace(detail) ? AppStrings.Get("Stream_UnavailableTitle") : detail),
+        };
+
+        _streamFailure = new StreamFailureState(reason, title, subtitle, link);
+        _failedStreamLink = link;
+        Render();
+    }
+
+    private void OnStreamRetryClick(object sender, RoutedEventArgs e)
+    {
+        if (_failedStreamLink is { } link)
+        {
+            _streamFailure = null;
+            StartResolvingStream(link);
+        }
+    }
+
+    private void OnStreamEditLinkClick(object sender, RoutedEventArgs e)
+    {
+        string? linkToEdit = _failedStreamLink;
+        _streamFailure = null;
+        _failedStreamLink = null;
+        _openUrl.Close();
+        ShowOpenUrl(linkToEdit);
+    }
+
+    private async void OnStreamOpenInBrowserClick(object sender, RoutedEventArgs e)
+    {
+        if (_failedStreamLink is { } link && Uri.TryCreate(link, UriKind.Absolute, out Uri? uri))
+        {
+            await Windows.System.Launcher.LaunchUriAsync(uri);
+        }
+    }
+
+    private void OnStreamFailureCancelClick(object sender, RoutedEventArgs e)
+    {
+        _streamFailure = null;
+        _failedStreamLink = null;
+        _openUrl.Close();
         Render();
     }
 
@@ -1064,7 +1263,7 @@ public sealed partial class MainPage : Page
         {
             OpenUrlNote.Invalid => (AppStrings.Get("OpenUrl_InvalidLink"), Tone.Warning),
             OpenUrlNote.Unavailable => (AppStrings.Get("OpenUrl_NotAvailable"), Tone.Neutral),
-            _ => (AppStrings.Get("OpenUrl_NotAvailable"), (Tone?)null),
+            _ => (AppStrings.Get("OpenUrl_Hint"), (Tone?)null),
         };
         OpenUrlNoteText.Text = note;
         OpenUrlNoteDot.Visibility = dot is null ? Visibility.Collapsed : Visibility.Visible;
@@ -1103,8 +1302,13 @@ public sealed partial class MainPage : Page
     /// <summary>A file that went missing since the list was drawn turns into the missing row instead of opening.</summary>
     private async void OnRecentOpenRequested(object? sender, EventArgs e)
     {
-        if (sender is not RecentRow { Item.IsLink: false } row || _session is null)
+        if (sender is not RecentRow row || _session is null)
         {
+            return;
+        }
+        if (row.Item.IsLink)
+        {
+            StartResolvingStream(row.Item.Location);
             return;
         }
         string path = row.Item.Location;
@@ -1389,7 +1593,7 @@ public sealed partial class MainPage : Page
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
-        string? fileName = HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null;
+        string? fileName = _streamTitle ?? (HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null);
         TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");
         // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
         TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
@@ -1435,7 +1639,11 @@ public sealed partial class MainPage : Page
             _ => (Tone.Warning, AppStrings.Get("Shell_EngineNotRunning"), null),
         };
 
-        if (_dragging)
+        if (_streamFailure is { } streamFail)
+        {
+            SetHome(streamFail.Title, streamFail.Subtitle, Tone.Warning, engine);
+        }
+        else if (_dragging)
         {
             if (_dragSupported)
             {
@@ -1492,8 +1700,9 @@ public sealed partial class MainPage : Page
             SetHome(AppStrings.Get("EmptyState_Title"), HomeFilesSubtitle(), null, engine);
         }
 
+        bool streamFailed = _streamFailure is not null && !_dragging;
         StartupProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-        OpenActions.Visibility = failed || _dragging || streaming ? Visibility.Collapsed : Visibility.Visible;
+        OpenActions.Visibility = failed || _dragging || streaming || streamFailed ? Visibility.Collapsed : Visibility.Visible;
         OpenFileButton.IsEnabled = _session is not null;
         OpenUrlButton.IsEnabled = _session is not null;
         bool showStream = streaming && !_dragging;
@@ -1501,8 +1710,9 @@ public sealed partial class MainPage : Page
         StreamProgress.Visibility = showStream ? Visibility.Visible : Visibility.Collapsed;
         StreamProgress.IsActive = showStream;
         StreamCancelButton.Visibility = showStream ? Visibility.Visible : Visibility.Collapsed;
+        StreamFailureActions.Visibility = streamFailed ? Visibility.Visible : Visibility.Collapsed;
         // Recents belong to the plain empty state: hidden until there is history (2.10).
-        bool idle = _startup == StartupPhase.Ready && !_dragging && !streaming && vm?.Status != PlaybackStatus.Loading;
+        bool idle = _startup == StartupPhase.Ready && !_dragging && !streaming && !streamFailed && vm?.Status != PlaybackStatus.Loading;
         RecentsPanel.Visibility = idle && RecentsList.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         Visibility failure = failed && !_dragging ? Visibility.Visible : Visibility.Collapsed;
         DetailsPanel.Visibility = failure;

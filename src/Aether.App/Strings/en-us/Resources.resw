@@ -1,51 +1,51 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<root>
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
+<?xml version='1.0' encoding='utf-8'?>
+<root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:schema id="root">
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xs:element name="root" ns1:IsDataSet="true">
+      <xs:complexType>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element name="metadata">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" />
+              </xs:sequence>
+              <xs:attribute name="name" use="required" type="xsd:string" />
+              <xs:attribute name="type" type="xsd:string" />
+              <xs:attribute name="mimetype" type="xsd:string" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="assembly">
+            <xs:complexType>
+              <xs:attribute name="alias" type="xsd:string" />
+              <xs:attribute name="name" type="xsd:string" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="data">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+                <xs:element name="comment" type="xsd:string" minOccurs="0" ns1:Ordinal="2" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" ns1:Ordinal="1" />
+              <xs:attribute name="type" type="xsd:string" ns1:Ordinal="3" />
+              <xs:attribute name="mimetype" type="xsd:string" ns1:Ordinal="4" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="resheader">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" />
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+    </xs:element>
+  </xs:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -59,7 +59,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-  <!-- App and Title bar -->
+  
   <data name="App_Name" xml:space="preserve">
     <value>Aether</value>
   </data>
@@ -70,7 +70,7 @@
     <value>Settings (Ctrl+,)</value>
   </data>
 
-  <!-- Empty state (Screens 1 and 2A) -->
+  
   <data name="EmptyState_Title" xml:space="preserve">
     <value>No video loaded</value>
   </data>
@@ -118,7 +118,7 @@
     <value>Remove from recent</value>
   </data>
 
-  <!-- Shell and engine states (Screen 2) -->
+  
   <data name="Shell_StartingEngine" xml:space="preserve">
     <value>Starting up…</value>
   </data>
@@ -182,7 +182,7 @@
     <comment>Windows drag caption beside the pointer</comment>
   </data>
 
-  <!-- Open URL dialog (Screen 2.5) -->
+  
   <data name="OpenUrl_Title" xml:space="preserve">
     <value>Open URL</value>
   </data>
@@ -206,7 +206,7 @@
     <value>Cancel</value>
   </data>
 
-  <!-- Links and streaming states (Screen 2) -->
+  
   <data name="Stream_GettingStream" xml:space="preserve">
     <value>Getting stream</value>
   </data>
@@ -266,7 +266,7 @@
     <value>Cancel</value>
   </data>
 
-  <!-- yt-dlp update prompts (Screen 2) -->
+  
   <data name="YtDlp_UpdatePromptTitle" xml:space="preserve">
     <value>Link playback needs an update</value>
   </data>
@@ -295,7 +295,7 @@
     <value>yt-dlp 2026.03.17 is still installed</value>
   </data>
 
-  <!-- Transport and Playing controls / tooltips (Screens 3 and 5) -->
+  
   <data name="Transport_OpenFile" xml:space="preserve">
     <value>Open file (Ctrl+O)</value>
   </data>
@@ -369,7 +369,7 @@
     <value>Default from Settings</value>
   </data>
 
-  <!-- Rail (Screen 6) -->
+  
   <data name="Rail_Player" xml:space="preserve">
     <value>Player</value>
   </data>
@@ -383,7 +383,7 @@
     <value>Settings</value>
   </data>
 
-  <!-- Menus and flyouts (Screen 9) -->
+  
   <data name="Menu_OpenFile" xml:space="preserve">
     <value>Open file</value>
   </data>
@@ -442,7 +442,7 @@
     <value>Clear list</value>
   </data>
 
-  <!-- Tracks flyout (Screen 9.2) -->
+  
   <data name="Tracks_Audio" xml:space="preserve">
     <value>Audio</value>
   </data>
@@ -462,7 +462,7 @@
     <value>Subtitle delay</value>
   </data>
 
-  <!-- Video flyout (Screen 9.3) -->
+  
   <data name="VideoFlyout_Zoom" xml:space="preserve">
     <value>Zoom</value>
   </data>
@@ -494,7 +494,7 @@
     <value>Reset colours</value>
   </data>
 
-  <!-- Diagnostics and Picture in Picture (Screen 8) -->
+  
   <data name="Diagnostics_Title" xml:space="preserve">
     <value>Diagnostics</value>
   </data>
@@ -523,7 +523,7 @@
     <value>Back to full window</value>
   </data>
 
-  <!-- Toasts and notifications (Screen 10) -->
+  
   <data name="Toast_HwDecFailed" xml:space="preserve">
     <value>Hardware decoding failed, using software decoding</value>
   </data>
@@ -561,7 +561,7 @@
     <value>Clip could not be saved</value>
   </data>
 
-  <!-- Settings page: sections (Screen 7) -->
+  
   <data name="Settings_Back" xml:space="preserve">
     <value>Back</value>
     <comment>Title bar button that closes settings and returns to the player.</comment>
@@ -573,7 +573,7 @@
     <value>Playback</value>
   </data>
 
-  <!-- Settings: General (Screen 7.1) -->
+  
   <data name="Settings_BatterySaver_Title" xml:space="preserve">
     <value>Battery saver</value>
   </data>
@@ -587,7 +587,7 @@
     <value>Instead of opening a new window</value>
   </data>
 
-  <!-- Settings: Playback (Screen 7.2) -->
+  
   <data name="Settings_PreciseSeeking_Title" xml:space="preserve">
     <value>Precise seeking</value>
   </data>
@@ -619,7 +619,7 @@
     <value>Also with T while playing</value>
   </data>
 
-  <!-- Settings: Video (Screens 7.3 and 7.4) -->
+  
   <data name="Settings_QualityPreset_Title" xml:space="preserve">
     <value>Quality preset</value>
   </data>
@@ -699,7 +699,7 @@
     <value>Saturation</value>
   </data>
 
-  <!-- Settings: Audio (Screen 7.5) -->
+  
   <data name="Settings_OutputDevice_Title" xml:space="preserve">
     <value>Output device</value>
   </data>
@@ -725,7 +725,7 @@
     <value>Evens out loud and quiet files</value>
   </data>
 
-  <!-- Settings: Subtitles (Screen 7.6) -->
+  
   <data name="Settings_ShowSubtitlesByDefault_Title" xml:space="preserve">
     <value>Show subtitles by default</value>
   </data>
@@ -739,7 +739,7 @@
     <value>Font and size</value>
   </data>
 
-  <!-- Settings: Streaming (Screens 7.7 and 7.12) -->
+  
   <data name="Settings_StreamingQuality_Title" xml:space="preserve">
     <value>Quality</value>
   </data>
@@ -771,7 +771,7 @@
     <value>Checks once a day</value>
   </data>
 
-  <!-- Settings: Shortcuts (Screen 7.8) -->
+  
   <data name="Settings_Shortcuts_PlayPause" xml:space="preserve">
     <value>Play or pause</value>
   </data>
@@ -839,7 +839,7 @@
     <value>Settings</value>
   </data>
 
-  <!-- Settings: Advanced (Screen 7.9) -->
+  
   <data name="Settings_CustomOptions_Title" xml:space="preserve">
     <value>Custom mpv options</value>
   </data>
@@ -853,7 +853,7 @@
     <value>Restores every setting to its default. Recent files are kept.</value>
   </data>
 
-  <!-- Settings: About (Screen 7.10) -->
+  
   <data name="Settings_About_Engine" xml:space="preserve">
     <value>Engine</value>
   </data>
@@ -885,7 +885,7 @@
     <value>Opens the issue tracker on GitHub</value>
   </data>
 
-  <!-- Settings: Page Titles -->
+  
   <data name="Settings_Page_General" xml:space="preserve">
     <value>General</value>
   </data>
@@ -914,7 +914,7 @@
     <value>About</value>
   </data>
 
-  <!-- Settings: Additional Setting Titles and Descriptions -->
+  
   <data name="Settings_QualityPreset_High" xml:space="preserve">
     <value>High quality</value>
   </data>
@@ -925,7 +925,7 @@
     <value>Subtitle size</value>
   </data>
 
-  <!-- Settings: Choice Values -->
+  
   <data name="Settings_Upscaling_Bilinear" xml:space="preserve">
     <value>Bilinear</value>
   </data>
@@ -993,7 +993,7 @@
     <value>Best</value>
   </data>
 
-  <!-- Settings: Mpv Option Errors -->
+  
   <data name="Settings_MpvOptions_Error_MissingEquals" xml:space="preserve">
     <value>Line {0}: Expected key=value</value>
   </data>
@@ -1010,7 +1010,7 @@
     <value>Line {0}: Duplicate option '{1}'</value>
   </data>
 
-  <!-- Settings: Notices and Actions -->
+  
   <data name="Settings_ResetToDefault" xml:space="preserve">
     <value>Reset to default</value>
   </data>
@@ -1029,7 +1029,7 @@
   <data name="Settings_Shortcuts_Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
-  <!-- Common -->
+  
   <data name="Common_On" xml:space="preserve">
     <value>On</value>
   </data>
@@ -1120,7 +1120,7 @@
   <data name="Settings_YtDlp_UpdateFailed" xml:space="preserve">
     <value>Couldn’t update. If you installed yt-dlp with a package manager, update it there.</value>
   </data>
-  <!-- Settings: VLC-parity options -->
+  
   <data name="Settings_Deinterlace_Title" xml:space="preserve">
     <value>Deinterlace</value>
   </data>
@@ -1313,4 +1313,4 @@
   <data name="Settings_About_Architecture" xml:space="preserve">
     <value>Architecture</value>
   </data>
-</root>
+<data name="Toast_ClipStreamNotSupported" xml:space="preserve"><value>Save the file first to export clips</value></data><data name="EmptyState_SubtitleWithLink" xml:space="preserve"><value>Drop a file, paste a link or press {0}</value></data></root>

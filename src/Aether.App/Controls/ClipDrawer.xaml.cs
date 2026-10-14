@@ -201,6 +201,11 @@ public sealed partial class ClipDrawer : UserControl
         {
             return;
         }
+        if (WebLink.IsValid(source))
+        {
+            AppToasts.Show("clip-stream", AppStrings.Get("Toast_ClipStreamNotSupported"), ToastTone.Neutral);
+            return;
+        }
         var pending = new PendingExport(ClipDisplay.NamePrefix(source));
         _pending.Insert(0, pending);
         SetOpen(true);

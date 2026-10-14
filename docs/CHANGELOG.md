@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Link Playback (yt-dlp, Pass 9):
+  - Stream resolution with yt-dlp: resolves YouTube and 1000+ streaming sites using `--dump-json`, passing extracted direct stream URLs and required HTTP headers directly to libmpv.
+  - Stream failure handling & user recovery: classified errors (private video, sign-in required, region-blocked, live not started, offline, unsupported site, missing yt-dlp) with actionable recovery options: Retry, Edit link, Open in browser, and Cancel.
+  - Process tree isolation: concurrent asynchronous stdout/stderr draining with clean `Kill(entireProcessTree: true)` on user cancellation or timeout.
+  - Hero state indicators: loading spinner displaying domain name with a 10s "still working..." notice.
+  - Home screen link paste: `Ctrl+V` on empty state immediately triggers link resolution and playback; updated subtitle hint to "Drop a file, paste a link or press Ctrl+O".
+  - Recents integration: remote streams saved in recent history with extracted video titles, durations, and original URLs.
+  - Remote stream clipping guard: lossless clip export displays neutral toast "Save the file first to export clips" while frame copy (`Ctrl+C`) and frame save (`Ctrl+Shift+S`) continue working via mpv screenshot.
+  - Engine restart carry-over: preserves `OriginalWebLink` across engine re-initialization and settings changes.
 - Playback & high-refresh display pacing: bypassed forced display-fps-override on high-refresh displays (>60 Hz), restoring native presentation timing ("0") to prevent GPU 3D engine starvation under display-resample and spline36 on high-refresh displays (120/144/180 Hz).
 - Playback performance: software decoding fallback under auto-safe now retains full frame readahead queue (fix R2); XAML layout updates and string allocations for clock and seek bar gated while controls are hidden (fix R3).
 - UI finish: More (…) menu items now feature Segoe Fluent Icons (Back 1 frame, Forward 1 frame, Loop, Always on top); Springy and Quick motion profiles tuned for smooth, refined transitions.
