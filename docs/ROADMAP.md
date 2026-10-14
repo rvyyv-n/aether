@@ -198,6 +198,7 @@ Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
 | 7.21 | Hover rail (screen 6, unparked): 4 px hot zone on the left edge, 4 px FillRange peek, opens after 150 ms of hover or on click; 56 wide, items Player, Clips, Stream and Settings pinned at the bottom; hides with the controls, Esc closes it, never opens during a drag; solid SurfaceOverlayStrong fallback if Acrylic cannot blur the swap chain. Spec in the handoff (6.1–6.4). Opus plans and asks questions first | M |
 | 7.22 | Ctrl+E exports the marked clip (in and out set), with a toast when nothing is marked; added to the Shortcuts page | S |
 | 7.23 | Seek modifiers on the arrow keys: Shift skips 1 s, Ctrl skips 30 s, plain arrows stay 5 s; shown in the Shortcuts page | S |
+| 7.24 | Edge-to-edge video is broken: the picture shows as a narrow strip with a dark band on its left edge instead of filling the window; find the cause (card inset, swap chain size or backdrop blur pass) and fix it, with a screenshot check at several window sizes | M |
 
 ---
 

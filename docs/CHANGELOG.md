@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Roadmap: task 7.24 for the broken edge-to-edge video.
 - Roadmap: added Ctrl+E clip export and Shift/Ctrl seek steps (Pass 7), keyframe markers (Pass 10), a phone-browser support notice, GC check and licence file (Pass 11); 10-bit HDR and UI automation parked for after v1.
 - Roadmap: link playback (yt-dlp) is now Pass 9 and precise re-encode clip export Pass 10; the LAN streamer and release work moved to Pass 11.
 - Repository initialization.
