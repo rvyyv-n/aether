@@ -11,6 +11,9 @@
     <PublishProfile Condition="Exists('Properties\PublishProfiles\win-$(Platform).pubxml')">win-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <WinUISDKReferences>false</WinUISDKReferences>
+    <!-- Unpackaged standalone WinUI 3 desktop application -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <EnableMsixTooling>true</EnableMsixTooling>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -19,43 +22,33 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\LockScreenLogo.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png" />
-    <Content Include="Assets\StoreLogo.png" />
-    <Content Include="Assets\AppIcon.ico" />
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\SplashScreen.scale-200.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\StoreLogo.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\AppIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <!-- libmpv and ANGLE for the target platform (not in git; see docs/AGENTS.md). Packaged next to the exe. -->
+  <!-- libmpv and ANGLE for the target platform. Native binaries must NOT be marked Content (which indexes them into PRI), but None with copy-to-output -->
+  <PropertyGroup>
+    <_NativeArch Condition="'$(Platform)' == 'x64' or '$(RuntimeIdentifier)' == 'win-x64' or ('$(Platform)' == 'AnyCPU' and '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())' == 'x64')">x64</_NativeArch>
+    <_NativeArch Condition="'$(Platform)' == 'arm64' or '$(RuntimeIdentifier)' == 'win-arm64'">arm64</_NativeArch>
+    <_NativeArch Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'">x86</_NativeArch>
+    <_NativeArch Condition="'$(_NativeArch)' == ''">x64</_NativeArch>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Content Include="Native\$(Platform)\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Native\$(_NativeArch)\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
-  <!--
-    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
-    Tools extension to be activated for this project even if the Windows App SDK Nuget
-    package has not yet been restored.
-  -->
-  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
-    <ProjectCapability Include="Msix" />
-  </ItemGroup>
-
-  <!--
-    Microsoft.Windows.SDK.BuildTools.WinApp adds first-class support for
-    `dotnet run` on packaged WinUI apps: it hooks the .NET CLI Run target to
-    register a debug identity via the winapp CLI and launch the app with
-    package identity (AUMID).
-    Set <EnableWinAppRunSupport>false</EnableWinAppRunSupport> in a
-    <PropertyGroup> above to opt out.
-  -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="*" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="*" />
@@ -68,20 +61,43 @@
     <ProjectReference Include="..\Aether.Server.LanHost\Aether.Server.LanHost.csproj" />
   </ItemGroup>
 
-  <!--
-    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
-    Explorer "Package and Publish" context menu entry to be enabled for this project even if
-    the Windows App SDK Nuget package has not yet been restored.
-  -->
-  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
-    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
-  </PropertyGroup>
-
   <!-- Publish Properties -->
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!-- Trimming breaks WinUI 3 XAML reflection and type metadata in unpackaged apps -->
+    <PublishTrimmed>False</PublishTrimmed>
   </PropertyGroup>
+
+  <!-- Unpackaged WinUI 3 PRI unification: guarantee resources.pri is always present next to the executable -->
+  <Target Name="EnsureUnpackagedResourcesPri" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pri"
+          DestinationFiles="$(TargetDir)resources.pri"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(TargetDir)$(TargetName).pri')" />
+  </Target>
+
+  <Target Name="IncludeUnpackagedResourcesPriInPublish" BeforeTargets="GeneratePublishDependencyFile" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(TargetDir)resources.pri" Condition="Exists('$(TargetDir)resources.pri')">
+        <RelativePath>resources.pri</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="$(TargetDir)$(TargetName).pri" Condition="Exists('$(TargetDir)$(TargetName).pri') and !Exists('$(TargetDir)resources.pri')">
+        <RelativePath>resources.pri</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="EnsureUnpackagedResourcesPriForPublish" AfterTargets="Publish">
+    <Copy SourceFiles="$(TargetDir)resources.pri"
+          DestinationFiles="$(PublishDir)resources.pri"
+          SkipUnchangedFiles="true"
+          Condition="'$(PublishDir)' != '' and Exists('$(TargetDir)resources.pri')" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pri"
+          DestinationFiles="$(PublishDir)resources.pri"
+          SkipUnchangedFiles="true"
+          Condition="'$(PublishDir)' != '' and Exists('$(TargetDir)$(TargetName).pri') and !Exists('$(PublishDir)resources.pri')" />
+  </Target>
 </Project>

@@ -64,8 +64,6 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $AppProject = Join-Path $RepoRoot "src\Aether.App\Aether.App.csproj"
 $DevHostProject = Join-Path $RepoRoot "tools\dev-host\Aether.DevHost.csproj"
-$PackageGuid = "55AF92B1-5987-459F-B55A-89F4EE8B1B81"
-$Aumid = "${PackageGuid}_1z32rh13vfry6!App"
 
 # --- MODE 1: Locally Host Stream Server ---
 if ($HostServer) {
@@ -82,7 +80,7 @@ if ($HostServer) {
 
 # --- MODE 2: Run Desktop Player ---
 $OutputDir = Join-Path $RepoRoot "src\Aether.App\bin\$Platform\$Configuration\net10.0-windows10.0.26100.0\win-$Platform"
-$ManifestPath = Join-Path $OutputDir "AppxManifest.xml"
+$ExePath = Join-Path $OutputDir "Aether.App.exe"
 
 if ($Rebuild) {
     Write-Host "[Aether Dev] Cleaning obj and bin..." -ForegroundColor Yellow
@@ -119,29 +117,21 @@ if (-not $NoBuild) {
     Write-Host "[Aether Dev] Build succeeded in $($buildStopwatch.Elapsed.TotalSeconds.ToString('0.00'))s" -ForegroundColor Green
 }
 
-# Ensure loose package registration in Developer Mode
-if (-not (Test-Path $ManifestPath)) {
-    Write-Error "[Aether Dev] AppxManifest.xml not found at $ManifestPath. Build first."
+# Ensure the executable exists
+if (-not (Test-Path $ExePath)) {
+    Write-Error "[Aether Dev] Aether.App.exe not found at $ExePath. Build first."
     exit 1
 }
 
-$registeredPkg = Get-AppxPackage "*$PackageGuid*" -ErrorAction SilentlyContinue
-if (-not $registeredPkg -or ($registeredPkg.InstallLocation -ne $OutputDir)) {
-    Write-Host "[Aether Dev] Registering loose package in-place for Developer Mode..." -ForegroundColor Yellow
-    Add-AppxPackage -Register $ManifestPath
-    Write-Host "[Aether Dev] Loose package registered." -ForegroundColor Green
-}
-
-# Launch the app
-Write-Host "[Aether Dev] Launching Aether..." -ForegroundColor Cyan
+# Launch the app directly as an unpackaged desktop application (no Developer Mode or certificates required)
+Write-Host "[Aether Dev] Launching Aether (unpackaged standalone)..." -ForegroundColor Cyan
 
 if ($FilePath) {
     $resolvedPath = (Resolve-Path $FilePath).Path
     Write-Host "[Aether Dev] Opening video: $resolvedPath" -ForegroundColor Cyan
-    # Pass video file to Aether (via shell association or launch)
-    Start-Process "shell:AppsFolder\$Aumid" -ArgumentList "`"$resolvedPath`""
+    Start-Process -FilePath $ExePath -ArgumentList "`"$resolvedPath`""
 } else {
-    Start-Process "shell:AppsFolder\$Aumid"
+    Start-Process -FilePath $ExePath
 }
 
 Start-Sleep -Milliseconds 800

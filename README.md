@@ -12,7 +12,7 @@
 <p align="center">
   <a href="#key-features">Features</a> &nbsp;·&nbsp;
   <a href="#keyboard-shortcuts">Shortcuts</a> &nbsp;·&nbsp;
-  <a href="#building--running">Build</a> &nbsp;·&nbsp;
+  <a href="#installation--running">Install & Run</a> &nbsp;·&nbsp;
   <a href="docs/ROADMAP.md">Roadmap</a> &nbsp;·&nbsp;
   <a href="docs/CHANGELOG.md">Changelog</a>
 </p>
@@ -46,6 +46,7 @@ It is made for people who review footage, cut clips, and want a player that stay
 - ⚙️ **Comprehensive Settings & Keybinds:** Nine dedicated preference pages (Video, Audio, Subtitles, Playback, Shortcuts, Streaming, Advanced, General, About) with live shortcut conflict detection.
 - 📡 **Instant LAN Mobile Streaming:** Embedded in-memory Kestrel HTTP 206 partial-content server with instant QR-code mobile pairing—scan to continue playback on any phone or tablet on your network.
 - 🏎️ **Native AOT & Zero-Allocation Hot Path:** Built on C# 13 and .NET 10/9 with source-generated `[LibraryImport]` P/Invoke bindings and zero managed allocations on the render loop.
+- 📦 **Zero-Admin Standalone Runner & Per-User Installer:** Fully unpackaged WinUI 3 deployment running directly from user space (`%LOCALAPPDATA%`), without UAC prompts, developer mode, or test certificates.
 
 ---
 
@@ -81,7 +82,7 @@ Aether is structured into modular, decoupled subsystems:
 | **Aether.Core.Playback** | `.NET 9` | UI-agnostic playback engine, seek coalescing, settings store, and event coordination |
 | **Aether.App** | `.NET 10` (WinUI 3) | Presentation shell: Mica Alt backdrop, auto-hiding OSD, settings pages, single instance router |
 | **Aether.PvP.Review** | `.NET 10` | High-FPS frame analysis, game tick HUD calculations, and lossless FFmpeg clipping |
-| **Aether.Server.LanHost** | `.NET 9` | Embedded Kestrel HTTP 206 streaming host and QR pairing service |
+| **Aether.Server.LanHost** | `.NET 9` | Embedded Kestrel LAN stream server |
 
 ---
 
@@ -97,6 +98,7 @@ aether/
 │   ├── Aether.Core.Playback/   # Headless playback loop, shortcuts, and settings map
 │   ├── Aether.PvP.Review/      # Analysis HUD and lossless clipping engine
 │   └── Aether.Server.LanHost/  # Embedded Kestrel LAN stream server
+├── tools/                      # Build, packaging, run, and standalone installer tools
 └── tests/                      # Automated test suites (846 unit tests)
     ├── Aether.Core.Tests/      # Playback, settings, shortcuts, and windowing tests
     ├── Aether.PvP.Tests/       # Frame timing, clipping, and tick analysis tests
@@ -105,7 +107,24 @@ aether/
 
 ---
 
-## Building & Running
+## Installation & Running
+
+### Option 1: Standalone Installer (Recommended)
+Download and run `AetherInstaller.exe`:
+- **Zero Administrator Rights:** Installs cleanly into `%LOCALAPPDATA%\Programs\Aether`.
+- **Zero Certificates:** No test certificate installation or Developer Mode required.
+- **Windows Integration:** Adds Start Menu & Desktop shortcuts, registers in Windows Settings "Installed apps" with clean uninstaller, adds `aether.exe` to Run (`Win+R`), and registers "Play with Aether" context menu.
+- **Silent Scripted Install:** Run `AetherInstaller.exe --silent` (or `--uninstall` for clean removal).
+
+### Option 2: Portable Runner
+Extract `Aether-portable.zip` anywhere (e.g. USB drive or folder) and launch:
+```bat
+run-portable.cmd
+```
+
+---
+
+## Building & Developing
 
 ### Prerequisites
 - Windows 10/11 (version 1809+, build 17763 or newer)
@@ -113,23 +132,32 @@ aether/
 - [Windows App SDK 1.6+](https://learn.microsoft.com/windows/apps/windows-app-sdk/)
 
 ### Fast Developer Workflow
-
-To build incrementally and launch the app immediately without packaging an MSIX bundle:
+Build incrementally and launch unpackaged in ~2-3 seconds:
 
 ```powershell
-# Fast build (~2-3s) and launch desktop app
-.\run.ps1
+# Fast build and launch unpackaged desktop app
+.\tools\run.ps1
 
 # Launch with a specific video file
-.\run.ps1 "path\to\video.mp4"
+.\tools\run.ps1 "path\to\video.mp4"
 
 # Launch instantly without rebuilding
-.\run.ps1 -NoBuild
+.\tools\run.ps1 -NoBuild
 
 # Locally host a video via Kestrel HTTP 206 for browser / mobile testing
-.\run.ps1 -Host "path\to\video.mp4"
+.\tools\run.ps1 -Host "path\to\video.mp4"
 ```
-*(Registers the loose layout in-place with Windows Developer Mode on first run; no installer needed).*
+
+### Packaging Standalone Binaries & Installer
+To generate the portable release bundle and standalone installer executable:
+
+```powershell
+.\tools\package-standalone.ps1
+```
+This builds and outputs to `dist/`:
+- `AetherInstaller.exe` (Self-contained standalone single-file installer)
+- `Aether-portable.zip` (Portable archive)
+- `Aether-portable/` (Ready-to-run folder)
 
 ### Build & Test Gate
 
@@ -144,13 +172,6 @@ dotnet build AetherPlayer.sln -c Debug -p:Platform=x64 --no-restore -warnaserror
 dotnet test AetherPlayer.sln -c Debug -p:Platform=x64 --no-build
 ```
 
-### Running the App via dotnet CLI
-`Aether.App` can also be launched with:
-```powershell
-dotnet run --project src/Aether.App -p:Platform=x64
-```
-*(Requires Windows Developer Mode enabled under **Settings → System → For developers**).*
-
 ---
 
 ## Suite Architecture & Licensing
@@ -158,4 +179,4 @@ dotnet run --project src/Aether.App -p:Platform=x64
 Aether is part of a unified suite of Windows 11 performance utilities (including system debloating and tuning tools) sharing core design tokens (`DesignTokens.xaml`), Mica Alt aesthetics, and zero-allocation performance principles (see [ADR-0016](docs/DECISIONS.md#adr-0016-unified-utility-suite-proprietary-licensing--lgpl-architecture)).
 
 - **Application Code & Assets:** Proprietary / All rights reserved. Unauthorized reproduction, forking, redistribution, or modification of the application shell, suite components, and binaries is prohibited.
-- **Third-Party Libraries:** Incorporates [libmpv](https://mpv.io) under LGPL v2.1+ via dynamic C-ABI loading (`libmpv-2.dll`), and [ANGLE](https://chromium.googlesource.com/angle/angle) under BSD. End users may replace `libmpv-2.dll` with compatible builds per LGPL terms.
+- **libmpv Dynamic Linking:** Uses standard C-ABI dynamic linking (`libmpv-2.dll`) adhering to LGPL v2.1+.

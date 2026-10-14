@@ -12,6 +12,10 @@ public static class Program
     [STAThread]
     private static int Main()
     {
+        // Unpackaged WinUI 3 MRT Core and native dependency resolution require the base directory
+        // to be the working directory when launched via shell verbs, shortcuts, or external paths.
+        Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
         WinRT.ComWrappersSupport.InitializeComWrappers();
         if (SingleInstance.TryHandOff())
         {

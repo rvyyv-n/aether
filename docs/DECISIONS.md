@@ -71,7 +71,7 @@
   - Auto-hide: `ChromeVisibility` (Playback, UI-agnostic, tested with a manual clock) decides; holds (not playing, pointer over controls, drag or dialog) keep the chrome up. The fade animates each element's Composition visual opacity (`ChromeFader`), so it runs on the compositor. The cursor is hidden with `ShowCursor` through `CursorVisibility` (Interop), which steps the per-thread counter only across the shown/hidden boundary; WinUI has no hidden cursor shape.
   - Startup: `EngineStartup` probes for libmpv and creates the `MpvContext` on the thread pool; the UI thread then composes `PlayerSession` around it (event loop, dispatch, key input, surface). Missing binaries and initialization failures come back as a status, never as an exception, and the page shows them with Retry and Open folder. A startup abandoned by unload or retry disposes the engine it produced.
   - Commands from the shell (`loadfile`, `cycle pause`, `set volume`) go through `mpv_command_async`, so the UI never waits on the core.
-- **Status:** Accepted. Not yet verified on screen: the packaged app needs Developer Mode to launch from the CLI, and an unpackaged build lacks the merged framework resources.
+- **Status:** Accepted. Unpackaged runtime and framework resource resolution resolved in ADR-0017.
 
 ## ADR-0011: Settings Store
 - **Context:** The Settings pages (Pass 6) need a model with defaults, per-setting reset and \"applies on restart\" flags, usable without WinUI.
@@ -123,4 +123,24 @@
   - Distribution: Aether and companion utilities are distributed under a single parent suite/studio banner, sharing unified design tokens, typography ramp, and installer packaging.
   - Licensing & fork protection: The application shell, presentation layer, C# playback logic, and companion utilities are proprietary / source-available with a restrictive license prohibiting unauthorized commercial redistribution, re-branding, or closed forks.
   - LGPL compliance: `libmpv` is consumed exclusively as an unmanaged shared library (`libmpv-2.dll`) via standard C-ABI dynamic linking (`[LibraryImport]` / source-generated P/Invoke in `Aether.Core.Interop`). In accordance with LGPL v2.1+ requirements, the application dynamically links the library, allowing end users to inspect and replace `libmpv-2.dll` with alternative compatible builds without requiring the host C# application code to be GPL/LGPL licensed.
+- **Status:** Accepted.
+
+## ADR-0017: Unpackaged WinUI 3 Deployment, Standalone Runner & Per-User Installer
+- **Context:** Running and distributing Aether previously relied on MSIX packaging or Windows Developer Mode loose package registration via `Add-AppxPackage`. Default unpackaged builds (`WindowsPackageType=None`) failed during WinUI 3 startup with `E_XAMLPARSEFAILED` (`0x802B000A`), and MSIX packages required administrative privileges and test code-signing certificates installed to the Local Machine Root trust store.
+- **Root Cause Analysis:**
+  1. **Working Directory & MRT Core Loose Resolution:** Unpackaged WinUI 3 MRT Core requires `Directory.GetCurrentDirectory()` to match `AppContext.BaseDirectory` on entry; otherwise loose `.xbf` and framework resource dictionary lookups fail.
+  2. **PRI File Table Candidate Poisoning:** Native binaries (`libmpv-2.dll`, `libEGL.dll`, `libGLESv2.dll`) marked as `<Content>` in `Aether.App.csproj` caused `makepri.exe` to index the 120MB binary blobs into `resources.pri`, corrupting PRI table chunk boundaries and leading to `Cannot find a Resource with the Name/Key TabViewScrollButtonBackground`.
+  3. **Unpackaged Unified PRI Naming:** For unpackaged WinUI 3 apps, MRT Core strictly resolves resources from `resources.pri` in the executable folder, whereas MSBuild outputs `$(TargetName).pri` (`Aether.App.pri`).
+  4. **Tooling Flag Dependency:** Setting `<EnableMsixTooling>false</EnableMsixTooling>` broke `MrtCore.targets` during build. It must remain `true` even when `WindowsPackageType=None`.
+  5. **XamlControlsResources Necessity:** WinUI 3 controls require the framework `XamlControlsResources` dictionary in `App.xaml` for TabView, Button, and Slider default brushes.
+- **Decision:**
+  - **App & Build Fixes:** Configure `src/Aether.App/Aether.App.csproj` with `<WindowsPackageType>None</WindowsPackageType>`, `<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>`, and `<EnableMsixTooling>true</EnableMsixTooling>`. Mark native DLLs as `<None>` with `CopyToPublishDirectory="PreserveNewest"`. Add target to copy `$(TargetName).pri` to `resources.pri` on build and publish. Add `Directory.SetCurrentDirectory(AppContext.BaseDirectory);` at `Program.Main()` before WinUI initializes.
+  - **Developer Workflow (`tools/run.ps1`):** Launches `Aether.App.exe` directly unpackaged without Developer Mode or loose package registration.
+  - **Standalone Per-User Installer (`tools/installer/Aether.Installer/` & `dist/AetherInstaller.exe`):**
+    - Single-file self-extracting .exe embedding the compressed application payload (`payload.zip`).
+    - Installs to `%LOCALAPPDATA%\Programs\Aether` with zero UAC / Administrator prompt requirement.
+    - Creates Start Menu and Desktop shortcuts via COM `IShellLinkW`.
+    - Registers in `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\Aether` (Windows Settings "Installed apps" with clean `--uninstall` support) and `HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\aether.exe`.
+    - Registers shell context menu ("Play with Aether") under `HKCU\Software\Classes\SystemFileAssociations\video\shell\Aether`.
+  - **Portable Runner & Distribution (`tools/package-standalone.ps1`):** Generates `dist/Aether-portable/` and `dist/Aether-portable.zip` containing `Aether.cmd` and `run-portable.cmd` for zero-installation USB / portable drive usage.
 - **Status:** Accepted.
