@@ -139,6 +139,8 @@ public static class MpvSettingsMap
             new("slang", settings.PreferredSubtitleLanguage),
             new("sub-font", settings.SubtitleFont),
             new("sub-font-size", SubtitleFontSize(settings.SubtitleSize)),
+            new("sub-color", SubtitleColor(settings.SubtitleColor)),
+            new("sub-pos", SubtitlePosition(settings.SubtitlePosition)),
             new("ytdl-format", YtdlFormat(settings.StreamingQuality, settings.PreferGpuDecodableFormats)),
             new("deinterlace", YesNo(settings.Deinterlace && settings.DeinterlaceMode == "auto")),
             new("video-aspect-override", settings.AspectRatio == "auto" ? "-1" : settings.AspectRatio),
@@ -170,6 +172,22 @@ public static class MpvSettingsMap
         "small" => "40",
         "large" => "75",
         _ => "55",
+    };
+
+    public static string SubtitleColor(string color) => color switch
+    {
+        "yellow" => "#FFFF00",
+        "green" => "#00FF00",
+        "cyan" => "#00FFFF",
+        _ => "#FFFFFF",
+    };
+
+    /// <summary>Percent of the picture height from the top, where the last line sits (mpv's default is 100, the bottom edge).</summary>
+    public static string SubtitlePosition(string position) => position switch
+    {
+        "raised" => "90",
+        "top" => "10",
+        _ => "100",
     };
 
     /// <summary>

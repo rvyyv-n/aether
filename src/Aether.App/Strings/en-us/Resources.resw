@@ -1304,4 +1304,34 @@
   <data name="Tracks_Forced" xml:space="preserve">
     <value>Forced</value>
   </data>
+  <data name="Settings_ColorAndPosition_Title" xml:space="preserve">
+    <value>Colour and position</value>
+  </data>
+  <data name="Settings_SubtitleColor_Title" xml:space="preserve">
+    <value>Subtitle colour</value>
+  </data>
+  <data name="Settings_SubtitlePosition_Title" xml:space="preserve">
+    <value>Subtitle position</value>
+  </data>
+  <data name="Settings_SubtitleColor_White" xml:space="preserve">
+    <value>White</value>
+  </data>
+  <data name="Settings_SubtitleColor_Yellow" xml:space="preserve">
+    <value>Yellow</value>
+  </data>
+  <data name="Settings_SubtitleColor_Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="Settings_SubtitleColor_Cyan" xml:space="preserve">
+    <value>Cyan</value>
+  </data>
+  <data name="Settings_SubtitlePosition_Bottom" xml:space="preserve">
+    <value>Bottom</value>
+  </data>
+  <data name="Settings_SubtitlePosition_Raised" xml:space="preserve">
+    <value>Raised</value>
+  </data>
+  <data name="Settings_SubtitlePosition_Top" xml:space="preserve">
+    <value>Top</value>
+  </data>
 </root>

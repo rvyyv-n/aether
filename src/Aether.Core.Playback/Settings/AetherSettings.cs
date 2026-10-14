@@ -69,6 +69,10 @@ public sealed record AetherSettings
     public string SubtitleFont { get; init; } = "Segoe UI Variable";
     /// <summary><c>small</c>, <c>medium</c> or <c>large</c>.</summary>
     public string SubtitleSize { get; init; } = "medium";
+    /// <summary><c>white</c>, <c>yellow</c>, <c>green</c> or <c>cyan</c>.</summary>
+    public string SubtitleColor { get; init; } = "white";
+    /// <summary><c>bottom</c>, <c>raised</c> or <c>top</c>.</summary>
+    public string SubtitlePosition { get; init; } = "bottom";
 
     // Streaming
     /// <summary>Maximum stream height: <c>480p</c>, <c>720p</c>, <c>1080p</c>, <c>1440p</c>, <c>2160p</c> or <c>best</c>.</summary>

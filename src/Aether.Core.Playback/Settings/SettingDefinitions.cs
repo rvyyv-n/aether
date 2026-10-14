@@ -43,6 +43,8 @@ public static class SettingKeys
     public const string PreferredSubtitleLanguage = "subtitles.language";
     public const string SubtitleFont = "subtitles.font";
     public const string SubtitleSize = "subtitles.size";
+    public const string SubtitleColor = "subtitles.color";
+    public const string SubtitlePosition = "subtitles.position";
     public const string StreamingQuality = "streaming.quality";
     public const string PreferGpuDecodableFormats = "streaming.preferGpuDecodable";
     public const string YtDlpAutoUpdate = "streaming.ytdlpAutoUpdate";
@@ -191,6 +193,8 @@ public static class SettingDefinitions
         Text(SettingKeys.PreferredSubtitleLanguage, s => s.PreferredSubtitleLanguage, (s, v) => s with { PreferredSubtitleLanguage = v }),
         Text(SettingKeys.SubtitleFont, s => s.SubtitleFont, (s, v) => s with { SubtitleFont = v }),
         Choice(SettingKeys.SubtitleSize, s => s.SubtitleSize, (s, v) => s with { SubtitleSize = v }, false, "small", "medium", "large"),
+        Choice(SettingKeys.SubtitleColor, s => s.SubtitleColor, (s, v) => s with { SubtitleColor = v }, false, "white", "yellow", "green", "cyan"),
+        Choice(SettingKeys.SubtitlePosition, s => s.SubtitlePosition, (s, v) => s with { SubtitlePosition = v }, false, "bottom", "raised", "top"),
 
         Choice(SettingKeys.StreamingQuality, s => s.StreamingQuality, (s, v) => s with { StreamingQuality = v }, false, "480p", "720p", "1080p", "1440p", "2160p", "best"),
         Flag(SettingKeys.PreferGpuDecodableFormats, s => s.PreferGpuDecodableFormats, (s, v) => s with { PreferGpuDecodableFormats = v }),

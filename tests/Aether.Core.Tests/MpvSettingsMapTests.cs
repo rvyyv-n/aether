@@ -28,6 +28,8 @@ public class MpvSettingsMapTests
         Assert.Equal("en", p["slang"]);
         Assert.Equal("Segoe UI Variable", p["sub-font"]);
         Assert.Equal("55", p["sub-font-size"]);
+        Assert.Equal("#FFFFFF", p["sub-color"]);
+        Assert.Equal("100", p["sub-pos"]);
     }
 
     [Fact]
@@ -417,4 +419,19 @@ public class MpvSettingsMapTests
         Assert.Equal(3, sent.Count(c => c[0] == "af"));
         Assert.Equal(["af", "remove", "@aether-norm"], sent[^1]);
     }
+
+    [Theory]
+    [InlineData("white", "#FFFFFF")]
+    [InlineData("yellow", "#FFFF00")]
+    [InlineData("green", "#00FF00")]
+    [InlineData("cyan", "#00FFFF")]
+    public void Subtitle_Colour_Maps_To_Hex(string color, string expected) =>
+        Assert.Equal(expected, Runtime(new AetherSettings { SubtitleColor = color })["sub-color"]);
+
+    [Theory]
+    [InlineData("bottom", "100")]
+    [InlineData("raised", "90")]
+    [InlineData("top", "10")]
+    public void Subtitle_Position_Maps_To_Sub_Pos(string position, string expected) =>
+        Assert.Equal(expected, Runtime(new AetherSettings { SubtitlePosition = position })["sub-pos"]);
 }
