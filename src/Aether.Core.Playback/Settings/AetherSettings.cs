@@ -75,4 +75,5 @@ public sealed record AetherSettings
     public string ShortcutMute { get; init; } = "";
     public string ShortcutLoop { get; init; } = "";
     public string ShortcutAlwaysOnTop { get; init; } = "";
+    public string ShortcutDiagnostics { get; init; } = "";
 }

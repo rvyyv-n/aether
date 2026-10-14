@@ -17,4 +17,5 @@ public enum ShortcutAction
     Mute,
     Loop,
     AlwaysOnTop,
+    Diagnostics,
 }

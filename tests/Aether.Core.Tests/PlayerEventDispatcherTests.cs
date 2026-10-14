@@ -100,6 +100,72 @@ public unsafe class PlayerEventDispatcherTests
     }
 
     [Fact]
+    public void DiagnosticsProperties_UpdateFieldsAfterFlush()
+    {
+        var vm = new PlayerViewModel();
+        var dispatcher = new PlayerEventDispatcher(vm, new FakeUiFlushScheduler());
+        using var events = new NativeMpvEvents();
+
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyString((ulong)PlayerProperty.HwdecCurrent, "d3d11va")));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyString((ulong)PlayerProperty.VideoFormat, "h264")));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyInt64((ulong)PlayerProperty.VideoParamsWidth, 1920)));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyInt64((ulong)PlayerProperty.VideoParamsHeight, 1080)));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyDouble((ulong)PlayerProperty.EstimatedVfFps, 29.97)));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyDouble((ulong)PlayerProperty.DisplayFps, 143.98)));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyInt64((ulong)PlayerProperty.DecoderFrameDropCount, 3)));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyInt64((ulong)PlayerProperty.FrameDropCount, 7)));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyDouble((ulong)PlayerProperty.DemuxerCacheDuration, 12.5)));
+        dispatcher.Flush();
+
+        Assert.Equal("d3d11va", vm.Decoder);
+        Assert.Equal("h264", vm.VideoFormat);
+        Assert.Equal(1920, vm.CodedWidth);
+        Assert.Equal(1080, vm.CodedHeight);
+        Assert.Equal(29.97, vm.EstimatedFps);
+        Assert.Equal(143.98, vm.DisplayFps);
+        Assert.Equal(3, vm.DecoderDroppedFrames);
+        Assert.Equal(7, vm.DroppedFrames);
+        Assert.Equal(12.5, vm.CacheDuration);
+    }
+
+    [Fact]
+    public void DiagnosticsProperties_Unavailable_FallBackToDefaults()
+    {
+        var vm = new PlayerViewModel();
+        var dispatcher = new PlayerEventDispatcher(vm, new FakeUiFlushScheduler());
+        using var events = new NativeMpvEvents();
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyString((ulong)PlayerProperty.HwdecCurrent, "d3d11va")));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyDouble((ulong)PlayerProperty.DemuxerCacheDuration, 4)));
+        dispatcher.Flush();
+
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyUnavailable((ulong)PlayerProperty.HwdecCurrent)));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyUnavailable((ulong)PlayerProperty.DemuxerCacheDuration)));
+        dispatcher.Flush();
+
+        Assert.Null(vm.Decoder);
+        Assert.True(vm.CacheDuration < 0);
+    }
+
+    [Fact]
+    public void StringProperty_RepeatedValue_KeepsTheSameString()
+    {
+        var vm = new PlayerViewModel();
+        var scheduler = new FakeUiFlushScheduler();
+        var dispatcher = new PlayerEventDispatcher(vm, scheduler);
+        using var events = new NativeMpvEvents();
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyString((ulong)PlayerProperty.VideoFormat, "hevc")));
+        dispatcher.Flush();
+        string? first = vm.VideoFormat;
+        int flushes = scheduler.RequestFlushCount;
+
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyString((ulong)PlayerProperty.VideoFormat, "hevc")));
+
+        Assert.Equal(flushes, scheduler.RequestFlushCount);
+        dispatcher.Flush();
+        Assert.Same(first, vm.VideoFormat);
+    }
+
+    [Fact]
     public void Property_Pause_UpdatesFieldAfterFlush()
     {
         var vm = new PlayerViewModel();

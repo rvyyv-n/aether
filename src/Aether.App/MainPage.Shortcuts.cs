@@ -93,6 +93,7 @@ public sealed partial class MainPage
         ShortcutAction.Mute => OnMuteAccelerator,
         ShortcutAction.Loop => OnLoopAccelerator,
         ShortcutAction.AlwaysOnTop => OnAlwaysOnTopAccelerator,
+        ShortcutAction.Diagnostics => OnDiagnosticsAccelerator,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 

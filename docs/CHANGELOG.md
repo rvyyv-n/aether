@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fast developer runner script (`run.ps1`, `tools/run.ps1`) for sub-3s incremental builds that launches the app directly.
 - Aether runs as a standalone app without Developer Mode or certificates, with a per-user installer (`AetherInstaller.exe`, or `tools/Install.ps1`) and a portable build. The installer needs no admin rights, upgrades cleanly, asks before closing a running Aether, and adds Aether to Open with and to Installed apps.
 - Player bar matches the design: a rounded see-through card with the video blurred behind it, the design's play, speed, skip and full-screen controls, and a title bar whose gear and Back match the window buttons.
+- Diagnostics panel (Ctrl+I, changeable in Settings → Shortcuts): decoder, video, frame rate, display refresh, dropped frames and cache on a solid panel, with a Copy button.
+- Aether now reads the refresh rate of the monitor the window is on (and follows it to another monitor or a changed display mode) and tells the player, so 120 fps clips no longer lose every other frame with Smooth motion on.
+- Toast notifications: a small card above the controls (or near the bottom when they hide) with an optional dot and action and a Dismiss button. One shows at a time, failures go first, a toast with an action is never replaced, repeats show once, and the timer (4 s, or 8 s with an action) pauses while the pointer or keyboard focus is on it or a menu or dialog is open. Nothing shows them yet.
 - Standalone Kestrel developer streaming host (`tools/host.ps1`, `tools/dev-host`).
 
 ### Fixed

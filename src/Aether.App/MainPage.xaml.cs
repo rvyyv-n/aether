@@ -50,6 +50,7 @@ public sealed partial class MainPage : Page
     private readonly ChromeVisibility _chrome = new();
     private DispatcherQueueTimer? _chromeTimer;
     private ChromeFader? _fader;
+    private ToastService? _toasts;
     private IShellWindow? _host;
 
     private PlayerSession? _session;
@@ -75,8 +76,6 @@ public sealed partial class MainPage : Page
     private readonly HoverFlyout _volumeHover = new();
     private DispatcherQueueTimer? _volumeHoverTimer;
     private bool _volumeOpeningPinned;
-    private bool _volumeFlyoutShowing;
-    private string? _volumeTip;
 
     // Links cannot play until streaming lands, so Play in the dialog reports that instead (4.D5).
     private readonly OpenUrlFlow _openUrl = new(TimeProvider.System, streamingAvailable: false);
@@ -203,6 +202,7 @@ public sealed partial class MainPage : Page
             _copiedTimer.Interval = TimeSpan.FromSeconds(2);
             _copiedTimer.IsRepeating = false;
             _copiedTimer.Tick += OnCopiedTimerTick;
+            _toasts = new ToastService(ToastCard, ToastLayer, _fader, DispatcherQueue, () => Focus(FocusState.Programmatic));
         }
         if (_session is null)
         {
@@ -492,6 +492,9 @@ public sealed partial class MainPage : Page
             case nameof(PlayerViewModel.IsPaused):
                 Render();
                 break;
+            case nameof(PlayerViewModel.State) when Diagnostics.Visibility == Visibility.Visible:
+                Diagnostics.Update(vm.State);
+                break;
         }
     }
 
@@ -548,11 +551,10 @@ public sealed partial class MainPage : Page
         }
         bool muted = TransportState.IsMuted(volume);
         VolumeButton.Content = muted ? MuteGlyph : VolumeGlyph;
-        _volumeTip = Tip(muted ? "Transport_Unmute" : "Transport_Mute", ShortcutAction.Mute);
-        if (!_volumeFlyoutShowing)
-        {
-            ToolTipService.SetToolTip(VolumeButton, _volumeTip);
-        }
+        // No tooltip: the hover flyout is the label, and a tooltip would open across its slider.
+        string name = AppStrings.Get(muted ? "Transport_Unmute" : "Transport_Mute");
+        int shortcut = name.LastIndexOf(" (", StringComparison.Ordinal);
+        AutomationProperties.SetName(VolumeButton, shortcut > 0 ? name[..shortcut] : name);
     }
 
     private void OnMuteAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -580,6 +582,22 @@ public sealed partial class MainPage : Page
             args.Handled = true;
             host.ToggleAlwaysOnTop();
         }
+    }
+
+    private void OnDiagnosticsAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (ArePlayerKeysPaused)
+        {
+            return;
+        }
+
+        args.Handled = true;
+        bool show = Diagnostics.Visibility != Visibility.Visible;
+        if (show && _session is { } session)
+        {
+            Diagnostics.Update(session.ViewModel.State);
+        }
+        Diagnostics.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnVolumeClick(object sender, RoutedEventArgs e) => ToggleMute();
@@ -680,9 +698,6 @@ public sealed partial class MainPage : Page
     private void ShowVolumeFlyout(bool pinned)
     {
         _volumeOpeningPinned = pinned;
-        // The button's tooltip opens above it, right across the slider, so it stays off while the flyout is up.
-        _volumeFlyoutShowing = true;
-        ToolTipService.SetToolTip(VolumeButton, null);
         // Transient: a hover-opened flyout must not take focus from the page's playback keys.
         VolumeFlyout.ShowAt(VolumeButton, new FlyoutShowOptions
         {
@@ -707,8 +722,6 @@ public sealed partial class MainPage : Page
     {
         _volumeHover.Closed();
         ArmVolumeHover();
-        _volumeFlyoutShowing = false;
-        ToolTipService.SetToolTip(VolumeButton, _volumeTip);
         _chrome.SetHold(ChromeHolds.Flyout, false);
         ApplyChrome();
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
@@ -813,6 +826,11 @@ public sealed partial class MainPage : Page
         else if (ClipDrawer.Close())
         {
             args.Handled = true;
+        }
+        else if (Diagnostics.Visibility == Visibility.Visible)
+        {
+            args.Handled = true;
+            Diagnostics.Visibility = Visibility.Collapsed;
         }
         else if (_host is { IsFullScreen: true } host)
         {
@@ -1208,6 +1226,8 @@ public sealed partial class MainPage : Page
             _host?.SetCaptionButtonsVisible(visible);
         }
         UpdateCursor();
+        _toasts?.SetControlsShown(_chrome.IsVisible && Osd.Visibility == Visibility.Visible);
+        _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog)) != 0);
 
         if (_chromeTimer is null)
         {

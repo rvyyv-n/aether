@@ -49,6 +49,7 @@ public static class SettingKeys
     public const string ShortcutMute = "shortcuts.mute";
     public const string ShortcutLoop = "shortcuts.loop";
     public const string ShortcutAlwaysOnTop = "shortcuts.alwaysOnTop";
+    public const string ShortcutDiagnostics = "shortcuts.diagnostics";
 }
 
 /// <summary>One setting: key, restart flag, validation and (de)serialisation. No reflection, so it is AOT-safe.</summary>
@@ -181,6 +182,7 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutMute, s => s.ShortcutMute, (s, v) => s with { ShortcutMute = v }),
         Shortcut(SettingKeys.ShortcutLoop, s => s.ShortcutLoop, (s, v) => s with { ShortcutLoop = v }),
         Shortcut(SettingKeys.ShortcutAlwaysOnTop, s => s.ShortcutAlwaysOnTop, (s, v) => s with { ShortcutAlwaysOnTop = v }),
+        Shortcut(SettingKeys.ShortcutDiagnostics, s => s.ShortcutDiagnostics, (s, v) => s with { ShortcutDiagnostics = v }),
     ];
 
     private static readonly Dictionary<string, SettingDefinition> ByKey = All.ToDictionary(d => d.Key, StringComparer.Ordinal);

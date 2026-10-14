@@ -410,6 +410,14 @@
             <Border Grid.Column="3" Width="{StaticResource AetherSizeCaptionButtons}" />
         </Grid>
 
+        <!--  Diagnostics (Ctrl+I): top-left, 16 in from the edge and under the 32 px title bar.  -->
+        <controls:DiagnosticsPanel
+            x:Name="Diagnostics"
+            Margin="16,48,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Visibility="Collapsed" />
+
         <!--
             Export chip and clip drawer (s5-03, 5.3): 8 above the 84 px card (24 + 84 + 8 = 116), right-aligned
             to it by sharing its width and margins. Fades with the controls.
@@ -692,6 +700,18 @@
                 </Grid>
             </Grid>
         </Border>
+
+        <!--
+            Toasts (screen 10): bottom centre, min(360, window - 32) wide. The margin below follows the controls
+            (ToastService.SetControlsShown); the page code fills in the toast.
+        -->
+        <Grid
+            x:Name="ToastLayer"
+            Margin="16,0,16,24"
+            VerticalAlignment="Bottom"
+            Visibility="Collapsed">
+            <controls:Toast x:Name="ToastCard" />
+        </Grid>
 
         <!--
             Open URL (2.5): scrim over the whole window, the strip dimmed with everything else. The

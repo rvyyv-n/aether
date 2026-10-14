@@ -540,7 +540,7 @@
     <value>Settings</value>
   </data>
   <data name="Toast_YtDlpUpdated" xml:space="preserve">
-    <value>yt-dlp updated to 2026.07.04</value>
+    <value>yt-dlp updated to {0}</value>
   </data>
   <data name="Toast_FrameCopied" xml:space="preserve">
     <value>Frame copied</value>

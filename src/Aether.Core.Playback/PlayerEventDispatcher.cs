@@ -1,3 +1,6 @@
+using System.Buffers;
+using System.Text;
+using System.Text.Unicode;
 using Aether.Core.Interop.Mpv;
 
 namespace Aether.Core.Playback;
@@ -15,6 +18,15 @@ public enum PlayerProperty : ulong
     IdleActive,
     DisplayWidth,
     DisplayHeight,
+    HwdecCurrent,
+    VideoFormat,
+    VideoParamsWidth,
+    VideoParamsHeight,
+    EstimatedVfFps,
+    DisplayFps,
+    DecoderFrameDropCount,
+    FrameDropCount,
+    DemuxerCacheDuration,
 }
 
 /// <summary>
@@ -79,6 +91,15 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
         context.ObserveProperty((ulong)PlayerProperty.IdleActive, "idle-active", MpvFormat.Flag);
         context.ObserveProperty((ulong)PlayerProperty.DisplayWidth, "dwidth", MpvFormat.Int64);
         context.ObserveProperty((ulong)PlayerProperty.DisplayHeight, "dheight", MpvFormat.Int64);
+        context.ObserveProperty((ulong)PlayerProperty.HwdecCurrent, "hwdec-current", MpvFormat.String);
+        context.ObserveProperty((ulong)PlayerProperty.VideoFormat, "video-format", MpvFormat.String);
+        context.ObserveProperty((ulong)PlayerProperty.VideoParamsWidth, "video-params/w", MpvFormat.Int64);
+        context.ObserveProperty((ulong)PlayerProperty.VideoParamsHeight, "video-params/h", MpvFormat.Int64);
+        context.ObserveProperty((ulong)PlayerProperty.EstimatedVfFps, "estimated-vf-fps", MpvFormat.Double);
+        context.ObserveProperty((ulong)PlayerProperty.DisplayFps, "display-fps", MpvFormat.Double);
+        context.ObserveProperty((ulong)PlayerProperty.DecoderFrameDropCount, "decoder-frame-drop-count", MpvFormat.Int64);
+        context.ObserveProperty((ulong)PlayerProperty.FrameDropCount, "frame-drop-count", MpvFormat.Int64);
+        context.ObserveProperty((ulong)PlayerProperty.DemuxerCacheDuration, "demuxer-cache-duration", MpvFormat.Double);
     }
 
     /// <summary>Event thread.</summary>
@@ -185,6 +206,33 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
                 case PlayerProperty.DisplayHeight:
                     next = next with { VideoHeight = ToDimension(change) };
                     break;
+                case PlayerProperty.HwdecCurrent:
+                    next = next with { Decoder = ToText(change, before.Decoder) };
+                    break;
+                case PlayerProperty.VideoFormat:
+                    next = next with { VideoFormat = ToText(change, before.VideoFormat) };
+                    break;
+                case PlayerProperty.VideoParamsWidth:
+                    next = next with { CodedWidth = ToDimension(change) };
+                    break;
+                case PlayerProperty.VideoParamsHeight:
+                    next = next with { CodedHeight = ToDimension(change) };
+                    break;
+                case PlayerProperty.EstimatedVfFps:
+                    next = next with { EstimatedFps = change.TryGetDouble(out double estimated) ? estimated : 0 };
+                    break;
+                case PlayerProperty.DisplayFps:
+                    next = next with { DisplayFps = change.TryGetDouble(out double refresh) ? refresh : 0 };
+                    break;
+                case PlayerProperty.DecoderFrameDropCount:
+                    next = next with { DecoderDroppedFrames = change.TryGetInt64(out long decoderDrops) ? decoderDrops : 0 };
+                    break;
+                case PlayerProperty.FrameDropCount:
+                    next = next with { DroppedFrames = change.TryGetInt64(out long drops) ? drops : 0 };
+                    break;
+                case PlayerProperty.DemuxerCacheDuration:
+                    next = next with { CacheDuration = change.TryGetDouble(out double cache) ? cache : -1 };
+                    break;
                 case PlayerProperty.IdleActive:
                     // Unavailable can't happen for idle-active; treat it as idle.
                     _idleActive = !change.TryGetFlag(out bool idle) || idle;
@@ -221,6 +269,29 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
         {
             MarkDirty();
         }
+    }
+
+    /// <summary>
+    /// A string property, reusing <paramref name="current"/> when the text is unchanged so a repeated
+    /// report allocates nothing; null when unavailable or empty.
+    /// </summary>
+    private static string? ToText(in MpvPropertyChange change, string? current)
+    {
+        if (!change.TryGetStringUtf8(out ReadOnlySpan<byte> utf8) || utf8.IsEmpty)
+        {
+            return null;
+        }
+
+        if (current is not null && utf8.Length <= 128)
+        {
+            Span<char> buffer = stackalloc char[128];
+            if (Utf8.ToUtf16(utf8, buffer, out _, out int written) == OperationStatus.Done
+                && buffer[..written].SequenceEqual(current))
+            {
+                return current;
+            }
+        }
+        return Encoding.UTF8.GetString(utf8);
     }
 
     /// <summary>A display dimension in pixels; 0 when unavailable or out of range.</summary>

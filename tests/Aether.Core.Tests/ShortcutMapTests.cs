@@ -34,6 +34,7 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.Mute, "M")]
     [InlineData(ShortcutAction.Loop, "L")]
     [InlineData(ShortcutAction.AlwaysOnTop, "T")]
+    [InlineData(ShortcutAction.Diagnostics, "Ctrl+I")]
     public void Defaults_Are_Todays_Keys(ShortcutAction action, string expected)
     {
         Assert.Equal([expected], Defaults(action));

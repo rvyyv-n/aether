@@ -35,6 +35,32 @@ public sealed partial class MainPage
             SpeedMenu.Items.Add(item);
         }
         ShowSpeed(PlaybackSpeed.Normal);
+        foreach (Button button in new[]
+        {
+            OpenButton, SpeedButton, BackButton, BackFrameButton, PlayPauseButton, ForwardFrameButton,
+            ForwardButton, MoreButton, FullScreenButton,
+        })
+        {
+            button.PointerExited += OnTipOwnerPointerExited;
+            button.PointerCanceled += OnTipOwnerPointerExited;
+        }
+        LoopButton.PointerExited += OnTipOwnerPointerExited;
+        AlwaysOnTopButton.PointerExited += OnTipOwnerPointerExited;
+    }
+
+    /// <summary>
+    /// Moving to the next icon would leave the last one's tooltip fading out underneath the new one. Taking the
+    /// tooltip off and putting it back closes it at once, so only the icon under the pointer shows one.
+    /// </summary>
+    private static void OnTipOwnerPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        var owner = (DependencyObject)sender;
+        object? tip = ToolTipService.GetToolTip(owner);
+        if (tip is not null)
+        {
+            ToolTipService.SetToolTip(owner, null);
+            ToolTipService.SetToolTip(owner, tip);
+        }
     }
 
     /// <summary>Plays the next video in the folder when a local file ends and Play next in folder is on.</summary>

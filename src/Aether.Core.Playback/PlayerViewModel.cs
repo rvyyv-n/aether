@@ -20,6 +20,15 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs StatusArgs = new(nameof(Status));
     private static readonly PropertyChangedEventArgs VideoWidthArgs = new(nameof(VideoWidth));
     private static readonly PropertyChangedEventArgs VideoHeightArgs = new(nameof(VideoHeight));
+    private static readonly PropertyChangedEventArgs DecoderArgs = new(nameof(Decoder));
+    private static readonly PropertyChangedEventArgs VideoFormatArgs = new(nameof(VideoFormat));
+    private static readonly PropertyChangedEventArgs CodedWidthArgs = new(nameof(CodedWidth));
+    private static readonly PropertyChangedEventArgs CodedHeightArgs = new(nameof(CodedHeight));
+    private static readonly PropertyChangedEventArgs EstimatedFpsArgs = new(nameof(EstimatedFps));
+    private static readonly PropertyChangedEventArgs DisplayFpsArgs = new(nameof(DisplayFps));
+    private static readonly PropertyChangedEventArgs DecoderDroppedFramesArgs = new(nameof(DecoderDroppedFrames));
+    private static readonly PropertyChangedEventArgs DroppedFramesArgs = new(nameof(DroppedFrames));
+    private static readonly PropertyChangedEventArgs CacheDurationArgs = new(nameof(CacheDuration));
     private static readonly PropertyChangedEventArgs IsLoopingArgs = new(nameof(IsLooping));
 
     private PlayerState _state = PlayerState.Initial;
@@ -55,6 +64,33 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
     /// <summary>Display height in pixels (<c>dheight</c>); 0 without video.</summary>
     public int VideoHeight => _state.VideoHeight;
+
+    /// <summary>Active hardware decoder (<c>hwdec-current</c>), "no" for software; null when unavailable.</summary>
+    public string? Decoder => _state.Decoder;
+
+    /// <summary>Video codec name (<c>video-format</c>); null when unavailable.</summary>
+    public string? VideoFormat => _state.VideoFormat;
+
+    /// <summary>Decoded picture width in pixels (<c>video-params/w</c>); 0 without video.</summary>
+    public int CodedWidth => _state.CodedWidth;
+
+    /// <summary>Decoded picture height in pixels (<c>video-params/h</c>); 0 without video.</summary>
+    public int CodedHeight => _state.CodedHeight;
+
+    /// <summary>Measured output frame rate (<c>estimated-vf-fps</c>); 0 when unknown.</summary>
+    public double EstimatedFps => _state.EstimatedFps;
+
+    /// <summary>Display refresh rate mpv sees (<c>display-fps</c>); 0 when unknown.</summary>
+    public double DisplayFps => _state.DisplayFps;
+
+    /// <summary>Frames the decoder dropped (<c>decoder-frame-drop-count</c>).</summary>
+    public long DecoderDroppedFrames => _state.DecoderDroppedFrames;
+
+    /// <summary>Frames dropped at output (<c>frame-drop-count</c>).</summary>
+    public long DroppedFrames => _state.DroppedFrames;
+
+    /// <summary>Seconds buffered ahead (<c>demuxer-cache-duration</c>); negative when unavailable.</summary>
+    public double CacheDuration => _state.CacheDuration;
 
     /// <summary>Restart from 0 when the file ends (see <see cref="LoopRestart"/>). UI thread; not part of <see cref="State"/>.</summary>
     public bool IsLooping
@@ -96,6 +132,15 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         if (previous.Status != next.Status) Raise(StatusArgs);
         if (previous.VideoWidth != next.VideoWidth) Raise(VideoWidthArgs);
         if (previous.VideoHeight != next.VideoHeight) Raise(VideoHeightArgs);
+        if (!string.Equals(previous.Decoder, next.Decoder)) Raise(DecoderArgs);
+        if (!string.Equals(previous.VideoFormat, next.VideoFormat)) Raise(VideoFormatArgs);
+        if (previous.CodedWidth != next.CodedWidth) Raise(CodedWidthArgs);
+        if (previous.CodedHeight != next.CodedHeight) Raise(CodedHeightArgs);
+        if (!previous.EstimatedFps.Equals(next.EstimatedFps)) Raise(EstimatedFpsArgs);
+        if (!previous.DisplayFps.Equals(next.DisplayFps)) Raise(DisplayFpsArgs);
+        if (previous.DecoderDroppedFrames != next.DecoderDroppedFrames) Raise(DecoderDroppedFramesArgs);
+        if (previous.DroppedFrames != next.DroppedFrames) Raise(DroppedFramesArgs);
+        if (!previous.CacheDuration.Equals(next.CacheDuration)) Raise(CacheDurationArgs);
     }
 
     private void Raise(PropertyChangedEventArgs args) => PropertyChanged?.Invoke(this, args);

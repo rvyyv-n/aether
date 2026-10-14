@@ -166,12 +166,12 @@ Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
 | # | Task | Effort |
 |:---|:---|:---:|
 | 7.1 | Right-click `MenuFlyout` with icons, shortcuts, submenus (including Clips and Stream), max height with scroll; tracks and video flyouts | M |
-| 7.2 | Toast control: look, placement, fade, reduced motion, live-region announcement | S |
-| 7.2a | `ToastService`: one visible at a time, queued by priority, a toast with an action is never replaced, duplicates collapse, 4 s / 8 s with an action, pauses on hover and focus | M |
-| 7.3 | Diagnostics panel (`Ctrl+I`) on a solid surface: decoder, video, frame rate (`container-fps` / `estimated-vf-fps`), display refresh (`display-fps`), dropped frames (`decoder-frame-drop-count` · `frame-drop-count`), cache ("—" when unavailable). No GPU row | S |
-| 7.4 | Auto-detect display refresh rate & smooth motion display sync: query window monitor refresh via `MonitorFromWindow` + `EnumDisplaySettingsW` (or `DwmGetCompositionTimingInfo`), set mpv's `display-fps-override`, and update on `WM_DISPLAYCHANGE` and monitor transitions. Resolves 120 fps video decimation under `video-sync=display-resample` | M |
-| 7.4a | 120 fps / high-refresh render loop pacing & VSync audit: review `MpvRenderLoop` latency wait order; evaluate `DXGI_PRESENT_ALLOW_TEARING` / VRR on 120Hz/144Hz/240Hz monitors to eliminate micro-judder | M |
-| 7.4b | libmpv property wiring for diagnostics: observe `hwdec-current`, `video-format`, `video-params/w` and `h`, `container-fps`, `estimated-vf-fps`, `display-fps`, `decoder-frame-drop-count`, `frame-drop-count`, and `demuxer-cache-duration` in `PlayerEventDispatcher` | S |
+| 7.2 | Toast control: look, placement, fade, reduced motion, live-region announcement — **Done** | S |
+| 7.2a | `ToastService`: one visible at a time, queued by priority, a toast with an action is never replaced, duplicates collapse, 4 s / 8 s with an action, pauses on hover and focus — **Done** | M |
+| 7.3 | Diagnostics panel (`Ctrl+I`) on a solid surface: decoder, video, frame rate (`container-fps` / `estimated-vf-fps`), display refresh (`display-fps`), dropped frames (`decoder-frame-drop-count` · `frame-drop-count`), cache ("—" when unavailable). No GPU row — **Done** (`Ctrl+I` toggles a solid panel top-left; Copy puts the rows on the clipboard; Esc closes it) | S |
+| 7.4 | Auto-detect display refresh rate & smooth motion display sync: query window monitor refresh via `MonitorFromWindow` + `EnumDisplaySettingsW` (or `DwmGetCompositionTimingInfo`), set mpv's `display-fps-override`, and update on `WM_DISPLAYCHANGE` and monitor transitions. Resolves 120 fps video decimation under `video-sync=display-resample` — **Done** (`EnumDisplaySettingsW`, whole hertz; re-read on `WM_DISPLAYCHANGE` and monitor change; a custom `display-fps-override` wins. ADR-0018. Not yet checked on a high-refresh display) | M |
+| 7.4a | 120 fps / high-refresh render loop pacing & VSync audit: review `MpvRenderLoop` latency wait order; evaluate `DXGI_PRESENT_ALLOW_TEARING` / VRR on 120Hz/144Hz/240Hz monitors to eliminate micro-judder — **Done** (audited: wait order kept, VSync on, no tearing/VRR for a composition swap chain; no code change. ADR-0018) | M |
+| 7.4b | libmpv property wiring for diagnostics: observe `hwdec-current`, `video-format`, `video-params/w` and `h`, `container-fps`, `estimated-vf-fps`, `display-fps`, `decoder-frame-drop-count`, `frame-drop-count`, and `demuxer-cache-duration` in `PlayerEventDispatcher` — **Done** | S |
 | 7.5 | Wire engine failures, yt-dlp updates, frame copy and export results to the toast service | S |
 | 7.6 | Tests for toast queue rules and diagnostics formatting | S |
 | 7.7 | VLC parity settings (Settings → Video, Streaming, Advanced): deinterlacing (`deinterlace` & mode), frame snapshot settings (`screenshot-directory`, `screenshot-format`, `screenshot-template`), aspect ratio override (`video-aspect-override`), network cache buffer slider (`demuxer-max-bytes`, readahead), HTTP proxy (`http-proxy`), RTSP transport (`rtsp-transport`), corrupt AVI index repair (`index=recreate`), and skip H.264 deblocking (`vd-lavc-skiploopfilter`) | M |
@@ -180,6 +180,22 @@ Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
 | 7.10 | Find the cause of stutter after a 5 s skip and with software decoding (low CPU, high GPU in Task Manager): play the same clip with the backdrop blur off, then on, with software and with hardware decoding, and compare CPU, GPU and dropped frames; read the per-engine GPU view (3D, Video Decode, Copy); log `hwdec-current` and the dropped-frame counts across a skip. If it appears only on seeks, try a faster skip (keyframe seek or `hr-seek` off for the 5 s buttons) and keep exact seeks for the seek bar's release. Run it once the diagnostics panel (7.3, 7.4b) can show the decoder | S |
 
 **Pass 7 means:** Menus, toasts and diagnostics behave as the redline describes, 120 fps and high-refresh recordings play with frame-accurate smoothness, and VLC-parity playback settings are configurable without compromising the minimalist shell.
+
+**Pass 7 UI finish (after 7.1–7.10; Opus plans and asks questions first, Sonnet builds):** compared against the design handoff (screens 3, 5, 8, 9, 10) and the current build.
+
+| # | Task | Effort |
+|:---|:---|:---:|
+| 7.11 | Collapsed bar: while a video plays, show the one-row pill from screen 3 (Open, Play, times around the seek bar, Mute, Full screen) and grow it into the full card on hover or click; decide whether it shrinks back after idle | M |
+| 7.12 | Speed button: the outline is too large and looks out of place; refit to the 5.1 / 5.6 redline | S |
+| 7.13 | Settings gear in the title bar: size, weight and spacing against the caption buttons look wrong; match the redline | S |
+| 7.14 | Title and badge: the filename badge next to "Aether" looks off (shape, size, baseline); match screen 3 (SurfaceOsd, radius 4, padding 6,2, baseline shared with the title) | S |
+| 7.15 | Animation and interaction refinement: bar grow/shrink, hover and press feedback, menu and flyout opening, toast in/out, with reduced-motion respected | M |
+| 7.16 | Tracks flyout (9.2): audio and subtitle (closed caption) track lists from `track-list` with the redline labels (language · title · channels, SDH, Forced), Off, Add subtitle file, audio and subtitle delay steppers. Nothing exists in the code yet | M |
+| 7.17 | Subtitle display: on-screen captions follow the Subtitles settings (size, colour, position) and survive an engine restart | M |
+| 7.18 | Video flyout (9.3): zoom with Reset, rotate 0/90/180/270, aspect ratio, brightness, contrast, gamma, saturation with Reset colours | M |
+| 7.19 | Copy frame and Save frame (Ctrl+C, Ctrl+Shift+S) — the menu entries in 9.1 need the engine work behind them | S |
+| 7.20 | Wire the 9.1 menu items that are still missing: Recent, Audio and Subtitles (open the tracks flyout), Video, Picture in picture (Pass 8, shown disabled until then), Settings Ctrl+, | S |
+| 7.21 | Hover rail (screen 6, unparked): 4 px hot zone on the left edge, 4 px FillRange peek, opens after 150 ms of hover or on click; 56 wide, items Player, Clips, Stream and Settings pinned at the bottom; hides with the controls, Esc closes it, never opens during a drag; solid SurfaceOverlayStrong fallback if Acrylic cannot blur the swap chain. Spec in the handoff (6.1–6.4). Opus plans and asks questions first | M |
 
 ---
 
@@ -215,7 +231,7 @@ Mockups: screens 8.3–8.4.
 
 ### Parked
 
-- **Hover rail (screen 6):** deferred. Clips and Stream are reached from the right-click menu and shortcuts. The spec stays in the design handoff.
+- **Hover rail (screen 6):** now task 7.21 in Pass 7. Clips and Stream also stay in the right-click menu and shortcuts.
 - **Re-encode export (NVENC / QSV / AMF / x264):** not planned. Export is stream copy only. Revisit for non-keyframe cuts or size-limited exports.
 - **GPU timing row in Diagnostics:** libmpv doesn't expose it. Would need our own D3D11 timestamp queries.
 - **Link playback (yt-dlp streaming):** not scheduled yet. When it lands, the empty-state hint must switch to "Drop a file, paste a link or press Ctrl+O", and Play in the Open URL dialog must start the stream instead of showing "Links can’t be played yet." (`OpenUrlFlow` takes `streamingAvailable`).
