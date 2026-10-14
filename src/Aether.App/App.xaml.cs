@@ -180,6 +180,8 @@ public partial class App : Application
         {
             // Fall back to the command line below.
         }
-        return LaunchArguments.FirstMediaPath(LaunchArguments.Split(args.Arguments));
+        // Unpackaged launches can arrive with empty Arguments, so the process command line is the fallback.
+        return LaunchArguments.FirstMediaPath(LaunchArguments.Split(args.Arguments))
+            ?? LaunchArguments.FirstMediaPath(Environment.GetCommandLineArgs().Skip(1));
     }
 }
