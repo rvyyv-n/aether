@@ -19,6 +19,8 @@ namespace Aether_App.Playback;
 /// </summary>
 public sealed class PlayerSession : IDisposable
 {
+    private const string DisplayFpsOverride = "display-fps-override";
+
     private readonly MpvContext _context;
     private readonly MpvEventLoop _events;
     private readonly PlayerEventDispatcher _dispatcher;
@@ -29,6 +31,7 @@ public sealed class PlayerSession : IDisposable
     private readonly LoopRestart _loop = new();
     private readonly FileEnd _fileEnd = new();
     private readonly MpvSettingsSync _settingsSync;
+    private readonly DisplayRefreshSync? _display;
     private bool _disposed;
 
     private PlayerSession(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
@@ -55,11 +58,22 @@ public sealed class PlayerSession : IDisposable
             App.Settings.Changed += OnSettingChanged;
             PowerManager.PowerSourceKindChanged += OnPowerSourceChanged;
             ApplySettings();
+
+            _display = App.DisplaySync;
+            if (_display is not null)
+            {
+                _display.Changed += OnDisplayRefreshChanged;
+                SendDisplayRefresh();
+            }
         }
         catch
         {
             App.Settings.Changed -= OnSettingChanged;
             PowerManager.PowerSourceKindChanged -= OnPowerSourceChanged;
+            if (_display is not null)
+            {
+                _display.Changed -= OnDisplayRefreshChanged;
+            }
             _keys?.Dispose();
             _events?.Dispose();
             _context.Dispose();
@@ -208,6 +222,36 @@ public sealed class PlayerSession : IDisposable
         }
     }
 
+    private void OnDisplayRefreshChanged(object? sender, EventArgs e) => SendDisplayRefresh();
+
+    /// <summary>
+    /// UI thread: tells mpv the refresh rate of the window's monitor, so <c>video-sync=display-resample</c> does not
+    /// assume 60 Hz and drop frames of a 120 fps clip. Sent as a one-off, since <see cref="MpvSettingsSync"/> only
+    /// carries settings; a <c>display-fps-override</c> in the custom options wins.
+    /// </summary>
+    private void SendDisplayRefresh()
+    {
+        if (_disposed || _display is null)
+        {
+            return;
+        }
+        foreach (KeyValuePair<string, string> option in MpvSettingsMap.CustomOptions(App.Settings.Current.CustomMpvOptions))
+        {
+            if (option.Key.Equals(DisplayFpsOverride, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+        }
+        try
+        {
+            _context.CommandAsync(new MpvCommand("set", DisplayFpsOverride, _display.Current));
+        }
+        catch (Exception exception) when (exception is MpvException or ObjectDisposedException)
+        {
+            // The core is shutting down.
+        }
+    }
+
     private static bool IsOnBattery()
     {
         try
@@ -256,6 +300,10 @@ public sealed class PlayerSession : IDisposable
         _disposed = true;
         App.Settings.Changed -= OnSettingChanged;
         PowerManager.PowerSourceKindChanged -= OnPowerSourceChanged;
+        if (_display is not null)
+        {
+            _display.Changed -= OnDisplayRefreshChanged;
+        }
         _seekCoalescer.Reset();
         _keys.Dispose();
         _events.Dispose();

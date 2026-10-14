@@ -3,6 +3,7 @@ using Aether.Core.Playback;
 using Aether.Core.Playback.Settings;
 using Aether.Core.Playback.Windowing;
 using Aether_App.Controls;
+using Aether_App.Playback;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -115,6 +116,8 @@ public sealed partial class MainWindow : Window, IShellWindow
             _aspectLock = null; // the window still works, just without the drag-resize aspect lock and minimum size
         }
 
+        DisplaySync = new DisplayRefreshSync(WinRT.Interop.WindowNative.GetWindowHandle(this));
+
         InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         nonClient.PointerEntered += OnNonClientPointerMoved;
         nonClient.PointerMoved += OnNonClientPointerMoved;
@@ -127,6 +130,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         Closed += (_, _) =>
         {
             _captionTimer.Stop();
+            DisplaySync.Dispose(); // before the aspect lock: it sits on top of that subclass
             _aspectLock?.Dispose();
             App.Settings.Changed -= OnSettingChanged;
         };
@@ -134,6 +138,9 @@ public sealed partial class MainWindow : Window, IShellWindow
         AppWindow.Closing += OnAppWindowClosing;
         TrackNormalBounds();
     }
+
+    /// <summary>The refresh rate of the monitor this window is on, for the playback engine.</summary>
+    internal DisplayRefreshSync DisplaySync { get; }
 
     /// <summary>Opens this file as soon as the engine is ready (launch from a file or the command line).</summary>
     public void OpenWhenReady(string path) => Shell.OpenWhenReady(path);
@@ -356,6 +363,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         if (args.DidSizeChange || args.DidPositionChange || args.DidPresenterChange)
         {
             TrackNormalBounds();
+            DisplaySync.OnWindowMoved();
         }
         if (args.DidPresenterChange)
         {

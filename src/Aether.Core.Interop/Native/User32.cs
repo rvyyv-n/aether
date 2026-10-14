@@ -9,6 +9,20 @@ internal static unsafe partial class User32
     public const uint WM_GETMINMAXINFO = 0x0024;
     public const uint WM_NCDESTROY = 0x0082;
     public const uint WM_SIZING = 0x0214;
+    public const uint WM_DISPLAYCHANGE = 0x007E;
+
+    public const uint MONITOR_DEFAULTTONEAREST = 2;
+    public const uint ENUM_CURRENT_SETTINGS = 0xFFFFFFFF;
+
+    /// <summary>The monitor the window is mostly on; the nearest one when it is on none (minimised, off-screen).</summary>
+    [LibraryImport("user32.dll")]
+    public static partial nint MonitorFromWindow(nint hwnd, uint flags);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    public static partial int GetMonitorInfo(nint monitor, MonitorInfoEx* info);
+
+    [LibraryImport("user32.dll", EntryPoint = "EnumDisplaySettingsW")]
+    public static partial int EnumDisplaySettings(char* deviceName, uint modeNumber, DevMode* mode);
 
     /// <summary>Adjusts the calling thread's cursor display counter; returns the new count (shown while >= 0).</summary>
     [LibraryImport("user32.dll")]
@@ -45,6 +59,24 @@ internal static unsafe partial class User32
 
     public static nint GetWindowLongPtr(nint hwnd, int index) =>
         IntPtr.Size == 8 ? GetWindowLongPtr64(hwnd, index) : GetWindowLong32(hwnd, index);
+
+    /// <summary>Win32 <c>MONITORINFOEXW</c>; only the device name is used.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MonitorInfoEx
+    {
+        public uint Size;
+        public PixelRect Monitor, Work;
+        public uint Flags;
+        public fixed char DeviceName[32];
+    }
+
+    /// <summary>Win32 <c>DEVMODEW</c> (220 bytes) in its display form; only the size and the refresh rate are used.</summary>
+    [StructLayout(LayoutKind.Explicit, Size = 220)]
+    public struct DevMode
+    {
+        [FieldOffset(68)] public ushort Size;
+        [FieldOffset(184)] public uint DisplayFrequency;
+    }
 
     /// <summary>Win32 <c>MINMAXINFO</c>; only the minimum tracking size is used.</summary>
     [StructLayout(LayoutKind.Sequential)]
