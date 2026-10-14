@@ -96,6 +96,8 @@ public sealed partial class MainPage
         ShortcutAction.AlwaysOnTop => OnAlwaysOnTopAccelerator,
         ShortcutAction.Diagnostics => OnDiagnosticsAccelerator,
         ShortcutAction.Settings => OnSettingsAccelerator,
+        ShortcutAction.CopyFrame => OnCopyFrameAccelerator,
+        ShortcutAction.SaveFrame => OnSaveFrameAccelerator,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 

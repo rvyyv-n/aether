@@ -1,8 +1,8 @@
 namespace Aether.Core.Playback;
 
 /// <summary>
-/// Which entries of the right-click menu (screen 9.1) can be used right now. Video, Copy frame, Save frame and
-/// Picture in picture stay off until the work behind them lands (roadmap 7.18, 7.19, Pass 8).
+/// Which entries of the right-click menu (screen 9.1) can be used right now. Picture in picture stays off until
+/// the work behind it lands (Pass 8).
 /// </summary>
 /// <param name="EngineReady">The engine is up, so a file or link can be opened.</param>
 /// <param name="HasVideo">A file is open (playing, paused or ended).</param>
@@ -24,11 +24,12 @@ public sealed record ContextMenuState(bool EngineReady, bool HasVideo, int Recen
 
     public bool Speed => HasVideo;
 
-    public bool Video => false;
+    /// <summary>The video flyout and the frame grabs all need a picture to work on.</summary>
+    public bool Video => HasVideo;
 
-    public bool CopyFrame => false;
+    public bool CopyFrame => HasVideo;
 
-    public bool SaveFrame => false;
+    public bool SaveFrame => HasVideo;
 
     public bool PictureInPicture => false;
 

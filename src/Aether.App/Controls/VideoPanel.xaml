@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Aether_App.Controls.VideoPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Video flyout (screen 9.3): 340 wide, padding 12,16. Zoom with its readout and Reset, Rotate as a segmented control,
+        Aspect ratio as a combo, then the four colour sliders with Reset colours. The flyout supplies the solid surface
+        (ADR-0013); the scroll area keeps it inside a short window (9.5).
+    -->
+    <ScrollViewer
+        x:Name="Scroller"
+        Width="{StaticResource AetherSizeVideoFlyout}"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="16,12" Spacing="12">
+            <StackPanel Spacing="4">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="ZoomLabel"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                    <TextBlock
+                        x:Name="ZoomValue"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherBodyTextStyle}"
+                        Typography.NumeralAlignment="Tabular" />
+                    <Button
+                        x:Name="ZoomResetButton"
+                        Grid.Column="2"
+                        Click="OnZoomResetClick"
+                        Style="{StaticResource AetherSettingsTextButtonStyle}" />
+                </Grid>
+                <Slider
+                    x:Name="ZoomSlider"
+                    Width="Auto"
+                    IsThumbToolTipEnabled="False"
+                    Maximum="400"
+                    Minimum="25"
+                    SmallChange="5"
+                    StepFrequency="5"
+                    Style="{StaticResource AetherSettingsSliderStyle}"
+                    ValueChanged="OnZoomChanged" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="RotateLabel" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                <ListBox
+                    x:Name="RotateList"
+                    HorizontalAlignment="Stretch"
+                    SelectionChanged="OnRotateChanged"
+                    Style="{StaticResource AetherSegmentedStyle}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="AspectLabel" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                <ComboBox
+                    x:Name="AspectCombo"
+                    MinWidth="0"
+                    HorizontalAlignment="Stretch"
+                    SelectionChanged="OnAspectChanged"
+                    Style="{StaticResource AetherSettingsComboStyle}" />
+            </StackPanel>
+
+            <StackPanel x:Name="ColourRows" Spacing="8" />
+
+            <Button
+                x:Name="ResetColoursButton"
+                HorizontalAlignment="Left"
+                Click="OnResetColoursClick"
+                Style="{StaticResource AetherSettingsTextButtonStyle}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

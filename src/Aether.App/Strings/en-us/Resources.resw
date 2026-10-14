@@ -545,6 +545,15 @@
   <data name="Toast_FrameCopied" xml:space="preserve">
     <value>Frame copied</value>
   </data>
+  <data name="Toast_FrameSaved" xml:space="preserve">
+    <value>Frame saved</value>
+  </data>
+  <data name="Toast_FrameCopyFailed" xml:space="preserve">
+    <value>The frame could not be copied</value>
+  </data>
+  <data name="Toast_FrameSaveFailed" xml:space="preserve">
+    <value>The frame could not be saved</value>
+  </data>
   <data name="Toast_ClipSaved" xml:space="preserve">
     <value>Clip saved</value>
   </data>

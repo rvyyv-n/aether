@@ -26,6 +26,8 @@ public static class ShortcutActions
         ShortcutAction.AlwaysOnTop => SettingKeys.ShortcutAlwaysOnTop,
         ShortcutAction.Diagnostics => SettingKeys.ShortcutDiagnostics,
         ShortcutAction.Settings => SettingKeys.ShortcutSettings,
+        ShortcutAction.CopyFrame => SettingKeys.ShortcutCopyFrame,
+        ShortcutAction.SaveFrame => SettingKeys.ShortcutSaveFrame,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 
@@ -58,6 +60,8 @@ public static class ShortcutActions
         ShortcutAction.AlwaysOnTop => [KeyCombination.Letter('T')],
         ShortcutAction.Diagnostics => [KeyCombination.Letter('I', KeyModifiers.Ctrl)],
         ShortcutAction.Settings => [new KeyCombination(KeyCombination.OemComma, KeyModifiers.Ctrl)],
+        ShortcutAction.CopyFrame => [KeyCombination.Letter('C', KeyModifiers.Ctrl)],
+        ShortcutAction.SaveFrame => [KeyCombination.Letter('S', KeyModifiers.Ctrl | KeyModifiers.Shift)],
         _ => [],
     };
 

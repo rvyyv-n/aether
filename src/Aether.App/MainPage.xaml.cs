@@ -101,6 +101,7 @@ public sealed partial class MainPage : Page
         InitializeTransport();
         InitializeContextMenu();
         InitializeTracks();
+        InitializeVideo();
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -412,6 +413,7 @@ public sealed partial class MainPage : Page
         _durationRecorded = false;
         _trackChoices = carry?.Tracks; // another file starts on mpv's own picks
         _restoreTracks = carry?.Tracks;
+        ApplyVideoForOpen(afterRestart: carry is not null);
         TrySend(() =>
         {
             if (carry is { Paused: true })

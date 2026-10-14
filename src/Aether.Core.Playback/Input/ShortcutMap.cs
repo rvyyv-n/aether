@@ -119,6 +119,8 @@ public sealed class ShortcutMap
         ShortcutAction.AlwaysOnTop => settings.ShortcutAlwaysOnTop,
         ShortcutAction.Diagnostics => settings.ShortcutDiagnostics,
         ShortcutAction.Settings => settings.ShortcutSettings,
+        ShortcutAction.CopyFrame => settings.ShortcutCopyFrame,
+        ShortcutAction.SaveFrame => settings.ShortcutSaveFrame,
         _ => "",
     };
 }

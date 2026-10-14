@@ -10,8 +10,9 @@ using Windows.Foundation;
 namespace Aether_App;
 
 /// <summary>
-/// The right-click menu (screen 9.1). Audio and Subtitles open the tracks flyout (MainPage.Tracks.cs); Video, the frame
-/// and the picture-in-picture entries stay disabled until those land. UI thread only.
+/// The right-click menu (screen 9.1). Audio and Subtitles open the tracks flyout (MainPage.Tracks.cs), Video the video
+/// flyout (MainPage.Video.cs); the frame entries are in MainPage.Frames.cs. Picture in picture stays disabled until
+/// it lands. UI thread only.
 /// </summary>
 public sealed partial class MainPage
 {
@@ -57,6 +58,8 @@ public sealed partial class MainPage
         CtxAlwaysOnTop.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
         CtxDiagnostics.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Diagnostics);
         CtxSettings.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Settings);
+        CtxCopyFrame.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.CopyFrame);
+        CtxSaveFrame.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.SaveFrame);
     }
 
     private void OnPageContextRequested(UIElement sender, ContextRequestedEventArgs args)
@@ -165,6 +168,7 @@ public sealed partial class MainPage
             Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
         }
         ShowTracksIfRequested();
+        ShowVideoIfRequested();
     }
 
     private void OnDiagnosticsMenuClick(object sender, RoutedEventArgs e) => ToggleDiagnostics();

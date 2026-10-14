@@ -44,6 +44,28 @@
             </Flyout.FlyoutPresenterStyle>
             <controls:TracksPanel x:Name="TracksPanel" />
         </Flyout>
+
+        <!--  Video flyout (9.3): right-aligned to the pill, on the same solid surface as the tracks flyout (MainPage.Video.cs).  -->
+        <Flyout
+            x:Name="VideoFlyout"
+            Closed="OnVideoFlyoutClosed"
+            Opened="OnVideoFlyoutOpened"
+            Placement="TopEdgeAlignedRight">
+            <Flyout.FlyoutPresenterStyle>
+                <Style TargetType="FlyoutPresenter">
+                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="MinWidth" Value="0" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="MaxWidth" Value="600" />
+                    <Setter Property="MaxHeight" Value="2000" />
+                </Style>
+            </Flyout.FlyoutPresenterStyle>
+            <controls:VideoPanel x:Name="VideoPanel" />
+        </Flyout>
     </Page.Resources>
 
     <!--  Escape is fixed. Every other shortcut is added from the shortcut settings (MainPage.Shortcuts.cs).  -->
@@ -126,18 +148,19 @@
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xEC4A;" />
                         </MenuFlyoutSubItem.Icon>
                     </MenuFlyoutSubItem>
-                    <MenuFlyoutSubItem
+                    <MenuFlyoutItem
                         x:Name="CtxVideo"
+                        Click="OnVideoMenuClick"
                         MinWidth="266"
-                        Style="{StaticResource AetherMenuSubItemStyle}">
-                        <MenuFlyoutSubItem.Icon>
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE714;" />
-                        </MenuFlyoutSubItem.Icon>
-                    </MenuFlyoutSubItem>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem
                         x:Name="CtxCopyFrame"
-                        KeyboardAcceleratorTextOverride="Ctrl+C"
+                        Click="OnCopyFrameMenuClick"
                         MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
@@ -146,7 +169,7 @@
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
                         x:Name="CtxSaveFrame"
-                        KeyboardAcceleratorTextOverride="Ctrl+Shift+S"
+                        Click="OnSaveFrameMenuClick"
                         MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>

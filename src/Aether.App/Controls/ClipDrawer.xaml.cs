@@ -284,18 +284,7 @@ public sealed partial class ClipDrawer : UserControl
 
     private async Task ShowInFolderAsync(string path)
     {
-        if (Path.GetDirectoryName(path) is not { } directory)
-        {
-            return;
-        }
-        try
-        {
-            StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(directory);
-            var options = new FolderLauncherOptions();
-            options.ItemsToSelect.Add(await StorageFile.GetFileFromPathAsync(path));
-            await Launcher.LaunchFolderAsync(folder, options);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        if (!await Aether_App.ShowInFolder.TryAsync(path))
         {
             RenderRows(); // gone since the list was drawn: show it as missing
         }

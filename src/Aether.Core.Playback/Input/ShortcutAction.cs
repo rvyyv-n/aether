@@ -19,4 +19,6 @@ public enum ShortcutAction
     AlwaysOnTop,
     Diagnostics,
     Settings,
+    CopyFrame,
+    SaveFrame,
 }
