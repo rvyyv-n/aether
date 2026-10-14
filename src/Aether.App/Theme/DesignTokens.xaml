@@ -238,19 +238,19 @@
     <x:Double x:Key="AetherMotionChromeShowMilliseconds">150</x:Double>
     <x:Double x:Key="AetherMotionChromeHideMilliseconds">250</x:Double>
     <!--  Easing control points x1,y1,x2,y2: things appear on the ease-out and leave on the ease-in  -->
-    <x:String x:Key="AetherMotionEaseOut">0,0,0,1</x:String>
+    <x:String x:Key="AetherMotionEaseOut">0.1,0.9,0.2,1.0</x:String>
     <x:String x:Key="AetherMotionEaseIn">1,0,1,1</x:String>
     <!--  Quick profile (7.15): Windows 11 feel, nothing bounces. Bar grow and shrink, toast and clip drawer slides  -->
-    <x:Double x:Key="AetherMotionQuickGrowMilliseconds">250</x:Double>
+    <x:Double x:Key="AetherMotionQuickGrowMilliseconds">260</x:Double>
     <x:Double x:Key="AetherMotionQuickShrinkMilliseconds">200</x:Double>
     <x:Double x:Key="AetherMotionQuickInMilliseconds">200</x:Double>
     <x:Double x:Key="AetherMotionQuickOutMilliseconds">150</x:Double>
     <x:Double x:Key="AetherMotionQuickSlide">8</x:Double>  <!-- px a toast or drawer slides in from; it leaves by half that -->
     <!--  Springy profile (7.15): a damped spring for the bar, toast in and the clip drawer opening; leaving and fades
          are as in Quick. The period is the undamped spring's (like SwiftUI's response): about 6% overshoot, settled in ~0.5 s  -->
-    <x:Double x:Key="AetherMotionSpringDampingRatio">0.65</x:Double>
-    <x:Double x:Key="AetherMotionSpringPeriodMilliseconds">400</x:Double>
-    <x:Double x:Key="AetherMotionSpringSlide">16</x:Double>
+    <x:Double x:Key="AetherMotionSpringDampingRatio">0.85</x:Double>
+    <x:Double x:Key="AetherMotionSpringPeriodMilliseconds">350</x:Double>
+    <x:Double x:Key="AetherMotionSpringSlide">10</x:Double>
 
 
     <!--

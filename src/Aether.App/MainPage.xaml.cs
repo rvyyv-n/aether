@@ -548,6 +548,10 @@ public sealed partial class MainPage : Page
     /// <summary>Position and duration text and the seek bar. Both times change shape together from an hour.</summary>
     private void UpdateClock(PlayerViewModel vm)
     {
+        if (!_chromeShown && (Osd?.Visibility != Visibility.Visible))
+        {
+            return;
+        }
         DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
         SyncClipRange();
         SeekBar.Duration = vm.Duration;
@@ -1258,6 +1262,10 @@ public sealed partial class MainPage : Page
         if (visible != _chromeShown && _fader is not null)
         {
             _chromeShown = visible;
+            if (visible && _session?.ViewModel is { } clockVm)
+            {
+                UpdateClock(clockVm);
+            }
             _fader.Fade(TopScrim, visible);
             _fader.Fade(TitleBar, visible);
             _fader.Fade(Osd, visible);

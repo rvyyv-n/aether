@@ -846,20 +846,36 @@
                                         x:Name="MoreBackFrameItem"
                                         Click="OnBackFrameClick"
                                         KeyboardAcceleratorTextOverride=","
-                                        Style="{StaticResource AetherMenuItemStyle}" />
+                                        Style="{StaticResource AetherMenuItemStyle}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE892;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
                                     <MenuFlyoutItem
                                         x:Name="MoreForwardFrameItem"
                                         Click="OnForwardFrameClick"
                                         KeyboardAcceleratorTextOverride="."
-                                        Style="{StaticResource AetherMenuItemStyle}" />
+                                        Style="{StaticResource AetherMenuItemStyle}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE893;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreLoopItem"
                                         Click="OnLoopClick"
-                                        Style="{StaticResource AetherToggleMenuItemStyle}" />
+                                        Style="{StaticResource AetherToggleMenuItemStyle}">
+                                        <ToggleMenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8EE;" />
+                                        </ToggleMenuFlyoutItem.Icon>
+                                    </ToggleMenuFlyoutItem>
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreAlwaysOnTopItem"
                                         Click="OnAlwaysOnTopClick"
-                                        Style="{StaticResource AetherToggleMenuItemStyle}" />
+                                        Style="{StaticResource AetherToggleMenuItemStyle}">
+                                        <ToggleMenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE718;" />
+                                        </ToggleMenuFlyoutItem.Icon>
+                                    </ToggleMenuFlyoutItem>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
                         </Button>

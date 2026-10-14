@@ -79,7 +79,7 @@ public class MpvSettingsMapTests
     }
 
     [Theory]
-    [InlineData("auto-safe", true)]
+    [InlineData("auto-safe", false)]
     [InlineData("d3d11va", true)]
     [InlineData("no", false)]
     public void Software_Decoding_Keeps_The_Frame_Decoded_Ahead(string hwdec, bool expected) =>

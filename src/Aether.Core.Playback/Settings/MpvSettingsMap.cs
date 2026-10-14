@@ -56,7 +56,9 @@ public static class MpvSettingsMap
     public static bool VideoLatencyHacks(AetherSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        return settings.HardwareDecoding != "no";
+        // Review finding R2: restrict video-latency-hacks to explicit d3d11va; under auto-safe or
+        // software decoding, disabling the 1-frame readahead queue starves the decoder and causes dropped frames.
+        return settings.HardwareDecoding == "d3d11va";
     }
 
     /// <summary>The valid <c>key=value</c> lines of <paramref name="text"/>, in order, without a leading <c>--</c>.</summary>
