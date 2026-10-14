@@ -48,6 +48,11 @@ function Write-Err([string]$msg) {
 
 # --- UNINSTALL MODE ---
 if ($Uninstall) {
+    # Uninstall deletes the whole folder, so only touch one that holds Aether.
+    if ((Test-Path $TargetDir) -and -not (Test-Path (Join-Path $TargetDir $MainExe))) {
+        Write-Err "[Error] $TargetDir is not an $AppName install, so nothing was removed."
+        exit 1
+    }
     Write-Info "Uninstalling $AppName from $TargetDir..."
 
     # Kill running instances
@@ -109,6 +114,11 @@ if (-not $sourceDir) {
     exit 1
 }
 
+if ((Test-Path $TargetDir) -and (Get-ChildItem $TargetDir -Force | Select-Object -First 1) -and -not (Test-Path (Join-Path $TargetDir $MainExe))) {
+    Write-Err "[Error] $TargetDir already has other files in it. Choose an empty folder."
+    exit 1
+}
+
 # Kill running instances before overwriting
 Get-Process -Name "Aether.App" -ErrorAction SilentlyContinue | Where-Object {
     try { $_.Path -like "$TargetDir*" } catch { $false }
@@ -161,8 +171,8 @@ Set-ItemProperty -Path $uninstallKey -Name "DisplayVersion" -Value $AppVersion
 Set-ItemProperty -Path $uninstallKey -Name "Publisher" -Value "Aether Studio"
 Set-ItemProperty -Path $uninstallKey -Name "DisplayIcon" -Value "$installedExe,0"
 Set-ItemProperty -Path $uninstallKey -Name "InstallLocation" -Value $TargetDir
-Set-ItemProperty -Path $uninstallKey -Name "UninstallString" -Value "powershell.exe -ExecutionPolicy Bypass -File `"$TargetDir\Install.ps1`" -Uninstall"
-Set-ItemProperty -Path $uninstallKey -Name "QuietUninstallString" -Value "powershell.exe -ExecutionPolicy Bypass -File `"$TargetDir\Install.ps1`" -Uninstall -Quiet"
+Set-ItemProperty -Path $uninstallKey -Name "UninstallString" -Value "powershell.exe -ExecutionPolicy Bypass -File `"$TargetDir\Install.ps1`" -Uninstall -TargetDir `"$TargetDir`""
+Set-ItemProperty -Path $uninstallKey -Name "QuietUninstallString" -Value "powershell.exe -ExecutionPolicy Bypass -File `"$TargetDir\Install.ps1`" -Uninstall -TargetDir `"$TargetDir`" -Quiet"
 Set-ItemProperty -Path $uninstallKey -Name "NoModify" -Value 1 -Type DWord
 Set-ItemProperty -Path $uninstallKey -Name "NoRepair" -Value 1 -Type DWord
 

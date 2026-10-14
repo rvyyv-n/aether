@@ -79,7 +79,6 @@ internal static partial class Program
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Programs",
             AppName);
-        string targetDir = string.IsNullOrWhiteSpace(customTarget) ? defaultTarget : Path.GetFullPath(customTarget);
 
         if (portable)
         {
@@ -88,9 +87,13 @@ internal static partial class Program
 
         if (uninstall)
         {
-            return ExecuteUninstall(targetDir, silent);
+            // Settings runs the uninstaller without --target, so a custom install is found through its registry entry.
+            string uninstallDir = !string.IsNullOrWhiteSpace(customTarget) ? Path.GetFullPath(customTarget)
+                : RegisteredInstallLocation() ?? defaultTarget;
+            return ExecuteUninstall(uninstallDir, silent);
         }
 
+        string targetDir = string.IsNullOrWhiteSpace(customTarget) ? defaultTarget : Path.GetFullPath(customTarget);
         return ExecuteInstall(targetDir, createDesktop, launchAfter, silent, forwardArgs);
     }
 
@@ -140,6 +143,15 @@ internal static partial class Program
             Console.WriteLine($"  {targetDir}");
             Console.ResetColor();
             Console.WriteLine();
+        }
+
+        // Uninstall deletes the whole folder, so never install into one that holds anything else.
+        if (Directory.Exists(targetDir) && Directory.EnumerateFileSystemEntries(targetDir).Any() && !IsAetherInstall(targetDir))
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"[Error] {targetDir} already has other files in it. Choose an empty folder.");
+            Console.ResetColor();
+            return 1;
         }
 
         try
@@ -297,6 +309,14 @@ internal static partial class Program
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Uninstalling {AppName} from {targetDir}...");
             Console.ResetColor();
+        }
+
+        if (Directory.Exists(targetDir) && !IsAetherInstall(targetDir))
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"[Error] {targetDir} is not an {AppName} install, so nothing was removed.");
+            Console.ResetColor();
+            return 1;
         }
 
         try
@@ -465,6 +485,14 @@ internal static partial class Program
             }
         }
         catch { }
+    }
+
+    private static bool IsAetherInstall(string dir) => File.Exists(Path.Combine(dir, MainExeName));
+
+    private static string? RegisteredInstallLocation()
+    {
+        using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\" + AppName);
+        return key?.GetValue("InstallLocation") is string location && location.Length > 0 ? location : null;
     }
 
     private static void RegisterUninstall(string targetDir)
