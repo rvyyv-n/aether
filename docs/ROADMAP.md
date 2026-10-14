@@ -258,7 +258,7 @@ Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for st
 | 11.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations; confirm the low-pause GC settings (workstation, non-concurrent, SustainedLowLatency) are really configured | M |
 | 11.6 | `EngineResilience`: attach/detach context cleanup, attached core disposal device-loss safety, queue overflow resync, background core destruction | M |
 | 11.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S |
-| 11.8 | `THIRD_PARTY.md` licence and attribution file for libmpv, FFmpeg, yt-dlp, ANGLE and the other bundled parts, included in the installer and portable zip | S |
+| 11.8 | `THIRD_PARTY.md` licence and attribution file for libmpv, FFmpeg, yt-dlp, ANGLE and the other bundled parts, included in the installer and portable zip — **Draft written** (versions and the libmpv and FFmpeg licence flavour still to confirm, see `docs/reviews/third-party-notes.md`) | S |
 
 **Pass 11 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
 
