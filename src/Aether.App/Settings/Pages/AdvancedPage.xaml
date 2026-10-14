@@ -5,6 +5,18 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:settings="using:Aether_App.Settings">
     <settings:SettingsGroup>
+        <settings:SettingsRow x:Name="RepairAviIndexRow" Glyph="&#xE90F;">
+            <settings:SettingsRow.Note>
+                <TextBlock x:Name="RepairAviIndexRestartNote" Margin="0,2,0,0" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+            </settings:SettingsRow.Note>
+            <ToggleSwitch x:Name="RepairAviIndexToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+        </settings:SettingsRow>
+        <settings:SettingsRow x:Name="SkipDeblockingRow" Glyph="&#xE713;">
+            <settings:SettingsRow.Note>
+                <TextBlock x:Name="SkipDeblockingRestartNote" Margin="0,2,0,0" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+            </settings:SettingsRow.Note>
+            <ComboBox x:Name="SkipDeblockingCombo" Style="{StaticResource AetherSettingsComboStyle}" />
+        </settings:SettingsRow>
         <settings:SettingsRow x:Name="CustomOptionsRow" Glyph="&#xE943;">
             <settings:SettingsRow.Note>
                 <StackPanel Margin="0,12,0,0" Spacing="8">

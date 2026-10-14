@@ -48,6 +48,11 @@
             <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#0AFFFFFF" />
             <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPointerOver" Color="#0FFFFFFF" />
             <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPressed" Color="#0AFFFFFF" />
+            <!--  Shortcut text on the right of a menu row: Caption in TextSecondary (62%), TextDisabled (36%) on a disabled row  -->
+            <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForeground" Color="#9EFFFFFF" />
+            <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPointerOver" Color="#9EFFFFFF" />
+            <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPressed" Color="#9EFFFFFF" />
+            <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundDisabled" Color="#5CFFFFFF" />
         </ResourceDictionary>
         <!--  Dark: copy the Default block here unchanged if the app ever stops forcing RequestedTheme="Dark".  -->
     </ResourceDictionary.ThemeDictionaries>
@@ -568,6 +573,14 @@
         <Setter Property="Padding" Value="0,4" />
     </Style>
     <Style x:Key="AetherToggleMenuItemStyle" BasedOn="{StaticResource DefaultToggleMenuFlyoutItemStyle}" TargetType="ToggleMenuFlyoutItem">
+        <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+        <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+    </Style>
+    <Style x:Key="AetherMenuSubItemStyle" BasedOn="{StaticResource DefaultMenuFlyoutSubItemStyle}" TargetType="MenuFlyoutSubItem">
         <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
         <Setter Property="Margin" Value="4,0" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />

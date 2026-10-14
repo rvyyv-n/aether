@@ -46,7 +46,7 @@ public sealed partial class ShortcutsPage : Page
         Add(NavigationGroup, ShortcutAction.OpenFile, ShortcutAction.OpenUrl, ShortcutAction.SetIn, ShortcutAction.SetOut);
         Add(WindowGroup, ShortcutAction.FullScreen);
         WindowGroup.Children.Add(FixedRow("Settings_Shortcuts_LeaveFullScreen", "Esc"));
-        Add(WindowGroup, ShortcutAction.AlwaysOnTop, ShortcutAction.Diagnostics);
+        Add(WindowGroup, ShortcutAction.AlwaysOnTop, ShortcutAction.Diagnostics, ShortcutAction.Settings);
 
         ResetAllButton.Content = AppStrings.Get("Settings_Shortcuts_ResetAll");
         ResetAllButton.Click += (_, _) =>

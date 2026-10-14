@@ -27,10 +27,12 @@ public readonly record struct KeyCombination(int Key, KeyModifiers Modifiers = K
     public static bool IsBindableKey(int key) => ByKey.ContainsKey(key);
 
     /// <summary>
-    /// Keys the player keeps for itself: plain Escape (leave full screen or close) and comma and full stop with any
-    /// modifiers (the frame-step keys, which are read as raw key events rather than accelerators).
+    /// Keys the player keeps for itself: plain Escape (leave full screen or close) and comma and full stop (the
+    /// frame-step keys, which are read as raw key events rather than accelerators) unless Ctrl is held, which
+    /// frees Ctrl+, for Settings.
     /// </summary>
-    public bool IsReserved => (Key == Escape && Modifiers == KeyModifiers.None) || Key is OemComma or OemPeriod;
+    public bool IsReserved =>
+        (Key == Escape && Modifiers == KeyModifiers.None) || (Key is OemComma or OemPeriod && (Modifiers & KeyModifiers.Ctrl) == 0);
 
     public bool IsValid => IsBindableKey(Key) && !IsReserved;
 

@@ -17,6 +17,12 @@
             </settings:SettingsRow.Note>
             <ToggleSwitch x:Name="PassthroughToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
         </settings:SettingsRow>
+        <settings:SettingsRow x:Name="PitchCorrectionRow" Glyph="&#xE8D6;">
+            <ToggleSwitch x:Name="PitchCorrectionToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+        </settings:SettingsRow>
+        <settings:SettingsRow x:Name="StereoDownmixRow" Glyph="&#xE994;">
+            <ToggleSwitch x:Name="StereoDownmixToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+        </settings:SettingsRow>
         <settings:SettingsRow x:Name="VolumeNormalisationRow" Glyph="&#xE9E9;">
             <ToggleSwitch x:Name="VolumeNormalisationToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
         </settings:SettingsRow>

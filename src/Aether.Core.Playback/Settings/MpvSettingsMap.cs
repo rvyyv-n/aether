@@ -2,8 +2,9 @@ using System.Globalization;
 
 namespace Aether.Core.Playback.Settings;
 
-/// <summary>What to change on a running core: mpv properties in order, and whether the volume-normalising filter is on.</summary>
-public sealed record MpvRuntimePlan(IReadOnlyList<KeyValuePair<string, string>> Properties, bool NormaliseVolume);
+/// <summary>What to change on a running core: mpv properties in order, whether the volume-normalising filter is on, and the deinterlacing filter.</summary>
+/// <param name="DeinterlaceFilter">Software filter to add for the chosen deinterlacer (<c>yadif</c> or <c>bwdif</c>), or null for none.</param>
+public sealed record MpvRuntimePlan(IReadOnlyList<KeyValuePair<string, string>> Properties, bool NormaliseVolume, string? DeinterlaceFilter = null);
 
 /// <summary>
 /// Turns an <see cref="AetherSettings"/> snapshot into mpv options. Pure, so it is tested without libmpv.
@@ -14,11 +15,15 @@ public static class MpvSettingsMap
     /// <summary>Label of the filter we add, so removing it leaves any other audio filter alone.</summary>
     public const string NormaliseFilterLabel = "aether-norm";
 
+    /// <summary>Label of the deinterlacing filter we add.</summary>
+    public const string DeinterlaceFilterLabel = "aether-deint";
+
     private const string NormaliseFilter = "dynaudnorm";
 
     /// <summary>
-    /// Options that only count before the core starts: passthrough, then the custom options (which come last, so they
-    /// win over everything Aether sets). Lines the validator rejects are skipped, so a reserved key never gets through.
+    /// Options that only count before the core starts: passthrough, the network cache size, AVI index repair and the
+    /// deblocking skip, then the custom options (which come last, so they win over everything Aether sets). Lines the
+    /// validator rejects are skipped, so a reserved key never gets through.
     /// </summary>
     public static IReadOnlyList<KeyValuePair<string, string>> StartOptions(AetherSettings settings)
     {
@@ -27,6 +32,18 @@ public static class MpvSettingsMap
         if (settings.Passthrough)
         {
             options.Add(new("audio-spdif", "ac3,eac3,dts-hd,truehd"));
+        }
+        if (settings.NetworkCacheMegabytes != new AetherSettings().NetworkCacheMegabytes)
+        {
+            options.Add(new("demuxer-max-bytes", $"{settings.NetworkCacheMegabytes.ToString(CultureInfo.InvariantCulture)}MiB"));
+        }
+        if (settings.RepairAviIndex)
+        {
+            options.Add(new("index", "recreate"));
+        }
+        if (settings.SkipDeblocking != "default")
+        {
+            options.Add(new("vd-lavc-skiploopfilter", settings.SkipDeblocking));
         }
         options.AddRange(CustomOptions(settings.CustomMpvOptions));
         return options;
@@ -123,6 +140,15 @@ public static class MpvSettingsMap
             new("sub-font", settings.SubtitleFont),
             new("sub-font-size", SubtitleFontSize(settings.SubtitleSize)),
             new("ytdl-format", YtdlFormat(settings.StreamingQuality, settings.PreferGpuDecodableFormats)),
+            new("deinterlace", YesNo(settings.Deinterlace && settings.DeinterlaceMode == "auto")),
+            new("video-aspect-override", settings.AspectRatio == "auto" ? "-1" : settings.AspectRatio),
+            new("screenshot-directory", settings.ScreenshotDirectory),
+            new("screenshot-format", settings.ScreenshotFormat),
+            new("screenshot-template", settings.ScreenshotTemplate),
+            new("audio-pitch-correction", YesNo(settings.PitchCorrection)),
+            new("audio-channels", settings.StereoDownmix ? "stereo" : "auto-safe"),
+            new("http-proxy", settings.HttpProxy),
+            new("rtsp-transport", settings.RtspTransport),
         };
 
         var custom = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -134,7 +160,8 @@ public static class MpvSettingsMap
         {
             properties.RemoveAll(p => custom.Contains(p.Key));
         }
-        return new MpvRuntimePlan(properties, settings.VolumeNormalisation && !custom.Contains("af"));
+        string? deinterlacer = settings.Deinterlace && settings.DeinterlaceMode != "auto" && !custom.Contains("vf") ? settings.DeinterlaceMode : null;
+        return new MpvRuntimePlan(properties, settings.VolumeNormalisation && !custom.Contains("af"), deinterlacer);
     }
 
     /// <summary>Text size in mpv's scaled pixels (it is 55 at a 720-pixel-high window).</summary>
@@ -165,6 +192,11 @@ public static class MpvSettingsMap
     public static IReadOnlyList<string[]> NormaliseCommands(bool on) => on
         ? [["af", "remove", "@" + NormaliseFilterLabel], ["af", "add", $"@{NormaliseFilterLabel}:{NormaliseFilter}"]]
         : [["af", "remove", "@" + NormaliseFilterLabel]];
+
+    /// <summary>The commands that switch the deinterlacing filter; <paramref name="filter"/> null removes it.</summary>
+    public static IReadOnlyList<string[]> DeinterlaceCommands(string? filter) => filter is null
+        ? [["vf", "remove", "@" + DeinterlaceFilterLabel]]
+        : [["vf", "remove", "@" + DeinterlaceFilterLabel], ["vf", "add", $"@{DeinterlaceFilterLabel}:{filter}"]];
 
     private static string YesNo(bool value) => value ? "yes" : "no";
 

@@ -32,6 +32,7 @@ public sealed class PlayerSession : IDisposable
     private readonly FileEnd _fileEnd = new();
     private readonly MpvSettingsSync _settingsSync;
     private readonly DisplayRefreshSync? _display;
+    private readonly DisplayWakeLock _wake = new();
     private bool _disposed;
 
     private PlayerSession(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
@@ -198,7 +199,15 @@ public sealed class PlayerSession : IDisposable
     /// <summary>Releases a held step key, e.g. when the window is deactivated.</summary>
     public void ReleaseKeys() => _keys.ReleaseAll();
 
-    private void OnSettingChanged(object? sender, SettingChangedEventArgs e) => ApplySettings();
+    private void OnSettingChanged(object? sender, SettingChangedEventArgs e)
+    {
+        ApplySettings();
+        UpdateWake();
+    }
+
+    /// <summary>UI thread: the screen stays awake only while a file plays and the setting is on.</summary>
+    private void UpdateWake() =>
+        _wake.Set(!_disposed && App.Settings.Current.PreventSleep && ViewModel.State.Status == PlaybackStatus.Playing);
 
     private void OnPowerSourceChanged(object? sender, object e) => ApplySettings();
 
@@ -272,6 +281,7 @@ public sealed class PlayerSession : IDisposable
         // The first frame sits at time 0 (or within half a frame of it when the container starts later).
         double halfFrame = state.FramesPerSecond > 0 ? 0.5 / state.FramesPerSecond : 0;
         _stepper.SetBounds(atStart: state.Position <= halfFrame, atEnd: state.IsAtEnd);
+        UpdateWake();
         if (_loop.ShouldRestart(state.IsAtEnd, ViewModel.IsLooping))
         {
             try
@@ -304,6 +314,7 @@ public sealed class PlayerSession : IDisposable
         {
             _display.Changed -= OnDisplayRefreshChanged;
         }
+        _wake.Dispose();
         _seekCoalescer.Reset();
         _keys.Dispose();
         _events.Dispose();

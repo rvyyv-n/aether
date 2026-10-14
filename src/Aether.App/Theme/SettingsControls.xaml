@@ -360,6 +360,18 @@
     </Style>
 
     <Style
+        x:Key="AetherSettingsTextBoxStyle"
+        BasedOn="{StaticResource DefaultTextBoxStyle}"
+        TargetType="TextBox">
+        <Setter Property="Width" Value="260" />
+        <Setter Property="MinHeight" Value="{StaticResource AetherSizeComboHeight}" />
+        <Setter Property="Background" Value="{StaticResource AetherFillInputBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+        <Setter Property="IsSpellCheckEnabled" Value="False" />
+    </Style>
+
+    <Style
         x:Key="AetherSettingsSliderStyle"
         BasedOn="{StaticResource DefaultSliderStyle}"
         TargetType="Slider">

@@ -18,4 +18,5 @@ public enum ShortcutAction
     Loop,
     AlwaysOnTop,
     Diagnostics,
+    Settings,
 }

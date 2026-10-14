@@ -554,6 +554,12 @@
   <data name="Toast_Dismiss" xml:space="preserve">
     <value>Dismiss</value>
   </data>
+  <data name="Toast_YtDlpUpdateFailed" xml:space="preserve">
+    <value>yt-dlp could not be updated</value>
+  </data>
+  <data name="Toast_ClipFailed" xml:space="preserve">
+    <value>Clip could not be saved</value>
+  </data>
 
   <!-- Settings page: sections (Screen 7) -->
   <data name="Settings_Back" xml:space="preserve">
@@ -1164,5 +1170,120 @@
   </data>
   <data name="Settings_YtDlp_UpdateFailed" xml:space="preserve">
     <value>Couldn’t update. If you installed yt-dlp with a package manager, update it there.</value>
+  </data>
+  <!-- Settings: VLC-parity options -->
+  <data name="Settings_Deinterlace_Title" xml:space="preserve">
+    <value>Deinterlace</value>
+  </data>
+  <data name="Settings_Deinterlace_Description" xml:space="preserve">
+    <value>Smooths the combing lines in interlaced video, such as old TV recordings</value>
+  </data>
+  <data name="Settings_DeinterlaceMode_Title" xml:space="preserve">
+    <value>Deinterlacing method</value>
+  </data>
+  <data name="Settings_DeinterlaceMode_Auto" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Settings_DeinterlaceMode_Yadif" xml:space="preserve">
+    <value>Yadif</value>
+  </data>
+  <data name="Settings_DeinterlaceMode_Bwdif" xml:space="preserve">
+    <value>Bwdif</value>
+  </data>
+  <data name="Settings_AspectRatio_Title" xml:space="preserve">
+    <value>Aspect ratio</value>
+  </data>
+  <data name="Settings_AspectRatio_Description" xml:space="preserve">
+    <value>Stretches the picture to a fixed shape. Automatic uses the video's own.</value>
+  </data>
+  <data name="Settings_AspectRatio_Auto" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Settings_Snapshots_Title" xml:space="preserve">
+    <value>Snapshots</value>
+  </data>
+  <data name="Settings_Snapshots_Description" xml:space="preserve">
+    <value>Where saved frames go and what they are called</value>
+  </data>
+  <data name="Settings_ScreenshotDirectory_Title" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Settings_ScreenshotDirectory_Description" xml:space="preserve">
+    <value>Leave empty to use the current folder</value>
+  </data>
+  <data name="Settings_ScreenshotFormat_Title" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="Settings_ScreenshotTemplate_Title" xml:space="preserve">
+    <value>File name</value>
+  </data>
+  <data name="Settings_ScreenshotTemplate_Description" xml:space="preserve">
+    <value>%F is the video name and %P the time in it</value>
+  </data>
+  <data name="Settings_PitchCorrection_Title" xml:space="preserve">
+    <value>Keep pitch when speed changes</value>
+  </data>
+  <data name="Settings_PitchCorrection_Description" xml:space="preserve">
+    <value>Voices stay natural at 0.5× or 2×</value>
+  </data>
+  <data name="Settings_StereoDownmix_Title" xml:space="preserve">
+    <value>Mix surround sound down to stereo</value>
+  </data>
+  <data name="Settings_StereoDownmix_Description" xml:space="preserve">
+    <value>For headphones or two speakers. Applies the next time audio starts.</value>
+  </data>
+  <data name="Settings_PreventSleep_Title" xml:space="preserve">
+    <value>Keep the screen awake while playing</value>
+  </data>
+  <data name="Settings_PreventSleep_Description" xml:space="preserve">
+    <value>The display won't dim or sleep during playback. It is released when you pause.</value>
+  </data>
+  <data name="Settings_NetworkCache_Title" xml:space="preserve">
+    <value>Network buffer</value>
+  </data>
+  <data name="Settings_NetworkCache_Description" xml:space="preserve">
+    <value>How much of a stream is loaded ahead of time</value>
+  </data>
+  <data name="Settings_NetworkCache_Value" xml:space="preserve">
+    <value>{0} MB</value>
+  </data>
+  <data name="Settings_HttpProxy_Title" xml:space="preserve">
+    <value>HTTP proxy</value>
+  </data>
+  <data name="Settings_HttpProxy_Description" xml:space="preserve">
+    <value>Sends web streams through a proxy. Empty means none.</value>
+  </data>
+  <data name="Settings_RtspTransport_Title" xml:space="preserve">
+    <value>RTSP transport</value>
+  </data>
+  <data name="Settings_RtspTransport_Description" xml:space="preserve">
+    <value>How camera and RTSP streams are carried. TCP is the safest.</value>
+  </data>
+  <data name="Settings_RtspTransport_Multicast" xml:space="preserve">
+    <value>UDP multicast</value>
+  </data>
+  <data name="Settings_RepairAviIndex_Title" xml:space="preserve">
+    <value>Repair damaged AVI files</value>
+  </data>
+  <data name="Settings_RepairAviIndex_Description" xml:space="preserve">
+    <value>Rebuilds the index of a broken AVI so it can be seeked. Slows opening those files.</value>
+  </data>
+  <data name="Settings_SkipDeblocking_Title" xml:space="preserve">
+    <value>Skip H.264 deblocking</value>
+  </data>
+  <data name="Settings_SkipDeblocking_Description" xml:space="preserve">
+    <value>Trades some picture quality for speed on slow PCs</value>
+  </data>
+  <data name="Settings_SkipDeblocking_Default" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings_SkipDeblocking_NonRef" xml:space="preserve">
+    <value>Non-reference frames</value>
+  </data>
+  <data name="Settings_SkipDeblocking_NonKey" xml:space="preserve">
+    <value>All but key frames</value>
+  </data>
+  <data name="Settings_SkipDeblocking_All" xml:space="preserve">
+    <value>All frames</value>
   </data>
 </root>

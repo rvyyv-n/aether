@@ -1,5 +1,6 @@
 using Aether.Core.Playback;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -96,7 +97,9 @@ public sealed class FrameStepKeyInput : IDisposable
     private void OnKeyDown(object sender, KeyRoutedEventArgs e)
     {
         // A comma or full stop typed into a field (the Open URL link) is text, not a frame step.
-        if (e.OriginalSource is TextBox || !TryGetDirection(e.Key, out FrameStepDirection direction))
+        if (e.OriginalSource is TextBox
+            || !TryGetDirection(e.Key, out FrameStepDirection direction)
+            || InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down))
         {
             return;
         }

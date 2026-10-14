@@ -14,6 +14,7 @@ internal sealed class ToastService
 {
     private const double AboveControlsMargin = 116; // 8 above the 84 px pill, which sits 24 up
     private const double BottomMargin = 24;
+    private const double ChipGap = 8;
 
     private readonly ToastQueue _queue;
     private readonly Toast _toast;
@@ -85,11 +86,15 @@ internal sealed class ToastService
         Arm();
     }
 
-    /// <summary>Sits 8 above the pill while the controls show, 24 from the bottom once they hide.</summary>
-    public void SetControlsShown(bool shown)
+    /// <summary>
+    /// Sits 8 above the pill while the controls show, 24 from the bottom once they hide.
+    /// <paramref name="chipHeight"/> is the export chip or clip drawer between the two, which the toast clears by 8.
+    /// </summary>
+    public void SetControlsShown(bool shown, double chipHeight = 0)
     {
         Thickness margin = _layer.Margin;
-        _layer.Margin = new Thickness(margin.Left, margin.Top, margin.Right, shown ? AboveControlsMargin : BottomMargin);
+        double bottom = shown ? AboveControlsMargin + (chipHeight > 0 ? chipHeight + ChipGap : 0) : BottomMargin;
+        _layer.Margin = new Thickness(margin.Left, margin.Top, margin.Right, bottom);
     }
 
     private void Close()

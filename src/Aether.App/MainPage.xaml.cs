@@ -98,6 +98,7 @@ public sealed partial class MainPage : Page
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
         InitializeTransport();
+        InitializeContextMenu();
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -203,7 +204,9 @@ public sealed partial class MainPage : Page
             _copiedTimer.IsRepeating = false;
             _copiedTimer.Tick += OnCopiedTimerTick;
             _toasts = new ToastService(ToastCard, ToastLayer, _fader, DispatcherQueue, () => Focus(FocusState.Programmatic));
+            ClipLayer.SizeChanged += (_, _) => UpdateToastPlacement();
         }
+        AppToasts.Requested += OnToastRequested;
         if (_session is null)
         {
             StartEngine();
@@ -228,6 +231,7 @@ public sealed partial class MainPage : Page
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         App.Recents.Changed -= OnRecentsChanged;
         App.Shortcuts.Changed -= OnShortcutsChanged;
+        AppToasts.Requested -= OnToastRequested;
         SaveResumePosition(background: false);
         CursorVisibility.Show();
         if (_session is { } session)
@@ -248,6 +252,7 @@ public sealed partial class MainPage : Page
         int version = ++_startupVersion;
         _startup = StartupPhase.Starting;
         _startupError = null;
+        _lastDecoder = null;
         Render();
 
         EngineStartupResult<MpvContext> result =
@@ -458,6 +463,10 @@ public sealed partial class MainPage : Page
     private bool HasVideo =>
         _session?.ViewModel.Status is PlaybackStatus.Playing or PlaybackStatus.Paused or PlaybackStatus.Ended;
 
+    private string? _lastDecoder;
+
+    private void OnToastRequested(ToastRequest request) => _toasts?.Show(request);
+
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
         PlayerViewModel vm = _session!.ViewModel;
@@ -491,6 +500,14 @@ public sealed partial class MainPage : Page
                 break;
             case nameof(PlayerViewModel.IsPaused):
                 Render();
+                break;
+            case nameof(PlayerViewModel.Decoder):
+                if (HardwareDecodeFallback.Occurred(_lastDecoder, vm.Decoder))
+                {
+                    _toasts?.Show("hwdec-failed", AppStrings.Get("Toast_HwDecFailed"), ToastTone.Failure,
+                        AppStrings.Get("Toast_Settings"), () => SetSettingsShown(true));
+                }
+                _lastDecoder = vm.Decoder;
                 break;
             case nameof(PlayerViewModel.State) when Diagnostics.Visibility == Visibility.Visible:
                 Diagnostics.Update(vm.State);
@@ -592,6 +609,11 @@ public sealed partial class MainPage : Page
         }
 
         args.Handled = true;
+        ToggleDiagnostics();
+    }
+
+    private void ToggleDiagnostics()
+    {
         bool show = Diagnostics.Visibility != Visibility.Visible;
         if (show && _session is { } session)
         {
@@ -1226,7 +1248,7 @@ public sealed partial class MainPage : Page
             _host?.SetCaptionButtonsVisible(visible);
         }
         UpdateCursor();
-        _toasts?.SetControlsShown(_chrome.IsVisible && Osd.Visibility == Visibility.Visible);
+        UpdateToastPlacement();
         _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog)) != 0);
 
         if (_chromeTimer is null)
@@ -1243,6 +1265,14 @@ public sealed partial class MainPage : Page
         {
             _chromeTimer.Stop();
         }
+    }
+
+    /// <summary>The toast shares the spot above the pill with the export chip and clip drawer, and sits above them.</summary>
+    private void UpdateToastPlacement()
+    {
+        bool controls = _chrome.IsVisible && Osd.Visibility == Visibility.Visible;
+        double chip = ClipLayer.Visibility == Visibility.Visible ? ClipLayer.ActualHeight : 0;
+        _toasts?.SetControlsShown(controls, chip);
     }
 
     private void UpdateCursor()

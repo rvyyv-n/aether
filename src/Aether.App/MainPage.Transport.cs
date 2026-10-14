@@ -173,7 +173,7 @@ public sealed partial class MainPage
     {
         SpeedButton.Content = PlaybackSpeed.Format(speed);
         AutomationProperties.SetName(SpeedButton, $"{AppStrings.Get("Transport_Speed")} {PlaybackSpeed.Format(speed)}");
-        foreach (MenuFlyoutItemBase item in SpeedMenu.Items)
+        foreach (MenuFlyoutItemBase item in SpeedMenu.Items.Concat(CtxSpeed.Items))
         {
             if (item is ToggleMenuFlyoutItem { Tag: double option } toggle)
             {
@@ -258,6 +258,7 @@ public sealed partial class MainPage
         bool onTop = _host?.IsAlwaysOnTop ?? false;
         AlwaysOnTopButton.IsChecked = onTop;
         MoreAlwaysOnTopItem.IsChecked = onTop;
+        CtxAlwaysOnTop.IsChecked = onTop;
     }
 
     // In (I) and Out (O): the band on the seek bar and the export chip above the pill.

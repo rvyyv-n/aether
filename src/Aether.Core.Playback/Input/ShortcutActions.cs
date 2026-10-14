@@ -25,6 +25,7 @@ public static class ShortcutActions
         ShortcutAction.Loop => SettingKeys.ShortcutLoop,
         ShortcutAction.AlwaysOnTop => SettingKeys.ShortcutAlwaysOnTop,
         ShortcutAction.Diagnostics => SettingKeys.ShortcutDiagnostics,
+        ShortcutAction.Settings => SettingKeys.ShortcutSettings,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 
@@ -56,6 +57,7 @@ public static class ShortcutActions
         ShortcutAction.Loop => [KeyCombination.Letter('L')],
         ShortcutAction.AlwaysOnTop => [KeyCombination.Letter('T')],
         ShortcutAction.Diagnostics => [KeyCombination.Letter('I', KeyModifiers.Ctrl)],
+        ShortcutAction.Settings => [new KeyCombination(KeyCombination.OemComma, KeyModifiers.Ctrl)],
         _ => [],
     };
 

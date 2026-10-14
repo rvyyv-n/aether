@@ -16,6 +16,18 @@ public sealed partial class AdvancedPage : Page
         InitializeComponent();
         _binder = new SettingsPageBinder(this);
 
+        _binder.Toggle(RepairAviIndexRow, RepairAviIndexToggle, SettingKeys.RepairAviIndex, "Settings_RepairAviIndex_Title", "Settings_RepairAviIndex_Description");
+        _binder.RestartNote(RepairAviIndexRestartNote, SettingKeys.RepairAviIndex);
+        _binder.Choose(SkipDeblockingRow, SkipDeblockingCombo, SettingKeys.SkipDeblocking,
+            [
+                new("default", AppStrings.Get("Settings_SkipDeblocking_Default")),
+                new("nonref", AppStrings.Get("Settings_SkipDeblocking_NonRef")),
+                new("nonkey", AppStrings.Get("Settings_SkipDeblocking_NonKey")),
+                new("all", AppStrings.Get("Settings_SkipDeblocking_All")),
+            ],
+            "Settings_SkipDeblocking_Title", "Settings_SkipDeblocking_Description");
+        _binder.RestartNote(SkipDeblockingRestartNote, SettingKeys.SkipDeblocking);
+
         SettingsPageBinder.Describe(CustomOptionsRow, "Settings_CustomOptions_Title", "Settings_CustomOptions_Description");
         AutomationProperties.SetName(CustomOptionsBox, CustomOptionsRow.Header);
         CustomOptionsBox.TextChanged += (_, _) => Validate();

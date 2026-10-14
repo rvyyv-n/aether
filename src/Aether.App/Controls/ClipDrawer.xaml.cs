@@ -65,6 +65,9 @@ public sealed partial class ClipDrawer : UserControl
         RenderChip();
     }
 
+    /// <summary>Opens the drawer, as the Clips entry of the right-click menu does.</summary>
+    public void Open() => SetOpen(true);
+
     /// <summary>Esc closes an open drawer first. Returns whether it did.</summary>
     public bool Close()
     {
@@ -189,6 +192,8 @@ public sealed partial class ClipDrawer : UserControl
             _pending.Remove(pending);
             var clip = new SavedClip(result.OutputPath, result.SizeBytes, length, DateTimeOffset.Now);
             _ = Task.Run(() => App.Clips.Add(clip)); // Changed redraws the rows
+            AppToasts.Show("clip-saved", AppStrings.Get("Toast_ClipSaved"), ToastTone.Success,
+                AppStrings.Get("Toast_ShowInFolder"), () => _ = ShowInFolderAsync(result.OutputPath));
         }
         catch (OperationCanceledException)
         {
@@ -203,6 +208,7 @@ public sealed partial class ClipDrawer : UserControl
             }
             RenderRows();
             RenderChip();
+            AppToasts.Show("clip-failed", AppStrings.Get("Toast_ClipFailed"), ToastTone.Failure);
         }
     }
 
@@ -270,7 +276,15 @@ public sealed partial class ClipDrawer : UserControl
 
     private async void OnShowInFolderRequested(object? sender, EventArgs e)
     {
-        if (sender is not ClipRow { Saved: { } clip } || Path.GetDirectoryName(clip.Path) is not { } directory)
+        if (sender is ClipRow { Saved: { } clip })
+        {
+            await ShowInFolderAsync(clip.Path);
+        }
+    }
+
+    private async Task ShowInFolderAsync(string path)
+    {
+        if (Path.GetDirectoryName(path) is not { } directory)
         {
             return;
         }
@@ -278,7 +292,7 @@ public sealed partial class ClipDrawer : UserControl
         {
             StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(directory);
             var options = new FolderLauncherOptions();
-            options.ItemsToSelect.Add(await StorageFile.GetFileFromPathAsync(clip.Path));
+            options.ItemsToSelect.Add(await StorageFile.GetFileFromPathAsync(path));
             await Launcher.LaunchFolderAsync(folder, options);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)

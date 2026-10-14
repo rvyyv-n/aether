@@ -16,6 +16,7 @@ public class DesignTokensTests
         "SymbolThemeFontFamily",
         "DefaultTextBoxStyle",
         "DefaultMenuFlyoutItemStyle",
+        "DefaultMenuFlyoutSubItemStyle",
         "DefaultToggleMenuFlyoutItemStyle",
         "DefaultToggleSwitchStyle",
         "DefaultComboBoxStyle",

@@ -139,8 +139,8 @@ internal sealed class SettingsPageBinder
         });
     }
 
-    /// <summary>A -100..100 slider with its signed value beside it (+6, 0, -12).</summary>
-    public void Slider(SettingsRow row, Slider slider, TextBlock valueText, string key, string titleKey, string? descriptionKey = null)
+    /// <summary>A slider with its value beside it: signed by default (+6, 0, -12), or as <paramref name="format"/> shows it.</summary>
+    public void Slider(SettingsRow row, Slider slider, TextBlock valueText, string key, string titleKey, string? descriptionKey = null, Func<int, string>? format = null)
     {
         Describe(row, titleKey, descriptionKey);
         AutomationProperties.SetName(slider, row.Header);
@@ -156,8 +156,38 @@ internal sealed class SettingsPageBinder
             int value = App.Settings.Get(key) is int stored ? stored : 0;
             bool changed = !App.Settings.IsDefault(key);
             slider.Value = value;
-            valueText.Text = value > 0 ? "+" + value.ToString(CultureInfo.CurrentCulture) : value.ToString(CultureInfo.CurrentCulture);
+            valueText.Text = format?.Invoke(value) ?? (value > 0 ? "+" + value.ToString(CultureInfo.CurrentCulture) : value.ToString(CultureInfo.CurrentCulture));
             AutomationProperties.SetHelpText(slider, changed ? AppStrings.Get("Settings_ChangedFromDefault") : "");
+        });
+    }
+
+    /// <summary>A one-line text box over a text setting; the value is saved when the box loses focus or Enter is pressed.</summary>
+    public void TextEntry(SettingsRow row, TextBox box, string key, string titleKey, string? descriptionKey = null)
+    {
+        Describe(row, titleKey, descriptionKey);
+        AutomationProperties.SetName(box, row.Header);
+        void Commit()
+        {
+            if (!_updating)
+            {
+                Write(key, box.Text);
+            }
+        }
+        box.LostFocus += (_, _) => Commit();
+        box.KeyDown += (_, e) =>
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                Commit();
+            }
+        };
+        Track(() =>
+        {
+            string stored = App.Settings.Get(key) as string ?? "";
+            if (box.Text != stored && box.FocusState == FocusState.Unfocused)
+            {
+                box.Text = stored;
+            }
         });
     }
 

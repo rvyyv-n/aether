@@ -17,6 +17,26 @@
         <settings:SettingsRow x:Name="SmoothMotionRow" Glyph="&#xEC4A;">
             <ToggleSwitch x:Name="SmoothMotionToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
         </settings:SettingsRow>
+        <settings:SettingsRow x:Name="DeinterlaceRow" Glyph="&#xE71C;">
+            <ToggleSwitch x:Name="DeinterlaceToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+        </settings:SettingsRow>
+        <settings:SettingsRow x:Name="DeinterlaceModeRow" Glyph=" ">
+            <ComboBox x:Name="DeinterlaceModeCombo" Style="{StaticResource AetherSettingsComboStyle}" />
+        </settings:SettingsRow>
+        <settings:SettingsRow x:Name="AspectRatioRow" Glyph="&#xE799;">
+            <ComboBox x:Name="AspectRatioCombo" Style="{StaticResource AetherSettingsComboStyle}" />
+        </settings:SettingsRow>
+        <settings:SettingsExpander x:Name="SnapshotsExpander" Glyph="&#xE722;">
+            <settings:SettingsRow x:Name="ScreenshotDirectoryRow">
+                <TextBox x:Name="ScreenshotDirectoryBox" Style="{StaticResource AetherSettingsTextBoxStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="ScreenshotFormatRow">
+                <ComboBox x:Name="ScreenshotFormatCombo" Style="{StaticResource AetherSettingsComboStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="ScreenshotTemplateRow">
+                <TextBox x:Name="ScreenshotTemplateBox" Style="{StaticResource AetherSettingsTextBoxStyle}" />
+            </settings:SettingsRow>
+        </settings:SettingsExpander>
         <settings:SettingsExpander x:Name="ScalingExpander" Glyph="&#xE740;">
             <settings:SettingsRow x:Name="UpscalingRow">
                 <StackPanel Orientation="Horizontal" Spacing="8">

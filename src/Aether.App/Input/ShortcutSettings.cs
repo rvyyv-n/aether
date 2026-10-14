@@ -134,6 +134,7 @@ public sealed class ShortcutSettings
         ShortcutAction.Loop => "Settings_Shortcuts_Loop",
         ShortcutAction.AlwaysOnTop => "Settings_Shortcuts_AlwaysOnTop",
         ShortcutAction.Diagnostics => "Settings_Shortcuts_Diagnostics",
+        ShortcutAction.Settings => "Settings_Shortcuts_Settings",
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 }

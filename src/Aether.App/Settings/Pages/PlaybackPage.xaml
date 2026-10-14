@@ -21,6 +21,9 @@
             <settings:SettingsRow x:Name="RememberWindowSizeRow" Glyph="&#xE740;">
                 <ToggleSwitch x:Name="RememberWindowSizeToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
+            <settings:SettingsRow x:Name="PreventSleepRow" Glyph="&#xE706;">
+                <ToggleSwitch x:Name="PreventSleepToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
             <settings:SettingsRow x:Name="AlwaysOnTopRow" Glyph="&#xE718;">
                 <ToggleSwitch x:Name="AlwaysOnTopToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>

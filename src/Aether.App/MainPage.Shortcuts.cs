@@ -70,6 +70,7 @@ public sealed partial class MainPage
         Label(AlwaysOnTopButton, "Transport_AlwaysOnTop", ShortcutAction.AlwaysOnTop);
         MoreLoopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Loop);
         MoreAlwaysOnTopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
+        ApplyContextMenuShortcuts();
     }
 
     private static string Tip(string key, ShortcutAction action) => App.Shortcuts.Tip(AppStrings.Get(key), action);
@@ -94,6 +95,7 @@ public sealed partial class MainPage
         ShortcutAction.Loop => OnLoopAccelerator,
         ShortcutAction.AlwaysOnTop => OnAlwaysOnTopAccelerator,
         ShortcutAction.Diagnostics => OnDiagnosticsAccelerator,
+        ShortcutAction.Settings => OnSettingsAccelerator,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 
