@@ -1286,4 +1286,22 @@
   <data name="Settings_SkipDeblocking_All" xml:space="preserve">
     <value>All frames</value>
   </data>
+  <data name="Tracks_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Tracks_DelayEarlier" xml:space="preserve">
+    <value>Earlier by 0.1 s</value>
+  </data>
+  <data name="Tracks_DelayLater" xml:space="preserve">
+    <value>Later by 0.1 s</value>
+  </data>
+  <data name="Tracks_TrackN" xml:space="preserve">
+    <value>Track {0}</value>
+  </data>
+  <data name="Tracks_Sdh" xml:space="preserve">
+    <value>SDH</value>
+  </data>
+  <data name="Tracks_Forced" xml:space="preserve">
+    <value>Forced</value>
+  </data>
 </root>

@@ -99,6 +99,7 @@ public sealed partial class MainPage : Page
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
         InitializeTransport();
         InitializeContextMenu();
+        InitializeTracks();
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;

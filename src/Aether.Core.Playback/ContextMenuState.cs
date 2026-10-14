@@ -1,8 +1,8 @@
 namespace Aether.Core.Playback;
 
 /// <summary>
-/// Which entries of the right-click menu (screen 9.1) can be used right now. Audio, Subtitles, Video, Copy frame,
-/// Save frame and Picture in picture stay off until the work behind them lands (roadmap 7.16, 7.18, 7.19, Pass 8).
+/// Which entries of the right-click menu (screen 9.1) can be used right now. Video, Copy frame, Save frame and
+/// Picture in picture stay off until the work behind them lands (roadmap 7.18, 7.19, Pass 8).
 /// </summary>
 /// <param name="EngineReady">The engine is up, so a file or link can be opened.</param>
 /// <param name="HasVideo">A file is open (playing, paused or ended).</param>
@@ -17,9 +17,10 @@ public sealed record ContextMenuState(bool EngineReady, bool HasVideo, int Recen
 
     public bool Recent => EngineReady && RecentCount > 0;
 
-    public bool Audio => false;
+    /// <summary>Audio and Subtitles open the tracks flyout, which has nothing to list without a file.</summary>
+    public bool Audio => HasVideo;
 
-    public bool Subtitles => false;
+    public bool Subtitles => HasVideo;
 
     public bool Speed => HasVideo;
 

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Right-click menu on the player: Open file, Open URL, Recent files, Speed, Always on top, Diagnostics, Settings and Clips, with each shortcut shown as you have set it. Audio, Subtitles, Video, Copy frame, Save frame, Picture in picture and Stream appear greyed out until they are built.
 - Ctrl+, opens Settings (changeable in Settings → Shortcuts). It was the one key the shortcut list used to refuse; only Ctrl with comma or full stop is now allowed, and the frame-step keys ignore Ctrl.
 - Toasts now appear for a hardware decoder falling back to software (with a Settings button), a yt-dlp update succeeding or failing, and a saved or failed clip export (Show in folder opens the folder with the clip selected). They sit above the export chip or clip drawer when it shows.
+- Audio and Subtitles in the right-click menu now open a tracks panel above the controls. Each column lists the file's tracks as language · title · channels (5.1, 2.0), with SDH or Forced on subtitles, the current one checked and long names trimmed with the full name on hover. Subtitles have Off and Add subtitle file…, and both columns have a delay control that moves by 0.1 s.
 - Standalone Kestrel developer streaming host (`tools/host.ps1`, `tools/dev-host`).
 
 ### Fixed

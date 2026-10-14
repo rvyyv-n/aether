@@ -19,6 +19,33 @@
     PointerMoved="OnPagePointerMoved"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <!--
+            Tracks flyout (9.2): opened from Audio and Subtitles in the right-click menu, centred above the pill. A solid
+            surface because Acrylic does not sample the swap chain (ADR-0013); the panel scrolls inside it (MainPage.Tracks.cs).
+        -->
+        <Flyout
+            x:Name="TracksFlyout"
+            Closed="OnTracksFlyoutClosed"
+            Opened="OnTracksFlyoutOpened"
+            Placement="Top">
+            <Flyout.FlyoutPresenterStyle>
+                <Style TargetType="FlyoutPresenter">
+                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="MinWidth" Value="0" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="MaxWidth" Value="600" />
+                    <Setter Property="MaxHeight" Value="2000" />
+                </Style>
+            </Flyout.FlyoutPresenterStyle>
+            <controls:TracksPanel x:Name="TracksPanel" />
+        </Flyout>
+    </Page.Resources>
+
     <!--  Escape is fixed. Every other shortcut is added from the shortcut settings (MainPage.Shortcuts.cs).  -->
     <Page.KeyboardAccelerators>
         <KeyboardAccelerator Key="Escape" Invoked="OnEscapeAccelerator" />
@@ -73,22 +100,24 @@
                         </MenuFlyoutSubItem.Icon>
                     </MenuFlyoutSubItem>
                     <MenuFlyoutSeparator />
-                    <MenuFlyoutSubItem
+                    <MenuFlyoutItem
                         x:Name="CtxAudio"
+                        Click="OnTracksMenuClick"
                         MinWidth="266"
-                        Style="{StaticResource AetherMenuSubItemStyle}">
-                        <MenuFlyoutSubItem.Icon>
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE767;" />
-                        </MenuFlyoutSubItem.Icon>
-                    </MenuFlyoutSubItem>
-                    <MenuFlyoutSubItem
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
                         x:Name="CtxSubtitles"
+                        Click="OnTracksMenuClick"
                         MinWidth="266"
-                        Style="{StaticResource AetherMenuSubItemStyle}">
-                        <MenuFlyoutSubItem.Icon>
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE7F0;" />
-                        </MenuFlyoutSubItem.Icon>
-                    </MenuFlyoutSubItem>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSubItem
                         x:Name="CtxSpeed"
                         MinWidth="266"

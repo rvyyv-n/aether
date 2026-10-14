@@ -10,8 +10,8 @@ using Windows.Foundation;
 namespace Aether_App;
 
 /// <summary>
-/// The right-click menu (screen 9.1). The tracks and video flyouts behind Audio, Subtitles and Video, and the frame
-/// and picture-in-picture entries, stay disabled until those land. UI thread only.
+/// The right-click menu (screen 9.1). Audio and Subtitles open the tracks flyout (MainPage.Tracks.cs); Video, the frame
+/// and the picture-in-picture entries stay disabled until those land. UI thread only.
 /// </summary>
 public sealed partial class MainPage
 {
@@ -164,6 +164,7 @@ public sealed partial class MainPage
         {
             Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
         }
+        ShowTracksIfRequested();
     }
 
     private void OnDiagnosticsMenuClick(object sender, RoutedEventArgs e) => ToggleDiagnostics();
