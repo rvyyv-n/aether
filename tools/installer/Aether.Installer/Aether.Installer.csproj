@@ -15,6 +15,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\..\src\Aether.Core.Playback\MediaFormats.cs" Link="MediaFormats.cs" />
+  </ItemGroup>
+
   <ItemGroup Condition="Exists('payload.zip')">
     <EmbeddedResource Include="payload.zip" LogicalName="payload.zip" />
   </ItemGroup>

@@ -33,8 +33,10 @@ param(
 )
 
 $AppName = "Aether"
-$AppVersion = "1.0.0"
 $MainExe = "Aether.App.exe"
+$ProgId = "Aether.VideoPlayer"
+# Mirrors MediaFormats.Extensions in src/Aether.Core.Playback/MediaFormats.cs.
+$SupportedExtensions = @(".mp4", ".mkv", ".mov", ".webm")
 
 function Write-Info([string]$msg) {
     if (-not $Quiet) { Write-Host $msg -ForegroundColor Cyan }
@@ -46,6 +48,35 @@ function Write-Err([string]$msg) {
     Write-Host $msg -ForegroundColor Red
 }
 
+function Get-RunningAether([string]$dir) {
+    $prefix = $dir.TrimEnd('\') + '\'
+    Get-Process -Name "Aether.App" -ErrorAction SilentlyContinue | Where-Object {
+        try { $_.Path.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) } catch { $false }
+    }
+}
+
+# Only asks when a console can answer; otherwise (quiet, redirected input) it just proceeds.
+function Close-RunningAether([string]$dir) {
+    $running = @(Get-RunningAether $dir)
+    if ($running.Count -eq 0) { return }
+    if (-not $Quiet -and [Environment]::UserInteractive -and -not [Console]::IsInputRedirected) {
+        Write-Host "$AppName is running from $dir and will be closed." -ForegroundColor Yellow
+        $answer = (Read-Host "Continue? [Y/n]").Trim()
+        if ($answer -and $answer -notmatch '^(y|yes)$') {
+            Write-Err "[Cancelled] $AppName was left running. Close it yourself and run this again."
+            exit 1
+        }
+    }
+    $running | Stop-Process -Force -ErrorAction SilentlyContinue
+}
+
+function Update-ShellAssociations {
+    if (-not ('Aether.ShellNotify' -as [type])) {
+        Add-Type -Namespace Aether -Name ShellNotify -MemberDefinition '[DllImport("shell32.dll")] public static extern void SHChangeNotify(int wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);'
+    }
+    [Aether.ShellNotify]::SHChangeNotify(0x08000000, 0, [IntPtr]::Zero, [IntPtr]::Zero)
+}
+
 # --- UNINSTALL MODE ---
 if ($Uninstall) {
     # Uninstall deletes the whole folder, so only touch one that holds Aether.
@@ -55,10 +86,7 @@ if ($Uninstall) {
     }
     Write-Info "Uninstalling $AppName from $TargetDir..."
 
-    # Kill running instances
-    Get-Process -Name "Aether.App" -ErrorAction SilentlyContinue | Where-Object {
-        try { $_.Path -like "$TargetDir*" } catch { $false }
-    } | Stop-Process -Force -ErrorAction SilentlyContinue
+    Close-RunningAether $TargetDir
 
     # Remove Start Menu shortcut
     $startMenuLnk = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\$AppName.lnk"
@@ -72,7 +100,18 @@ if ($Uninstall) {
     Remove-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$AppName" -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\App Paths\aether.exe" -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item "HKCU:\Software\Classes\SystemFileAssociations\video\shell\Aether" -Recurse -Force -ErrorAction SilentlyContinue
-    Remove-Item "HKCU:\Software\Classes\Aether.VideoPlayer" -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item "HKCU:\Software\Classes\$ProgId" -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item "HKCU:\Software\Classes\Applications\$MainExe" -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item "HKCU:\Software\Aether\Capabilities" -Recurse -Force -ErrorAction SilentlyContinue
+    $vendorKey = Get-Item "HKCU:\Software\Aether" -ErrorAction SilentlyContinue
+    if ($vendorKey -and $vendorKey.SubKeyCount -eq 0 -and $vendorKey.ValueCount -eq 0) {
+        Remove-Item $vendorKey.PSPath -Force -ErrorAction SilentlyContinue
+    }
+    Remove-ItemProperty "HKCU:\Software\RegisteredApplications" -Name $AppName -ErrorAction SilentlyContinue
+    foreach ($ext in $SupportedExtensions) {
+        Remove-ItemProperty "HKCU:\Software\Classes\$ext\OpenWithProgids" -Name $ProgId -ErrorAction SilentlyContinue
+    }
+    Update-ShellAssociations
 
     # Remove target directory
     if (Test-Path $TargetDir) {
@@ -86,7 +125,7 @@ if ($Uninstall) {
 # --- INSTALL MODE ---
 if (-not $Quiet) {
     Write-Host "====================================================================" -ForegroundColor Cyan
-    Write-Host "           $($AppName.ToUpper()) - STANDALONE PER-USER INSTALLER v$AppVersion" -ForegroundColor Cyan
+    Write-Host "           $($AppName.ToUpper()) - STANDALONE PER-USER INSTALLER" -ForegroundColor Cyan
     Write-Host "      Zero Administrator Privileges Required | %LOCALAPPDATA%       " -ForegroundColor Cyan
     Write-Host "====================================================================" -ForegroundColor Cyan
     Write-Host ""
@@ -119,19 +158,36 @@ if ((Test-Path $TargetDir) -and (Get-ChildItem $TargetDir -Force | Select-Object
     exit 1
 }
 
-# Kill running instances before overwriting
-Get-Process -Name "Aether.App" -ErrorAction SilentlyContinue | Where-Object {
-    try { $_.Path -like "$TargetDir*" } catch { $false }
-} | Stop-Process -Force -ErrorAction SilentlyContinue
+Close-RunningAether $TargetDir
+
+# Installing from the install folder itself: the files to deploy are the ones already there.
+$inPlace = (Test-Path $TargetDir) -and ((Get-Item $TargetDir).FullName.TrimEnd('\') -ieq (Get-Item $sourceDir).FullName.TrimEnd('\'))
+
+# Upgrade: clear the old version's files first so nothing stale is left behind (the source is known to exist by now).
+if ((Test-Path (Join-Path $TargetDir $MainExe)) -and -not $inPlace) {
+    Get-ChildItem $TargetDir -Force | Where-Object { $_.FullName -ine $PSCommandPath } |
+        Remove-Item -Recurse -Force
+}
 
 # 1. Copy files
 Write-Info "[1/5] Deploying application files from $sourceDir..."
 if (-not (Test-Path $TargetDir)) {
     New-Item -ItemType Directory -Path $TargetDir -Force | Out-Null
 }
-Copy-Item "$sourceDir\*" -Destination $TargetDir -Recurse -Force
+if (-not $inPlace) {
+    Copy-Item "$sourceDir\*" -Destination $TargetDir -Recurse -Force
+}
 
 $installedExe = Join-Path $TargetDir $MainExe
+$versionInfo = (Get-Item $installedExe).VersionInfo
+$displayVersion = ([string]$versionInfo.ProductVersion -split '\+')[0].Trim()
+if (-not $displayVersion) { $displayVersion = ([string]$versionInfo.FileVersion).Trim() }
+if (-not $displayVersion) { $displayVersion = "0.0.0" }
+# The SDK fills CompanyName with the assembly name when none is set, which isn't a real publisher.
+$company = ([string]$versionInfo.CompanyName).Trim()
+if (-not $company -or $company -ieq [IO.Path]::GetFileNameWithoutExtension($MainExe) -or $company -ieq $versionInfo.ProductName) {
+    $company = $AppName
+}
 $iconFile = Join-Path $TargetDir "Assets\AppIcon.ico"
 if (-not (Test-Path $iconFile)) { $iconFile = $installedExe }
 
@@ -167,8 +223,8 @@ Write-Info "[4/5] Registering in Windows (Installed Apps & Run)..."
 $uninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$AppName"
 if (-not (Test-Path $uninstallKey)) { New-Item -Path $uninstallKey -Force | Out-Null }
 Set-ItemProperty -Path $uninstallKey -Name "DisplayName" -Value $AppName
-Set-ItemProperty -Path $uninstallKey -Name "DisplayVersion" -Value $AppVersion
-Set-ItemProperty -Path $uninstallKey -Name "Publisher" -Value "Aether Studio"
+Set-ItemProperty -Path $uninstallKey -Name "DisplayVersion" -Value $displayVersion
+Set-ItemProperty -Path $uninstallKey -Name "Publisher" -Value $company
 Set-ItemProperty -Path $uninstallKey -Name "DisplayIcon" -Value "$installedExe,0"
 Set-ItemProperty -Path $uninstallKey -Name "InstallLocation" -Value $TargetDir
 Set-ItemProperty -Path $uninstallKey -Name "UninstallString" -Value "powershell.exe -ExecutionPolicy Bypass -File `"$TargetDir\Install.ps1`" -Uninstall -TargetDir `"$TargetDir`""
@@ -192,8 +248,47 @@ $cmdKey = Join-Path $contextMenuKey "command"
 if (-not (Test-Path $cmdKey)) { New-Item -Path $cmdKey -Force | Out-Null }
 Set-ItemProperty -Path $cmdKey -Name "(Default)" -Value "`"$installedExe`" `"%1`""
 
+# ProgId for direct file associations
+$progIdKey = "HKCU:\Software\Classes\$ProgId"
+New-Item -Path "$progIdKey\DefaultIcon" -Force | Out-Null
+New-Item -Path "$progIdKey\shell\open\command" -Force | Out-Null
+Set-ItemProperty -Path $progIdKey -Name "(Default)" -Value "Aether Video File"
+Set-ItemProperty -Path "$progIdKey\DefaultIcon" -Name "(Default)" -Value "`"$installedExe`",0"
+Set-ItemProperty -Path "$progIdKey\shell\open\command" -Name "(Default)" -Value "`"$installedExe`" `"%1`""
+
+# "Open with" list entries for each supported type, without claiming the default app.
+foreach ($ext in $SupportedExtensions) {
+    $withKey = "HKCU:\Software\Classes\$ext\OpenWithProgids"
+    if (-not (Test-Path $withKey)) { New-Item -Path $withKey -Force | Out-Null }
+    Set-ItemProperty -Path $withKey -Name $ProgId -Value ""
+}
+
+$appKey = "HKCU:\Software\Classes\Applications\$MainExe"
+New-Item -Path "$appKey\shell\open\command" -Force | Out-Null
+New-Item -Path "$appKey\SupportedTypes" -Force | Out-Null
+Set-ItemProperty -Path $appKey -Name "FriendlyAppName" -Value $AppName
+Set-ItemProperty -Path "$appKey\shell\open\command" -Name "(Default)" -Value "`"$installedExe`" `"%1`""
+foreach ($ext in $SupportedExtensions) {
+    Set-ItemProperty -Path "$appKey\SupportedTypes" -Name $ext -Value ""
+}
+
+# Capabilities make Aether show up in Settings > Default apps.
+$capKey = "HKCU:\Software\Aether\Capabilities"
+New-Item -Path "$capKey\FileAssociations" -Force | Out-Null
+Set-ItemProperty -Path $capKey -Name "ApplicationName" -Value $AppName
+Set-ItemProperty -Path $capKey -Name "ApplicationDescription" -Value "$AppName Video Player"
+foreach ($ext in $SupportedExtensions) {
+    Set-ItemProperty -Path "$capKey\FileAssociations" -Name $ext -Value $ProgId
+}
+$registeredKey = "HKCU:\Software\RegisteredApplications"
+if (-not (Test-Path $registeredKey)) { New-Item -Path $registeredKey -Force | Out-Null }
+Set-ItemProperty -Path $registeredKey -Name $AppName -Value "Software\Aether\Capabilities"
+Update-ShellAssociations
+
 # Copy installer script into target directory for uninstall support
-Copy-Item $PSCommandPath -Destination (Join-Path $TargetDir "Install.ps1") -Force
+if ($PSCommandPath -ine (Join-Path $TargetDir "Install.ps1")) {
+    Copy-Item $PSCommandPath -Destination (Join-Path $TargetDir "Install.ps1") -Force
+}
 
 Write-Success "`n[SUCCESS] $AppName has been installed successfully!"
 
