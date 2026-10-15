@@ -22,9 +22,6 @@ public static class TransportState
     /// <summary>Back and Forward 5 s (← and →).</summary>
     public const double SkipSeconds = 5;
 
-    /// <summary>Below this card width, frame step, loop and always on top move into More controls (5.7).</summary>
-    public const double CompactPillWidth = 520;
-
     public static PlayButtonAction PlayButton(PlaybackStatus status) => status switch
     {
         PlaybackStatus.Ended => PlayButtonAction.Replay,
@@ -58,9 +55,6 @@ public static class TransportState
         "set",
         "speed",
         PlaybackSpeed.Clamp(speed).ToString("0.###", CultureInfo.InvariantCulture));
-
-    /// <summary>The card is min(520, window − 32) wide; half a pixel of slack absorbs layout rounding.</summary>
-    public static bool IsCompact(double pillWidth) => pillWidth < CompactPillWidth - 0.5;
 
     /// <summary>The volume after Mute (M): silent if audible, otherwise back to <paramref name="lastAudible"/>.</summary>
     public static double ToggleMute(double volume, double lastAudible) =>
