@@ -22,6 +22,14 @@ public class VideoAdjustmentsTests
     }
 
     [Theory]
+    [InlineData(0, 1920, 1080)]
+    [InlineData(90, 1080, 1920)]
+    [InlineData(180, 1920, 1080)]
+    [InlineData(270, 1080, 1920)]
+    public void A_Quarter_Turn_Swaps_The_Displayed_Width_And_Height(int rotation, int width, int height) =>
+        Assert.Equal((width, height), VideoAdjustments.DisplaySize(1920, 1080, rotation));
+
+    [Theory]
     [InlineData(0, 25)]
     [InlineData(1000, 400)]
     [InlineData(110.4, 110)]

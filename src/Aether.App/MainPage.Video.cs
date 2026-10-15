@@ -60,9 +60,20 @@ public sealed partial class MainPage
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
     }
 
+    /// <summary>The open video's size as shown, with the flyout's rotation applied; 0 by 0 without video.</summary>
+    private (int Width, int Height) DisplayedVideoSize()
+    {
+        int width = _session?.ViewModel.VideoWidth ?? 0;
+        int height = _session?.ViewModel.VideoHeight ?? 0;
+        return VideoAdjustments.DisplaySize(width, height, _video?.Rotation ?? 0);
+    }
+
     private void OnVideoAdjusted(object? sender, VideoAdjustments adjustments)
     {
         _video = adjustments == VideoAdjustments.FromSettings(App.Settings.Current) ? null : adjustments;
+        // A quarter turn changes the picture's shape, so the surface and the window's aspect lock follow it.
+        FitVideo();
+        QueueWindowSync();
         PushVideo();
     }
 
@@ -76,6 +87,8 @@ public sealed partial class MainPage
         if (!afterRestart)
         {
             _video = null;
+            FitVideo(); // the new file starts unrotated
+            QueueWindowSync();
         }
         PushVideo();
     }

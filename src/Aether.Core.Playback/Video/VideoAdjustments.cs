@@ -86,6 +86,10 @@ public sealed record VideoAdjustments(
         ];
     }
 
+    /// <summary>The size the picture takes on screen: mpv's <c>dwidth</c> and <c>dheight</c> ignore the flyout's rotation, so a quarter turn swaps them.</summary>
+    public static (int Width, int Height) DisplaySize(int width, int height, int rotation) =>
+        NormalizeRotation(rotation) % 180 == 90 ? (height, width) : (width, height);
+
     public static string ZoomForMpv(int percent) =>
         Math.Log2(ClampZoom(percent) / 100.0).ToString("0.####", CultureInfo.InvariantCulture);
 

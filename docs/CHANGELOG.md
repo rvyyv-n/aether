@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standalone Kestrel developer streaming host (`tools/host.ps1`, `tools/dev-host`).
 
 ### Fixed
+- Rotating the video from the Video panel no longer squeezes the picture into a narrow strip with black bands; the picture now fills its window area at the rotated shape.
 - Changing hardware decoding, audio passthrough or custom mpv options now applies with Restart engine straight away, without relaunching the app; the video carries on where it was.
 - A video opened at launch (command line, Open with, Play with Aether) opens again and shows its picture instead of playing sound only.
 - Fixed Settings content layout squishing and extra dead space by ensuring content column expands up to max-width without false centering.

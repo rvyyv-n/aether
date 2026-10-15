@@ -1527,8 +1527,7 @@ public sealed partial class MainPage : Page
     /// <summary>Sizes the surface to the video's display aspect ratio, centred in the host.</summary>
     private void FitVideo()
     {
-        int width = _session?.ViewModel.VideoWidth ?? 0;
-        int height = _session?.ViewModel.VideoHeight ?? 0;
+        (int width, int height) = DisplayedVideoSize();
         double hostWidth = VideoHost.ActualWidth;
         double hostHeight = VideoHost.ActualHeight;
         if (width <= 0 || height <= 0 || hostWidth <= 0 || hostHeight <= 0)
@@ -1557,8 +1556,7 @@ public sealed partial class MainPage : Page
     private void SyncWindowToVideo()
     {
         _windowSyncQueued = false;
-        int width = _session?.ViewModel.VideoWidth ?? 0;
-        int height = _session?.ViewModel.VideoHeight ?? 0;
+        (int width, int height) = DisplayedVideoSize();
         if (width <= 0 || height <= 0)
         {
             _host?.SetVideoAspect(0);
