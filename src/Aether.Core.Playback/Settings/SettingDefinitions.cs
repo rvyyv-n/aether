@@ -59,6 +59,10 @@ public static class SettingKeys
     public const string ShortcutOpenUrl = "shortcuts.openUrl";
     public const string ShortcutSkipBack = "shortcuts.skipBack";
     public const string ShortcutSkipForward = "shortcuts.skipForward";
+    public const string ShortcutSkipBackFine = "shortcuts.skipBackFine";
+    public const string ShortcutSkipForwardFine = "shortcuts.skipForwardFine";
+    public const string ShortcutSkipBackLong = "shortcuts.skipBackLong";
+    public const string ShortcutSkipForwardLong = "shortcuts.skipForwardLong";
     public const string ShortcutSetIn = "shortcuts.setIn";
     public const string ShortcutSetOut = "shortcuts.setOut";
     public const string ShortcutPlayPause = "shortcuts.playPause";
@@ -216,6 +220,10 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutOpenUrl, s => s.ShortcutOpenUrl, (s, v) => s with { ShortcutOpenUrl = v }),
         Shortcut(SettingKeys.ShortcutSkipBack, s => s.ShortcutSkipBack, (s, v) => s with { ShortcutSkipBack = v }),
         Shortcut(SettingKeys.ShortcutSkipForward, s => s.ShortcutSkipForward, (s, v) => s with { ShortcutSkipForward = v }),
+        Shortcut(SettingKeys.ShortcutSkipBackFine, s => s.ShortcutSkipBackFine, (s, v) => s with { ShortcutSkipBackFine = v }),
+        Shortcut(SettingKeys.ShortcutSkipForwardFine, s => s.ShortcutSkipForwardFine, (s, v) => s with { ShortcutSkipForwardFine = v }),
+        Shortcut(SettingKeys.ShortcutSkipBackLong, s => s.ShortcutSkipBackLong, (s, v) => s with { ShortcutSkipBackLong = v }),
+        Shortcut(SettingKeys.ShortcutSkipForwardLong, s => s.ShortcutSkipForwardLong, (s, v) => s with { ShortcutSkipForwardLong = v }),
         Shortcut(SettingKeys.ShortcutSetIn, s => s.ShortcutSetIn, (s, v) => s with { ShortcutSetIn = v }),
         Shortcut(SettingKeys.ShortcutSetOut, s => s.ShortcutSetOut, (s, v) => s with { ShortcutSetOut = v }),
         Shortcut(SettingKeys.ShortcutPlayPause, s => s.ShortcutPlayPause, (s, v) => s with { ShortcutPlayPause = v }),

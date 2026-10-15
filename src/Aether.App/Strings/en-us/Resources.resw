@@ -781,6 +781,18 @@
   <data name="Settings_Shortcuts_Forward5s" xml:space="preserve">
     <value>Forward 5 s</value>
   </data>
+  <data name="Settings_Shortcuts_Back1s" xml:space="preserve">
+    <value>Back 1 s</value>
+  </data>
+  <data name="Settings_Shortcuts_Forward1s" xml:space="preserve">
+    <value>Forward 1 s</value>
+  </data>
+  <data name="Settings_Shortcuts_Back30s" xml:space="preserve">
+    <value>Back 30 s</value>
+  </data>
+  <data name="Settings_Shortcuts_Forward30s" xml:space="preserve">
+    <value>Forward 30 s</value>
+  </data>
   <data name="Settings_Shortcuts_Back1Frame" xml:space="preserve">
     <value>Back 1 frame</value>
   </data>

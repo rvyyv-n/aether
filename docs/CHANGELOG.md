@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Seek modifiers: `Shift+←/→` skips 1 second and `Ctrl+←/→` skips 30 seconds (plain arrows stay 5 seconds); all four keys are changeable on the Shortcuts page.
 - Clip export shortcut: `Ctrl+E` exports the marked clip (changeable on the Shortcuts page), and shows a toast when no In and Out are set.
 - Link Playback (yt-dlp, Pass 9):
   - Stream resolution with yt-dlp: resolves YouTube and 1000+ streaming sites using `--dump-json`, passing extracted direct stream URLs and required HTTP headers directly to libmpv.

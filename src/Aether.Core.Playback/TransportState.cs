@@ -22,6 +22,12 @@ public static class TransportState
     /// <summary>Back and Forward 5 s (← and →).</summary>
     public const double SkipSeconds = 5;
 
+    /// <summary>Shift+← and Shift+→.</summary>
+    public const double FineSkipSeconds = 1;
+
+    /// <summary>Ctrl+← and Ctrl+→.</summary>
+    public const double LongSkipSeconds = 30;
+
     public static PlayButtonAction PlayButton(PlaybackStatus status) => status switch
     {
         PlaybackStatus.Ended => PlayButtonAction.Replay,

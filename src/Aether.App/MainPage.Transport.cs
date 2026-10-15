@@ -140,6 +140,18 @@ public sealed partial class MainPage
     private void OnForwardAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
         OnTransportKey(args, () => SkipBy(TransportState.SkipSeconds));
 
+    private void OnBackFineAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, () => SkipBy(-TransportState.FineSkipSeconds));
+
+    private void OnForwardFineAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, () => SkipBy(TransportState.FineSkipSeconds));
+
+    private void OnBackLongAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, () => SkipBy(-TransportState.LongSkipSeconds));
+
+    private void OnForwardLongAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, () => SkipBy(TransportState.LongSkipSeconds));
+
     private void OnBackFrameClick(object sender, RoutedEventArgs e) => StepFrame(FrameStepDirection.Backward);
 
     private void OnForwardFrameClick(object sender, RoutedEventArgs e) => StepFrame(FrameStepDirection.Forward);

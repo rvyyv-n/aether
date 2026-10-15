@@ -101,6 +101,10 @@ public sealed record AetherSettings
     public string ShortcutOpenUrl { get; init; } = "";
     public string ShortcutSkipBack { get; init; } = "";
     public string ShortcutSkipForward { get; init; } = "";
+    public string ShortcutSkipBackFine { get; init; } = "";
+    public string ShortcutSkipForwardFine { get; init; } = "";
+    public string ShortcutSkipBackLong { get; init; } = "";
+    public string ShortcutSkipForwardLong { get; init; } = "";
     public string ShortcutSetIn { get; init; } = "";
     public string ShortcutSetOut { get; init; } = "";
     public string ShortcutPlayPause { get; init; } = "";
