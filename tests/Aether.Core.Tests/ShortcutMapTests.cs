@@ -38,6 +38,7 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.Settings, "Ctrl+Comma")]
     [InlineData(ShortcutAction.CopyFrame, "Ctrl+C")]
     [InlineData(ShortcutAction.SaveFrame, "Ctrl+Shift+S")]
+    [InlineData(ShortcutAction.ExportClip, "Ctrl+E")]
     public void Defaults_Are_Todays_Keys(ShortcutAction action, string expected)
     {
         Assert.Equal([expected], Defaults(action));

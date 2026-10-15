@@ -195,7 +195,27 @@ public sealed partial class ClipDrawer : UserControl
 
     // ---- Export ----
 
-    private async void OnExportClick(object sender, RoutedEventArgs e)
+    /// <summary>The export shortcut: exports the marked clip, or says nothing is marked.</summary>
+    public void RequestExport()
+    {
+        if (!_range.IsComplete)
+        {
+            AppToasts.Show("clip-unmarked", AppStrings.Get("Toast_ClipNothingMarked"), ToastTone.Neutral);
+            return;
+        }
+        if (!_ffmpegChecked || App.ClipExport.IsFfmpegAvailable)
+        {
+            ExportClip();
+        }
+        else
+        {
+            AppToasts.Show("clip-ffmpeg", AppStrings.Get("Clips_NeedsFfmpeg"), ToastTone.Neutral);
+        }
+    }
+
+    private void OnExportClick(object sender, RoutedEventArgs e) => ExportClip();
+
+    private async void ExportClip()
     {
         if (_sourcePath is not { } source || !_range.IsComplete)
         {

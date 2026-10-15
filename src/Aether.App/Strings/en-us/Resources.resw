@@ -832,6 +832,9 @@
   <data name="Settings_Shortcuts_SaveFrame" xml:space="preserve">
     <value>Save frame</value>
   </data>
+  <data name="Settings_Shortcuts_ExportClip" xml:space="preserve">
+    <value>Export clip</value>
+  </data>
   <data name="Settings_Shortcuts_Diagnostics" xml:space="preserve">
     <value>Diagnostics</value>
   </data>
@@ -1313,4 +1316,4 @@
   <data name="Settings_About_Architecture" xml:space="preserve">
     <value>Architecture</value>
   </data>
-<data name="Toast_ClipStreamNotSupported" xml:space="preserve"><value>Save the file first to export clips</value></data><data name="EmptyState_SubtitleWithLink" xml:space="preserve"><value>Drop a file, paste a link or press {0}</value></data></root>
+<data name="Toast_ClipNothingMarked" xml:space="preserve"><value>Mark a clip first: set In and Out</value></data><data name="Toast_ClipStreamNotSupported" xml:space="preserve"><value>Save the file first to export clips</value></data><data name="EmptyState_SubtitleWithLink" xml:space="preserve"><value>Drop a file, paste a link or press {0}</value></data></root>

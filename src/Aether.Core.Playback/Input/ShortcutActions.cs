@@ -28,6 +28,7 @@ public static class ShortcutActions
         ShortcutAction.Settings => SettingKeys.ShortcutSettings,
         ShortcutAction.CopyFrame => SettingKeys.ShortcutCopyFrame,
         ShortcutAction.SaveFrame => SettingKeys.ShortcutSaveFrame,
+        ShortcutAction.ExportClip => SettingKeys.ShortcutExportClip,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 
@@ -62,6 +63,7 @@ public static class ShortcutActions
         ShortcutAction.Settings => [new KeyCombination(KeyCombination.OemComma, KeyModifiers.Ctrl)],
         ShortcutAction.CopyFrame => [KeyCombination.Letter('C', KeyModifiers.Ctrl)],
         ShortcutAction.SaveFrame => [KeyCombination.Letter('S', KeyModifiers.Ctrl | KeyModifiers.Shift)],
+        ShortcutAction.ExportClip => [KeyCombination.Letter('E', KeyModifiers.Ctrl)],
         _ => [],
     };
 

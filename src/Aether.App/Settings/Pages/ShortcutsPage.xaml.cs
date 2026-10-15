@@ -43,7 +43,7 @@ public sealed partial class ShortcutsPage : Page
         PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Back1Frame", ","));
         PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Forward1Frame", "."));
         Add(PlaybackGroup, ShortcutAction.Mute, ShortcutAction.Loop, ShortcutAction.CopyFrame, ShortcutAction.SaveFrame);
-        Add(NavigationGroup, ShortcutAction.OpenFile, ShortcutAction.OpenUrl, ShortcutAction.SetIn, ShortcutAction.SetOut);
+        Add(NavigationGroup, ShortcutAction.OpenFile, ShortcutAction.OpenUrl, ShortcutAction.SetIn, ShortcutAction.SetOut, ShortcutAction.ExportClip);
         Add(WindowGroup, ShortcutAction.FullScreen);
         WindowGroup.Children.Add(FixedRow("Settings_Shortcuts_LeaveFullScreen", "Esc"));
         Add(WindowGroup, ShortcutAction.AlwaysOnTop, ShortcutAction.Diagnostics, ShortcutAction.Settings);

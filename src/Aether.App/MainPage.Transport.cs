@@ -295,6 +295,9 @@ public sealed partial class MainPage
     private void OnSetOutAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
         OnTransportKey(args, () => SetClipRange(_clipRange.SetOut(CurrentPosition())));
 
+    private void OnExportClipAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, ClipDrawer.RequestExport);
+
     private double CurrentPosition() =>
         _session is { } session ? TransportState.DisplayPosition(session.ViewModel.State) : 0;
 

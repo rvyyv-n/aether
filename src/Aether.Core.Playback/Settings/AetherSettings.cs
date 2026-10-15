@@ -112,4 +112,5 @@ public sealed record AetherSettings
     public string ShortcutSettings { get; init; } = "";
     public string ShortcutCopyFrame { get; init; } = "";
     public string ShortcutSaveFrame { get; init; } = "";
+    public string ShortcutExportClip { get; init; } = "";
 }

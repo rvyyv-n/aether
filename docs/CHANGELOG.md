@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Clip export shortcut: `Ctrl+E` exports the marked clip (changeable on the Shortcuts page), and shows a toast when no In and Out are set.
 - Link Playback (yt-dlp, Pass 9):
   - Stream resolution with yt-dlp: resolves YouTube and 1000+ streaming sites using `--dump-json`, passing extracted direct stream URLs and required HTTP headers directly to libmpv.
   - Stream failure handling & user recovery: classified errors (private video, sign-in required, region-blocked, live not started, offline, unsupported site, missing yt-dlp) with actionable recovery options: Retry, Edit link, Open in browser, and Cancel.

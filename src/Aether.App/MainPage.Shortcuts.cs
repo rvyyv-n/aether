@@ -141,6 +141,7 @@ public sealed partial class MainPage
         ShortcutAction.Settings => OnSettingsAccelerator,
         ShortcutAction.CopyFrame => OnCopyFrameAccelerator,
         ShortcutAction.SaveFrame => OnSaveFrameAccelerator,
+        ShortcutAction.ExportClip => OnExportClipAccelerator,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 
