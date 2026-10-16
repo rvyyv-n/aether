@@ -144,6 +144,7 @@ public sealed partial class MainPage
         ShortcutAction.Mute => OnMuteAccelerator,
         ShortcutAction.Loop => OnLoopAccelerator,
         ShortcutAction.AlwaysOnTop => OnAlwaysOnTopAccelerator,
+        ShortcutAction.PictureInPicture => OnPictureInPictureAccelerator,
         ShortcutAction.Diagnostics => OnDiagnosticsAccelerator,
         ShortcutAction.Settings => OnSettingsAccelerator,
         ShortcutAction.CopyFrame => OnCopyFrameAccelerator,

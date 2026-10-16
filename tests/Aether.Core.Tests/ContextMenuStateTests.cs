@@ -23,12 +23,12 @@ public class ContextMenuStateTests
         Assert.True(Playing.Video);
         Assert.True(Playing.CopyFrame);
         Assert.True(Playing.SaveFrame);
+        Assert.True(Playing.PictureInPicture);
     }
 
     [Fact]
     public void Entries_Whose_Work_Is_Not_Built_Stay_Disabled()
     {
-        Assert.False(Playing.PictureInPicture);
         Assert.False(Playing.Stream);
     }
 
@@ -56,6 +56,7 @@ public class ContextMenuStateTests
         Assert.False(idle.Video);
         Assert.False(idle.CopyFrame);
         Assert.False(idle.SaveFrame);
+        Assert.False(idle.PictureInPicture);
         Assert.False(idle.Clips);
         Assert.False((Playing with { ClipCount = 0 }).Clips);
     }

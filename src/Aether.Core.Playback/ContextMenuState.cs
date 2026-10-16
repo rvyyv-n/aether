@@ -1,8 +1,7 @@
 namespace Aether.Core.Playback;
 
 /// <summary>
-/// Which entries of the right-click menu (screen 9.1) can be used right now. Picture in picture stays off until
-/// the work behind it lands (Pass 8).
+/// Which entries of the right-click menu (screen 9.1) can be used right now.
 /// </summary>
 /// <param name="EngineReady">The engine is up, so a file or link can be opened.</param>
 /// <param name="HasVideo">A file is open (playing, paused or ended).</param>
@@ -31,7 +30,8 @@ public sealed record ContextMenuState(bool EngineReady, bool HasVideo, int Recen
 
     public bool SaveFrame => HasVideo;
 
-    public bool PictureInPicture => false;
+    /// <summary>Picture in picture floats the open video; in the overlay the same entry goes back to the full window.</summary>
+    public bool PictureInPicture => HasVideo;
 
     public bool AlwaysOnTop => HasWindow;
 

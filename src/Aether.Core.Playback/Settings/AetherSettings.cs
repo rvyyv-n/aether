@@ -114,6 +114,7 @@ public sealed record AetherSettings
     public string ShortcutMute { get; init; } = "";
     public string ShortcutLoop { get; init; } = "";
     public string ShortcutAlwaysOnTop { get; init; } = "";
+    public string ShortcutPictureInPicture { get; init; } = "";
     public string ShortcutDiagnostics { get; init; } = "";
     public string ShortcutSettings { get; init; } = "";
     public string ShortcutCopyFrame { get; init; } = "";

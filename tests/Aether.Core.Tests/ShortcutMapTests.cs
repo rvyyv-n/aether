@@ -38,6 +38,7 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.Mute, "M")]
     [InlineData(ShortcutAction.Loop, "L")]
     [InlineData(ShortcutAction.AlwaysOnTop, "T")]
+    [InlineData(ShortcutAction.PictureInPicture, "P")]
     [InlineData(ShortcutAction.Diagnostics, "Ctrl+I")]
     [InlineData(ShortcutAction.Settings, "Ctrl+Comma")]
     [InlineData(ShortcutAction.CopyFrame, "Ctrl+C")]

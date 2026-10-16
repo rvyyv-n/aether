@@ -138,7 +138,7 @@ public sealed partial class MainPage
         {
             return;
         }
-        bool available = _chrome.IsVisible && !_settingsShown && _openUrl.Stage != OpenUrlStage.Editing;
+        bool available = _chrome.IsVisible && !_settingsShown && _openUrl.Stage != OpenUrlStage.Editing && !IsPictureInPicture;
         _rail.SetAvailable(available);
         _rail.SetDragging(_dragging || _pointerHeld || ClipDrawer.IsDraggingOut);
         RailHotZone.Visibility = available ? Visibility.Visible : Visibility.Collapsed;

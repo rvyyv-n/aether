@@ -152,6 +152,9 @@ public sealed partial class MainPage : Page
         AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
         ApplyTransportStrings();
         ApplyShortcutLabels();
+        string backToFull = AppStrings.Get("Pip_BackToFullWindow");
+        ToolTipService.SetToolTip(PipBackButton, backToFull);
+        AutomationProperties.SetName(PipBackButton, backToFull);
         RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
     }
@@ -170,6 +173,7 @@ public sealed partial class MainPage : Page
             if (_host is not null)
             {
                 _host.FullScreenChanged -= OnFullScreenChanged;
+                _host.PictureInPictureChanged -= OnPictureInPictureChanged;
                 _host.TitleBarPointerMoved -= OnTitleBarPointerMoved;
                 _host.AlwaysOnTopChanged -= OnAlwaysOnTopChanged;
             }
@@ -177,6 +181,7 @@ public sealed partial class MainPage : Page
             if (_host is not null)
             {
                 _host.FullScreenChanged += OnFullScreenChanged;
+                _host.PictureInPictureChanged += OnPictureInPictureChanged;
                 _host.TitleBarPointerMoved += OnTitleBarPointerMoved;
                 _host.AlwaysOnTopChanged += OnAlwaysOnTopChanged;
             }
@@ -585,6 +590,7 @@ public sealed partial class MainPage : Page
         }
         DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
         SyncClipRange();
+        UpdatePipSeek(vm);
         SeekBar.Duration = vm.Duration;
         double position = TransportState.DisplayPosition(vm.State);
         SeekBar.Position = position;
@@ -671,6 +677,10 @@ public sealed partial class MainPage : Page
     private void SetDiagnosticsShown(bool show)
     {
         _diagnosticsShown = show;
+        if (show)
+        {
+            LeavePictureInPicture();
+        }
         if (show && _session is { } session)
         {
             Diagnostics.Update(session.ViewModel.State);
@@ -820,7 +830,17 @@ public sealed partial class MainPage : Page
 
     private void OnFullScreenClick(object sender, RoutedEventArgs e) => ToggleFullScreen();
 
-    private void OnVideoDoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => ToggleFullScreen();
+    private void OnVideoDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (IsPictureInPicture)
+        {
+            LeavePictureInPicture();
+        }
+        else
+        {
+            ToggleFullScreen();
+        }
+    }
 
     private void ToggleFullScreen()
     {
@@ -958,6 +978,7 @@ public sealed partial class MainPage : Page
         if (shown)
         {
             SettingsHost.Child ??= new SettingsView();
+            LeavePictureInPicture();
             _host?.SetFullScreen(false);
         }
         if (_fader is null)
@@ -1020,6 +1041,7 @@ public sealed partial class MainPage : Page
         }
 
         EndTour();
+        LeavePictureInPicture();
         _openUrl.Open(clipboard);
         OpenUrlBox.Text = _openUrl.Text;
         if (_fader is null)
@@ -1541,6 +1563,8 @@ public sealed partial class MainPage : Page
             }
             _fader.Fade(TopScrim, visible);
             _fader.Fade(TitleBar, visible);
+            _fader.Fade(PipChrome, visible);
+            PipChrome.IsHitTestVisible = visible;
             _fader.Fade(Osd, visible);
             VideoSurface.FadeBackdrop(visible, _fader.DurationMilliseconds(visible));
             Osd.IsHitTestVisible = visible;
@@ -1552,7 +1576,8 @@ public sealed partial class MainPage : Page
         SyncRail(applyChrome: false);
         UpdateCursor();
         UpdateToastPlacement();
-        _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog | ChromeHolds.Tour)) != 0);
+        // Toasts wait for the full window: in the overlay they would cover most of the picture.
+        _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog | ChromeHolds.Tour)) != 0 || IsPictureInPicture);
 
         if (_chromeTimer is null)
         {
@@ -1643,27 +1668,39 @@ public sealed partial class MainPage : Page
     /// <summary>Brings every view element in line with the startup, playback, drag and window state.</summary>
     private void Render()
     {
-        bool hasVideo = HasVideo && !_settingsShown;
-        bool fullScreen = _host?.IsFullScreen == true;
         PlayerViewModel? vm = _session?.ViewModel;
+        bool pip = IsPictureInPicture;
+        if (pip && PictureInPicture.EndsOn(vm?.Status ?? PlaybackStatus.Idle))
+        {
+            LeavePictureInPicture(); // raises PictureInPictureChanged, which renders again
+            return;
+        }
+        // Between two files of a folder the overlay keeps its look rather than flashing the home screen.
+        bool hasVideo = (HasVideo || pip) && !_settingsShown;
+        bool fullScreen = _host?.IsFullScreen == true;
 
         // Video, scrims and controls.
         VideoSurface.Opacity = hasVideo ? 1 : 0;
-        VideoHost.Background = fullScreen && hasVideo
+        VideoHost.Background = (fullScreen || pip) && hasVideo
             ? (Brush)Application.Current.Resources["AetherSurfaceLetterboxBrush"]
             : null;
         HomeView.Visibility = !_settingsShown && (!hasVideo || _dragging) ? Visibility.Visible : Visibility.Collapsed;
         DropScrim.Visibility = hasVideo && _dragging ? Visibility.Visible : Visibility.Collapsed;
         DropOutline.Visibility = _dragging ? Visibility.Visible : Visibility.Collapsed;
-        Osd.Visibility = hasVideo ? Visibility.Visible : Visibility.Collapsed;
+        Osd.Visibility = hasVideo && !pip ? Visibility.Visible : Visibility.Collapsed;
         ClipLayer.Visibility = Osd.Visibility;
-        VideoSurface.SetBackdropActive(hasVideo);
+        PipChrome.Visibility = hasVideo && pip ? Visibility.Visible : Visibility.Collapsed;
+        // ADR-0013: no blur in picture in picture; there is no card to blur behind.
+        VideoSurface.SetBackdropActive(hasVideo && !pip);
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         PlaceRail();
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         string? fileName = _streamTitle ?? (HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null);
         TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");
+        TitleText.Visibility = pip ? Visibility.Collapsed : Visibility.Visible;
+        SettingsButton.Visibility = pip || _settingsShown ? Visibility.Collapsed : Visibility.Visible;
+        PipBackButton.Visibility = pip ? Visibility.Visible : Visibility.Collapsed;
         // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
         TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
         TitleBadgeText.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
@@ -1678,6 +1715,9 @@ public sealed partial class MainPage : Page
         PlayPauseButton.Content = glyph;
         ToolTipService.SetToolTip(PlayPauseButton, label);
         AutomationProperties.SetName(PlayPauseButton, label);
+        PipPlayPauseButton.Content = glyph;
+        ToolTipService.SetToolTip(PipPlayPauseButton, label);
+        AutomationProperties.SetName(PipPlayPauseButton, label);
         FullScreenButton.Content = fullScreen ? ExitFullScreenGlyph : FullScreenGlyph;
         ToolTipService.SetToolTip(FullScreenButton, fullScreen ? AppStrings.Get("Transport_ExitFullScreen") : Tip("Transport_FullScreen", ShortcutAction.FullScreen));
 

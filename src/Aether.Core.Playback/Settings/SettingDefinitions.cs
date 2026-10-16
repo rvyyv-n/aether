@@ -71,6 +71,7 @@ public static class SettingKeys
     public const string ShortcutMute = "shortcuts.mute";
     public const string ShortcutLoop = "shortcuts.loop";
     public const string ShortcutAlwaysOnTop = "shortcuts.alwaysOnTop";
+    public const string ShortcutPictureInPicture = "shortcuts.pictureInPicture";
     public const string ShortcutDiagnostics = "shortcuts.diagnostics";
     public const string ShortcutSettings = "shortcuts.settings";
     public const string ShortcutCopyFrame = "shortcuts.copyFrame";
@@ -233,6 +234,7 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutMute, s => s.ShortcutMute, (s, v) => s with { ShortcutMute = v }),
         Shortcut(SettingKeys.ShortcutLoop, s => s.ShortcutLoop, (s, v) => s with { ShortcutLoop = v }),
         Shortcut(SettingKeys.ShortcutAlwaysOnTop, s => s.ShortcutAlwaysOnTop, (s, v) => s with { ShortcutAlwaysOnTop = v }),
+        Shortcut(SettingKeys.ShortcutPictureInPicture, s => s.ShortcutPictureInPicture, (s, v) => s with { ShortcutPictureInPicture = v }),
         Shortcut(SettingKeys.ShortcutDiagnostics, s => s.ShortcutDiagnostics, (s, v) => s with { ShortcutDiagnostics = v }),
         Shortcut(SettingKeys.ShortcutSettings, s => s.ShortcutSettings, (s, v) => s with { ShortcutSettings = v }),
         Shortcut(SettingKeys.ShortcutCopyFrame, s => s.ShortcutCopyFrame, (s, v) => s with { ShortcutCopyFrame = v }),

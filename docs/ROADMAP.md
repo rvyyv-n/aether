@@ -231,7 +231,7 @@ Mockups: screens 8.3–8.4.
 
 | # | Task | Effort |
 |:---|:---|:---:|
-| 8.1 | Picture in picture: `AppWindow` CompactOverlay presenter at 400×225 (spike first: confirm the minimum size), hover controls, "Back to full window" beside the system close button, `P` shortcut (ignored when a text field has focus) | M |
+| 8.1 | Picture in picture: `AppWindow` CompactOverlay presenter at 400×225 (spike first: confirm the minimum size), hover controls, "Back to full window" beside the system close button, `P` shortcut (ignored when a text field has focus) — **Done** (size test in `docs/reviews/pass-8-pip-spike.md`: Windows allows 400×225 and much smaller, and shows only its Close button. P or the right-click entry floats the video edge to edge at 400×225 in the bottom-right corner, then where it was last left. On hover a dark shade at the top holds Back to full window beside Close, with a play button in the middle and a thin line along the bottom to seek. Back, P, a double-click or Close all return to the full window; Esc does not. P is also changeable on the Shortcuts page. Not yet checked on screen) | M |
 | 8.2 | Engine hand-over between the main window and the overlay window without a decode restart (swap chain, device and lifetime safety) — **Done** (one window that changes shape instead of two, ADR-0022: the video engine, its render thread and the picture never move, so nothing restarts; spec in `docs/reviews/pass-8-pip-handover-spec.md` covers the order of the switch, closing the small window and the edge cases) | M |
 | 8.3 | Tests for the hand-over lifecycle and picture-in-picture state transitions | S |
 

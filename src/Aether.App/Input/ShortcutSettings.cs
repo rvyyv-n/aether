@@ -137,6 +137,7 @@ public sealed class ShortcutSettings
         ShortcutAction.Mute => "Settings_Shortcuts_Mute",
         ShortcutAction.Loop => "Settings_Shortcuts_Loop",
         ShortcutAction.AlwaysOnTop => "Settings_Shortcuts_AlwaysOnTop",
+        ShortcutAction.PictureInPicture => "Settings_Shortcuts_PictureInPicture",
         ShortcutAction.Diagnostics => "Settings_Shortcuts_Diagnostics",
         ShortcutAction.Settings => "Settings_Shortcuts_Settings",
         ShortcutAction.CopyFrame => "Settings_Shortcuts_CopyFrame",

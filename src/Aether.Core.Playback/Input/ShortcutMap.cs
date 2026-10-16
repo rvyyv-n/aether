@@ -121,6 +121,7 @@ public sealed class ShortcutMap
         ShortcutAction.Mute => settings.ShortcutMute,
         ShortcutAction.Loop => settings.ShortcutLoop,
         ShortcutAction.AlwaysOnTop => settings.ShortcutAlwaysOnTop,
+        ShortcutAction.PictureInPicture => settings.ShortcutPictureInPicture,
         ShortcutAction.Diagnostics => settings.ShortcutDiagnostics,
         ShortcutAction.Settings => settings.ShortcutSettings,
         ShortcutAction.CopyFrame => settings.ShortcutCopyFrame,

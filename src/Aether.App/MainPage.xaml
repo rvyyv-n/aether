@@ -179,6 +179,7 @@
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem
                         x:Name="CtxPictureInPicture"
+                        Click="OnPictureInPictureMenuClick"
                         KeyboardAcceleratorTextOverride="P"
                         MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
@@ -592,6 +593,47 @@
         </Rectangle>
 
         <!--
+            Picture in picture (8.1): over the edge-to-edge video, a 48 round play/pause in the centre and a thin
+            progress line along the bottom edge (click to seek, no times). Fades with the chrome; the top shade is
+            the TopScrim and "Back to full window" sits in the title bar.
+        -->
+        <Grid
+            x:Name="PipChrome"
+            Visibility="Collapsed">
+            <Button
+                x:Name="PipPlayPauseButton"
+                Width="{StaticResource AetherSizePipPlay}"
+                Height="{StaticResource AetherSizePipPlay}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Click="OnPlayPauseClick"
+                Content="&#xF5B0;"
+                CornerRadius="24"
+                FontSize="{StaticResource AetherSizePipPlayIcon}"
+                Style="{StaticResource AetherPlayButtonStyle}" />
+            <Grid
+                x:Name="PipSeekLine"
+                Height="16"
+                VerticalAlignment="Bottom"
+                Background="Transparent"
+                PointerPressed="OnPipSeekPressed">
+                <Rectangle
+                    Height="{StaticResource AetherSizePipSeekLine}"
+                    VerticalAlignment="Bottom"
+                    Fill="{StaticResource AetherFillProgressTrackBrush}" />
+                <Rectangle
+                    Height="{StaticResource AetherSizePipSeekLine}"
+                    VerticalAlignment="Bottom"
+                    Fill="{StaticResource AetherTextPrimaryBrush}"
+                    RenderTransformOrigin="0,0.5">
+                    <Rectangle.RenderTransform>
+                        <ScaleTransform x:Name="PipSeekScale" ScaleX="0" />
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+            </Grid>
+        </Grid>
+
+        <!--
             Settings (6.1): fills the window under the title bar, straight on the backdrop. Created on first open.
         -->
         <Border
@@ -627,6 +669,7 @@
                     Shared baseline at y 20: both texts trim to their baseline and sit on the panel's bottom edge.
                 -->
                 <StackPanel
+                    x:Name="TitleText"
                     Height="20"
                     Margin="16,0,0,0"
                     VerticalAlignment="Top"
@@ -662,6 +705,15 @@
                 Click="OnSettingsClick"
                 Content="&#xE713;"
                 Style="{StaticResource AetherTitleBarButtonStyle}" />
+            <!--  Picture in picture only, in place of the gear: back to the full window, beside the system Close.  -->
+            <Button
+                x:Name="PipBackButton"
+                Grid.Column="2"
+                Width="{StaticResource AetherSizePipBackButton}"
+                Click="OnPipBackClick"
+                Content="&#xEE47;"
+                Style="{StaticResource AetherTitleBarButtonStyle}"
+                Visibility="Collapsed" />
             <!--  The window sets the width to the system's real caption-button inset; 138 is the 100% default.  -->
             <Border
                 x:Name="CaptionReserve"
