@@ -1,5 +1,8 @@
 using System.Globalization;
 using Aether.Core.Playback.Settings;
+using Microsoft.UI.Input;
+using Microsoft.UI.Xaml;
+using Windows.UI.Core;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Controls;
@@ -27,8 +30,7 @@ public sealed partial class SubtitlesPage : Page
             "Settings_PreferredSubtitleLang_Title", allowCustom: true);
 
         // Font and size share one row, so each box is named for what it sets rather than for the row.
-        binder.Choose(SubtitleFontRow, SubtitleFontCombo, SettingKeys.SubtitleFont, [.. SubtitleFonts.Select(f => new Choice(f, f))],
-            "Settings_FontAndSize_Title", allowCustom: true);
+        BindFont(binder);
         binder.Choose(SubtitleFontRow, SubtitleSizeCombo, SettingKeys.SubtitleSize,
             [
                 new("small", AppStrings.Get("Settings_SubtitleSize_Small")),
@@ -86,20 +88,87 @@ public sealed partial class SubtitlesPage : Page
 
         AutomationProperties.SetName(SubtitleColorCombo,AppStrings.Get("Settings_SubtitleColor_Title"));
         AutomationProperties.SetName(SubtitlePositionCombo, AppStrings.Get("Settings_SubtitlePosition_Title"));
-        AutomationProperties.SetName(SubtitleFontCombo, AppStrings.Get("Settings_SubtitleFont_Title"));
+        AutomationProperties.SetName(SubtitleFontBox, AppStrings.Get("Settings_SubtitleFont_Title"));
+        AutomationProperties.SetName(SubtitleFontArrow, AppStrings.Get("Settings_SubtitleFont_Title"));
         AutomationProperties.SetName(SubtitleSizeCombo, AppStrings.Get("Settings_SubtitleSize_Title"));
+    }
 
-        // Any installed font can be typed in; a blank box goes back to the default.
-        SubtitleFontCombo.TextSubmitted += (_, e) =>
+    private List<string> _fonts = [];
+
+    // The list opens from the arrow or Alt+Down; typing filters it. A typed name is kept on Enter or when focus leaves,
+    // and a blank box goes back to the default.
+    private void BindFont(SettingsPageBinder binder)
+    {
+        SettingsPageBinder.Describe(SubtitleFontRow, "Settings_FontAndSize_Title", null);
+        bool updating = false;
+
+        void ShowAll()
         {
-            e.Handled = true;
-            string font = e.Text.Trim();
+            SubtitleFontBox.ItemsSource = _fonts;
+            SubtitleFontBox.IsSuggestionListOpen = true;
+        }
+
+        void Commit(string text)
+        {
+            string font = text.Trim();
             bool changed = font.Length == 0 ? App.Settings.Reset(SettingKeys.SubtitleFont) : App.Settings.Set(SettingKeys.SubtitleFont, font);
             if (changed)
             {
                 SettingsSaver.Save();
             }
+        }
+
+        SubtitleFontBox.TextChanged += (box, e) =>
+        {
+            if (!updating && e.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+            {
+                box.ItemsSource = FontList.Filter(_fonts, box.Text);
+            }
         };
+        SubtitleFontBox.QuerySubmitted += (_, e) => Commit(e.ChosenSuggestion as string ?? e.QueryText);
+        SubtitleFontBox.LostFocus += (_, _) => Commit(SubtitleFontBox.Text);
+        SubtitleFontBox.KeyDown += (_, e) =>
+        {
+            if (e.Key == Windows.System.VirtualKey.Down
+                && InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Menu).HasFlag(CoreVirtualKeyStates.Down))
+            {
+                e.Handled = true;
+                ShowAll();
+            }
+        };
+        SubtitleFontArrow.Click += (_, _) =>
+        {
+            SubtitleFontBox.Focus(FocusState.Programmatic);
+            ShowAll();
+        };
+
+        binder.Track(() =>
+        {
+            string stored = App.Settings.Get(SettingKeys.SubtitleFont) as string ?? "";
+            if (!_fonts.Contains(stored, StringComparer.OrdinalIgnoreCase))
+            {
+                _fonts = FontList.Build(_fonts.Count == 0 ? SubtitleFonts : _fonts, stored);
+            }
+            // Never overwrite what is being typed.
+            if (SubtitleFontBox.Text != stored && SubtitleFontBox.FocusState == FocusState.Unfocused)
+            {
+                updating = true;
+                SubtitleFontBox.Text = stored;
+                updating = false;
+            }
+        });
+
+        // Reading every installed font takes a moment, so it happens off the UI thread.
+        _ = LoadInstalledFontsAsync();
+    }
+
+    private async Task LoadInstalledFontsAsync()
+    {
+        List<string> installed = await Task.Run(InstalledFonts.Families);
+        if (installed.Count > 0)
+        {
+            _fonts = FontList.Build(installed, App.Settings.Get(SettingKeys.SubtitleFont) as string);
+        }
     }
 
     // The preview follows the same maps as mpv, so what it shows is what the video gets. The outline is not drawn.

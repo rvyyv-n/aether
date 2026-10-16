@@ -16,7 +16,33 @@
         </settings:SettingsRow>
         <settings:SettingsRow x:Name="SubtitleFontRow" Glyph="&#xE8D2;">
             <StackPanel Orientation="Horizontal" Spacing="12">
-                <ComboBox x:Name="SubtitleFontCombo" MinWidth="180" IsEditable="True" Style="{StaticResource AetherSettingsComboStyle}" />
+                <!--  A plain editable ComboBox only opens from its arrow and is flaky about focus, so the box and arrow are built from parts  -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <AutoSuggestBox
+                        x:Name="SubtitleFontBox"
+                        Width="180"
+                        MinHeight="{StaticResource AetherSizeComboHeight}"
+                        Background="{StaticResource AetherFillInputBrush}"
+                        BorderBrush="{StaticResource AetherStrokeControlBrush}"
+                        CornerRadius="4,0,0,4"
+                        UpdateTextOnSelect="True" />
+                    <Button
+                        x:Name="SubtitleFontArrow"
+                        Grid.Column="1"
+                        Width="32"
+                        MinHeight="{StaticResource AetherSizeComboHeight}"
+                        Padding="0"
+                        VerticalAlignment="Stretch"
+                        Background="{StaticResource AetherFillInputBrush}"
+                        BorderBrush="{StaticResource AetherStrokeControlBrush}"
+                        CornerRadius="0,4,4,0">
+                        <FontIcon FontSize="12" Glyph="&#xE70D;" />
+                    </Button>
+                </Grid>
                 <ComboBox x:Name="SubtitleSizeCombo" MinWidth="112" Style="{StaticResource AetherSettingsComboStyle}" />
             </StackPanel>
         </settings:SettingsRow>
