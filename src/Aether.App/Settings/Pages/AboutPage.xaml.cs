@@ -9,6 +9,7 @@ namespace Aether_App.Settings.Pages;
 
 public sealed partial class AboutPage : Page
 {
+    private static readonly Uri Author = new("https://github.com/rvyyv-n");
     private static readonly Uri Repository = new("https://github.com/rvyyv-n/aether");
     private static readonly Uri Issues = new("https://github.com/rvyyv-n/aether/issues");
 
@@ -42,6 +43,12 @@ public sealed partial class AboutPage : Page
         CopyDiagnosticsText.Text = AppStrings.Get("Settings_About_CopyDiagnostics");
         AutomationProperties.SetName(CopyDiagnosticsButton, AppStrings.Get("Settings_About_CopyDiagnostics"));
         CopyDiagnosticsButton.Click += async (_, _) => await CopyDiagnosticsAsync();
+
+        GitHubTitle.Text = AppStrings.Get("Settings_About_GitHub");
+        GitHubDescription.Text = AppStrings.Get("Settings_About_GitHubDescription");
+        AutomationProperties.SetName(GitHubButton, GitHubTitle.Text);
+        AutomationProperties.SetHelpText(GitHubButton, GitHubDescription.Text);
+        GitHubButton.Click += async (_, _) => await Launcher.LaunchUriAsync(Author);
 
         LicencesTitle.Text = AppStrings.Get("Settings_About_Licences");
         LicencesDescription.Text = AppStrings.Get("Settings_About_LicencesDescription");

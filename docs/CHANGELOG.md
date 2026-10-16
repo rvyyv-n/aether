@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Settings › About now has a GitHub row that opens the author's page (github.com/rvyyv-n) in the browser.
+- Saved links in the right-click Recent menu can now be played, the same as from the home screen; Picture in picture and Stream stay greyed out until Pass 8 and Pass 11.
 - Seek modifiers: `Shift+←/→` skips 1 second and `Ctrl+←/→` skips 30 seconds (plain arrows stay 5 seconds); all four keys are changeable on the Shortcuts page.
 - Clip export shortcut: `Ctrl+E` exports the marked clip (changeable on the Shortcuts page), and shows a toast when no In and Out are set.
 - Link Playback (yt-dlp, Pass 9):

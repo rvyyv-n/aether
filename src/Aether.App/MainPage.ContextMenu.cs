@@ -11,8 +11,8 @@ namespace Aether_App;
 
 /// <summary>
 /// The right-click menu (screen 9.1). Audio and Subtitles open the tracks flyout (MainPage.Tracks.cs), Video the video
-/// flyout (MainPage.Video.cs); the frame entries are in MainPage.Frames.cs. Picture in picture stays disabled until
-/// it lands. UI thread only.
+/// flyout (MainPage.Video.cs); the frame entries are in MainPage.Frames.cs. Picture in picture (Pass 8) and Stream
+/// (LAN streaming, Pass 11) stay disabled until the work behind them lands. UI thread only.
 /// </summary>
 public sealed partial class MainPage
 {
@@ -119,7 +119,6 @@ public sealed partial class MainPage
                 Style = itemStyle,
                 MinWidth = RecentItemWidth,
                 MaxWidth = RecentItemWidth,
-                IsEnabled = !recent.IsLink, // links cannot play until streaming lands
             };
             ToolTipService.SetToolTip(item, recent.Location);
             item.Click += OnRecentMenuItemClick;
@@ -136,25 +135,11 @@ public sealed partial class MainPage
         CtxRecent.Items.Add(clear);
     }
 
-    private async void OnRecentMenuItemClick(object sender, RoutedEventArgs e)
+    private void OnRecentMenuItemClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not MenuFlyoutItem { Tag: RecentItem recent } || _session is null)
+        if (sender is MenuFlyoutItem { Tag: RecentItem recent })
         {
-            return;
-        }
-        string path = recent.Location;
-        bool exists = await Task.Run(() => File.Exists(path));
-        if (!_isLoaded)
-        {
-            return;
-        }
-        if (exists)
-        {
-            Open(path);
-        }
-        else
-        {
-            RefreshRecents(); // the row on the empty state turns into its missing form
+            OpenRecent(recent);
         }
     }
 

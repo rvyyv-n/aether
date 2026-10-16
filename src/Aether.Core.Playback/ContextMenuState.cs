@@ -42,7 +42,7 @@ public sealed record ContextMenuState(bool EngineReady, bool HasVideo, int Recen
     /// <summary>The drawer only exists with a video open, and has nothing to show until a clip is saved.</summary>
     public bool Clips => HasVideo && ClipCount > 0;
 
-    /// <summary>Links cannot play until streaming lands, so there is no stream entry to open yet.</summary>
+    /// <summary>Stream is the LAN streaming panel (Pass 11), which does not exist yet.</summary>
     public bool Stream => false;
 
     /// <summary>The Recent submenu shows one line per entry; a missing name falls back to the file or link itself.</summary>

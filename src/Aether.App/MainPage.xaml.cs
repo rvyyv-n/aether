@@ -1299,19 +1299,30 @@ public sealed partial class MainPage : Page
         Render();
     }
 
-    /// <summary>A file that went missing since the list was drawn turns into the missing row instead of opening.</summary>
-    private async void OnRecentOpenRequested(object? sender, EventArgs e)
+    private void OnRecentOpenRequested(object? sender, EventArgs e)
     {
-        if (sender is not RecentRow row || _session is null)
+        if (sender is RecentRow row)
+        {
+            OpenRecent(row.Item);
+        }
+    }
+
+    /// <summary>
+    /// Opens a recents entry from the empty state or the Recent menu. A file that went missing since the list was
+    /// drawn turns into the missing row instead of opening.
+    /// </summary>
+    private async void OpenRecent(RecentItem recent)
+    {
+        if (_session is null)
         {
             return;
         }
-        if (row.Item.IsLink)
+        if (recent.IsLink)
         {
-            StartResolvingStream(row.Item.Location);
+            StartResolvingStream(recent.Location);
             return;
         }
-        string path = row.Item.Location;
+        string path = recent.Location;
         bool exists = await Task.Run(() => File.Exists(path));
         if (!_isLoaded)
         {
