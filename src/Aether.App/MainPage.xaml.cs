@@ -111,6 +111,7 @@ public sealed partial class MainPage : Page
         InitializeTransport();
         InitializeBar();
         InitializeRail();
+        InitializeTour();
         InitializeContextMenu();
         InitializeTracks();
         InitializeVideo();
@@ -256,6 +257,7 @@ public sealed partial class MainPage : Page
         _volumeHoverTimer?.Stop();
         _openUrlTimer?.Stop();
         _copiedTimer?.Stop();
+        EndTour();
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         App.Recents.Changed -= OnRecentsChanged;
         App.Shortcuts.Changed -= OnShortcutsChanged;
@@ -329,6 +331,7 @@ public sealed partial class MainPage : Page
                 }
                 SyncVolume();
                 OpenPending();
+                QueueLaunchTour();
                 break;
             case EngineStartupStatus.MissingBinary:
                 _startup = StartupPhase.MissingBinary;
@@ -439,6 +442,7 @@ public sealed partial class MainPage : Page
         {
             return;
         }
+        EndTour(); // the user has gone on to watch something
         SaveResumePosition(background: true);
         double? startAt = carry?.Position ?? (App.Settings.Current.ResumePlayback ? App.Resume.TryGet(path) : null);
         _currentPath = path;
@@ -898,7 +902,7 @@ public sealed partial class MainPage : Page
 
     private void OnEscapeAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (CloseRail())
+        if (EndTour() || CloseRail())
         {
             args.Handled = true;
         }
@@ -930,8 +934,8 @@ public sealed partial class MainPage : Page
 
     private void OnAnyKeyDown(object sender, KeyRoutedEventArgs e) => NotifyActivity();
 
-    /// <summary>Player keys stand down while the Open URL field or settings has the keyboard.</summary>
-    private bool ArePlayerKeysPaused => IsOpenUrlShown || _settingsShown;
+    /// <summary>Player keys stand down while the Open URL field, settings or the tour has the keyboard.</summary>
+    private bool ArePlayerKeysPaused => IsOpenUrlShown || _settingsShown || _tour.IsActive;
 
     // ---- Settings (6.1) ----
 
@@ -945,6 +949,10 @@ public sealed partial class MainPage : Page
         if (_settingsShown == shown)
         {
             return;
+        }
+        if (shown)
+        {
+            EndTour(); // the gear stays clickable during the tour
         }
         _settingsShown = shown;
         if (shown)
@@ -1011,6 +1019,7 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        EndTour();
         _openUrl.Open(clipboard);
         OpenUrlBox.Text = _openUrl.Text;
         if (_fader is null)
@@ -1117,6 +1126,7 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        EndTour();
         _streamResolutionCts?.Cancel();
         var cts = new CancellationTokenSource();
         _streamResolutionCts = cts;
@@ -1542,7 +1552,7 @@ public sealed partial class MainPage : Page
         SyncRail(applyChrome: false);
         UpdateCursor();
         UpdateToastPlacement();
-        _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog)) != 0);
+        _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog | ChromeHolds.Tour)) != 0);
 
         if (_chromeTimer is null)
         {

@@ -9,6 +9,8 @@ public sealed record AetherSettings
     // General
     public bool BatterySaver { get; init; } = true;
     public bool OpenInRunningWindow { get; init; } = true;
+    /// <summary>The first-run tour (7.26) has been shown; Settings › About can show it again.</summary>
+    public bool TourSeen { get; init; }
 
     // Playback
     public bool PreciseSeeking { get; init; }

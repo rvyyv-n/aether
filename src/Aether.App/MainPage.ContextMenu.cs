@@ -64,6 +64,11 @@ public sealed partial class MainPage
 
     private void OnPageContextRequested(UIElement sender, ContextRequestedEventArgs args)
     {
+        if (_tour.IsActive)
+        {
+            args.Handled = true; // the tour opens the menu itself on its menu step
+            return;
+        }
         // Settings and the Open URL box keep their own right-click (copy and paste).
         if (_settingsShown || IsOpenUrlShown || args.OriginalSource is TextBox)
         {
@@ -148,7 +153,11 @@ public sealed partial class MainPage
     private void OnContextMenuClosed(object? sender, object e)
     {
         HoldForMenu(false);
-        if (!IsOpenUrlShown)
+        if (_tour.IsActive)
+        {
+            TourNextButton.Focus(FocusState.Programmatic);
+        }
+        else if (!IsOpenUrlShown)
         {
             Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
         }

@@ -1137,5 +1137,100 @@
                 </StackPanel>
             </Border>
         </Grid>
+
+        <!--
+            First-run tour (7.26, docs/reviews/pass-7-first-run-tour-spec.md). The scrim starts under the title bar,
+            which stays live; its hole and the ring are placed per frame from MainPage.Tour.cs as the light moves. The
+            blocker keeps clicks off the controls underneath. The card is placed beside each target in code.
+        -->
+        <Grid
+            x:Name="TourLayer"
+            SizeChanged="OnTourLayerSizeChanged"
+            Visibility="Collapsed">
+            <Border x:Name="TourBlocker" Background="Transparent" />
+            <Path
+                x:Name="TourScrim"
+                Fill="{StaticResource AetherSurfaceScrimBrush}"
+                IsHitTestVisible="False" />
+            <Rectangle
+                x:Name="TourRing"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                IsHitTestVisible="False"
+                Stroke="{StaticResource AetherStrokeInputFocusBrush}"
+                StrokeThickness="2" />
+            <Border
+                x:Name="TourCard"
+                Width="{StaticResource AetherSizeTourCard}"
+                Padding="16"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="{StaticResource AetherSurfaceDialogFallbackBrush}"
+                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AetherOverlayCornerRadius}"
+                KeyDown="OnTourCardKeyDown">
+                <StackPanel TabFocusNavigation="Cycle">
+                    <Grid>
+                        <TextBlock
+                            x:Name="TourProgress"
+                            VerticalAlignment="Center"
+                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Style="{StaticResource AetherCaptionTextStyle}" />
+                        <Button
+                            x:Name="TourSkipButton"
+                            Margin="0,-6,-8,-6"
+                            Padding="8,0"
+                            HorizontalAlignment="Right"
+                            AllowFocusOnInteraction="True"
+                            BorderBrush="Transparent"
+                            Click="OnTourSkipClick"
+                            FontSize="{StaticResource AetherCaptionFontSize}"
+                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Style="{StaticResource AetherOutlinePillButtonStyle}" />
+                    </Grid>
+                    <StackPanel x:Name="TourContent" Margin="0,12,0,0" Spacing="4">
+                        <TextBlock
+                            x:Name="TourTitle"
+                            Style="{StaticResource AetherSubtitleTextStyle}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="TourBody"
+                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Style="{StaticResource AetherBodyTextStyle}"
+                            TextWrapping="Wrap" />
+                        <StackPanel
+                            x:Name="TourKeys"
+                            Margin="0,8,0,0"
+                            Spacing="6"
+                            Visibility="Collapsed" />
+                    </StackPanel>
+                    <Grid Margin="0,16,0,0" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel
+                            x:Name="TourDots"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="4" />
+                        <Button
+                            x:Name="TourBackButton"
+                            Grid.Column="1"
+                            AllowFocusOnInteraction="True"
+                            Click="OnTourBackClick"
+                            Style="{StaticResource AetherOutlinePillButtonStyle}" />
+                        <Button
+                            x:Name="TourNextButton"
+                            Grid.Column="2"
+                            AllowFocusOnInteraction="True"
+                            Click="OnTourNextClick"
+                            Style="{StaticResource AetherEmphasisPillButtonStyle}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Page>

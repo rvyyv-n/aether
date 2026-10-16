@@ -50,6 +50,12 @@ public sealed partial class AboutPage : Page
         AutomationProperties.SetHelpText(GitHubButton, GitHubDescription.Text);
         GitHubButton.Click += async (_, _) => await Launcher.LaunchUriAsync(Author);
 
+        TourTitle.Text = AppStrings.Get("Settings_About_Tour");
+        TourDescription.Text = AppStrings.Get("Settings_About_TourDescription");
+        AutomationProperties.SetName(TourButton, TourTitle.Text);
+        AutomationProperties.SetHelpText(TourButton, TourDescription.Text);
+        TourButton.Click += (_, _) => App.ShowTour();
+
         LicencesTitle.Text = AppStrings.Get("Settings_About_Licences");
         LicencesDescription.Text = AppStrings.Get("Settings_About_LicencesDescription");
         AutomationProperties.SetName(LicencesButton, AppStrings.Get("Settings_About_Licences"));

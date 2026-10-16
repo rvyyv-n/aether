@@ -32,6 +32,9 @@ public enum ChromeHolds
 
     /// <summary>The pointer is on the hover rail (7.21). Keeps the chrome up but, unlike the others, leaves the pill slim.</summary>
     Rail = 256,
+
+    /// <summary>The first-run tour is showing (7.26).</summary>
+    Tour = 512,
 }
 
 /// <summary>

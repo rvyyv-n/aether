@@ -46,6 +46,25 @@
             </Button>
         </settings:SettingsRow>
         <Button
+            x:Name="TourButton"
+            MinHeight="{StaticResource AetherSizeSettingsRow}"
+            Padding="16,12"
+            Style="{StaticResource AetherRecentRowButtonStyle}">
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <FontIcon Width="20" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16" Glyph="&#xE7E7;" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock x:Name="TourTitle" Style="{StaticResource AetherBodyTextStyle}" />
+                    <TextBlock x:Name="TourDescription" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                </StackPanel>
+                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{StaticResource AetherTextSecondaryBrush}" Glyph="&#xE76C;" />
+            </Grid>
+        </Button>
+        <Button
             x:Name="GitHubButton"
             MinHeight="{StaticResource AetherSizeSettingsRow}"
             Padding="16,12"

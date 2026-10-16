@@ -149,6 +149,8 @@ public sealed partial class MainWindow : Window, IShellWindow
     /// <summary>Starts the playback engine again with the current settings, keeping the open file.</summary>
     public void RestartEngine() => Shell.RestartEngine();
 
+    public void ShowTour() => Shell.ShowTour();
+
     /// <summary>
     /// Moves and resizes the window to where it was left, on a monitor that is still connected, and maximises it
     /// again if it was. Call before the first <see cref="Window.Activate"/>.

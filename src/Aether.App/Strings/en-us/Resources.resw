@@ -1337,4 +1337,65 @@
   <data name="Settings_About_Architecture" xml:space="preserve">
     <value>Architecture</value>
   </data>
-<data name="Toast_ClipNothingMarked" xml:space="preserve"><value>Mark a clip first: set In and Out</value></data><data name="Toast_ClipStreamNotSupported" xml:space="preserve"><value>Save the file first to export clips</value></data><data name="EmptyState_SubtitleWithLink" xml:space="preserve"><value>Drop a file, paste a link or press {0}</value></data></root>
+<data name="Toast_ClipNothingMarked" xml:space="preserve"><value>Mark a clip first: set In and Out</value></data><data name="Toast_ClipStreamNotSupported" xml:space="preserve"><value>Save the file first to export clips</value></data><data name="EmptyState_SubtitleWithLink" xml:space="preserve"><value>Drop a file, paste a link or press {0}</value></data>
+  <data name="Tour_Name" xml:space="preserve">
+    <value>Welcome tour</value>
+  </data>
+  <data name="Tour_Progress" xml:space="preserve">
+    <value>{0} of {1}</value>
+  </data>
+  <data name="Tour_Skip" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="Tour_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Tour_Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Tour_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Tour_Open_Title" xml:space="preserve">
+    <value>Open a video</value>
+  </data>
+  <data name="Tour_Open_Body" xml:space="preserve">
+    <value>Choose Open file or Open URL, paste a link with Ctrl+V, or drop a file anywhere on the window.</value>
+  </data>
+  <data name="Tour_Controls_Title" xml:space="preserve">
+    <value>The controls</value>
+  </data>
+  <data name="Tour_Controls_Body" xml:space="preserve">
+    <value>While a video plays, the controls sit here. They shrink to a slim bar as you watch and grow back when you point at them.</value>
+  </data>
+  <data name="Tour_Rail_Title" xml:space="preserve">
+    <value>The side rail</value>
+  </data>
+  <data name="Tour_Rail_Body" xml:space="preserve">
+    <value>Rest the pointer on the left edge to open the rail: your saved clips, streaming and Settings.</value>
+  </data>
+  <data name="Tour_Menu_Title" xml:space="preserve">
+    <value>Right-click for more</value>
+  </data>
+  <data name="Tour_Menu_Body" xml:space="preserve">
+    <value>Right-click anywhere for recent files, speed, audio and subtitle tracks, picture adjustments and diagnostics.</value>
+  </data>
+  <data name="Tour_Shortcuts_Title" xml:space="preserve">
+    <value>Keys worth knowing</value>
+  </data>
+  <data name="Tour_Shortcuts_Body" xml:space="preserve">
+    <value>Mark where a clip starts and ends, then export it. Any key can be changed in Settings › Shortcuts.</value>
+  </data>
+  <data name="Tour_Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Tour_Settings_Body" xml:space="preserve">
+    <value>Playback, video, audio, subtitles and keys live behind the gear. You can see this tour again from Settings › About.</value>
+  </data>
+  <data name="Settings_About_Tour" xml:space="preserve">
+    <value>Show the tour again</value>
+  </data>
+  <data name="Settings_About_TourDescription" xml:space="preserve">
+    <value>A quick look at the controls, the side rail, the right-click menu and the keys</value>
+  </data>
+</root>

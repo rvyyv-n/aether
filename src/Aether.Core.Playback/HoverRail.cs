@@ -26,6 +26,7 @@ public sealed class HoverRail
     private bool _overRail;
     private bool _dragging;
     private bool _available = true;
+    private bool _pinned;
 
     public bool IsOpen { get; private set; }
 
@@ -56,6 +57,21 @@ public sealed class HoverRail
         return true;
     }
 
+    /// <summary>
+    /// Holds the rail open whatever the pointer does (the first-run tour's rail step), and opens it if it can.
+    /// Unpinning leaves it open for <see cref="Decide"/> to close as usual. True if pinning opened it.
+    /// </summary>
+    public bool SetPinned(bool pinned)
+    {
+        _pinned = pinned;
+        if (!pinned || IsOpen || !_available)
+        {
+            return false;
+        }
+        IsOpen = true;
+        return true;
+    }
+
     /// <summary>Opens the rail if it can. True if it opened.</summary>
     public bool Open()
     {
@@ -72,6 +88,7 @@ public sealed class HoverRail
     {
         bool wasOpen = IsOpen;
         IsOpen = false;
+        _pinned = false;
         _inHotZone = false;
         _overRail = false;
         return wasOpen;
@@ -91,6 +108,6 @@ public sealed class HoverRail
         {
             return IsPeeking ? HoverRailAction.Open : HoverRailAction.None;
         }
-        return _inHotZone || _overRail ? HoverRailAction.None : HoverRailAction.Close;
+        return _pinned || _inHotZone || _overRail ? HoverRailAction.None : HoverRailAction.Close;
     }
 }

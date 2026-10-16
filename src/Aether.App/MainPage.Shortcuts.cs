@@ -42,6 +42,7 @@ public sealed partial class MainPage
                     Modifiers = ToModifiers(combination.Modifiers),
                 };
                 accelerator.Invoked += HandlerFor(action);
+                accelerator.IsEnabled = !_tour.IsActive;
                 KeyboardAccelerators.Add(accelerator);
                 _shortcutAccelerators.Add(accelerator);
             }
@@ -53,6 +54,7 @@ public sealed partial class MainPage
             Modifiers = Windows.System.VirtualKeyModifiers.Control,
         };
         pasteAccelerator.Invoked += OnPasteAccelerator;
+        pasteAccelerator.IsEnabled = !_tour.IsActive;
         KeyboardAccelerators.Add(pasteAccelerator);
         _shortcutAccelerators.Add(pasteAccelerator);
     }

@@ -110,4 +110,32 @@ public class HoverRailTests
         Assert.True(rail.Open());
         Assert.False(rail.Open());
     }
+
+    [Fact]
+    public void Pinned_StaysOpenWithThePointerAway_UntilUnpinned()
+    {
+        var rail = new HoverRail();
+        Assert.True(rail.SetPinned(true));
+        Assert.True(rail.IsOpen);
+        Assert.Equal(HoverRailAction.None, rail.Decide());
+        Assert.Null(rail.DueIn);
+
+        rail.SetPinned(false);
+        Assert.Equal(HoverRailAction.Close, rail.Decide());
+    }
+
+    [Fact]
+    public void Pinned_DoesNotOpenWhileUnavailable_AndCloseUnpins()
+    {
+        var rail = new HoverRail();
+        rail.SetAvailable(false);
+        Assert.False(rail.SetPinned(true));
+        Assert.False(rail.IsOpen);
+
+        rail.SetAvailable(true);
+        rail.SetPinned(true);
+        Assert.True(rail.Close());
+        rail.Open();
+        Assert.Equal(HoverRailAction.Close, rail.Decide());
+    }
 }

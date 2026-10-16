@@ -153,6 +153,9 @@ public partial class App : Application
     /// <summary>UI thread: starts the playback engine again with the current settings, keeping the open file.</summary>
     public static void RestartEngine() => s_window?.RestartEngine();
 
+    /// <summary>UI thread: closes Settings and shows the first-run tour again (Settings › About).</summary>
+    public static void ShowTour() => s_window?.ShowTour();
+
     private static string? LaunchPath(AppActivationArguments arguments)
     {
         try

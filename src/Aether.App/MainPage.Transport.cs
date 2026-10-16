@@ -263,9 +263,7 @@ public sealed partial class MainPage
     }
 
     /// <summary>Below a 560 px card (5.7), frame step, loop and always on top move into More controls; the slim pill hides them anyway.</summary>
-    private void OnOsdSizeChanged(object sender, SizeChangedEventArgs e)
-    {
-    }
+    private void OnOsdSizeChanged(object sender, SizeChangedEventArgs e) => RefreshTourLayout(); // the tour can light the growing bar
 
     // Loop and Always on top: the buttons and their More items follow the state, whoever changed it.
 

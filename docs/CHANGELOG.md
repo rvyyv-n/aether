@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- First-run tour: on the first launch Aether lights up its real controls one at a time (opening a video, the bar, the side rail, the right-click menu, the keys and the gear) with a short note beside each; skip it at any time, or see it again from Settings › About.
 - Settings › About now has a GitHub row that opens the author's page (github.com/rvyyv-n) in the browser.
 - Saved links in the right-click Recent menu can now be played, the same as from the home screen; Picture in picture and Stream stay greyed out until Pass 8 and Pass 11.
 - Seek modifiers: `Shift+←/→` skips 1 second and `Ctrl+←/→` skips 30 seconds (plain arrows stay 5 seconds); all four keys are changeable on the Shortcuts page.
