@@ -142,6 +142,7 @@ public sealed class ShortcutSettings
         ShortcutAction.CopyFrame => "Settings_Shortcuts_CopyFrame",
         ShortcutAction.SaveFrame => "Settings_Shortcuts_SaveFrame",
         ShortcutAction.ExportClip => "Settings_Shortcuts_ExportClip",
+        ShortcutAction.Sidebar => "Settings_Shortcuts_Sidebar",
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 }

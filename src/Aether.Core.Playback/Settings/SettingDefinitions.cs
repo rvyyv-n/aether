@@ -81,6 +81,7 @@ public static class SettingKeys
     public const string ShortcutCopyFrame = "shortcuts.copyFrame";
     public const string ShortcutSaveFrame = "shortcuts.saveFrame";
     public const string ShortcutExportClip = "shortcuts.exportClip";
+    public const string ShortcutSidebar = "shortcuts.sidebar";
 }
 
 /// <summary>One setting: key, restart flag, validation and (de)serialisation. No reflection, so it is AOT-safe.</summary>
@@ -248,6 +249,7 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutCopyFrame, s => s.ShortcutCopyFrame, (s, v) => s with { ShortcutCopyFrame = v }),
         Shortcut(SettingKeys.ShortcutSaveFrame, s => s.ShortcutSaveFrame, (s, v) => s with { ShortcutSaveFrame = v }),
         Shortcut(SettingKeys.ShortcutExportClip, s => s.ShortcutExportClip, (s, v) => s with { ShortcutExportClip = v }),
+        Shortcut(SettingKeys.ShortcutSidebar, s => s.ShortcutSidebar, (s, v) => s with { ShortcutSidebar = v }),
     ];
 
     private static readonly Dictionary<string, SettingDefinition> ByKey = All.ToDictionary(d => d.Key, StringComparer.Ordinal);

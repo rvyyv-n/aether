@@ -81,9 +81,14 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
         else
         {
             RenderVideo(width, height);
-            if (_backdrop is not null && _backdropSource!.TryGetFrame(Stopwatch.GetTimestamp(), out BackdropFrame frame))
+            if (_backdrop is not null)
             {
-                _backdrop.Draw(frame, width, height);
+                Span<BackdropFrame> frames = stackalloc BackdropFrame[BackdropSource.SlotCount];
+                int count = _backdropSource!.TryGetFrames(Stopwatch.GetTimestamp(), frames);
+                if (count > 0)
+                {
+                    _backdrop.Draw(frames[..count], width, height);
+                }
             }
         }
         _bridge.Flush();

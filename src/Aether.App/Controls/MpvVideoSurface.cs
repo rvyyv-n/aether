@@ -91,26 +91,26 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
     public MpvRenderLoop? RenderLoop => _loop;
 
     /// <summary>
-    /// Any thread. Where the player card sits over the video (swap-chain pixels, relative to this
+    /// Any thread. Where a card sits over the video (swap-chain pixels, relative to this
     /// surface) so the render thread can blur behind it; redraws even when playback is paused.
     /// </summary>
-    public void PostBackdrop(in BackdropRegion region)
+    public void PostBackdrop(BackdropSlot slot, in BackdropRegion region)
     {
-        _backdrop.Post(region);
+        _backdrop.Post(slot, region);
         _loop?.RequestRedraw();
     }
 
-    /// <summary>UI thread. Turns the blur on or off (off: no video, settings, picture in picture).</summary>
-    public void SetBackdropActive(bool active)
+    /// <summary>UI thread. Turns a card's blur on or off (off: no video, settings, picture in picture).</summary>
+    public void SetBackdropActive(BackdropSlot slot, bool active)
     {
-        _backdrop.SetActive(active);
+        _backdrop.SetActive(slot, active);
         _loop?.RequestRedraw();
     }
 
-    /// <summary>UI thread. Fades the blur with the card; a zero duration is instant.</summary>
-    public void FadeBackdrop(bool visible, double durationMilliseconds)
+    /// <summary>UI thread. Fades a card's blur with the card; a zero duration is instant.</summary>
+    public void FadeBackdrop(BackdropSlot slot, bool visible, double durationMilliseconds)
     {
-        _backdrop.Fade(visible, durationMilliseconds);
+        _backdrop.Fade(slot, visible, durationMilliseconds);
         _loop?.RequestRedraw();
     }
 

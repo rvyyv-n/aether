@@ -874,6 +874,9 @@
   <data name="Settings_Shortcuts_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="Settings_Shortcuts_Sidebar" xml:space="preserve">
+    <value>Sidebar</value>
+  </data>
 
   
   <data name="Settings_CustomOptions_Title" xml:space="preserve">

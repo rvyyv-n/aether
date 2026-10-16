@@ -165,6 +165,7 @@
     <CornerRadius x:Key="AetherPillCornerRadius">8</CornerRadius>
     <CornerRadius x:Key="AetherTransportCornerRadius">24</CornerRadius>  <!-- Half the 48 px slim pill, kept by the full card; the round 36 px play button + 6 padding is concentric with it -->
     <CornerRadius x:Key="AetherTransportButtonCornerRadius">6</CornerRadius>  <!-- Transport icon, toggle and speed buttons: 8 → 6 with the 36 px targets, for a crisper shape -->
+    <CornerRadius x:Key="AetherSidebarItemCornerRadius">18</CornerRadius>  <!-- Half the 36 px sidebar item: a circle, like the Play button -->
     <CornerRadius x:Key="AetherTileCornerRadius">16</CornerRadius>
 
     <!--  Sizes  -->
@@ -210,9 +211,10 @@
     <x:Double x:Key="AetherSizeClipThumbHeight">36</x:Double>
     <x:Double x:Key="AetherSizeMenuItem">32</x:Double>  <!-- Menu items: 4 px inset, padding 12, icon/check column 16, gap 12, shortcut gap 24, radius 4, hover fill.subtle.hover; menus on surface -->
     <x:Double x:Key="AetherSizeSpeedPill">40</x:Double>  <!-- Min width of the speed button: 36 tall like the transport buttons, Caption 12 semibold tabular -->
-    <x:Double x:Key="AetherSizeRailWidth">56</x:Double>  <!-- Hover rail: 8 from the left edge, from 8 below the title bar to 8 above the pill, padding 8, Surface -->
-    <x:Double x:Key="AetherSizeRailItem">40</x:Double>  <!-- Rail items 40×40, radius 8, gap 4, 20 px icons; active = FillEmphasisRest + StrokeControl; labels as -->
-    <x:Double x:Key="AetherSizeRailHotZone">4</x:Double>  <!-- Left-edge strip that wakes the rail; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
+    <x:Double x:Key="AetherSizeSidebarWidth">48</x:Double>  <!-- Sidebar: a floating pill 16 from the left edge, centred vertically; padding 6 around four 36 px items 4 apart (168 tall), the surface.osd tint with the bar's blur -->
+    <x:Double x:Key="AetherSizeSidebarItem">36</x:Double>  <!-- Sidebar items: 36 circles, 14 px glyphs; active = FillEmphasisRest + StrokeControl -->
+    <x:Double x:Key="AetherSizeSidebarPadding">6</x:Double>  <!-- Outside the 1 px stroke; 6 + 18 = 24 is concentric with the pill's radius -->
+    <x:Double x:Key="AetherSizeRailHotZone">4</x:Double>  <!-- Left-edge strip that wakes the sidebar; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
     <x:Double x:Key="AetherSizeSettingsNav">220</x:Double>  <!-- Settings section list width; items 36 tall (navItem), radius 4, gap 2, 16 px icons -->
     <x:Double x:Key="AetherSizeNavItem">36</x:Double>  <!-- Settings section list item height -->
     <x:Double x:Key="AetherSizeSettingsRow">60</x:Double>  <!-- Settings row card min height: padding 12,16, 20 px icon, title Body + description Caption TextSecond -->
@@ -439,15 +441,15 @@
         <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeIcon}" />
     </Style>
-    <!--  Hover rail items (6.3): 40 square, radius 8, 20 px glyphs; the active one (Player) adds AetherRailItemActiveStyle  -->
-    <Style x:Key="AetherRailItemStyle" BasedOn="{StaticResource AetherIconButtonStyle}" TargetType="Button">
-        <Setter Property="Width" Value="{StaticResource AetherSizeRailItem}" />
-        <Setter Property="Height" Value="{StaticResource AetherSizeRailItem}" />
-        <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
-        <Setter Property="FontSize" Value="{StaticResource AetherSizeIconLarge}" />
+    <!--  Sidebar items: 36 px circles with the transport's 14 px glyphs; the active one (Player) adds AetherSidebarItemActiveStyle  -->
+    <Style x:Key="AetherSidebarItemStyle" BasedOn="{StaticResource AetherTransportIconButtonStyle}" TargetType="Button">
+        <Setter Property="Width" Value="{StaticResource AetherSizeSidebarItem}" />
+        <Setter Property="Height" Value="{StaticResource AetherSizeSidebarItem}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherSidebarItemCornerRadius}" />
+        <Setter Property="FocusVisualMargin" Value="-3" />
         <Setter Property="ToolTipService.Placement" Value="Right" />
     </Style>
-    <Style x:Key="AetherRailItemActiveStyle" BasedOn="{StaticResource AetherRailItemStyle}" TargetType="Button">
+    <Style x:Key="AetherSidebarItemActiveStyle" BasedOn="{StaticResource AetherSidebarItemStyle}" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
     </Style>
