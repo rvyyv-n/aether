@@ -85,9 +85,9 @@
             SizeChanged="OnVideoHostSizeChanged">
             <FlyoutBase.AttachedFlyout>
                 <!--
-                    Right-click menu (9.1): solid like the transport menus, 276 wide (the Recent submenu 288). The
-                    item widths set that: 266 plus the 4 inset either side and the 1 px stroke. Labels, shortcuts and
-                    which entries are enabled come from the code (MainPage.ContextMenu.cs).
+                    Right-click menu (9.1): solid like the transport menus and as wide as its longest label and shortcut
+                    (the menu row styles in DesignTokens.xaml); the Recent submenu is 288. Labels, shortcuts and which
+                    entries are enabled come from the code (MainPage.ContextMenu.cs).
                 -->
                 <MenuFlyout
                     x:Name="ContextMenu"
@@ -98,7 +98,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxOpenFile"
                         Click="OnOpenFileClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE838;" />
@@ -107,7 +106,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxOpenUrl"
                         Click="OnOpenUrlClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE71B;" />
@@ -115,7 +113,6 @@
                     </MenuFlyoutItem>
                     <MenuFlyoutSubItem
                         x:Name="CtxRecent"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuSubItemStyle}">
                         <MenuFlyoutSubItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE81C;" />
@@ -125,7 +122,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxAudio"
                         Click="OnTracksMenuClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE767;" />
@@ -134,7 +130,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxSubtitles"
                         Click="OnTracksMenuClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE7F0;" />
@@ -142,7 +137,6 @@
                     </MenuFlyoutItem>
                     <MenuFlyoutSubItem
                         x:Name="CtxSpeed"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuSubItemStyle}">
                         <MenuFlyoutSubItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xEC4A;" />
@@ -151,7 +145,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxVideo"
                         Click="OnVideoMenuClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE714;" />
@@ -161,7 +154,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxCopyFrame"
                         Click="OnCopyFrameMenuClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8C8;" />
@@ -170,7 +162,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxSaveFrame"
                         Click="OnSaveFrameMenuClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE74E;" />
@@ -180,7 +171,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxPictureInPicture"
                         KeyboardAcceleratorTextOverride="P"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xEE49;" />
@@ -189,7 +179,6 @@
                     <ToggleMenuFlyoutItem
                         x:Name="CtxAlwaysOnTop"
                         Click="OnAlwaysOnTopClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherToggleMenuItemStyle}">
                         <ToggleMenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE840;" />
@@ -199,7 +188,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxDiagnostics"
                         Click="OnDiagnosticsMenuClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE9D9;" />
@@ -208,7 +196,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxSettings"
                         Click="OnSettingsMenuClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE713;" />
@@ -218,7 +205,6 @@
                     <MenuFlyoutItem
                         x:Name="CtxClips"
                         Click="OnClipsMenuClick"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8F1;" />
@@ -226,7 +212,6 @@
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
                         x:Name="CtxStream"
-                        MinWidth="266"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE774;" />
