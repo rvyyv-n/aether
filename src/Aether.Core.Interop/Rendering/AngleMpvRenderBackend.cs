@@ -26,12 +26,16 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
     private readonly BackdropSource? _backdropSource;
     private readonly BackdropBlurPass? _backdrop;
 
-    private AngleMpvRenderBackend(AngleBridge bridge, MpvRenderContext? render, BackdropSource? backdropSource, BackdropBlurPass? backdrop)
+    private VideoFrameCache? _frameCache;
+    private bool _videoStale = true;
+
+    private AngleMpvRenderBackend(AngleBridge bridge, MpvRenderContext? render, BackdropSource? backdropSource, BackdropBlurPass? backdrop, VideoFrameCache? frameCache)
     {
         _bridge = bridge;
         _render = render;
         _backdropSource = backdropSource;
         _backdrop = backdrop;
+        _frameCache = frameCache;
     }
 
     public static AngleMpvRenderBackend Create(D3D11DeviceManager device, DxgiPresenter presenter, MpvContext? mpv, BackdropSource? backdropSource, nint frameReadyEvent)
@@ -46,7 +50,9 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
                 : MpvRenderContext.CreateOpenGL(mpv, AngleBridge.GetProcAddressCallback, bridge.GetProcAddressContext, frameReadyEvent);
             // Only a video frame has a card to blur behind; a null pass leaves the plain tint.
             BackdropBlurPass? backdrop = render is not null && backdropSource is not null ? BackdropBlurPass.Create(bridge) : null;
-            return new AngleMpvRenderBackend(bridge, render, backdropSource, backdrop);
+            // Only worth its extra copy when redraws without a new video frame happen, which is what the fade causes.
+            VideoFrameCache? frameCache = backdrop is not null ? VideoFrameCache.Create(bridge) : null;
+            return new AngleMpvRenderBackend(bridge, render, backdropSource, backdrop, frameCache);
         }
         catch
         {
@@ -55,7 +61,12 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
         }
     }
 
-    public bool PollFrame() => _render is not null && (_render.Update() & MpvRenderUpdateFlags.Frame) != 0;
+    public bool PollFrame()
+    {
+        bool frame = _render is not null && (_render.Update() & MpvRenderUpdateFlags.Frame) != 0;
+        _videoStale |= frame;
+        return frame;
+    }
 
     public void ReleaseBackBuffer() => _bridge.ReleaseBackBuffer();
 
@@ -69,7 +80,7 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
         }
         else
         {
-            MpvException.ThrowIfError(_render.RenderOpenGL(0, (int)width, (int)height, AngleBridge.RenderFlipY), "mpv_render_context_render");
+            RenderVideo(width, height);
             if (_backdrop is not null && _backdropSource!.TryGetFrame(Stopwatch.GetTimestamp(), out BackdropFrame frame))
             {
                 _backdrop.Draw(frame, width, height);
@@ -77,6 +88,31 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
         }
         _bridge.Flush();
         return !_bridge.IsContextLost;
+    }
+
+    /// <summary>
+    /// Draws the picture. A redraw without a new video frame (the card's fade) copies the cached one
+    /// back instead of making mpv render it again; the cache is stale after a new frame or a resize.
+    /// </summary>
+    private void RenderVideo(uint width, uint height)
+    {
+        if (_frameCache is { } cache)
+        {
+            if (cache.EnsureSize(width, height, out bool reallocated))
+            {
+                if (_videoStale || reallocated)
+                {
+                    MpvException.ThrowIfError(_render!.RenderOpenGL((int)cache.Framebuffer, (int)width, (int)height, AngleBridge.RenderFlipY), "mpv_render_context_render");
+                    _videoStale = false;
+                }
+                cache.CopyToBackBuffer();
+                return;
+            }
+            // The cache texture could not be built: draw straight to the back buffer from now on.
+            cache.Dispose();
+            _frameCache = null;
+        }
+        MpvException.ThrowIfError(_render!.RenderOpenGL(0, (int)width, (int)height, AngleBridge.RenderFlipY), "mpv_render_context_render");
     }
 
     public void ReportSwap() => _render?.ReportSwap();
@@ -88,6 +124,7 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
             // mpv frees its GL objects through the context, so it must be current (surfaceless is fine).
             _bridge.MakeContextCurrent();
             _backdrop?.Dispose();
+            _frameCache?.Dispose();
             _render?.Dispose();
         }
         finally
