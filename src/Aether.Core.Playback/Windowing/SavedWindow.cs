@@ -7,5 +7,8 @@ public readonly record struct WindowRect(int X, int Y, int Width, int Height)
     public int Bottom => Y + Height;
 }
 
-/// <summary>The window as it was left: its normal (restored) bounds, and whether it was maximised.</summary>
-public sealed record SavedWindow(WindowRect Bounds, bool IsMaximized);
+/// <summary>
+/// The window as it was left: its normal (restored) bounds, whether it was maximised, and where the
+/// picture-in-picture window last was (null until it has been used).
+/// </summary>
+public sealed record SavedWindow(WindowRect Bounds, bool IsMaximized, WindowRect? PictureInPicture = null);

@@ -232,7 +232,7 @@ Mockups: screens 8.3–8.4.
 | # | Task | Effort |
 |:---|:---|:---:|
 | 8.1 | Picture in picture: `AppWindow` CompactOverlay presenter at 400×225 (spike first: confirm the minimum size), hover controls, "Back to full window" beside the system close button, `P` shortcut (ignored when a text field has focus) | M |
-| 8.2 | Engine hand-over between the main window and the overlay window without a decode restart (swap chain, device and lifetime safety) | M |
+| 8.2 | Engine hand-over between the main window and the overlay window without a decode restart (swap chain, device and lifetime safety) — **Done** (one window that changes shape instead of two, ADR-0022: the video engine, its render thread and the picture never move, so nothing restarts; spec in `docs/reviews/pass-8-pip-handover-spec.md` covers the order of the switch, closing the small window and the edge cases) | M |
 | 8.3 | Tests for the hand-over lifecycle and picture-in-picture state transitions | S |
 
 **Pass 8 means:** The video can float in a small always-on-top window and return to the full window without a stall.
