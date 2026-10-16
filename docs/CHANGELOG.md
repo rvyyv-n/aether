@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Playback performance: software decoding fallback under auto-safe now retains full frame readahead queue (fix R2); XAML layout updates and string allocations for clock and seek bar gated while controls are hidden (fix R3).
 - UI finish: More (…) menu items now feature Segoe Fluent Icons (Back 1 frame, Forward 1 frame, Loop, Always on top); Springy and Quick motion profiles tuned for smooth, refined transitions.
 - Housekeeping: the window title, About diagnostics lines, proxy hint and Diagnostics wording now come from the language file; unused language entries and design tokens, dead constants, the packaged-app manifest and logo images moved to `retired/`; native libraries for every architecture are ignored by git; the README no longer presents phone streaming as working before Pass 11.
+- Roadmap: auto-updater plan for 7.28 (Velopack with releases on GitHub, checked from Settings › About); nothing built yet, open questions on signing and defaults.
 - Roadmap: task 7.25 for the approved review fixes (R1-R7); review findings report added.
 - Roadmap: task 7.24 for the broken edge-to-edge video.
 - Roadmap: added Ctrl+E clip export and Shift/Ctrl seek steps (Pass 7), keyframe markers (Pass 10), a phone-browser support notice, GC check and licence file (Pass 11); 10-bit HDR and UI automation parked for after v1.

@@ -187,3 +187,8 @@
     - Lossless clip export for remote streams is gracefully prevented via "Save the file first to export clips" toast.
     - Frame copy (`Ctrl+C`) and frame snapshot (`Ctrl+Shift+S`) remain fully functional via mpv screenshot commands.
 - **Status:** Accepted.
+
+## ADR-0021: Auto-updater (7.28 plan)
+- **Context:** Aether ships unpackaged (ADR-0017) through a home-made per-user installer of about 215 MB and a portable zip, with no signing, no version number and no releases yet. 7.28 asked where releases live, how they are signed and whether updates are silent or prompted.
+- **Decision (proposed):** Velopack with releases on GitHub; WinGet later as an extra channel. Checks at most daily and on "Check for updates" in Settings › About; a found update downloads quietly and is applied on exit or on Restart from a toast, never mid-video. Pack ID `AetherPlayer` so uninstall never touches `%LOCALAPPDATA%\Aether` (user data). MSIX App Installer and the Store were rejected because they undo ADR-0017; a hand-made GitHub check was rejected for full 215 MB downloads and no safe swap. Full comparison, build steps and open questions in `docs/reviews/pass-7-auto-updater-plan.md`.
+- **Status:** Proposed; waiting on the owner's answers on signing, default on/off and repo visibility.
