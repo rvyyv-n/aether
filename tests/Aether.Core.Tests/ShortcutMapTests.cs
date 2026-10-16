@@ -44,6 +44,8 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.CopyFrame, "Ctrl+C")]
     [InlineData(ShortcutAction.SaveFrame, "Ctrl+Shift+S")]
     [InlineData(ShortcutAction.ExportClip, "Ctrl+E")]
+    [InlineData(ShortcutAction.NextChapter, "PageDown")]
+    [InlineData(ShortcutAction.PreviousChapter, "PageUp")]
     public void Defaults_Are_Todays_Keys(ShortcutAction action, string expected)
     {
         Assert.Equal([expected], Defaults(action));

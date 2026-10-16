@@ -279,7 +279,8 @@ public sealed partial class MainPage : Page
     }
 
     /// <summary>What a resolved link brings to <see cref="Open"/> beyond the stream address.</summary>
-    private sealed record OpenedLink(string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl);
+    private sealed record OpenedLink(
+        string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl, IReadOnlyList<StreamChapter>? Chapters);
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
     private sealed record PlaybackCarryOver(
@@ -459,6 +460,7 @@ public sealed partial class MainPage : Page
         _currentPath = path;
         _currentWebLink = link?.WebLink;
         _streamTitle = link?.Title;
+        ResetChapters(link?.Chapters);
         string headerFields = link?.HttpHeaders is { Count: > 0 } headers
             ? string.Join(",", headers.Select(kv => string.Concat(kv.Key, ": ", kv.Value)))
             : string.Empty;
@@ -562,6 +564,7 @@ public sealed partial class MainPage : Page
                 UpdateClock(vm); // an ended file reads its full duration
                 RecordDuration(vm);
                 RestoreTracksOnceLoaded();
+                LoadChaptersOnceLoaded();
                 Render();
                 break;
             case nameof(PlayerViewModel.IsPaused):
@@ -1193,7 +1196,7 @@ public sealed partial class MainPage : Page
             ArmOpenUrlTimer();
 
             string displayName = string.IsNullOrWhiteSpace(resolved.Title) ? WebLink.Host(link) ?? link : resolved.Title;
-            Open(resolved.StreamUrl, carry, new OpenedLink(link, displayName, resolved.HttpHeaders, resolved.AudioUrl));
+            Open(resolved.StreamUrl, carry, new OpenedLink(link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters));
 
             _ = Task.Run(() =>
             {

@@ -850,6 +850,12 @@
   <data name="Settings_Shortcuts_ExportClip" xml:space="preserve">
     <value>Export clip</value>
   </data>
+  <data name="Settings_Shortcuts_NextChapter" xml:space="preserve">
+    <value>Next chapter</value>
+  </data>
+  <data name="Settings_Shortcuts_PreviousChapter" xml:space="preserve">
+    <value>Previous chapter</value>
+  </data>
   <data name="Settings_Shortcuts_Diagnostics" xml:space="preserve">
     <value>Diagnostics</value>
   </data>

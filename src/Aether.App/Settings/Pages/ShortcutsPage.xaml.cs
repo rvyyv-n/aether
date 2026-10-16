@@ -40,7 +40,8 @@ public sealed partial class ShortcutsPage : Page
 
         // Fixed keys (frame steps, Escape) are listed with the ones that can be changed, in the order of 6.7.
         Add(PlaybackGroup, ShortcutAction.PlayPause, ShortcutAction.SkipBack, ShortcutAction.SkipForward,
-            ShortcutAction.SkipBackFine, ShortcutAction.SkipForwardFine, ShortcutAction.SkipBackLong, ShortcutAction.SkipForwardLong);
+            ShortcutAction.SkipBackFine, ShortcutAction.SkipForwardFine, ShortcutAction.SkipBackLong, ShortcutAction.SkipForwardLong,
+            ShortcutAction.PreviousChapter, ShortcutAction.NextChapter);
         PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Back1Frame", ","));
         PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Forward1Frame", "."));
         Add(PlaybackGroup, ShortcutAction.Mute, ShortcutAction.Loop, ShortcutAction.CopyFrame, ShortcutAction.SaveFrame);

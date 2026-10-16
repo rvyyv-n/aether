@@ -27,4 +27,6 @@ public enum ShortcutAction
     CopyFrame,
     SaveFrame,
     ExportClip,
+    NextChapter,
+    PreviousChapter,
 }

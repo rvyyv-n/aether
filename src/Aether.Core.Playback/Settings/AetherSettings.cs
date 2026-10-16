@@ -17,6 +17,10 @@ public sealed record AetherSettings
     public bool ResumePlayback { get; init; } = true;
     public bool LoopByDefault { get; init; }
     public bool PlayNextInFolder { get; init; } = true;
+    /// <summary>Skips chapters whose title matches <see cref="ChapterSkipNames"/> (9.7).</summary>
+    public bool ChapterAutoSkip { get; init; }
+    /// <summary>Comma or line separated chapter names to skip, matched as whole words.</summary>
+    public string ChapterSkipNames { get; init; } = "Sponsor, Intro, Outro";
     public bool RememberWindowSize { get; init; } = true;
     public bool AlwaysOnTop { get; init; }
     /// <summary>Keep the display awake while a file plays.</summary>
@@ -120,4 +124,6 @@ public sealed record AetherSettings
     public string ShortcutCopyFrame { get; init; } = "";
     public string ShortcutSaveFrame { get; init; } = "";
     public string ShortcutExportClip { get; init; } = "";
+    public string ShortcutNextChapter { get; init; } = "";
+    public string ShortcutPreviousChapter { get; init; } = "";
 }

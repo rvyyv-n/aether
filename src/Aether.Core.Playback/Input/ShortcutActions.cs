@@ -34,6 +34,8 @@ public static class ShortcutActions
         ShortcutAction.CopyFrame => SettingKeys.ShortcutCopyFrame,
         ShortcutAction.SaveFrame => SettingKeys.ShortcutSaveFrame,
         ShortcutAction.ExportClip => SettingKeys.ShortcutExportClip,
+        ShortcutAction.NextChapter => SettingKeys.ShortcutNextChapter,
+        ShortcutAction.PreviousChapter => SettingKeys.ShortcutPreviousChapter,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 
@@ -74,6 +76,8 @@ public static class ShortcutActions
         ShortcutAction.CopyFrame => [KeyCombination.Letter('C', KeyModifiers.Ctrl)],
         ShortcutAction.SaveFrame => [KeyCombination.Letter('S', KeyModifiers.Ctrl | KeyModifiers.Shift)],
         ShortcutAction.ExportClip => [KeyCombination.Letter('E', KeyModifiers.Ctrl)],
+        ShortcutAction.NextChapter => [new KeyCombination(KeyCombination.PageDown)],
+        ShortcutAction.PreviousChapter => [new KeyCombination(KeyCombination.PageUp)],
         _ => [],
     };
 

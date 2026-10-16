@@ -13,6 +13,8 @@ public static class SettingKeys
     public const string ResumePlayback = "playback.resume";
     public const string LoopByDefault = "playback.loop";
     public const string PlayNextInFolder = "playback.playNext";
+    public const string ChapterAutoSkip = "playback.chapterAutoSkip";
+    public const string ChapterSkipNames = "playback.chapterSkipNames";
     public const string RememberWindowSize = "playback.rememberWindowSize";
     public const string AlwaysOnTop = "playback.alwaysOnTop";
     public const string PreventSleep = "playback.preventSleep";
@@ -77,6 +79,8 @@ public static class SettingKeys
     public const string ShortcutCopyFrame = "shortcuts.copyFrame";
     public const string ShortcutSaveFrame = "shortcuts.saveFrame";
     public const string ShortcutExportClip = "shortcuts.exportClip";
+    public const string ShortcutNextChapter = "shortcuts.nextChapter";
+    public const string ShortcutPreviousChapter = "shortcuts.previousChapter";
 }
 
 /// <summary>One setting: key, restart flag, validation and (de)serialisation. No reflection, so it is AOT-safe.</summary>
@@ -170,6 +174,8 @@ public static class SettingDefinitions
         Flag(SettingKeys.ResumePlayback, s => s.ResumePlayback, (s, v) => s with { ResumePlayback = v }),
         Flag(SettingKeys.LoopByDefault, s => s.LoopByDefault, (s, v) => s with { LoopByDefault = v }),
         Flag(SettingKeys.PlayNextInFolder, s => s.PlayNextInFolder, (s, v) => s with { PlayNextInFolder = v }),
+        Flag(SettingKeys.ChapterAutoSkip, s => s.ChapterAutoSkip, (s, v) => s with { ChapterAutoSkip = v }),
+        Text(SettingKeys.ChapterSkipNames, s => s.ChapterSkipNames, (s, v) => s with { ChapterSkipNames = v }),
         Flag(SettingKeys.RememberWindowSize, s => s.RememberWindowSize, (s, v) => s with { RememberWindowSize = v }),
         Flag(SettingKeys.AlwaysOnTop, s => s.AlwaysOnTop, (s, v) => s with { AlwaysOnTop = v }),
         Flag(SettingKeys.PreventSleep, s => s.PreventSleep, (s, v) => s with { PreventSleep = v }),
@@ -240,6 +246,8 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutCopyFrame, s => s.ShortcutCopyFrame, (s, v) => s with { ShortcutCopyFrame = v }),
         Shortcut(SettingKeys.ShortcutSaveFrame, s => s.ShortcutSaveFrame, (s, v) => s with { ShortcutSaveFrame = v }),
         Shortcut(SettingKeys.ShortcutExportClip, s => s.ShortcutExportClip, (s, v) => s with { ShortcutExportClip = v }),
+        Shortcut(SettingKeys.ShortcutNextChapter, s => s.ShortcutNextChapter, (s, v) => s with { ShortcutNextChapter = v }),
+        Shortcut(SettingKeys.ShortcutPreviousChapter, s => s.ShortcutPreviousChapter, (s, v) => s with { ShortcutPreviousChapter = v }),
     ];
 
     private static readonly Dictionary<string, SettingDefinition> ByKey = All.ToDictionary(d => d.Key, StringComparer.Ordinal);
