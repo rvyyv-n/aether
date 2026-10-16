@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A slim navigation rail on the left edge: rest the pointer on the edge (a thin strip lights up) or click it, and Player, Clips, Stream and Settings slide in; it closes when you move away, press Esc or the controls hide. Every panel now moves the same way: the clip list, Settings and its sections, Diagnostics and the Open URL box fade and slide in and out instead of popping, button highlights fade, and the Springy motion style also gives buttons a small squash when pressed.
 
 ### Fixed
+- Skipping with the arrow keys or buttons is smoother (a held key no longer floods the player), the network cache setting is now respected, 59.94 and 119.88 Hz displays are paced exactly, and restarting the engine no longer causes a brief video stall.
 - Rotating the video from the Video panel no longer squeezes the picture into a narrow strip with black bands; the picture now fills its window area at the rotated shape.
 - Changing hardware decoding, audio passthrough or custom mpv options now applies with Restart engine straight away, without relaunching the app; the video carries on where it was.
 - A video opened at launch (command line, Open with, Play with Aether) opens again and shows its picture instead of playing sound only.

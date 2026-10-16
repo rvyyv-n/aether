@@ -28,6 +28,7 @@ public sealed class SeekCoalescer : IMpvCommandReplyHandler
 
     private double? _pendingPosition;
     private bool _pendingDragging;
+    private double? _pendingSkip;
 
     private long _seeksSent;
     private long _seeksCoalesced;
@@ -65,7 +66,19 @@ public sealed class SeekCoalescer : IMpvCommandReplyHandler
         {
             lock (_gate)
             {
-                return _pendingPosition.HasValue;
+                return _pendingPosition.HasValue || _pendingSkip.HasValue;
+            }
+        }
+    }
+
+    /// <summary>The summed skip waiting to dispatch (see <see cref="SeekBy"/>), or null.</summary>
+    public double? PendingSkip
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _pendingSkip;
             }
         }
     }
@@ -126,7 +139,8 @@ public sealed class SeekCoalescer : IMpvCommandReplyHandler
                 }
                 else
                 {
-                    // A seek is already in flight. Coalesce this request.
+                    // A seek is already in flight. Coalesce this request; an absolute target replaces a queued skip.
+                    _pendingSkip = null;
                     if (!_pendingPosition.HasValue)
                     {
                         _pendingDragging = dragging;
@@ -143,6 +157,42 @@ public sealed class SeekCoalescer : IMpvCommandReplyHandler
             }
 
             DispatchSeekLocked(target, dragging, now);
+        }
+    }
+
+    /// <summary>
+    /// UI thread: skips by <paramref name="deltaSeconds"/> from the current position. Skips requested while a seek is
+    /// in flight add up, and move a queued seek-bar target by the same amount, so a held arrow key sends one seek at a time.
+    /// </summary>
+    public void SeekBy(double deltaSeconds)
+    {
+        double delta = double.IsFinite(deltaSeconds) ? deltaSeconds : 0;
+        TimeSpan now = Now();
+
+        lock (_gate)
+        {
+            if (_inFlightId != 0)
+            {
+                if (now - _inFlightSince >= _options.InFlightTimeout)
+                {
+                    _inFlightId = 0;
+                }
+                else
+                {
+                    if (_pendingPosition is { } target)
+                    {
+                        _pendingPosition = Math.Max(0, target + delta);
+                    }
+                    else
+                    {
+                        _pendingSkip = (_pendingSkip ?? 0) + delta;
+                    }
+                    Interlocked.Increment(ref _seeksCoalesced);
+                    return;
+                }
+            }
+
+            DispatchSkipLocked(delta, now);
         }
     }
 
@@ -176,6 +226,11 @@ public sealed class SeekCoalescer : IMpvCommandReplyHandler
                 _pendingPosition = null;
                 DispatchSeekLocked(nextTarget, nextDragging, Now());
             }
+            else if (_pendingSkip is { } nextSkip)
+            {
+                _pendingSkip = null;
+                DispatchSkipLocked(nextSkip, Now());
+            }
 
             return true;
         }
@@ -188,6 +243,27 @@ public sealed class SeekCoalescer : IMpvCommandReplyHandler
         {
             _inFlightId = 0;
             _pendingPosition = null;
+            _pendingSkip = null;
+        }
+    }
+
+    private void DispatchSkipLocked(double delta, TimeSpan now)
+    {
+        ulong id = IMpvCommandReplyHandler.SeekReplyTag | (++_sequence & SequenceMask);
+        _inFlightId = id;
+        _inFlightSince = now;
+        Interlocked.Increment(ref _seeksSent);
+
+        try
+        {
+            _sender.SendSeekBy(delta, id);
+        }
+        catch (MpvException ex)
+        {
+            _inFlightId = 0;
+            _pendingPosition = null;
+            _pendingSkip = null;
+            SendFailed?.Invoke(this, ex);
         }
     }
 
@@ -206,6 +282,7 @@ public sealed class SeekCoalescer : IMpvCommandReplyHandler
         {
             _inFlightId = 0;
             _pendingPosition = null;
+            _pendingSkip = null;
             SendFailed?.Invoke(this, ex);
         }
     }

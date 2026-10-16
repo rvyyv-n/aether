@@ -65,6 +65,20 @@ public sealed class FakeSeekCommandSender : ISeekCommandSender
         OnSend?.Invoke(seconds, dragging, replyUserdata);
     }
 
+    public List<(double Delta, ulong ReplyUserdata)> SentSkips { get; } = [];
+
+    public void SendSeekBy(double deltaSeconds, ulong replyUserdata)
+    {
+        lock (_lock)
+        {
+            SentSkips.Add((deltaSeconds, replyUserdata));
+            if (_exceptionToThrow is not null)
+            {
+                throw _exceptionToThrow;
+            }
+        }
+    }
+
     public void Clear()
     {
         lock (_lock)

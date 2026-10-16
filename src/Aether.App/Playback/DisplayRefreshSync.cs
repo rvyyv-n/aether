@@ -28,7 +28,7 @@ internal sealed class DisplayRefreshSync : IDisposable
         Refresh(displayChanged: false);
     }
 
-    /// <summary>The <c>display-fps-override</c> value for the window's monitor: whole hertz, or "0" when unknown.</summary>
+    /// <summary>The <c>display-fps-override</c> value for the window's monitor: hertz such as "120" or "59.94", or "0" when unknown.</summary>
     public string Current => _tracker.Current;
 
     /// <summary>Raised when <see cref="Current"/> changes.</summary>
@@ -44,7 +44,7 @@ internal sealed class DisplayRefreshSync : IDisposable
         {
             return;
         }
-        if (_tracker.Accept(monitor, DisplayRefresh.QueryHertz(monitor)) is not null)
+        if (_tracker.Accept(monitor, DisplayRefresh.QueryExactHertz(monitor)) is not null)
         {
             Changed?.Invoke(this, EventArgs.Empty);
         }

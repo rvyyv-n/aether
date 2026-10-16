@@ -50,6 +50,16 @@ public static class MpvSettingsMap
     }
 
     /// <summary>
+    /// <c>demuxer-max-back-bytes</c> for the engine: half the network cache, between 8 and 512 MiB. mpv raises the
+    /// cache to at least the back buffer, so a fixed 512 MiB would override any cache setting below that.
+    /// </summary>
+    public static string BackBufferSize(AetherSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return $"{Math.Clamp(settings.NetworkCacheMegabytes / 2, 8, 512).ToString(CultureInfo.InvariantCulture)}MiB";
+    }
+
+    /// <summary>
     /// Whether to start the core with <c>video-latency-hacks</c>. The hacks stop mpv decoding a frame ahead; a GPU
     /// decoder keeps up regardless, but a software decoder then delivers every slow frame late and playback stutters.
     /// </summary>

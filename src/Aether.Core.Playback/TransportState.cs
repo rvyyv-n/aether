@@ -51,11 +51,14 @@ public static class TransportState
         Math.Max(0, double.IsFinite(seconds) ? seconds : 0).ToString("0.###", CultureInfo.InvariantCulture),
         dragging ? "absolute+keyframes" : "absolute+exact");
 
-    /// <summary>Skip by <paramref name="seconds"/> (negative goes back), landing on the exact frame.</summary>
+    /// <summary>
+    /// Skip by <paramref name="seconds"/> (negative goes back). No <c>exact</c> flag: mpv follows the Precise seeking
+    /// setting (<c>hr-seek</c>), so a skip is a quick keyframe jump unless the user asked for frame accuracy.
+    /// </summary>
     public static MpvCommand SeekBy(double seconds) => new(
         "seek",
         (double.IsFinite(seconds) ? seconds : 0).ToString("0.###", CultureInfo.InvariantCulture),
-        "relative+exact");
+        "relative");
 
     public static MpvCommand SetSpeed(double speed) => new(
         "set",

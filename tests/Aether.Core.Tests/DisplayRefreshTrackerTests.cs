@@ -32,6 +32,39 @@ public class DisplayRefreshTrackerTests
         Assert.Equal(DisplayRefreshTracker.Unknown, DisplayRefreshTracker.Format(hertz));
     }
 
+    [Theory]
+    [InlineData(59.94, "59.94")]
+    [InlineData(119.88, "119.88")]
+    [InlineData(23.976, "23.976")]
+    [InlineData(60.0, "60")]
+    [InlineData(59.9400599, "59.94")]
+    public void A_Fractional_Rate_Keeps_Its_Fraction(double hertz, string expected) =>
+        Assert.Equal(expected, DisplayRefreshTracker.Format(hertz));
+
+    [Theory]
+    [InlineData(9.9)]
+    [InlineData(1000.5)]
+    public void A_Fractional_Rate_Outside_The_Real_Range_Is_Unknown(double hertz) =>
+        Assert.Equal(DisplayRefreshTracker.Unknown, DisplayRefreshTracker.Format(hertz));
+
+    [Theory]
+    [InlineData(60000u, 1001u, 59.94)]
+    [InlineData(120000u, 1001u, 119.88)]
+    [InlineData(144u, 1u, 144.0)]
+    [InlineData(0u, 1u, 0.0)]
+    [InlineData(60u, 0u, 0.0)]
+    public void A_Rational_Rate_Becomes_Hertz(uint numerator, uint denominator, double expected) =>
+        Assert.Equal(expected, DisplayRefresh.FromRational(numerator, denominator), 2);
+
+    [Fact]
+    public void The_Same_Fractional_Rate_Is_Not_Reported_Twice()
+    {
+        var tracker = new DisplayRefreshTracker();
+
+        Assert.Equal("59.94", tracker.Accept(MonitorA, 60000.0 / 1001));
+        Assert.Null(tracker.Accept(MonitorA, 59.94));
+    }
+
     [Fact]
     public void Nothing_Is_Overridden_Before_The_First_Reading()
     {

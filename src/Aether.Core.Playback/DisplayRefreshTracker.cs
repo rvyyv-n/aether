@@ -20,7 +20,7 @@ public sealed class DisplayRefreshTracker
     private nint _monitor;
     private bool _hasReading;
 
-    /// <summary>The value mpv should hold now: whole hertz such as "120", or <see cref="Unknown"/>.</summary>
+    /// <summary>The value mpv should hold now: hertz such as "120" or "59.94", or <see cref="Unknown"/>.</summary>
     public string Current { get; private set; } = Unknown;
 
     /// <summary>
@@ -34,7 +34,7 @@ public sealed class DisplayRefreshTracker
     /// Records a reading of <paramref name="monitor"/>. Returns the new value for mpv, or null when it is the same as
     /// <see cref="Current"/> and nothing needs sending.
     /// </summary>
-    public string? Accept(nint monitor, int hertz)
+    public string? Accept(nint monitor, double hertz)
     {
         _monitor = monitor;
         _hasReading = true;
@@ -48,9 +48,13 @@ public sealed class DisplayRefreshTracker
         return value;
     }
 
-    /// <summary>The <c>display-fps-override</c> text for a reading: whole hertz, or <see cref="Unknown"/> when it is not a real rate.</summary>
-    public static string Format(int hertz) =>
+    /// <summary>
+    /// The <c>display-fps-override</c> text for a reading: hertz to three decimals without trailing zeros ("60",
+    /// "59.94"), or <see cref="Unknown"/> when it is not a real rate. The fraction matters: pacing against 60 on a
+    /// 59.94 Hz display drops a frame every 16 seconds or so.
+    /// </summary>
+    public static string Format(double hertz) =>
         hertz is >= MinimumHertz and <= MaximumHertz
-            ? hertz.ToString(CultureInfo.InvariantCulture)
+            ? hertz.ToString("0.###", CultureInfo.InvariantCulture)
             : Unknown;
 }

@@ -24,6 +24,18 @@ internal static unsafe partial class User32
     [LibraryImport("user32.dll", EntryPoint = "EnumDisplaySettingsW")]
     public static partial int EnumDisplaySettings(char* deviceName, uint modeNumber, DevMode* mode);
 
+    public const uint QDC_ONLY_ACTIVE_PATHS = 2;
+    public const uint DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME = 1;
+
+    [LibraryImport("user32.dll")]
+    public static partial int GetDisplayConfigBufferSizes(uint flags, uint* pathCount, uint* modeCount);
+
+    [LibraryImport("user32.dll")]
+    public static partial int QueryDisplayConfig(uint flags, uint* pathCount, DisplayConfigPathInfo* paths, uint* modeCount, DisplayConfigModeInfo* modes, nint currentTopologyId);
+
+    [LibraryImport("user32.dll")]
+    public static partial int DisplayConfigGetDeviceInfo(DisplayConfigSourceDeviceName* request);
+
     /// <summary>Adjusts the calling thread's cursor display counter; returns the new count (shown while >= 0).</summary>
     [LibraryImport("user32.dll")]
     public static partial int ShowCursor(int show);
@@ -76,6 +88,33 @@ internal static unsafe partial class User32
     {
         [FieldOffset(68)] public ushort Size;
         [FieldOffset(184)] public uint DisplayFrequency;
+    }
+
+    /// <summary>Win32 <c>DISPLAYCONFIG_PATH_INFO</c> (72 bytes); only the source id and the target's refresh rate are read.</summary>
+    [StructLayout(LayoutKind.Explicit, Size = 72)]
+    public struct DisplayConfigPathInfo
+    {
+        [FieldOffset(0)] public long SourceAdapterId;
+        [FieldOffset(8)] public uint SourceId;
+        [FieldOffset(48)] public uint RefreshNumerator;
+        [FieldOffset(52)] public uint RefreshDenominator;
+    }
+
+    /// <summary>Win32 <c>DISPLAYCONFIG_MODE_INFO</c> (64 bytes); only a buffer for <c>QueryDisplayConfig</c>.</summary>
+    [StructLayout(LayoutKind.Explicit, Size = 64)]
+    public struct DisplayConfigModeInfo
+    {
+    }
+
+    /// <summary>Win32 <c>DISPLAYCONFIG_SOURCE_DEVICE_NAME</c> (84 bytes): the GDI name (\.\DISPLAY1) of a path's source.</summary>
+    [StructLayout(LayoutKind.Explicit, Size = 84)]
+    public struct DisplayConfigSourceDeviceName
+    {
+        [FieldOffset(0)] public uint Type;
+        [FieldOffset(4)] public uint Size;
+        [FieldOffset(8)] public long AdapterId;
+        [FieldOffset(16)] public uint Id;
+        [FieldOffset(20)] public fixed char GdiDeviceName[32];
     }
 
     /// <summary>Win32 <c>MINMAXINFO</c>; only the minimum tracking size is used.</summary>

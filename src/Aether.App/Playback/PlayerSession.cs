@@ -107,6 +107,7 @@ public sealed class PlayerSession : IDisposable
             {
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
+                BackBufferSize = MpvSettingsMap.BackBufferSize(s),
                 AdditionalOptions = startOptions,
             });
         }
@@ -118,6 +119,7 @@ public sealed class PlayerSession : IDisposable
             {
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
+                BackBufferSize = MpvSettingsMap.BackBufferSize(s),
             });
         }
     }
@@ -185,9 +187,9 @@ public sealed class PlayerSession : IDisposable
     public void SetVolume(double volume) =>
         _context.CommandAsync(new MpvCommand("set", "volume", Math.Clamp(volume, 0, 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)));
 
-    /// <summary>Back or Forward 5 s from the pill or the arrow keys. Non-blocking.</summary>
+    /// <summary>Skips from the pill or the arrow keys; a held key collapses into one seek at a time. Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
-    public void SeekBy(double seconds) => _context.CommandAsync(TransportState.SeekBy(seconds));
+    public void SeekBy(double seconds) => _seekCoalescer.SeekBy(seconds);
 
     /// <summary>Speed from the speed menu, 0.1× to 4.0×. Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>

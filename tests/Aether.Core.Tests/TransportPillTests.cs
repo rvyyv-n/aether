@@ -114,9 +114,9 @@ public class TransportPillTests
         Assert.Equal(expected, TransportState.SetSpeed(speed).ToString());
 
     [Theory]
-    [InlineData(5, "seek 5 relative+exact")]
-    [InlineData(-5, "seek -5 relative+exact")]
-    [InlineData(double.NaN, "seek 0 relative+exact")]
-    public void SeekBy_IsRelativeAndExact(double seconds, string expected) =>
+    [InlineData(5, "seek 5 relative")]
+    [InlineData(-5, "seek -5 relative")]
+    [InlineData(double.NaN, "seek 0 relative")]
+    public void SeekBy_IsRelativeAndLeavesExactnessToPreciseSeeking(double seconds, string expected) =>
         Assert.Equal(expected, TransportState.SeekBy(seconds).ToString());
 }

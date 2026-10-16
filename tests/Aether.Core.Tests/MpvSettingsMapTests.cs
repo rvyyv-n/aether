@@ -172,6 +172,15 @@ public class MpvSettingsMapTests
             MpvSettingsMap.NormaliseCommands(true));
     }
 
+    [Theory]
+    [InlineData(16, "8MiB")]
+    [InlineData(64, "32MiB")]
+    [InlineData(150, "75MiB")]
+    [InlineData(1024, "512MiB")]
+    [InlineData(2048, "512MiB")]
+    public void Back_Buffer_Is_Half_The_Network_Cache_Within_Bounds(int cacheMegabytes, string expected) =>
+        Assert.Equal(expected, MpvSettingsMap.BackBufferSize(new AetherSettings { NetworkCacheMegabytes = cacheMegabytes }));
+
     [Fact]
     public void Passthrough_Is_A_Start_Option_Only_When_On()
     {
