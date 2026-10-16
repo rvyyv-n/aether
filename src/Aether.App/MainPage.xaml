@@ -244,7 +244,7 @@
             </Grid.RowDefinitions>
 
             <!--  Hero: tile, 16, title, 4, subtitle, 24, details (failures), 24, actions.  -->
-            <StackPanel Margin="16,32,16,16" VerticalAlignment="Center">
+            <StackPanel x:Name="HomeHero" Margin="16,32,16,16" VerticalAlignment="Center">
                 <Border
                     Width="{StaticResource AetherSizeHeroTile}"
                     Height="{StaticResource AetherSizeHeroTile}"
@@ -1166,8 +1166,8 @@
                             Style="{StaticResource AetherCaptionTextStyle}" />
                         <Button
                             x:Name="TourSkipButton"
-                            Margin="0,-6,-8,-6"
-                            Padding="8,0"
+                            Margin="0,0,-4,0"
+                            Padding="12,0"
                             HorizontalAlignment="Right"
                             AllowFocusOnInteraction="True"
                             BorderBrush="Transparent"
@@ -1198,11 +1198,18 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel
-                            x:Name="TourDots"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal"
-                            Spacing="4" />
+                        <Grid
+                            x:Name="TourBar"
+                            Width="96"
+                            Height="4"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                            <Border Background="{StaticResource AetherTextTertiaryBrush}" CornerRadius="2" Opacity="0.4" />
+                            <Border
+                                x:Name="TourBarFill"
+                                Background="{StaticResource AetherTextPrimaryBrush}"
+                                CornerRadius="2" />
+                        </Grid>
                         <Button
                             x:Name="TourBackButton"
                             Grid.Column="1"

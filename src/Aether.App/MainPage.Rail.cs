@@ -189,7 +189,7 @@ public sealed partial class MainPage
         {
             return;
         }
-        bool available = _sidebarEnabled && _railFits && _chrome.IsVisible && !_settingsShown && _openUrl.Stage != OpenUrlStage.Editing;
+        bool available = _sidebarEnabled && !_tour.IsActive && _railFits && _chrome.IsVisible && !_settingsShown && _openUrl.Stage != OpenUrlStage.Editing;
         _rail.SetAvailable(available);
         _rail.SetDragging(_dragging || _pointerHeld || ClipDrawer.IsDraggingOut);
         RailHotZone.Visibility = available ? Visibility.Visible : Visibility.Collapsed;

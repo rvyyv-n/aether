@@ -1438,19 +1438,13 @@
     <value>Open a video</value>
   </data>
   <data name="Tour_Open_Body" xml:space="preserve">
-    <value>Choose Open file or Open URL, paste a link with Ctrl+V, or drop a file anywhere on the window.</value>
+    <value>Choose Open file or Open URL, or drop a file on the window. You can also paste a link with Ctrl+V to play YouTube and other web links.</value>
   </data>
   <data name="Tour_Controls_Title" xml:space="preserve">
     <value>The controls</value>
   </data>
   <data name="Tour_Controls_Body" xml:space="preserve">
     <value>While a video plays, the controls sit here. They shrink to a slim bar as you watch and grow back when you point at them.</value>
-  </data>
-  <data name="Tour_Rail_Title" xml:space="preserve">
-    <value>The side rail</value>
-  </data>
-  <data name="Tour_Rail_Body" xml:space="preserve">
-    <value>Rest the pointer on the left edge to open the rail: your saved clips, streaming and Settings.</value>
   </data>
   <data name="Tour_Menu_Title" xml:space="preserve">
     <value>Right-click for more</value>

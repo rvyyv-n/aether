@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- First-run tour: the cards now stay fully inside the window (the second one no longer hides Next), Skip tour is no longer clipped, the side rail is left out of the tour and stays shut while it runs, the keys card sits beside the home content instead of over the file list, the first card mentions web links, and the lit ring pulses gently while a progress bar fills as you go (both off when Windows animations are off).
 - Settings › General now holds the window settings (remember window size, always on top) next to battery saver and history, instead of leaving them on the Playback page.
 
 ### Added
