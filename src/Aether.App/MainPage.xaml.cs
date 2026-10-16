@@ -94,6 +94,7 @@ public sealed partial class MainPage : Page
     private int _recentsVersion; // bumped to drop a missing-file check that a newer one replaced
     private bool _durationRecorded;
     private bool _settingsShown;
+    private bool _diagnosticsShown;
 
     public MainPage()
     {
@@ -109,6 +110,7 @@ public sealed partial class MainPage : Page
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
         InitializeTransport();
         InitializeBar();
+        InitializeRail();
         InitializeContextMenu();
         InitializeTracks();
         InitializeVideo();
@@ -552,7 +554,7 @@ public sealed partial class MainPage : Page
                 }
                 _lastDecoder = vm.Decoder;
                 break;
-            case nameof(PlayerViewModel.State) when Diagnostics.Visibility == Visibility.Visible:
+            case nameof(PlayerViewModel.State) when _diagnosticsShown:
                 Diagnostics.Update(vm.State);
                 break;
         }
@@ -659,14 +661,28 @@ public sealed partial class MainPage : Page
         ToggleDiagnostics();
     }
 
-    private void ToggleDiagnostics()
+    private void ToggleDiagnostics() => SetDiagnosticsShown(!_diagnosticsShown);
+
+    /// <summary>The panel drops in from the top edge it sits on and rises back out.</summary>
+    private void SetDiagnosticsShown(bool show)
     {
-        bool show = Diagnostics.Visibility != Visibility.Visible;
+        _diagnosticsShown = show;
         if (show && _session is { } session)
         {
             Diagnostics.Update(session.ViewModel.State);
         }
-        Diagnostics.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        if (_fader is null)
+        {
+            Diagnostics.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        }
+        else if (show)
+        {
+            _fader.Enter(Diagnostics, ChromeFader.FromAbove);
+        }
+        else
+        {
+            _fader.Exit(Diagnostics, ChromeFader.FromAbove);
+        }
     }
 
     private void OnVolumeClick(object sender, RoutedEventArgs e) => ToggleMute();
@@ -882,7 +898,11 @@ public sealed partial class MainPage : Page
 
     private void OnEscapeAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (IsOpenUrlShown)
+        if (CloseRail())
+        {
+            args.Handled = true;
+        }
+        else if (IsOpenUrlShown)
         {
             args.Handled = true;
             CloseOpenUrl();
@@ -896,10 +916,10 @@ public sealed partial class MainPage : Page
         {
             args.Handled = true;
         }
-        else if (Diagnostics.Visibility == Visibility.Visible)
+        else if (_diagnosticsShown)
         {
             args.Handled = true;
-            Diagnostics.Visibility = Visibility.Collapsed;
+            SetDiagnosticsShown(false);
         }
         else if (_host is { IsFullScreen: true } host)
         {
@@ -932,8 +952,19 @@ public sealed partial class MainPage : Page
             SettingsHost.Child ??= new SettingsView();
             _host?.SetFullScreen(false);
         }
-        SettingsHost.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
-        SettingsBackButton.Visibility = SettingsHost.Visibility;
+        if (_fader is null)
+        {
+            SettingsHost.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        }
+        else if (shown)
+        {
+            _fader.Enter(SettingsHost, ChromeFader.FromBelow);
+        }
+        else
+        {
+            _fader.Exit(SettingsHost, ChromeFader.FromBelow); // fades off over the player, which is already back
+        }
+        SettingsBackButton.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
         SettingsButton.Visibility = shown ? Visibility.Collapsed : Visibility.Visible;
         _chrome.SetHold(ChromeHolds.Settings, shown);
         Render();
@@ -982,7 +1013,16 @@ public sealed partial class MainPage : Page
 
         _openUrl.Open(clipboard);
         OpenUrlBox.Text = _openUrl.Text;
-        OpenUrlOverlay.Visibility = Visibility.Visible;
+        if (_fader is null)
+        {
+            OpenUrlOverlay.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            // The scrim only fades; the dialog rises with it.
+            _fader.Enter(OpenUrlOverlay, null);
+            _fader.Slide(OpenUrlCard, true, ChromeFader.FromBelow);
+        }
         _chrome.SetHold(ChromeHolds.Dialog, true);
         ApplyChrome();
         RenderOpenUrl();
@@ -1046,7 +1086,15 @@ public sealed partial class MainPage : Page
 
     private void HideOpenUrlDialog()
     {
-        OpenUrlOverlay.Visibility = Visibility.Collapsed;
+        if (_fader is null)
+        {
+            OpenUrlOverlay.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            _fader.Exit(OpenUrlOverlay, null);
+            _fader.Slide(OpenUrlCard, false, ChromeFader.FromBelow);
+        }
         _chrome.SetHold(ChromeHolds.Dialog, false);
         ApplyChrome();
         Focus(FocusState.Programmatic); // playback keys back on the page
@@ -1491,6 +1539,7 @@ public sealed partial class MainPage : Page
             _host?.SetCaptionButtonsVisible(visible);
         }
         SyncBar();
+        SyncRail(applyChrome: false);
         UpdateCursor();
         UpdateToastPlacement();
         _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog)) != 0);
@@ -1601,6 +1650,7 @@ public sealed partial class MainPage : Page
         VideoSurface.SetBackdropActive(hasVideo);
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
+        PlaceRail();
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         string? fileName = _streamTitle ?? (HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null);
         TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");

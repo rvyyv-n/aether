@@ -106,6 +106,24 @@ public class ChromeVisibilityTests
     }
 
     [Fact]
+    public void RailHold_KeepsChromeUp_ButLeavesThePillSlim()
+    {
+        var time = new ManualTimeProvider();
+        var chrome = new ChromeVisibility(time, Delay);
+        time.Advance(Delay);
+        Assert.True(chrome.Tick());
+
+        Assert.True(chrome.SetHold(ChromeHolds.Rail, true));
+        Assert.False(chrome.IsExpanded);
+        time.Advance(TimeSpan.FromMinutes(1));
+        Assert.False(chrome.Tick());
+        Assert.True(chrome.IsVisible);
+
+        chrome.SetHold(ChromeHolds.Rail, false);
+        Assert.Equal(Delay, chrome.DueIn);
+    }
+
+    [Fact]
     public void CardShrinks_OnTime_WhileThePointerMovesElsewhere()
     {
         var time = new ManualTimeProvider();

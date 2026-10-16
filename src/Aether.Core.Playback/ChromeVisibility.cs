@@ -29,6 +29,9 @@ public enum ChromeHolds
 
     /// <summary>A control in the transport card has keyboard focus (Tab).</summary>
     KeyboardFocus = 128,
+
+    /// <summary>The pointer is on the hover rail (7.21). Keeps the chrome up but, unlike the others, leaves the pill slim.</summary>
+    Rail = 256,
 }
 
 /// <summary>
@@ -90,7 +93,7 @@ public sealed class ChromeVisibility
     }
 
     /// <summary>
-    /// Sets or clears a hold. Setting one shows the chrome and grows the card; clearing one restarts the
+    /// Sets or clears a hold. Setting one shows the chrome and grows the card (the rail's excepted); clearing one restarts the
     /// countdown, so the card stays for a full <see cref="IdleDelay"/> after, say, the pointer leaves the controls.
     /// Returns true if the chrome became visible.
     /// </summary>
@@ -100,7 +103,10 @@ public sealed class ChromeVisibility
         Holds = active ? previous | hold : previous & ~hold;
         if (active)
         {
-            IsExpanded = true;
+            if (hold != ChromeHolds.Rail)
+            {
+                IsExpanded = true;
+            }
             return Show();
         }
         if (previous != Holds)

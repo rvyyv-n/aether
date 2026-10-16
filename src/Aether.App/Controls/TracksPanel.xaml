@@ -20,6 +20,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                            <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
                             <ContentPresenter
                                 Padding="{TemplateBinding Padding}"
                                 HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"

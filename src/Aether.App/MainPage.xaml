@@ -253,9 +253,6 @@
             (screens 1 and 2): the hero centred above the status strip.
         -->
         <Grid x:Name="HomeView">
-            <Grid.OpacityTransition>
-                <ScalarTransition Duration="0:0:0.2" />
-            </Grid.OpacityTransition>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
@@ -681,6 +678,78 @@
             Visibility="Collapsed" />
 
         <!--
+            Hover rail (7.21, screen 6). A 4 px hot zone on the left edge under the title bar wakes it: resting there shows
+            the FillRange peek strip and opens the rail after 150 ms, a click opens it at once. 56 wide (padding 7 plus the
+            1 px stroke), 8 from the left, from 8 under the title bar to 8 above the pill; the page places it
+            (MainPage.Rail.cs). Solid SurfaceOverlayStrong: Acrylic cannot see the swap chain (ADR-0013).
+        -->
+        <Border
+            x:Name="RailHotZone"
+            Width="{StaticResource AetherSizeRailHotZone}"
+            Margin="0,32,0,0"
+            HorizontalAlignment="Left"
+            Background="Transparent"
+            PointerCanceled="OnRailHotZoneExited"
+            PointerEntered="OnRailHotZoneEntered"
+            PointerExited="OnRailHotZoneExited"
+            Tapped="OnRailHotZoneTapped">
+            <Border
+                x:Name="RailPeek"
+                Background="{StaticResource AetherFillRangeBrush}"
+                CornerRadius="0,2,2,0"
+                IsHitTestVisible="False"
+                Opacity="0" />
+        </Border>
+        <Border
+            x:Name="Rail"
+            Width="{StaticResource AetherSizeRailWidth}"
+            Margin="8,40,0,120"
+            Padding="7"
+            HorizontalAlignment="Left"
+            Background="{StaticResource AetherSurfaceOverlayStrongBrush}"
+            BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource AetherOverlayCornerRadius}"
+            PointerCanceled="OnRailPointerExited"
+            PointerEntered="OnRailPointerEntered"
+            PointerExited="OnRailPointerExited"
+            Visibility="Collapsed">
+            <Grid RowSpacing="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Button
+                    x:Name="RailPlayer"
+                    Click="OnRailPlayerClick"
+                    Content="&#xE714;"
+                    Style="{StaticResource AetherRailItemActiveStyle}" />
+                <Button
+                    x:Name="RailClips"
+                    Grid.Row="1"
+                    Click="OnRailClipsClick"
+                    Content="&#xE8F1;"
+                    Style="{StaticResource AetherRailItemStyle}" />
+                <!--  The LAN streamer lands in Pass 11.  -->
+                <Button
+                    x:Name="RailStream"
+                    Grid.Row="2"
+                    Content="&#xE774;"
+                    IsEnabled="False"
+                    Style="{StaticResource AetherRailItemStyle}" />
+                <Button
+                    x:Name="RailSettings"
+                    Grid.Row="4"
+                    Click="OnRailSettingsClick"
+                    Content="&#xE713;"
+                    Style="{StaticResource AetherRailItemStyle}" />
+            </Grid>
+        </Border>
+
+        <!--
             Export chip and clip drawer (s5-03, 5.3): 8 above the card (24 + 88 + 8 = 120 over the full card, 80 over
             the slim pill; the page moves it as the card grows), right-aligned to it by sharing its width and margins.
             Fades with the controls.
@@ -996,6 +1065,7 @@
             Background="{StaticResource AetherSurfaceScrimBrush}"
             Visibility="Collapsed">
             <Border
+                x:Name="OpenUrlCard"
                 MaxWidth="{StaticResource AetherSizeDialogWidth}"
                 Margin="16"
                 Padding="24"

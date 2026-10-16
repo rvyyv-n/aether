@@ -22,6 +22,9 @@
                         Background="{TemplateBinding Background}"
                         Content="{TemplateBinding Content}"
                         CornerRadius="{StaticResource AetherOverlayCornerRadius}">
+                        <ContentPresenter.BackgroundTransition>
+                            <BrushTransition Duration="0:0:0.083" />
+                        </ContentPresenter.BackgroundTransition>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal" />
@@ -256,6 +259,9 @@
                         x:Name="Root"
                         Background="Transparent"
                         CornerRadius="{StaticResource AetherControlCornerRadius}">
+                        <Grid.BackgroundTransition>
+                            <BrushTransition Duration="0:0:0.083" />
+                        </Grid.BackgroundTransition>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal" />

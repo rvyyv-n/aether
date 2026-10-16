@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restarting the engine from Settings now keeps your choice of audio track, subtitle track (or Off), the audio and subtitle delay and any subtitle files you added, instead of going back to the player's own picks.
 - Settings → Subtitles has a colour (white, yellow, green or cyan) and a position (bottom, raised or top) for captions, applied straight away. Subtitle files with their own styling keep their look.
 - Standalone Kestrel developer streaming host (`tools/host.ps1`, `tools/dev-host`).
+- A slim navigation rail on the left edge: rest the pointer on the edge (a thin strip lights up) or click it, and Player, Clips, Stream and Settings slide in; it closes when you move away, press Esc or the controls hide. Every panel now moves the same way: the clip list, Settings and its sections, Diagnostics and the Open URL box fade and slide in and out instead of popping, button highlights fade, and the Springy motion style also gives buttons a small squash when pressed.
 
 ### Fixed
 - Rotating the video from the Video panel no longer squeezes the picture into a narrow strip with black bands; the picture now fills its window area at the rotated shape.

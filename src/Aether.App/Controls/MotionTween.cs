@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
+using Aether.Core.Playback;
 using Microsoft.UI.Xaml.Media;
 
 namespace Aether_App.Controls;
@@ -7,7 +8,7 @@ namespace Aether_App.Controls;
 /// <summary>
 /// A value moved towards a target once per rendered frame on the UI thread, for motion that has to go through
 /// layout (the transport card's height, which the render thread's blur and the chip above it follow). Quick eases
-/// over a fixed time; Springy runs <see cref="Spring"/> and keeps its speed when the target changes midway.
+/// over a fixed time; Springy runs <see cref="DampedSpring"/> and keeps its speed when the target changes midway.
 /// With Windows animations off it jumps. UI thread only.
 /// </summary>
 internal sealed class MotionTween
@@ -15,7 +16,7 @@ internal sealed class MotionTween
     private readonly Stopwatch _clock = new();
     private bool _running;
     private bool _springy;
-    private Spring _spring;
+    private DampedSpring _spring;
     private double _velocity;
     private double _from;
     private double _durationSeconds;
@@ -47,7 +48,7 @@ internal sealed class MotionTween
             _velocity = 0; // only a spring carries its speed into the new target
         }
         _springy = springy;
-        _spring = Spring.FromTokens();
+        _spring = Motion.Spring();
         _from = Value;
         _durationSeconds = durationMilliseconds / 1000;
         _curve = curve;

@@ -40,6 +40,13 @@ public sealed partial class MainPage
         {
             element.SizeChanged += (_, _) => MeasureBarSlides();
         }
+        foreach (UIElement button in new UIElement[]
+        {
+            OpenButton, SpeedButton, BackButton, PlayPauseButton, ForwardButton, VolumeButton, MoreButton, FullScreenButton,
+        })
+        {
+            PressFeedback.Attach(button);
+        }
     }
 
     /// <summary>Grows or shrinks the card to match the chrome state. Called from <see cref="ApplyChrome"/>.</summary>
@@ -116,6 +123,7 @@ public sealed partial class MainPage
         ClipLayer.Margin = new Thickness(clip.Left, clip.Top, clip.Right,
             Osd.Margin.Bottom + height + Motion.Token("AetherSizeOsdGap"));
         UpdateToastPlacement();
+        PlaceRail();
     }
 
     // Tabbing onto any transport control grows the card; the buttons only take focus from the keyboard.

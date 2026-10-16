@@ -67,7 +67,7 @@ internal sealed class ToastService
         toast.DismissRequested += (_, _) => Close();
 
         _layer.Visibility = Visibility.Collapsed;
-        _fader.Fade(_layer, false);
+        _fader.Reveal(_layer, false);
     }
 
     public void Show(string key, string text, ToastTone tone = ToastTone.Neutral, string? actionLabel = null, Action? action = null) =>
@@ -116,7 +116,7 @@ internal sealed class ToastService
             _hideTimer.Stop();
             _toast.Present(request);
             _layer.Visibility = Visibility.Visible;
-            _fader.Fade(_layer, true);
+            _fader.Reveal(_layer, true);
             if (!_shown)
             {
                 _shown = true;
@@ -127,10 +127,10 @@ internal sealed class ToastService
         {
             _focused = false;
             _shown = false;
-            _fader.Fade(_layer, false);
+            _fader.Reveal(_layer, false);
             _fader.Slide(_toast, false);
             // Collapsed once the fade is done, so the invisible toast takes no clicks and is left out of the tab order.
-            double fade = _fader.DurationMilliseconds(false);
+            double fade = _fader.RevealDurationMilliseconds(false);
             _hideTimer.Interval = TimeSpan.FromMilliseconds(Math.Max(fade, 1));
             _hideTimer.Start();
         }

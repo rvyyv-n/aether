@@ -80,6 +80,7 @@ public sealed partial class MainPage
         MoreLoopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Loop);
         MoreAlwaysOnTopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
         ApplyContextMenuShortcuts();
+        ApplyRailShortcutLabels();
     }
 
     private static string Tip(string key, ShortcutAction action) => App.Shortcuts.Tip(AppStrings.Get(key), action);

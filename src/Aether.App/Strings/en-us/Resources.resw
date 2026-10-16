@@ -438,6 +438,9 @@
   <data name="Menu_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="Rail_Name" xml:space="preserve">
+    <value>Navigation</value>
+  </data>
   <data name="Menu_ClearList" xml:space="preserve">
     <value>Clear list</value>
   </data>
