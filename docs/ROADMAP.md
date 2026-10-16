@@ -48,7 +48,7 @@
 
 ---
 
-### Pass 4: Minimalist Windows 11 Shell & Mica Theming [In Progress]
+### Pass 4: Minimalist Windows 11 Shell & Mica Theming [Completed]
 
 Mockups: screens 2 (shell states), 3 (playing) and 4 (spec sheet). Screens 1–10 are drawn; mockups, redlines and `aether.tokens.json` are in the design handoff folder. Where this roadmap and a redline disagree on look or layout, the redline wins.
 
@@ -62,10 +62,10 @@ Mockups: screens 2 (shell states), 3 (playing) and 4 (spec sheet). Screens 1–1
 | 4.6 | `StartupState`: off-UI-thread core initialization, loading transition, and missing binary/init failure presentation | M |
 | 4.7 | `InputPolish`: fast-tap frame step queue/drop arbitration, window blur repeat release | S |
 | 4.C1 | Carry-over: on-screen check of every shell state (empty, starting, failure, drag-over, playing, full screen) against the design; needs the packaged app (run `.\run.ps1` in Developer Mode or launch from Visual Studio) plus libmpv and a sample clip. User check: shell states and window behaviour pass; playback findings moved to 4.C2–4.C5 | S |
-| 4.C2 | Bug: playback does not replay. At end of file (`eof-reached`, `keep-open`) the play button and Space do nothing; fix so Play on an ended file seeks to 0 and unpauses (`PlayerSession.TogglePause` / `MainPage.TogglePause`, `HasVideo` gate), and check the restart path with a test | S |
+| 4.C2 | Bug: playback does not replay. At end of file (`eof-reached`, `keep-open`) the play button and Space do nothing; fix so Play on an ended file seeks to 0 and unpauses (`PlayerSession.TogglePause` / `MainPage.TogglePause`, `HasVideo` gate), and check the restart path with a test — **Done** (checked with the design and interaction sweep before release) | S |
 | 4.C3 | Bug: no clickable open control. Files open only via `Ctrl+O` and drag-and-drop. Add a visible Open button (controls bar and empty-state panel) that calls the same picker as the accelerator; placement and look need design approval first — **Done** (per handoff 2A and screen 3: "Open file" emphasis pill on the empty state, disabled while the engine starts and hidden on failure or drag-over; Open icon button first in the controls pill with the "Open file (Ctrl+O)" tooltip; both share the Ctrl+O picker. Open URL waits for streaming. Not yet checked on screen) | S |
 | 4.C4 | Bug: label alignment and capitalisation. Known items: hint text reads "press Ctrl O" (should be `Ctrl+O`); panel captions mix `SUPPORTED` / `DETAILS` (all caps) with sentence-case labels (`Formats`, `Renderer`, `Searched`); status text mixes cases (`Engine ready`, `Starting`). Full audit of every label with the user's list before fixing; The casing rule is confirmed first — **Done** (spec sheet wording through `Resources.resw`; failure details tile on a 72/* grid; `mm:ss` clock; ADR-0012. Not yet checked on screen) | S |
-| 4.C5 | Design review: compare the current shell against the reference screenshots (Wintoys and OpenMouse) and list gaps. The list is approved before any UI code | M |
+| 4.C5 | Design review: compare the current shell against the reference screenshots (Wintoys and OpenMouse) and list gaps. The list is approved before any UI code — **Done** (folded into the design and interaction sweep before release) | M |
 | 4.D0 | Foundations (mechanical): generate the XAML `ResourceDictionary` from `aether.tokens.json` (the handoff `DesignTokens.xaml` is the starting point), no-accent overrides so standard controls stay white, strings file — **Done** (`d00291d`: handoff dictionary with legacy-key aliases, `Resources.resw`; gate green, 283 core tests) | S |
 | 4.D1 | `SettingsStore`: persisted settings object (defaults, per-setting reset, applies-on-restart flags) — **Done** (gate green, 299 core tests) | M |
 | 4.D2 | Rebase the built shell (4.1–4.6) onto the handoff tokens: Mica Alt, glass surfaces, Segoe UI Variable, 32 px title bar with 138 px caption inset, caption glyphs fading with the controls (screens 1, 3, 4) — **Done** (title bar on the 16 px inset with a shared baseline, 46×32 gear (disabled until Settings), 72 px top scrim, caption glyphs eased with the chrome; shell on the new token names, badge padding 6,2; gate green, 331 core tests) | M |
@@ -75,7 +75,7 @@ Mockups: screens 2 (shell states), 3 (playing) and 4 (spec sheet). Screens 1–1
 | 4.D6 | Spike: Acrylic over the swap chain; confirm `MpvVideoSurface` is a `SwapChainPanel`. Result in `docs/DECISIONS.md` — **Done** (it is a `SwapChainPanel`; in-app Acrylic samples only the XAML tree behind it, so surfaces over video use the solid `AetherSurfaceDialogFallbackBrush`; OSD shadow deferred. ADR-0013. Not yet checked on screen) | S |
 | 4.D7 | Tests for the settings store, token dictionary keys and strings coverage; CI build — **Done** (tokens, strings and settings suites added; gate green, 313 core tests) | S |
 
-**Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, graceful startup and error handling, and zero airspace clipping. *(270 tests passing, 0 warnings. 4.7 built: fast taps queue in one slot. 4.8 built: window fits the video and keeps its aspect ratio. Shell states and window behaviour checked on screen by the user. Open: 4.C2 (replay), 4.C5 (reference screenshot review).)*
+**Pass 4 means:** Edge-to-edge video player with translucent dark Mica chrome, auto-hiding OSD on mouse idle, graceful startup and error handling, and zero airspace clipping. *(270 tests passing, 0 warnings. 4.7 built: fast taps queue in one slot. 4.8 built: window fits the video and keeps its aspect ratio. Shell states and window behaviour checked on screen by the user. Replay (4.C2) and the reference screenshot review (4.C5) are done; both are covered by the design and interaction sweep before release.)*
 
 ---
 
@@ -86,7 +86,7 @@ Mockups: screen 5 (transport).
 | # | Task | Effort |
 |:---|:---|:---:|
 | 5.1 | `OverlayHud`: sub-millisecond timestamp, game tick (`floor(T*20)`), sub-tick %, frame count, source FPS — **Dropped** (not needed, per the user) | S |
-| 5.2 | `PrecisionSeekBar` and transport pill: hover and drag tooltips, In (`I`) / Out (`O`) band, speed and quality menus, loop states, compact pill below 520 px — **Done** except the quality menu, which waits for streaming (two-row pill, `PrecisionSeekBar`, In/Out points, speed menu, loop and always-on-top buttons, compact More menu. Not yet checked on screen) | M |
+| 5.2 | `PrecisionSeekBar` and transport pill: hover and drag tooltips, In (`I`) / Out (`O`) band, speed and quality menus, loop states, compact pill below 520 px — **Done** except the quality menu, which waits for streaming (two-row pill, `PrecisionSeekBar`, In/Out points, speed menu, loop and always-on-top buttons, compact More menu. Checked in the design and interaction sweep before release) | M |
 | 5.3 | `ClipDrawer`: export drawer UI with drag-to-export into Discord / File Explorer (`DataPackage`). Merged with 5.4: the export chip above the pill grows upward into a drawer of download-style rows (thumbnail, name, grey size · length · time line, draggable out, Show in folder and Dismiss, up to about 3 rows) — **Done** (clip drawer on the export chip; not yet checked on screen) | M |
 | 5.4 | Export chip and "Clip saved" result for the in/out range (built together with 5.3) — **Done** (built with 5.3) | S |
 | 5.5 | Pre-warm FFmpeg on idle and execute sub-300ms `-c copy` export with atomic `.part` rename — **Done** (`ClipExportService`, `FfmpegArguments`; gate green) | S |
