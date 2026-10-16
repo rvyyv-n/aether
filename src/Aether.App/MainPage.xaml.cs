@@ -278,6 +278,9 @@ public sealed partial class MainPage : Page
         }
     }
 
+    /// <summary>What a resolved link brings to <see cref="Open"/> beyond the stream address.</summary>
+    private sealed record OpenedLink(string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl);
+
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
     private sealed record PlaybackCarryOver(
         string? Path, double? Position, bool Paused, double Volume, double Speed, bool Looping, TrackChoices? Tracks, string? OriginalWebLink = null);
@@ -441,7 +444,8 @@ public sealed partial class MainPage : Page
 
     // ---- Playback ----
 
-    private void Open(string path, PlaybackCarryOver? carry = null)
+    /// <param name="link">The link this stream was resolved from, or null for a file.</param>
+    private void Open(string path, PlaybackCarryOver? carry = null, OpenedLink? link = null)
     {
         if (_session is not { } session)
         {
@@ -449,8 +453,16 @@ public sealed partial class MainPage : Page
         }
         EndTour(); // the user has gone on to watch something
         SaveResumePosition(background: true);
-        double? startAt = carry?.Position ?? (App.Settings.Current.ResumePlayback ? App.Resume.TryGet(path) : null);
+        // A link is remembered by its page address: the stream address expires within hours.
+        string resumeKey = link?.WebLink ?? path;
+        double? startAt = carry?.Position ?? (App.Settings.Current.ResumePlayback ? App.Resume.TryGet(resumeKey) : null);
         _currentPath = path;
+        _currentWebLink = link?.WebLink;
+        _streamTitle = link?.Title;
+        string headerFields = link?.HttpHeaders is { Count: > 0 } headers
+            ? string.Join(",", headers.Select(kv => string.Concat(kv.Key, ": ", kv.Value)))
+            : string.Empty;
+        string fileOptions = MpvLoadOptions.ForStream(link?.AudioUrl);
         _fitWindowPending = carry is null; // after a restart the window keeps the size it has
         _durationRecorded = false;
         _trackChoices = carry?.Tracks; // another file starts on mpv's own picks
@@ -462,11 +474,11 @@ public sealed partial class MainPage : Page
             {
                 session.Pause(); // a new core starts unpaused
             }
-            session.Open(path, startAt);
+            session.Context.SetProperty("http-header-fields", headerFields); // a file or another site must not inherit them
+            session.Open(path, startAt, fileOptions);
         });
-        if (_currentWebLink is null)
+        if (link is null)
         {
-            _streamTitle = null;
             string name = Path.GetFileName(path);
             _ = Task.Run(() => App.Recents.Add(path, name, DateTimeOffset.Now));
         }
@@ -476,7 +488,7 @@ public sealed partial class MainPage : Page
     /// <summary>Remembers where the current file is, for the next time it is opened (5.10).</summary>
     private void SaveResumePosition(bool background)
     {
-        if (_currentPath is not { } path || _session?.ViewModel is not { } vm || !HasVideo || !App.Settings.Current.ResumePlayback)
+        if ((_currentWebLink ?? _currentPath) is not { } path || _session?.ViewModel is not { } vm || !HasVideo || !App.Settings.Current.ResumePlayback)
         {
             return;
         }
@@ -1180,18 +1192,9 @@ public sealed partial class MainPage : Page
             _openUrl.Close();
             ArmOpenUrlTimer();
 
-            _currentWebLink = link;
-            _streamTitle = string.IsNullOrWhiteSpace(resolved.Title) ? WebLink.Host(link) : resolved.Title;
+            string displayName = string.IsNullOrWhiteSpace(resolved.Title) ? WebLink.Host(link) ?? link : resolved.Title;
+            Open(resolved.StreamUrl, carry, new OpenedLink(link, displayName, resolved.HttpHeaders, resolved.AudioUrl));
 
-            if (resolved.HttpHeaders is { Count: > 0 } headers)
-            {
-                string headerFields = string.Join(",", headers.Select(kv => string.Concat(kv.Key, ": ", kv.Value)));
-                TrySend(() => _session.Context.SetProperty("http-header-fields", headerFields));
-            }
-
-            Open(resolved.StreamUrl, carry);
-
-            string displayName = _streamTitle ?? WebLink.Host(link) ?? link;
             _ = Task.Run(() =>
             {
                 App.Recents.Add(link, displayName, DateTimeOffset.Now);

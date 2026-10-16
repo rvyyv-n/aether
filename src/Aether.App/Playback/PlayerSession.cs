@@ -1,6 +1,7 @@
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Settings;
+using Aether.Core.Playback.Streams;
 using Aether_App.Controls;
 using Aether_App.Input;
 using Microsoft.UI.Dispatching;
@@ -148,10 +149,11 @@ public sealed class PlayerSession : IDisposable
 
     /// <summary>
     /// Opens <paramref name="path"/>, replacing the current file, from <paramref name="startAt"/> seconds
-    /// when given. Non-blocking.
+    /// when given, with <paramref name="fileOptions"/> (built by <see cref="MpvLoadOptions"/>) applying to this file only.
+    /// Non-blocking.
     /// </summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
-    public void Open(string path, double? startAt = null)
+    public void Open(string path, double? startAt = null, string? fileOptions = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(path);
         // <c>start</c> is global and sticks, so every open sets it, to "none" when there is nothing to resume.
@@ -159,7 +161,9 @@ public sealed class PlayerSession : IDisposable
             ? seconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
             : "none";
         _context.CommandAsync(new MpvCommand("set", "start", start));
-        _context.CommandAsync(new MpvCommand("loadfile", path, "replace"));
+        _context.CommandAsync(string.IsNullOrEmpty(fileOptions)
+            ? new MpvCommand("loadfile", path, "replace")
+            : new MpvCommand("loadfile", path, "replace", "-1", fileOptions)); // -1: the playlist index mpv 0.38+ expects before options
     }
 
     /// <summary>Toggles pause; on an ended file restarts it from 0. Non-blocking.</summary>
