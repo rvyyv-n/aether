@@ -1607,8 +1607,18 @@ public sealed partial class MainPage : Page
             return;
         }
         double scale = Math.Min(hostWidth / width, hostHeight / height);
-        VideoSurface.Width = Math.Round(width * scale);
-        VideoSurface.Height = Math.Round(height * scale);
+        VideoSurface.Width = SnapToHost(Math.Round(width * scale), hostWidth);
+        VideoSurface.Height = SnapToHost(Math.Round(height * scale), hostHeight);
+    }
+
+    /// <summary>
+    /// The window keeps the video's shape only to the whole pixel, so a fitted side can come out a pixel short and
+    /// leave a hairline of backdrop at the edge. Within that, it takes the host's full size; the stretch can't be seen.
+    /// </summary>
+    private static double SnapToHost(double fitted, double host)
+    {
+        const double SnapDips = 2;
+        return host - fitted <= SnapDips ? host : fitted;
     }
 
     /// <summary>
