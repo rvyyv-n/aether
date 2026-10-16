@@ -126,9 +126,9 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
     private void OnUnloaded(object sender, RoutedEventArgs e) => StopLoop();
 
     /// <summary>
-    /// Swaps in a loop for the current player. The old loop frees its mpv render context on its own
-    /// thread while the new one starts; mpv allows one render context per core, so the new loop's
-    /// first creation can fail and is retried by the loop's backoff (raising one RenderFault).
+    /// Swaps in a loop for the current player. mpv allows one render context per core, so the old loop
+    /// is given a moment to free its context before the new one starts; otherwise the new loop's first
+    /// creation fails and waits out a retry delay.
     /// </summary>
     private void RestartLoop()
     {
@@ -136,7 +136,7 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
         {
             return; // not loaded: OnLoaded picks the player up
         }
-        StopLoop();
+        StopLoop(waitForExit: true);
         StartLoop();
     }
 
@@ -153,7 +153,7 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
         loop.Start();
     }
 
-    private void StopLoop()
+    private void StopLoop(bool waitForExit = false)
     {
         MpvRenderLoop? loop = _loop;
         if (loop is null)
@@ -163,8 +163,13 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
         _loop = null;
         IsPlayerReady = false;
 
-        // Non-blocking: the render thread releases device, swap chain and backend as it exits.
+        // The render thread releases device, swap chain and backend as it exits. Unloading never waits for it;
+        // a restart waits briefly (teardown takes a few ms) so the replacement can take over the mpv core.
         // The panel holds its own reference to the bound swap chain until it is detached here.
+        if (waitForExit)
+        {
+            loop.Stop(250);
+        }
         loop.Dispose();
         SwapChainPanelNative.SetSwapChain(PanelPointer, 0);
         GC.KeepAlive(this);

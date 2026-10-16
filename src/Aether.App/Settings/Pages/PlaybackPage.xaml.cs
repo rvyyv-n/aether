@@ -14,6 +14,7 @@ public sealed partial class PlaybackPage : Page
         binder.Toggle(LoopByDefaultRow, LoopByDefaultToggle, SettingKeys.LoopByDefault, "Settings_LoopByDefault_Title");
         binder.Toggle(PlayNextInFolderRow, PlayNextInFolderToggle, SettingKeys.PlayNextInFolder, "Settings_PlayNextFile_Title", "Settings_PlayNextFile_Description");
         binder.Toggle(RememberWindowSizeRow, RememberWindowSizeToggle, SettingKeys.RememberWindowSize, "Settings_RememberWindowSize_Title");
+        binder.Toggle(PreventSleepRow, PreventSleepToggle, SettingKeys.PreventSleep, "Settings_PreventSleep_Title", "Settings_PreventSleep_Description");
         binder.Toggle(AlwaysOnTopRow, AlwaysOnTopToggle, SettingKeys.AlwaysOnTop, "Settings_AlwaysOnTop_Title", "Settings_AlwaysOnTop_Description");
     }
 }

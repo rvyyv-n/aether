@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Aether_App.Controls.TracksPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <!--  A 32 px menu-style row: 4 radius, hover FillSubtleHover, no outline. The check column and label are set in code.  -->
+        <Style x:Key="TrackRowButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+            <Setter Property="AllowFocusOnInteraction" Value="False" />
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                            <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
+                            <ContentPresenter
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="Center"
+                                Content="{TemplateBinding Content}"
+                                Foreground="{TemplateBinding Foreground}" />
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <!--
+        Tracks flyout (screen 9.2): 536 wide, two columns. Each lists its tracks (the rows are filled in from the code),
+        then a delay stepper: − and + (32) around a 56 px tabular value. The flyout supplies the solid surface (ADR-0013);
+        the scroll area keeps it inside a short window.
+    -->
+    <ScrollViewer
+        x:Name="Scroller"
+        Width="{StaticResource AetherSizeTracksFlyout}"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Grid Padding="12" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel>
+                <TextBlock
+                    x:Name="AudioHeader"
+                    Margin="8,4,8,4"
+                    Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                <StackPanel x:Name="AudioRows" />
+                <Grid Margin="0,8,0,0" ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="56" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="AudioDelayLabel"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        TextTrimming="CharacterEllipsis" />
+                    <Button
+                        x:Name="AudioDelayDown"
+                        Grid.Column="1"
+                        Click="OnDelayDownClick"
+                        Content="&#xE949;"
+                        Style="{StaticResource AetherIconButtonStyle}"
+                        Tag="Audio" />
+                    <TextBlock
+                        x:Name="AudioDelayValue"
+                        Grid.Column="2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherBodyTextStyle}"
+                        Typography.NumeralAlignment="Tabular" />
+                    <Button
+                        x:Name="AudioDelayUp"
+                        Grid.Column="3"
+                        Click="OnDelayUpClick"
+                        Content="&#xE948;"
+                        Style="{StaticResource AetherIconButtonStyle}"
+                        Tag="Audio" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1">
+                <TextBlock
+                    x:Name="SubtitleHeader"
+                    Margin="8,4,8,4"
+                    Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                <StackPanel x:Name="SubtitleRows" />
+                <Button
+                    x:Name="AddSubtitleButton"
+                    Click="OnAddSubtitleClick"
+                    Style="{StaticResource TrackRowButtonStyle}">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon
+                            FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                            FontSize="{StaticResource AetherSizeIcon}"
+                            Glyph="&#xE710;" />
+                        <TextBlock
+                            x:Name="AddSubtitleLabel"
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource AetherBodyTextStyle}"
+                            TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                </Button>
+                <Grid Margin="0,8,0,0" ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="56" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="SubtitleDelayLabel"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        TextTrimming="CharacterEllipsis" />
+                    <Button
+                        x:Name="SubtitleDelayDown"
+                        Grid.Column="1"
+                        Click="OnDelayDownClick"
+                        Content="&#xE949;"
+                        Style="{StaticResource AetherIconButtonStyle}"
+                        Tag="Subtitle" />
+                    <TextBlock
+                        x:Name="SubtitleDelayValue"
+                        Grid.Column="2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherBodyTextStyle}"
+                        Typography.NumeralAlignment="Tabular" />
+                    <Button
+                        x:Name="SubtitleDelayUp"
+                        Grid.Column="3"
+                        Click="OnDelayUpClick"
+                        Content="&#xE948;"
+                        Style="{StaticResource AetherIconButtonStyle}"
+                        Tag="Subtitle" />
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

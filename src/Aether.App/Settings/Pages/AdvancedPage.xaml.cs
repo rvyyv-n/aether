@@ -16,6 +16,18 @@ public sealed partial class AdvancedPage : Page
         InitializeComponent();
         _binder = new SettingsPageBinder(this);
 
+        _binder.Toggle(RepairAviIndexRow, RepairAviIndexToggle, SettingKeys.RepairAviIndex, "Settings_RepairAviIndex_Title", "Settings_RepairAviIndex_Description");
+        _binder.RestartNote(RepairAviIndexRestartNote, SettingKeys.RepairAviIndex);
+        _binder.Choose(SkipDeblockingRow, SkipDeblockingCombo, SettingKeys.SkipDeblocking,
+            [
+                new("default", AppStrings.Get("Settings_SkipDeblocking_Default")),
+                new("nonref", AppStrings.Get("Settings_SkipDeblocking_NonRef")),
+                new("nonkey", AppStrings.Get("Settings_SkipDeblocking_NonKey")),
+                new("all", AppStrings.Get("Settings_SkipDeblocking_All")),
+            ],
+            "Settings_SkipDeblocking_Title", "Settings_SkipDeblocking_Description");
+        _binder.RestartNote(SkipDeblockingRestartNote, SettingKeys.SkipDeblocking);
+
         SettingsPageBinder.Describe(CustomOptionsRow, "Settings_CustomOptions_Title", "Settings_CustomOptions_Description");
         AutomationProperties.SetName(CustomOptionsBox, CustomOptionsRow.Header);
         CustomOptionsBox.TextChanged += (_, _) => Validate();
@@ -30,6 +42,13 @@ public sealed partial class AdvancedPage : Page
             }
         });
         _binder.RestartNote(CustomOptionsRestartNote, SettingKeys.CustomMpvOptions);
+
+        _binder.Choose(MotionStyleRow, MotionStyleCombo, SettingKeys.MotionStyle,
+            [
+                new("quick", AppStrings.Get("Settings_MotionStyle_Quick")),
+                new("springy", AppStrings.Get("Settings_MotionStyle_Springy")),
+            ],
+            "Settings_MotionStyle_Title", "Settings_MotionStyle_Description");
 
         SettingsPageBinder.Describe(ResetAllRow, "Settings_ResetAllSettings_Title", "Settings_ResetAllSettings_Description");
         ResetAllButton.Content = AppStrings.Get("Settings_ResetAllSettings");

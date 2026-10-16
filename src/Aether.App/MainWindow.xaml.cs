@@ -3,6 +3,7 @@ using Aether.Core.Playback;
 using Aether.Core.Playback.Settings;
 using Aether.Core.Playback.Windowing;
 using Aether_App.Controls;
+using Aether_App.Playback;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -79,6 +80,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     public MainWindow()
     {
         InitializeComponent();
+        Title = AppStrings.Get("App_Name");
 
         var resources = Application.Current.Resources;
         _captionForeground = (Color)resources["AetherCaptionGlyphColor"];
@@ -115,6 +117,8 @@ public sealed partial class MainWindow : Window, IShellWindow
             _aspectLock = null; // the window still works, just without the drag-resize aspect lock and minimum size
         }
 
+        DisplaySync = new DisplayRefreshSync(WinRT.Interop.WindowNative.GetWindowHandle(this));
+
         InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         nonClient.PointerEntered += OnNonClientPointerMoved;
         nonClient.PointerMoved += OnNonClientPointerMoved;
@@ -127,6 +131,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         Closed += (_, _) =>
         {
             _captionTimer.Stop();
+            DisplaySync.Dispose(); // before the aspect lock: it sits on top of that subclass
             _aspectLock?.Dispose();
             App.Settings.Changed -= OnSettingChanged;
         };
@@ -135,11 +140,16 @@ public sealed partial class MainWindow : Window, IShellWindow
         TrackNormalBounds();
     }
 
+    /// <summary>The refresh rate of the monitor this window is on, for the playback engine.</summary>
+    internal DisplayRefreshSync DisplaySync { get; }
+
     /// <summary>Opens this file as soon as the engine is ready (launch from a file or the command line).</summary>
     public void OpenWhenReady(string path) => Shell.OpenWhenReady(path);
 
     /// <summary>Starts the playback engine again with the current settings, keeping the open file.</summary>
     public void RestartEngine() => Shell.RestartEngine();
+
+    public void ShowTour() => Shell.ShowTour();
 
     /// <summary>
     /// Moves and resizes the window to where it was left, on a monitor that is still connected, and maximises it
@@ -356,6 +366,8 @@ public sealed partial class MainWindow : Window, IShellWindow
         if (args.DidSizeChange || args.DidPositionChange || args.DidPresenterChange)
         {
             TrackNormalBounds();
+            DisplaySync.OnWindowMoved();
+            UpdateCaptionInset();
         }
         if (args.DidPresenterChange)
         {
@@ -364,6 +376,19 @@ public sealed partial class MainWindow : Window, IShellWindow
         }
     }
 
-    private void OnActivated(object sender, WindowActivatedEventArgs args) =>
+    private void OnActivated(object sender, WindowActivatedEventArgs args)
+    {
         Shell.OnWindowActivationChanged(args.WindowActivationState != WindowActivationState.Deactivated);
+        UpdateCaptionInset();
+    }
+
+    // RightInset is in physical pixels and changes with the display scale; the page lays out in DIPs.
+    private void UpdateCaptionInset()
+    {
+        double scale = Shell.XamlRoot?.RasterizationScale ?? 0;
+        if (scale > 0)
+        {
+            Shell.SetCaptionInset(AppWindow.TitleBar.RightInset / scale);
+        }
+    }
 }

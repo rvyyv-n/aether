@@ -1,3 +1,4 @@
+using Aether.Core.Playback;
 using Aether.Core.Playback.Settings;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -30,6 +31,20 @@ public sealed partial class StreamingPage : Page
             "Settings_PreferHardwareDecode_Title", "Settings_PreferHardwareDecode_Description");
         binder.Toggle(YtDlpAutoUpdateRow, YtDlpAutoUpdateToggle, SettingKeys.YtDlpAutoUpdate,
             "Settings_YtDlp_UpdateAutomatically_Title", "Settings_YtDlp_UpdateAutomatically_Description");
+        binder.Slider(NetworkCacheRow, NetworkCacheSlider, NetworkCacheValue, SettingKeys.NetworkCacheMegabytes,
+            "Settings_NetworkCache_Title", "Settings_NetworkCache_Description",
+            megabytes => AppStrings.Format("Settings_NetworkCache_Value", megabytes));
+        binder.RestartNote(NetworkCacheRestartNote, SettingKeys.NetworkCacheMegabytes);
+        HttpProxyBox.PlaceholderText = AppStrings.Get("Settings_HttpProxy_Placeholder");
+        binder.TextEntry(HttpProxyRow, HttpProxyBox, SettingKeys.HttpProxy, "Settings_HttpProxy_Title", "Settings_HttpProxy_Description");
+        binder.Choose(RtspTransportRow, RtspTransportCombo, SettingKeys.RtspTransport,
+            [
+                new("tcp", "TCP"),
+                new("udp", "UDP"),
+                new("http", "HTTP"),
+                new("udp_multicast", AppStrings.Get("Settings_RtspTransport_Multicast")),
+            ],
+            "Settings_RtspTransport_Title", "Settings_RtspTransport_Description");
 
         YtDlpRow.Header = AppStrings.Get("Settings_YtDlp_Title");
         YtDlpActionButton.Click += async (_, _) => await OnYtDlpActionAsync();
@@ -66,6 +81,11 @@ public sealed partial class StreamingPage : Page
         if (!updated)
         {
             YtDlpRow.Description = AppStrings.Get("Settings_YtDlp_UpdateFailed");
+            AppToasts.Show("ytdlp-update", AppStrings.Get("Toast_YtDlpUpdateFailed"), ToastTone.Failure);
+        }
+        else if (await ExternalTools.YtDlpVersionAsync(_ytDlpPath) is { } version)
+        {
+            AppToasts.Show("ytdlp-update", AppStrings.Format("Toast_YtDlpUpdated", version), ToastTone.Success);
         }
     }
 

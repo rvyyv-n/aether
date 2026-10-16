@@ -1,4 +1,4 @@
-using Aether.Core.Playback;
+﻿using Aether.Core.Playback;
 using Aether.Core.Playback.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -10,7 +10,7 @@ namespace Aether_App;
 
 /// <summary>
 /// The Pass 5 transport pill (screen 5): seek bar, skip and frame-step buttons, the speed menu, In/Out
-/// points and the compact layout below a 520 px pill. Kept apart from the shell so each pass's wiring
+/// points and the compact layout below a 560 px card. Kept apart from the shell so each pass's wiring
 /// stays in one place. UI thread only.
 /// </summary>
 public sealed partial class MainPage
@@ -35,6 +35,30 @@ public sealed partial class MainPage
             SpeedMenu.Items.Add(item);
         }
         ShowSpeed(PlaybackSpeed.Normal);
+        foreach (Button button in new[]
+        {
+            OpenButton, SpeedButton, BackButton, PlayPauseButton, ForwardButton,
+            VolumeButton, MoreButton, FullScreenButton,
+        })
+        {
+            button.PointerExited += OnTipOwnerPointerExited;
+            button.PointerCanceled += OnTipOwnerPointerExited;
+        }
+    }
+
+    /// <summary>
+    /// Moving to the next icon would leave the last one's tooltip fading out underneath the new one. Taking the
+    /// tooltip off and putting it back closes it at once, so only the icon under the pointer shows one.
+    /// </summary>
+    private static void OnTipOwnerPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        var owner = (DependencyObject)sender;
+        object? tip = ToolTipService.GetToolTip(owner);
+        if (tip is not null)
+        {
+            ToolTipService.SetToolTip(owner, null);
+            ToolTipService.SetToolTip(owner, tip);
+        }
     }
 
     /// <summary>Plays the next video in the folder when a local file ends and Play next in folder is on.</summary>
@@ -68,8 +92,6 @@ public sealed partial class MainPage
     private void ApplyTransportStrings()
     {
         AutomationProperties.SetName(SeekBar, AppStrings.Get("Transport_Seek"));
-        Label(BackFrameButton, "Transport_Back1Frame");
-        Label(ForwardFrameButton, "Transport_Forward1Frame");
         Label(MoreButton, "Transport_MoreControls");
         ToolTipService.SetToolTip(SpeedButton, AppStrings.Get("Transport_Speed"));
         MoreBackFrameItem.Text = AppStrings.Get("Menu_Back1Frame");
@@ -118,6 +140,18 @@ public sealed partial class MainPage
     private void OnForwardAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
         OnTransportKey(args, () => SkipBy(TransportState.SkipSeconds));
 
+    private void OnBackFineAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, () => SkipBy(-TransportState.FineSkipSeconds));
+
+    private void OnForwardFineAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, () => SkipBy(TransportState.FineSkipSeconds));
+
+    private void OnBackLongAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, () => SkipBy(-TransportState.LongSkipSeconds));
+
+    private void OnForwardLongAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, () => SkipBy(TransportState.LongSkipSeconds));
+
     private void OnBackFrameClick(object sender, RoutedEventArgs e) => StepFrame(FrameStepDirection.Backward);
 
     private void OnForwardFrameClick(object sender, RoutedEventArgs e) => StepFrame(FrameStepDirection.Forward);
@@ -143,11 +177,16 @@ public sealed partial class MainPage
 
     // Speed (5.4): the pill names the current speed; its menu checks it.
 
+    private double _speed = PlaybackSpeed.Normal;
+    private bool _speedMenuOpen;
+
     private void ShowSpeed(double speed)
     {
+        _speed = speed;
         SpeedButton.Content = PlaybackSpeed.Format(speed);
+        ApplySpeedLook();
         AutomationProperties.SetName(SpeedButton, $"{AppStrings.Get("Transport_Speed")} {PlaybackSpeed.Format(speed)}");
-        foreach (MenuFlyoutItemBase item in SpeedMenu.Items)
+        foreach (MenuFlyoutItemBase item in SpeedMenu.Items.Concat(CtxSpeed.Items))
         {
             if (item is ToggleMenuFlyoutItem { Tag: double option } toggle)
             {
@@ -169,17 +208,53 @@ public sealed partial class MainPage
 
     private void OnSpeedMenuOpened(object sender, object e)
     {
-        SpeedButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        _speedMenuOpen = true;
+        ApplySpeedLook();
         HoldForMenu(true);
     }
 
     private void OnSpeedMenuClosed(object sender, object e)
     {
-        SpeedButton.ClearValue(BackgroundProperty);
+        _speedMenuOpen = false;
+        ApplySpeedLook();
         HoldForMenu(false);
     }
 
+    // Filled while its menu is open; filled and outlined, like Loop when on, while the speed is not 1x.
+    private void ApplySpeedLook()
+    {
+        bool changed = !PlaybackSpeed.IsCurrent(PlaybackSpeed.Normal, _speed);
+        if (changed || _speedMenuOpen)
+        {
+            SpeedButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        }
+        else
+        {
+            SpeedButton.ClearValue(BackgroundProperty);
+        }
+        if (changed)
+        {
+            SpeedButton.BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherStrokeControlBrush"];
+        }
+        else
+        {
+            SpeedButton.ClearValue(BorderBrushProperty);
+        }
+    }
+
     private void OnMoreClick(object sender, RoutedEventArgs e) => FlyoutBase.ShowAttachedFlyout(MoreButton);
+
+    private void OnMoreMenuOpened(object sender, object e)
+    {
+        MoreButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        HoldForMenu(true);
+    }
+
+    private void OnMoreMenuClosed(object sender, object e)
+    {
+        MoreButton.ClearValue(BackgroundProperty);
+        HoldForMenu(false);
+    }
 
     private void HoldForMenu(bool open)
     {
@@ -187,19 +262,8 @@ public sealed partial class MainPage
         ApplyChrome();
     }
 
-    /// <summary>Below a 520 px pill (5.7), frame step, loop and always on top move into More controls.</summary>
-    private void OnOsdSizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        bool compact = TransportState.IsCompact(e.NewSize.Width);
-        Visibility full = compact ? Visibility.Collapsed : Visibility.Visible;
-        BackFrameButton.Visibility = full;
-        ForwardFrameButton.Visibility = full;
-        LoopButton.Visibility = full;
-        AlwaysOnTopButton.Visibility = full;
-        MoreLoopItem.Visibility = compact ? Visibility.Visible : Visibility.Collapsed;
-        MoreAlwaysOnTopItem.Visibility = MoreLoopItem.Visibility;
-        MoreButton.Visibility = compact ? Visibility.Visible : Visibility.Collapsed;
-    }
+    /// <summary>Below a 560 px card (5.7), frame step, loop and always on top move into More controls; the slim pill hides them anyway.</summary>
+    private void OnOsdSizeChanged(object sender, SizeChangedEventArgs e) => RefreshTourLayout(); // the tour can light the growing bar
 
     // Loop and Always on top: the buttons and their More items follow the state, whoever changed it.
 
@@ -215,7 +279,6 @@ public sealed partial class MainPage
     private void SyncLoop()
     {
         bool looping = _session?.ViewModel.IsLooping ?? false;
-        LoopButton.IsChecked = looping;
         MoreLoopItem.IsChecked = looping;
     }
 
@@ -230,8 +293,8 @@ public sealed partial class MainPage
     private void SyncAlwaysOnTop()
     {
         bool onTop = _host?.IsAlwaysOnTop ?? false;
-        AlwaysOnTopButton.IsChecked = onTop;
         MoreAlwaysOnTopItem.IsChecked = onTop;
+        CtxAlwaysOnTop.IsChecked = onTop;
     }
 
     // In (I) and Out (O): the band on the seek bar and the export chip above the pill.
@@ -241,6 +304,9 @@ public sealed partial class MainPage
 
     private void OnSetOutAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
         OnTransportKey(args, () => SetClipRange(_clipRange.SetOut(CurrentPosition())));
+
+    private void OnExportClipAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
+        OnTransportKey(args, ClipDrawer.RequestExport);
 
     private double CurrentPosition() =>
         _session is { } session ? TransportState.DisplayPosition(session.ViewModel.State) : 0;

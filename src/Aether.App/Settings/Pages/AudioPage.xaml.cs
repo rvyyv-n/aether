@@ -18,5 +18,7 @@ public sealed partial class AudioPage : Page
         binder.Toggle(PassthroughRow, PassthroughToggle, SettingKeys.Passthrough, "Settings_Passthrough_Title", "Settings_Passthrough_Description");
         binder.RestartNote(PassthroughRestartNote, SettingKeys.Passthrough);
         binder.Toggle(VolumeNormalisationRow, VolumeNormalisationToggle, SettingKeys.VolumeNormalisation, "Settings_VolumeNormalisation_Title", "Settings_VolumeNormalisation_Description");
+        binder.Toggle(PitchCorrectionRow, PitchCorrectionToggle, SettingKeys.PitchCorrection, "Settings_PitchCorrection_Title", "Settings_PitchCorrection_Description");
+        binder.Toggle(StereoDownmixRow, StereoDownmixToggle, SettingKeys.StereoDownmix, "Settings_StereoDownmix_Title", "Settings_StereoDownmix_Description");
     }
 }

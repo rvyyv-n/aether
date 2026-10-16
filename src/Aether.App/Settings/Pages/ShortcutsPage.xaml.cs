@@ -39,14 +39,15 @@ public sealed partial class ShortcutsPage : Page
         WindowHeading.Text = AppStrings.Get("Settings_Shortcuts_Window");
 
         // Fixed keys (frame steps, Escape) are listed with the ones that can be changed, in the order of 6.7.
-        Add(PlaybackGroup, ShortcutAction.PlayPause, ShortcutAction.SkipBack, ShortcutAction.SkipForward);
+        Add(PlaybackGroup, ShortcutAction.PlayPause, ShortcutAction.SkipBack, ShortcutAction.SkipForward,
+            ShortcutAction.SkipBackFine, ShortcutAction.SkipForwardFine, ShortcutAction.SkipBackLong, ShortcutAction.SkipForwardLong);
         PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Back1Frame", ","));
         PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Forward1Frame", "."));
-        Add(PlaybackGroup, ShortcutAction.Mute, ShortcutAction.Loop);
-        Add(NavigationGroup, ShortcutAction.OpenFile, ShortcutAction.OpenUrl, ShortcutAction.SetIn, ShortcutAction.SetOut);
+        Add(PlaybackGroup, ShortcutAction.Mute, ShortcutAction.Loop, ShortcutAction.CopyFrame, ShortcutAction.SaveFrame);
+        Add(NavigationGroup, ShortcutAction.OpenFile, ShortcutAction.OpenUrl, ShortcutAction.SetIn, ShortcutAction.SetOut, ShortcutAction.ExportClip);
         Add(WindowGroup, ShortcutAction.FullScreen);
         WindowGroup.Children.Add(FixedRow("Settings_Shortcuts_LeaveFullScreen", "Esc"));
-        Add(WindowGroup, ShortcutAction.AlwaysOnTop);
+        Add(WindowGroup, ShortcutAction.AlwaysOnTop, ShortcutAction.Diagnostics, ShortcutAction.Settings);
 
         ResetAllButton.Content = AppStrings.Get("Settings_Shortcuts_ResetAll");
         ResetAllButton.Click += (_, _) =>

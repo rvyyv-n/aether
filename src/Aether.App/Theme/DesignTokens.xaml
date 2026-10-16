@@ -48,6 +48,11 @@
             <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#0AFFFFFF" />
             <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPointerOver" Color="#0FFFFFFF" />
             <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPressed" Color="#0AFFFFFF" />
+            <!--  Shortcut text on the right of a menu row: Caption in TextSecondary (62%), TextDisabled (36%) on a disabled row  -->
+            <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForeground" Color="#9EFFFFFF" />
+            <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPointerOver" Color="#9EFFFFFF" />
+            <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPressed" Color="#9EFFFFFF" />
+            <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundDisabled" Color="#5CFFFFFF" />
         </ResourceDictionary>
         <!--  Dark: copy the Default block here unchanged if the app ever stops forcing RequestedTheme="Dark".  -->
     </ResourceDictionary.ThemeDictionaries>
@@ -158,7 +163,8 @@
     <CornerRadius x:Key="AetherControlCornerRadius">4</CornerRadius>
     <CornerRadius x:Key="AetherOverlayCornerRadius">8</CornerRadius>
     <CornerRadius x:Key="AetherPillCornerRadius">8</CornerRadius>
-    <CornerRadius x:Key="AetherTransportCornerRadius">24</CornerRadius>  <!-- 16 button radius + 8 padding, so the corners are concentric -->
+    <CornerRadius x:Key="AetherTransportCornerRadius">24</CornerRadius>  <!-- Half the 48 px slim pill, kept by the full card; the round 36 px play button + 6 padding is concentric with it -->
+    <CornerRadius x:Key="AetherTransportButtonCornerRadius">6</CornerRadius>  <!-- Transport icon, toggle and speed buttons: 8 → 6 with the 36 px targets, for a crisper shape -->
     <CornerRadius x:Key="AetherTileCornerRadius">16</CornerRadius>
 
     <!--  Sizes  -->
@@ -168,19 +174,23 @@
     <x:Double x:Key="AetherSizeRow">52</x:Double>  <!-- Row cards -->
     <x:Double x:Key="AetherSizeIcon">16</x:Double>
     <x:Double x:Key="AetherSizeIconLarge">20</x:Double>
-    <!--  The handoff's 16 px transport icons draw about 12 px of ink; Segoe Fluent fills its whole em, so 12 matches them  -->
-    <x:Double x:Key="AetherSizeTransportIcon">12</x:Double>
-    <x:Double x:Key="AetherSizeTransportSkipIcon">14</x:Double>  <!-- The skip-5 ring; its circle is centred in the em, so the "5" centres on the button -->
-    <x:Double x:Key="AetherSizeTransportSkipDigit">8</x:Double>
+    <x:Double x:Key="AetherSizeTransportButton">36</x:Double>  <!-- Transport targets, up from 32 (owner: "slightly bigger, more sharp") -->
+    <!--  The handoff's 16 px transport icons draw about 12 px of ink (Segoe Fluent fills its whole em); 14 is a touch larger, to suit the 36 px targets  -->
+    <x:Double x:Key="AetherSizeTransportIcon">14</x:Double>
+    <x:Double x:Key="AetherSizeTransportSkipIcon">16</x:Double>  <!-- The skip-5 ring; its circle is centred in the em, so the "5" centres on the button -->
+    <x:Double x:Key="AetherSizeTransportSkipDigit">9</x:Double>
     <x:Double x:Key="AetherSizeHeroTile">96</x:Double>
     <x:Double x:Key="AetherSizeHeroGlyph">40</x:Double>
     <x:Double x:Key="AetherSizeStatusDot">6</x:Double>  <!-- Top-aligned. Top margin 5 on caption lines (16), 7 on body lines (20), 11 on subtitle lines (28, pro -->
     <x:Double x:Key="AetherSizeOsdWidth">520</x:Double>
-    <x:Double x:Key="AetherSizeOsdHeight">84</x:Double>  <!-- Padding 8, seek row 32, gap 4, button row 32 -->
+    <x:Double x:Key="AetherSizeOsdHeight">88</x:Double>  <!-- Full card: padding 8, seek row 32, gap 4, button row 36 -->
+    <x:Double x:Key="AetherSizeOsdSlimHeight">48</x:Double>  <!-- Slim pill while playing (7.11, s5-08): padding 6 around the 36 px button row -->
+    <x:Double x:Key="AetherSizeOsdGap">8</x:Double>  <!-- The export chip and toasts sit this far above the card, whatever its height -->
     <x:Double x:Key="AetherSizeOsdBottom">24</x:Double>
-    <x:Double x:Key="AetherSizeOsdSideMargin">16</x:Double>  <!-- Controls pill width = min(520, window - 32); window can be ~405 wide -->
+    <x:Double x:Key="AetherSizeOsdSideMargin">16</x:Double>  <!-- Controls card width = min(560, window - 32); window can be ~405 wide -->
     <x:Double x:Key="AetherSizeFocusRingOffset">3</x:Double>  <!-- Focus ring sits 3 px outside the control's 1 px border -->
-    <x:Double x:Key="AetherSizeTitleBarButton">46</x:Double>  <!-- Settings gear, 46×32, matches the caption buttons; left of the 138 caption area -->
+    <x:Double x:Key="AetherSizeTitleBarButton">46</x:Double>  <!-- Settings gear, 46×32, matches the caption buttons; left of the caption area -->
+    <x:Double x:Key="AetherSizeTitleBarGlyph">13</x:Double>  <!-- Gear and Back glyph (7.13): 16 read heavier than the system's minimise, maximise and close -->
     <x:Double x:Key="AetherSizeDialogWidth">440</x:Double>  <!-- min(440, window - 32); padding 24 -->
     <x:Double x:Key="AetherSizeProgressBar">4</x:Double>  <!-- Determinate bar thickness; 2 px when docked to the status strip's bottom edge -->
     <x:Double x:Key="AetherSizeProgressRing">40</x:Double>  <!-- In the hero tile. WinUI draws its own stroke -->
@@ -199,8 +209,7 @@
     <x:Double x:Key="AetherSizeClipThumbWidth">64</x:Double>  <!-- Clip row thumbnail, 16:9, radius 4 -->
     <x:Double x:Key="AetherSizeClipThumbHeight">36</x:Double>
     <x:Double x:Key="AetherSizeMenuItem">32</x:Double>  <!-- Menu items: 4 px inset, radius 4, check column 16, gap 12, hover fill.subtle.hover; menus on surface -->
-    <x:Double x:Key="AetherSizeSpeedPill">52</x:Double>  <!-- Min width of the speed button: outline pill, 32 tall, Caption 12 tabular -->
-    <x:Double x:Key="AetherSizeTransportCompactBreakpoint">520</x:Double>  <!-- Below this pill width, frame step, loop and always on top move into More controls (…) -->
+    <x:Double x:Key="AetherSizeSpeedPill">40</x:Double>  <!-- Min width of the speed button: 36 tall like the transport buttons, Caption 12 semibold tabular -->
     <x:Double x:Key="AetherSizeRailWidth">56</x:Double>  <!-- Hover rail: 8 from the left edge, from 8 below the title bar to 8 above the pill, padding 8, Surface -->
     <x:Double x:Key="AetherSizeRailItem">40</x:Double>  <!-- Rail items 40×40, radius 8, gap 4, 20 px icons; active = FillEmphasisRest + StrokeControl; labels as -->
     <x:Double x:Key="AetherSizeRailHotZone">4</x:Double>  <!-- Left-edge strip that wakes the rail; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
@@ -220,16 +229,33 @@
     <x:Double x:Key="AetherSizeDiagnosticsWidth">300</x:Double>  <!-- Diagnostics overlay: top-left, 16 in (48 when the title bar shows), padding 8,8,12,16, rows 76 / *,  -->
     <x:Double x:Key="AetherSizePipWidth">400</x:Double>  <!-- Picture in picture: AppWindow CompactOverlay 400×225 minimum; centre play 48; back-to-full-window 32 -->
     <x:Double x:Key="AetherSizeToastMaxWidth">360</x:Double>  <!-- Toast: min(360, window − 32), SurfaceOsd, radius 8, padding 8,8,8,16; 8 above the pill or 24 from th -->
+    <x:Double x:Key="AetherSizeTourCard">320</x:Double>  <!-- First-run tour card (7.26): SurfaceDialogFallback, radius 8, padding 16, 16 from the lit target -->
     <x:Double x:Key="AetherSizeMenuMaxHeightInset">16</x:Double>  <!-- Menus and flyouts cap at window height − 16 (8 each side) and scroll -->
 
-    <!--  Motion (milliseconds). Show eases out (0,0,0,1); hide eases in (1,0,1,1).
-         When UISettings.AnimationsEnabled is false, every fade and slide is instant; delays stay.  -->
+    <!--  Motion (milliseconds). When UISettings.AnimationsEnabled is false, everything is instant in both
+         profiles; delays stay. The chrome fade is the same in both profiles: the render thread's blur and the
+         caption glyphs step the same Fluent ease-out (0.1,0.9,0.2,1) both ways, so it stays in step with them.  -->
     <x:Double x:Key="AetherMotionChromeShowMilliseconds">150</x:Double>
-    <x:Double x:Key="AetherMotionChromeHideMilliseconds">300</x:Double>
-    <x:Double x:Key="AetherMotionChromeIdleDelayMilliseconds">2000</x:Double>
-    <x:Double x:Key="AetherMotionToastDurationMilliseconds">4000</x:Double>
-    <x:Double x:Key="AetherMotionReducedMotionMilliseconds">0</x:Double>
-    <x:Double x:Key="AetherMotionToastWithActionMilliseconds">8000</x:Double>
+    <x:Double x:Key="AetherMotionChromeHideMilliseconds">250</x:Double>
+    <!--  Easing control points x1,y1,x2,y2: things appear on the ease-out and leave on the ease-in  -->
+    <x:String x:Key="AetherMotionEaseOut">0.1,0.9,0.2,1.0</x:String>
+    <x:String x:Key="AetherMotionEaseIn">1,0,1,1</x:String>
+    <!--  Quick profile (7.15, refit with 7.21): Windows 11 feel, nothing bounces. Bar grow and shrink, and every enter and
+         exit (toasts, clip drawer, rail, Settings and its sections, diagnostics, Open URL): fade with a short slide  -->
+    <x:Double x:Key="AetherMotionQuickGrowMilliseconds">260</x:Double>
+    <x:Double x:Key="AetherMotionQuickShrinkMilliseconds">200</x:Double>
+    <x:Double x:Key="AetherMotionQuickInMilliseconds">200</x:Double>
+    <x:Double x:Key="AetherMotionQuickOutMilliseconds">150</x:Double>
+    <x:Double x:Key="AetherMotionQuickSlide">8</x:Double>  <!-- px a toast, drawer, panel or the rail slides in from; it leaves by half that -->
+    <!--  Springy profile (7.15): the damped spring for the bar and every entrance, plus a press squash; leaving and fades
+         are as in Quick. The period is the undamped spring's (like SwiftUI's response): about 6% overshoot, settled in ~0.5 s  -->
+    <x:Double x:Key="AetherMotionSpringDampingRatio">0.85</x:Double>
+    <x:Double x:Key="AetherMotionSpringPeriodMilliseconds">350</x:Double>
+    <x:Double x:Key="AetherMotionSpringSlide">10</x:Double>
+    <!--  Springy only: transport and rail buttons squash to this on press and spring back on release  -->
+    <x:Double x:Key="AetherMotionSpringPressScale">0.92</x:Double>
+    <!--  Both profiles: the rail's peek strip, and hover and press fills (the templates' BrushTransition, 0:0:0.083, as in the stock controls)  -->
+    <x:Double x:Key="AetherMotionFastMilliseconds">83</x:Double>
 
 
     <!--
@@ -269,12 +295,17 @@
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <!--  Timecodes only. Tabular digits come with the monospace face.  -->
+    <!--  Timecodes (7.12): the UI font with tabular figures, so digits keep their width without a monospace face  -->
     <Style x:Key="AetherTimecodeTextStyle" BasedOn="{StaticResource AetherBodyTextStyle}" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="{StaticResource AetherMonoFont}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
         <Setter Property="FontSize" Value="{StaticResource AetherTimecodeFontSize}" />
         <Setter Property="LineHeight" Value="{StaticResource AetherTimecodeLineHeight}" />
         <Setter Property="TextTrimming" Value="None" />
+    </Style>
+    <Style x:Key="AetherTimecodeSecondaryTextStyle" BasedOn="{StaticResource AetherTimecodeTextStyle}" TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextSecondaryBrush}" />
     </Style>
     <!--  The one named monospace exception: Settings › Advanced › Custom mpv options  -->
     <Style x:Key="AetherCustomOptionsTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
@@ -294,26 +325,10 @@
         <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
         <Setter Property="Padding" Value="16,12" />
     </Style>
-    <!--  Controls pill, toasts, anything over video. TextPrimary only on it.  -->
-    <Style x:Key="AetherOsdPanelStyle" BasedOn="{StaticResource AetherGlassPanelStyle}" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource AetherSurfaceOsdBrush}" />
-        <Setter Property="Padding" Value="8" />
-    </Style>
     <!--  Diagnostics: solid 95% so secondary text holds about 7:1 over bright video  -->
     <Style x:Key="AetherOverlayStrongPanelStyle" BasedOn="{StaticResource AetherGlassPanelStyle}" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource AetherSurfaceOverlayStrongBrush}" />
         <Setter Property="Padding" Value="16,8,8,12" />
-    </Style>
-    <!--  Settings row card: min 60, padding 12,16, 20 px icon, control on the right, 4 between cards  -->
-    <Style x:Key="AetherSettingsRowStyle" BasedOn="{StaticResource AetherGlassPanelStyle}" TargetType="Border">
-        <Setter Property="MinHeight" Value="{StaticResource AetherSizeSettingsRow}" />
-        <Setter Property="Padding" Value="16,12" />
-    </Style>
-    <Style x:Key="AetherBadgeStyle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource AetherSurfaceOsdBrush}" />
-        <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
-        <Setter Property="Padding" Value="6,2" />
-        <Setter Property="MaxWidth" Value="{StaticResource AetherSizeBadgeMaxWidth}" />
     </Style>
     <!--  Status dot: 6 px, top-aligned; Margin top 5 on caption lines, 7 on body lines, 11 on subtitle lines  -->
     <Style x:Key="AetherStatusDotStyle" TargetType="Ellipse">
@@ -346,7 +361,10 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
-                        <Border x:Name="StateLayer" CornerRadius="{TemplateBinding CornerRadius}" />
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
+                        <Border x:Name="StateLayer" Background="Transparent" CornerRadius="{TemplateBinding CornerRadius}">
+                            <Border.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Border.BackgroundTransition>
+                        </Border>
                         <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" />
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
@@ -381,6 +399,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
                         <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" />
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
@@ -419,7 +438,23 @@
         <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeIcon}" />
     </Style>
+    <!--  Hover rail items (6.3): 40 square, radius 8, 20 px glyphs; the active one (Player) adds AetherRailItemActiveStyle  -->
+    <Style x:Key="AetherRailItemStyle" BasedOn="{StaticResource AetherIconButtonStyle}" TargetType="Button">
+        <Setter Property="Width" Value="{StaticResource AetherSizeRailItem}" />
+        <Setter Property="Height" Value="{StaticResource AetherSizeRailItem}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherSizeIconLarge}" />
+        <Setter Property="ToolTipService.Placement" Value="Right" />
+    </Style>
+    <Style x:Key="AetherRailItemActiveStyle" BasedOn="{StaticResource AetherRailItemStyle}" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+    </Style>
+    <!--  Transport (owner, Pass 7): 36 px targets, 14 px glyphs and radius 6, a touch larger and crisper than the 32 px icon buttons  -->
     <Style x:Key="AetherTransportIconButtonStyle" BasedOn="{StaticResource AetherIconButtonStyle}" TargetType="Button">
+        <Setter Property="Width" Value="{StaticResource AetherSizeTransportButton}" />
+        <Setter Property="Height" Value="{StaticResource AetherSizeTransportButton}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherTransportButtonCornerRadius}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeTransportIcon}" />
     </Style>
     <!--  Tight line bounds so the digit's ink, not its line box, is what gets centred in the ring  -->
@@ -431,19 +466,20 @@
         <Setter Property="TextLineBounds" Value="Tight" />
         <Setter Property="IsTextScaleFactorEnabled" Value="False" />
     </Style>
-    <!--  Play/pause: 32 round translucent circle with a hairline, the same emphasis as the Open file pill  -->
+    <!--  Play/pause: 36 round translucent circle with a hairline, the same emphasis as the Open file pill  -->
     <Style x:Key="AetherPlayButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">
-        <Setter Property="Width" Value="{StaticResource AetherSizeControl}" />
-        <Setter Property="Height" Value="{StaticResource AetherSizeControl}" />
+        <Setter Property="Width" Value="{StaticResource AetherSizeTransportButton}" />
+        <Setter Property="Height" Value="{StaticResource AetherSizeTransportButton}" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
-        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="CornerRadius" Value="18" />
         <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeTransportIcon}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
                         <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" />
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
@@ -494,6 +530,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Grid x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
                         <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" />
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
@@ -547,14 +584,25 @@
         </Setter>
     </Style>
     <Style x:Key="AetherTransportToggleButtonStyle" BasedOn="{StaticResource AetherIconToggleButtonStyle}" TargetType="ToggleButton">
+        <Setter Property="Width" Value="{StaticResource AetherSizeTransportButton}" />
+        <Setter Property="Height" Value="{StaticResource AetherSizeTransportButton}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherTransportButtonCornerRadius}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeTransportIcon}" />
     </Style>
-    <!--  Speed (5.4): outline pill, at least 52 wide, Caption 12; takes FillEmphasisRest while its menu is open (set from code).  -->
+    <!--
+        Speed (7.12): a text button that sits like the icon buttons beside it (no outline, hover FillSubtleHover).
+        Off 1x it takes the "on" look of Loop (FillEmphasisRest and StrokeControl), so a changed speed stands out;
+        the page sets that, and the same fill while the menu is open, through Background and BorderBrush.
+    -->
     <Style x:Key="AetherSpeedPillButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">
         <Setter Property="MinWidth" Value="{StaticResource AetherSizeSpeedPill}" />
-        <Setter Property="Height" Value="{StaticResource AetherSizeControl}" />
-        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="Height" Value="{StaticResource AetherSizeTransportButton}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherTransportButtonCornerRadius}" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="FontSize" Value="{StaticResource AetherCaptionFontSize}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
     </Style>
     <!--
         Transport menus (5.4, 5.7): solid dialog fallback over video (ADR-0013), radius 8, StrokeSurface,
@@ -568,6 +616,14 @@
         <Setter Property="Padding" Value="0,4" />
     </Style>
     <Style x:Key="AetherToggleMenuItemStyle" BasedOn="{StaticResource DefaultToggleMenuFlyoutItemStyle}" TargetType="ToggleMenuFlyoutItem">
+        <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+        <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
+        <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
+        <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+    </Style>
+    <Style x:Key="AetherMenuSubItemStyle" BasedOn="{StaticResource DefaultMenuFlyoutSubItemStyle}" TargetType="MenuFlyoutSubItem">
         <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
         <Setter Property="Margin" Value="4,0" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
@@ -591,11 +647,13 @@
         <Setter Property="Width" Value="{StaticResource AetherSizeTitleBarButton}" />
         <Setter Property="Height" Value="{StaticResource AetherSizeTitleBar}" />
         <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="FontSize" Value="{StaticResource AetherSizeTitleBarGlyph}" />
         <Setter Property="Foreground" Value="{StaticResource AetherCaptionGlyphBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="Root" Background="{TemplateBinding Background}">
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
                         <ContentPresenter x:Name="ContentPresenter" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" />
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
@@ -630,7 +688,10 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
-                        <Border x:Name="StateLayer" CornerRadius="{TemplateBinding CornerRadius}" />
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
+                        <Border x:Name="StateLayer" Background="Transparent" CornerRadius="{TemplateBinding CornerRadius}">
+                            <Border.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Border.BackgroundTransition>
+                        </Border>
                         <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" />
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">

@@ -74,6 +74,27 @@ public class MpvRenderLoopTests
     }
 
     [Fact]
+    public void RedrawWithoutANewVideoFrame_Renders_ButDoesNotReportASwapToMpv()
+    {
+        var factory = new TestBackendFactory();
+        using var host = new TestRenderLoopHost();
+        using var loop = new MpvRenderLoop(factory, host, new MpvRenderLoopOptions { VSync = false });
+
+        loop.SetTargetSize(64, 64, 1.0f, 1.0f);
+        loop.Start();
+        Assert.True(TestWait.ForCondition(() => loop.State == RenderLoopState.Running && loop.FramesPresented >= 1));
+        var backend = Assert.Single(factory.Backends);
+
+        long before = loop.FramesPresented;
+        loop.RequestRedraw();
+
+        Assert.True(TestWait.ForCondition(() => loop.FramesPresented > before));
+        Assert.True(backend.RenderCount >= 2);
+        Assert.Equal(0, backend.ReportSwapCount);
+        Assert.True(loop.Stop(3000));
+    }
+
+    [Fact]
     public void SetTargetSize_DifferentPixelSize_CallsReleaseThenAcquireInOrder()
     {
         var factory = new TestBackendFactory();
@@ -364,6 +385,8 @@ public class MpvRenderLoopTests
 
         public DxgiPresenter Presenter => _presenter;
         public int DisposeCount => Volatile.Read(ref _disposeCount);
+        public int RenderCount => Volatile.Read(ref _renderCount);
+        public int ReportSwapCount => Volatile.Read(ref _reportSwapCount);
         public int ReleaseCount => Volatile.Read(ref _releaseCount);
         public int AcquireCount => Volatile.Read(ref _acquireCount);
         public ConcurrentQueue<string> Events => _events;

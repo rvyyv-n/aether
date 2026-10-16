@@ -11,6 +11,7 @@ public sealed class MpvSettingsSync(Action<string[]> send)
     private readonly object _gate = new();
     private readonly Dictionary<string, string> _sent = new(StringComparer.Ordinal);
     private bool _normalising;
+    private string? _deinterlacer;
 
     /// <summary>Sends the properties of <see cref="MpvSettingsMap.RuntimePlan"/> that changed since the last call.</summary>
     /// <exception cref="Aether.Core.Interop.Mpv.MpvException">The core rejected a command outright, e.g. while shutting down.</exception>
@@ -36,6 +37,15 @@ public sealed class MpvSettingsSync(Action<string[]> send)
                     _send(command);
                 }
                 _normalising = plan.NormaliseVolume;
+            }
+
+            if (plan.DeinterlaceFilter != _deinterlacer)
+            {
+                foreach (string[] command in MpvSettingsMap.DeinterlaceCommands(plan.DeinterlaceFilter))
+                {
+                    _send(command);
+                }
+                _deinterlacer = plan.DeinterlaceFilter;
             }
         }
     }

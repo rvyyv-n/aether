@@ -28,12 +28,21 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.OpenUrl, "Ctrl+Shift+O")]
     [InlineData(ShortcutAction.SkipBack, "Left")]
     [InlineData(ShortcutAction.SkipForward, "Right")]
+    [InlineData(ShortcutAction.SkipBackFine, "Shift+Left")]
+    [InlineData(ShortcutAction.SkipForwardFine, "Shift+Right")]
+    [InlineData(ShortcutAction.SkipBackLong, "Ctrl+Left")]
+    [InlineData(ShortcutAction.SkipForwardLong, "Ctrl+Right")]
     [InlineData(ShortcutAction.SetIn, "I")]
     [InlineData(ShortcutAction.SetOut, "O")]
     [InlineData(ShortcutAction.PlayPause, "Space")]
     [InlineData(ShortcutAction.Mute, "M")]
     [InlineData(ShortcutAction.Loop, "L")]
     [InlineData(ShortcutAction.AlwaysOnTop, "T")]
+    [InlineData(ShortcutAction.Diagnostics, "Ctrl+I")]
+    [InlineData(ShortcutAction.Settings, "Ctrl+Comma")]
+    [InlineData(ShortcutAction.CopyFrame, "Ctrl+C")]
+    [InlineData(ShortcutAction.SaveFrame, "Ctrl+Shift+S")]
+    [InlineData(ShortcutAction.ExportClip, "Ctrl+E")]
     public void Defaults_Are_Todays_Keys(ShortcutAction action, string expected)
     {
         Assert.Equal([expected], Defaults(action));
@@ -90,7 +99,7 @@ public class ShortcutMapTests
     [InlineData("Banana")]
     [InlineData("Escape")]
     [InlineData("Comma")]
-    [InlineData("Ctrl+Period")]
+    [InlineData("Alt+Period")]
     public void Garbage_Or_Reserved_Text_Does_Not_Parse(string? text)
     {
         Assert.False(KeyCombination.TryParse(text, out _));
@@ -389,21 +398,13 @@ public class ShortcutMapTests
 
     [Theory]
     [InlineData("Comma")]
-    [InlineData("Ctrl+Comma")]
     [InlineData("Shift+Comma")]
     [InlineData("Alt+Comma")]
-    [InlineData("Ctrl+Shift+Comma")]
-    [InlineData("Ctrl+Alt+Comma")]
     [InlineData("Alt+Shift+Comma")]
-    [InlineData("Ctrl+Alt+Shift+Comma")]
     [InlineData("Period")]
-    [InlineData("Ctrl+Period")]
     [InlineData("Shift+Period")]
     [InlineData("Alt+Period")]
-    [InlineData("Ctrl+Shift+Period")]
-    [InlineData("Ctrl+Alt+Period")]
     [InlineData("Alt+Shift+Period")]
-    [InlineData("Ctrl+Alt+Shift+Period")]
     [InlineData("Escape")]
     public void Reserved_Combinations_Cannot_Be_Parsed_Or_Validated(string text)
     {
@@ -412,7 +413,7 @@ public class ShortcutMapTests
     }
 
     [Fact]
-    public void Comma_And_Period_Are_Reserved_Across_All_Modifiers_While_Modified_Escape_Is_Valid()
+    public void Comma_And_Period_Are_Reserved_Unless_Ctrl_Is_Held_While_Modified_Escape_Is_Valid()
     {
         KeyModifiers[] allModifiers =
         [
@@ -428,13 +429,15 @@ public class ShortcutMapTests
 
         foreach (KeyModifiers mod in allModifiers)
         {
+            bool reserved = (mod & KeyModifiers.Ctrl) == 0;
+
             var comma = new KeyCombination(KeyCombination.OemComma, mod);
-            Assert.True(comma.IsReserved);
-            Assert.False(comma.IsValid);
+            Assert.Equal(reserved, comma.IsReserved);
+            Assert.Equal(!reserved, comma.IsValid);
 
             var period = new KeyCombination(KeyCombination.OemPeriod, mod);
-            Assert.True(period.IsReserved);
-            Assert.False(period.IsValid);
+            Assert.Equal(reserved, period.IsReserved);
+            Assert.Equal(!reserved, period.IsValid);
         }
 
         // Plain Escape is reserved, but modifier+Escape is allowed
@@ -454,7 +457,7 @@ public class ShortcutMapTests
         [
             new KeyCombination(KeyCombination.Escape, KeyModifiers.None),
             new KeyCombination(KeyCombination.OemComma, KeyModifiers.None),
-            new KeyCombination(KeyCombination.OemPeriod, KeyModifiers.Ctrl),
+            new KeyCombination(KeyCombination.OemPeriod, KeyModifiers.Alt),
         ]);
         Assert.Empty(unbound.Get(ShortcutAction.Mute));
 
@@ -476,7 +479,7 @@ public class ShortcutMapTests
         Assert.False(store.Set(SettingKeys.ShortcutMute, "Escape"));
         Assert.False(store.Set(SettingKeys.ShortcutMute, "Comma"));
         Assert.False(store.Set(SettingKeys.ShortcutMute, "Period"));
-        Assert.False(store.Set(SettingKeys.ShortcutMute, "Ctrl+Comma"));
+        Assert.False(store.Set(SettingKeys.ShortcutMute, "Alt+Comma"));
         Assert.False(store.Set(SettingKeys.ShortcutMute, "Shift+Period"));
     }
 
@@ -576,7 +579,7 @@ public class ShortcutMapTests
                   "shortcuts.fullScreen": "F, UnknownKey",
                   "shortcuts.mute": "Ctrl+Ctrl+M",
                   "shortcuts.loop": "Escape",
-                  "shortcuts.alwaysOnTop": "Ctrl+Comma"
+                  "shortcuts.alwaysOnTop": "Alt+Comma"
                 }
                 """,
         };
@@ -627,8 +630,9 @@ public class ShortcutMapTests
     [InlineData("Escape", false)]
     [InlineData("Comma", false)]
     [InlineData("Period", false)]
-    [InlineData("Ctrl+Comma", false)]
-    [InlineData("Ctrl+Period", false)]
+    [InlineData("Alt+Comma", false)]
+    [InlineData("Ctrl+Comma", true)]
+    [InlineData("Ctrl+Period", true)]
     [InlineData("   ", false)]
     [InlineData("Ctrl+O, Banana", false)]
     public void IsValidText_Validates_Shortcut_Strings_Accurately(string text, bool expected)

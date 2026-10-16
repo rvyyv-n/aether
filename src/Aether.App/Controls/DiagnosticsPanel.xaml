@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Aether_App.Controls.DiagnosticsPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Diagnostics (screen 8.1): a solid panel, not Acrylic (ADR-0013), so secondary text holds over bright video.
+        The title and Copy, then six label / value rows.
+    -->
+    <Border
+        Width="{StaticResource AetherSizeDiagnosticsWidth}"
+        Style="{StaticResource AetherOverlayStrongPanelStyle}">
+        <Grid RowSpacing="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                x:Name="TitleText"
+                Grid.ColumnSpan="2"
+                VerticalAlignment="Center"
+                Style="{StaticResource AetherCaptionStrongTextStyle}" />
+            <Button
+                x:Name="CopyButton"
+                Grid.ColumnSpan="2"
+                Height="{StaticResource AetherSizeControl}"
+                HorizontalAlignment="Right"
+                Click="OnCopyClick"
+                FontSize="{StaticResource AetherCaptionFontSize}"
+                Style="{StaticResource AetherOutlinePillButtonStyle}" />
+
+            <TextBlock
+                x:Name="DecoderLabel"
+                Grid.Row="1"
+                Style="{StaticResource AetherCaptionTextStyle}" />
+            <TextBlock
+                x:Name="DecoderValue"
+                Grid.Row="1"
+                Grid.Column="1"
+                Style="{StaticResource AetherMonoTextStyle}"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                x:Name="VideoLabel"
+                Grid.Row="2"
+                Style="{StaticResource AetherCaptionTextStyle}" />
+            <TextBlock
+                x:Name="VideoValue"
+                Grid.Row="2"
+                Grid.Column="1"
+                Style="{StaticResource AetherMonoTextStyle}"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                x:Name="FrameRateLabel"
+                Grid.Row="3"
+                Style="{StaticResource AetherCaptionTextStyle}" />
+            <TextBlock
+                x:Name="FrameRateValue"
+                Grid.Row="3"
+                Grid.Column="1"
+                Style="{StaticResource AetherMonoTextStyle}"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                x:Name="DisplayLabel"
+                Grid.Row="4"
+                Style="{StaticResource AetherCaptionTextStyle}" />
+            <TextBlock
+                x:Name="DisplayValue"
+                Grid.Row="4"
+                Grid.Column="1"
+                Style="{StaticResource AetherMonoTextStyle}"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                x:Name="DroppedLabel"
+                Grid.Row="5"
+                Style="{StaticResource AetherCaptionTextStyle}" />
+            <TextBlock
+                x:Name="DroppedValue"
+                Grid.Row="5"
+                Grid.Column="1"
+                Style="{StaticResource AetherMonoTextStyle}"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                x:Name="CacheLabel"
+                Grid.Row="6"
+                Style="{StaticResource AetherCaptionTextStyle}" />
+            <TextBlock
+                x:Name="CacheValue"
+                Grid.Row="6"
+                Grid.Column="1"
+                Style="{StaticResource AetherMonoTextStyle}"
+                TextTrimming="CharacterEllipsis" />
+        </Grid>
+    </Border>
+</UserControl>

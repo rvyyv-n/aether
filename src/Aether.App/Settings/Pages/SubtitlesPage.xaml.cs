@@ -34,6 +34,23 @@ public sealed partial class SubtitlesPage : Page
                 new("large", AppStrings.Get("Settings_SubtitleSize_Large")),
             ],
             "Settings_FontAndSize_Title");
+        binder.Choose(SubtitleLookRow, SubtitleColorCombo, SettingKeys.SubtitleColor,
+            [
+                new("white", AppStrings.Get("Settings_SubtitleColor_White")),
+                new("yellow", AppStrings.Get("Settings_SubtitleColor_Yellow")),
+                new("green", AppStrings.Get("Settings_SubtitleColor_Green")),
+                new("cyan", AppStrings.Get("Settings_SubtitleColor_Cyan")),
+            ],
+            "Settings_ColorAndPosition_Title");
+        binder.Choose(SubtitleLookRow, SubtitlePositionCombo, SettingKeys.SubtitlePosition,
+            [
+                new("bottom", AppStrings.Get("Settings_SubtitlePosition_Bottom")),
+                new("raised", AppStrings.Get("Settings_SubtitlePosition_Raised")),
+                new("top", AppStrings.Get("Settings_SubtitlePosition_Top")),
+            ],
+            "Settings_ColorAndPosition_Title");
+        AutomationProperties.SetName(SubtitleColorCombo, AppStrings.Get("Settings_SubtitleColor_Title"));
+        AutomationProperties.SetName(SubtitlePositionCombo, AppStrings.Get("Settings_SubtitlePosition_Title"));
         AutomationProperties.SetName(SubtitleFontCombo, AppStrings.Get("Settings_SubtitleFont_Title"));
         AutomationProperties.SetName(SubtitleSizeCombo, AppStrings.Get("Settings_SubtitleSize_Title"));
 

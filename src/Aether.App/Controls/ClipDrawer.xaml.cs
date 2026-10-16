@@ -29,6 +29,7 @@ public sealed partial class ClipDrawer : UserControl
     private double _duration;
     private bool _ffmpegChecked;
     private bool _open;
+    private ChromeFader? _fader;
 
     public ClipDrawer()
     {
@@ -64,6 +65,9 @@ public sealed partial class ClipDrawer : UserControl
         _duration = duration;
         RenderChip();
     }
+
+    /// <summary>Opens the drawer, as the Clips entry of the right-click menu does.</summary>
+    public void Open() => SetOpen(true);
 
     /// <summary>Esc closes an open drawer first. Returns whether it did.</summary>
     public bool Close()
@@ -159,9 +163,18 @@ public sealed partial class ClipDrawer : UserControl
         string label = AppStrings.Get(open ? "Clips_HideClips" : "Clips_ShowClips");
         ToolTipService.SetToolTip(ClipsToggle, label);
         AutomationProperties.SetName(ClipsToggle, label);
-        DrawerArea.Visibility = Show(open);
+        _fader ??= ChromeFader.ForElement(this);
         double width = (double)Application.Current.Resources["AetherSizeClipDrawerWidth"];
-        Panel.Width = open ? Math.Min(width, ActualWidth > 0 ? ActualWidth : width) : double.NaN; // narrow windows
+        if (open)
+        {
+            Panel.Width = Math.Min(width, ActualWidth > 0 ? ActualWidth : width); // narrow windows
+            _fader.Enter(DrawerArea, ChromeFader.FromBelow);
+        }
+        else
+        {
+            // The chip keeps its open width until the rows have gone, so they do not reflow as they fade.
+            _fader.Exit(DrawerArea, ChromeFader.FromBelow, () => Panel.Width = double.NaN);
+        }
 
         RowsScroller.ChangeView(null, 0, null, disableAnimation: true);
         RenderChip();
@@ -170,10 +183,35 @@ public sealed partial class ClipDrawer : UserControl
 
     // ---- Export ----
 
-    private async void OnExportClick(object sender, RoutedEventArgs e)
+    /// <summary>The export shortcut: exports the marked clip, or says nothing is marked.</summary>
+    public void RequestExport()
+    {
+        if (!_range.IsComplete)
+        {
+            AppToasts.Show("clip-unmarked", AppStrings.Get("Toast_ClipNothingMarked"), ToastTone.Neutral);
+            return;
+        }
+        if (!_ffmpegChecked || App.ClipExport.IsFfmpegAvailable)
+        {
+            ExportClip();
+        }
+        else
+        {
+            AppToasts.Show("clip-ffmpeg", AppStrings.Get("Clips_NeedsFfmpeg"), ToastTone.Neutral);
+        }
+    }
+
+    private void OnExportClick(object sender, RoutedEventArgs e) => ExportClip();
+
+    private async void ExportClip()
     {
         if (_sourcePath is not { } source || !_range.IsComplete)
         {
+            return;
+        }
+        if (WebLink.IsValid(source))
+        {
+            AppToasts.Show("clip-stream", AppStrings.Get("Toast_ClipStreamNotSupported"), ToastTone.Neutral);
             return;
         }
         var pending = new PendingExport(ClipDisplay.NamePrefix(source));
@@ -189,6 +227,8 @@ public sealed partial class ClipDrawer : UserControl
             _pending.Remove(pending);
             var clip = new SavedClip(result.OutputPath, result.SizeBytes, length, DateTimeOffset.Now);
             _ = Task.Run(() => App.Clips.Add(clip)); // Changed redraws the rows
+            AppToasts.Show("clip-saved", AppStrings.Get("Toast_ClipSaved"), ToastTone.Success,
+                AppStrings.Get("Toast_ShowInFolder"), () => _ = ShowInFolderAsync(result.OutputPath));
         }
         catch (OperationCanceledException)
         {
@@ -203,6 +243,7 @@ public sealed partial class ClipDrawer : UserControl
             }
             RenderRows();
             RenderChip();
+            AppToasts.Show("clip-failed", AppStrings.Get("Toast_ClipFailed"), ToastTone.Failure);
         }
     }
 
@@ -270,18 +311,15 @@ public sealed partial class ClipDrawer : UserControl
 
     private async void OnShowInFolderRequested(object? sender, EventArgs e)
     {
-        if (sender is not ClipRow { Saved: { } clip } || Path.GetDirectoryName(clip.Path) is not { } directory)
+        if (sender is ClipRow { Saved: { } clip })
         {
-            return;
+            await ShowInFolderAsync(clip.Path);
         }
-        try
-        {
-            StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(directory);
-            var options = new FolderLauncherOptions();
-            options.ItemsToSelect.Add(await StorageFile.GetFileFromPathAsync(clip.Path));
-            await Launcher.LaunchFolderAsync(folder, options);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+    }
+
+    private async Task ShowInFolderAsync(string path)
+    {
+        if (!await Aether_App.ShowInFolder.TryAsync(path))
         {
             RenderRows(); // gone since the list was drawn: show it as missing
         }

@@ -6,6 +6,7 @@ using Aether.Core.Playback.Settings;
 using Aether.Core.Playback.Windowing;
 using Aether.PvP.Review.Clipping;
 using Aether_App.Input;
+using Aether_App.Playback;
 using Microsoft.UI.Dispatching;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel;
@@ -41,6 +42,9 @@ public partial class App : Application
     private static bool s_earlyActivation;
 
     private Window? _window;
+
+    /// <summary>The main window's display refresh rate for the playback engine; null before the window exists.</summary>
+    internal static DisplayRefreshSync? DisplaySync => s_window?.DisplaySync;
 
     /// <summary>The single settings instance. Loaded on the thread pool at launch; it holds defaults until then.</summary>
     public static SettingsStore Settings { get; } = new(new FileSettingsStorage(FileSettingsStorage.DefaultPath()));
@@ -148,6 +152,9 @@ public partial class App : Application
 
     /// <summary>UI thread: starts the playback engine again with the current settings, keeping the open file.</summary>
     public static void RestartEngine() => s_window?.RestartEngine();
+
+    /// <summary>UI thread: closes Settings and shows the first-run tour again (Settings › About).</summary>
+    public static void ShowTour() => s_window?.ShowTour();
 
     private static string? LaunchPath(AppActivationArguments arguments)
     {

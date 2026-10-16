@@ -19,9 +19,8 @@ Package.StoreAssociation.xml
 _pkginfo.txt
 
 # Native binaries downloaded/cached locally
-src/Aether.App/Native/x64/*.dll
-src/Aether.App/Native/x64/*.exe
-!src/Aether.App/Native/x64/.gitkeep
+src/Aether.App/Native/*/*.dll
+src/Aether.App/Native/*/*.exe
 
 # Testing & Coverage
 TestResults/

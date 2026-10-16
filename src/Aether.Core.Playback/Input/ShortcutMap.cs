@@ -110,6 +110,10 @@ public sealed class ShortcutMap
         ShortcutAction.OpenUrl => settings.ShortcutOpenUrl,
         ShortcutAction.SkipBack => settings.ShortcutSkipBack,
         ShortcutAction.SkipForward => settings.ShortcutSkipForward,
+        ShortcutAction.SkipBackFine => settings.ShortcutSkipBackFine,
+        ShortcutAction.SkipForwardFine => settings.ShortcutSkipForwardFine,
+        ShortcutAction.SkipBackLong => settings.ShortcutSkipBackLong,
+        ShortcutAction.SkipForwardLong => settings.ShortcutSkipForwardLong,
         ShortcutAction.SetIn => settings.ShortcutSetIn,
         ShortcutAction.SetOut => settings.ShortcutSetOut,
         ShortcutAction.PlayPause => settings.ShortcutPlayPause,
@@ -117,6 +121,11 @@ public sealed class ShortcutMap
         ShortcutAction.Mute => settings.ShortcutMute,
         ShortcutAction.Loop => settings.ShortcutLoop,
         ShortcutAction.AlwaysOnTop => settings.ShortcutAlwaysOnTop,
+        ShortcutAction.Diagnostics => settings.ShortcutDiagnostics,
+        ShortcutAction.Settings => settings.ShortcutSettings,
+        ShortcutAction.CopyFrame => settings.ShortcutCopyFrame,
+        ShortcutAction.SaveFrame => settings.ShortcutSaveFrame,
+        ShortcutAction.ExportClip => settings.ShortcutExportClip,
         _ => "",
     };
 }

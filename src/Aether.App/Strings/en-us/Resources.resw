@@ -1,51 +1,51 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<root>
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
+<?xml version='1.0' encoding='utf-8'?>
+<root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:schema id="root">
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xs:element name="root" ns1:IsDataSet="true">
+      <xs:complexType>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element name="metadata">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" />
+              </xs:sequence>
+              <xs:attribute name="name" use="required" type="xsd:string" />
+              <xs:attribute name="type" type="xsd:string" />
+              <xs:attribute name="mimetype" type="xsd:string" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="assembly">
+            <xs:complexType>
+              <xs:attribute name="alias" type="xsd:string" />
+              <xs:attribute name="name" type="xsd:string" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="data">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+                <xs:element name="comment" type="xsd:string" minOccurs="0" ns1:Ordinal="2" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" ns1:Ordinal="1" />
+              <xs:attribute name="type" type="xsd:string" ns1:Ordinal="3" />
+              <xs:attribute name="mimetype" type="xsd:string" ns1:Ordinal="4" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="resheader">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" />
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+    </xs:element>
+  </xs:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -59,7 +59,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-  <!-- App and Title bar -->
+  
   <data name="App_Name" xml:space="preserve">
     <value>Aether</value>
   </data>
@@ -69,17 +69,8 @@
   <data name="TitleBar_SettingsTooltip" xml:space="preserve">
     <value>Settings (Ctrl+,)</value>
   </data>
-  <data name="TitleBar_Close" xml:space="preserve">
-    <value>Close</value>
-  </data>
-  <data name="TitleBar_Minimize" xml:space="preserve">
-    <value>Minimize</value>
-  </data>
-  <data name="TitleBar_Maximize" xml:space="preserve">
-    <value>Maximize</value>
-  </data>
 
-  <!-- Empty state (Screens 1 and 2A) -->
+  
   <data name="EmptyState_Title" xml:space="preserve">
     <value>No video loaded</value>
   </data>
@@ -127,7 +118,7 @@
     <value>Remove from recent</value>
   </data>
 
-  <!-- Shell and engine states (Screen 2) -->
+  
   <data name="Shell_StartingEngine" xml:space="preserve">
     <value>Starting up…</value>
   </data>
@@ -191,7 +182,7 @@
     <comment>Windows drag caption beside the pointer</comment>
   </data>
 
-  <!-- Open URL dialog (Screen 2.5) -->
+  
   <data name="OpenUrl_Title" xml:space="preserve">
     <value>Open URL</value>
   </data>
@@ -215,7 +206,7 @@
     <value>Cancel</value>
   </data>
 
-  <!-- Links and streaming states (Screen 2) -->
+  
   <data name="Stream_GettingStream" xml:space="preserve">
     <value>Getting stream</value>
   </data>
@@ -275,7 +266,7 @@
     <value>Cancel</value>
   </data>
 
-  <!-- yt-dlp update prompts (Screen 2) -->
+  
   <data name="YtDlp_UpdatePromptTitle" xml:space="preserve">
     <value>Link playback needs an update</value>
   </data>
@@ -304,7 +295,7 @@
     <value>yt-dlp 2026.03.17 is still installed</value>
   </data>
 
-  <!-- Transport and Playing controls / tooltips (Screens 3 and 5) -->
+  
   <data name="Transport_OpenFile" xml:space="preserve">
     <value>Open file (Ctrl+O)</value>
   </data>
@@ -378,7 +369,7 @@
     <value>Default from Settings</value>
   </data>
 
-  <!-- Rail (Screen 6) -->
+  
   <data name="Rail_Player" xml:space="preserve">
     <value>Player</value>
   </data>
@@ -392,7 +383,7 @@
     <value>Settings</value>
   </data>
 
-  <!-- Menus and flyouts (Screen 9) -->
+  
   <data name="Menu_OpenFile" xml:space="preserve">
     <value>Open file</value>
   </data>
@@ -447,11 +438,14 @@
   <data name="Menu_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="Rail_Name" xml:space="preserve">
+    <value>Navigation</value>
+  </data>
   <data name="Menu_ClearList" xml:space="preserve">
     <value>Clear list</value>
   </data>
 
-  <!-- Tracks flyout (Screen 9.2) -->
+  
   <data name="Tracks_Audio" xml:space="preserve">
     <value>Audio</value>
   </data>
@@ -471,7 +465,7 @@
     <value>Subtitle delay</value>
   </data>
 
-  <!-- Video flyout (Screen 9.3) -->
+  
   <data name="VideoFlyout_Zoom" xml:space="preserve">
     <value>Zoom</value>
   </data>
@@ -503,7 +497,7 @@
     <value>Reset colours</value>
   </data>
 
-  <!-- Diagnostics and Picture in Picture (Screen 8) -->
+  
   <data name="Diagnostics_Title" xml:space="preserve">
     <value>Diagnostics</value>
   </data>
@@ -532,7 +526,7 @@
     <value>Back to full window</value>
   </data>
 
-  <!-- Toasts and notifications (Screen 10) -->
+  
   <data name="Toast_HwDecFailed" xml:space="preserve">
     <value>Hardware decoding failed, using software decoding</value>
   </data>
@@ -540,10 +534,19 @@
     <value>Settings</value>
   </data>
   <data name="Toast_YtDlpUpdated" xml:space="preserve">
-    <value>yt-dlp updated to 2026.07.04</value>
+    <value>yt-dlp updated to {0}</value>
   </data>
   <data name="Toast_FrameCopied" xml:space="preserve">
     <value>Frame copied</value>
+  </data>
+  <data name="Toast_FrameSaved" xml:space="preserve">
+    <value>Frame saved</value>
+  </data>
+  <data name="Toast_FrameCopyFailed" xml:space="preserve">
+    <value>The frame could not be copied</value>
+  </data>
+  <data name="Toast_FrameSaveFailed" xml:space="preserve">
+    <value>The frame could not be saved</value>
   </data>
   <data name="Toast_ClipSaved" xml:space="preserve">
     <value>Clip saved</value>
@@ -554,8 +557,14 @@
   <data name="Toast_Dismiss" xml:space="preserve">
     <value>Dismiss</value>
   </data>
+  <data name="Toast_YtDlpUpdateFailed" xml:space="preserve">
+    <value>yt-dlp could not be updated</value>
+  </data>
+  <data name="Toast_ClipFailed" xml:space="preserve">
+    <value>Clip could not be saved</value>
+  </data>
 
-  <!-- Settings page: sections (Screen 7) -->
+  
   <data name="Settings_Back" xml:space="preserve">
     <value>Back</value>
     <comment>Title bar button that closes settings and returns to the player.</comment>
@@ -563,35 +572,11 @@
   <data name="Settings_Title" xml:space="preserve">
     <value>Settings</value>
   </data>
-  <data name="Settings_NavGeneral" xml:space="preserve">
-    <value>General</value>
-  </data>
   <data name="Settings_NavPlayback" xml:space="preserve">
     <value>Playback</value>
   </data>
-  <data name="Settings_NavVideo" xml:space="preserve">
-    <value>Video</value>
-  </data>
-  <data name="Settings_NavAudio" xml:space="preserve">
-    <value>Audio</value>
-  </data>
-  <data name="Settings_NavSubtitles" xml:space="preserve">
-    <value>Subtitles</value>
-  </data>
-  <data name="Settings_NavStreaming" xml:space="preserve">
-    <value>Streaming</value>
-  </data>
-  <data name="Settings_NavShortcuts" xml:space="preserve">
-    <value>Shortcuts</value>
-  </data>
-  <data name="Settings_NavAdvanced" xml:space="preserve">
-    <value>Advanced</value>
-  </data>
-  <data name="Settings_NavAbout" xml:space="preserve">
-    <value>About</value>
-  </data>
 
-  <!-- Settings: General (Screen 7.1) -->
+  
   <data name="Settings_BatterySaver_Title" xml:space="preserve">
     <value>Battery saver</value>
   </data>
@@ -605,7 +590,7 @@
     <value>Instead of opening a new window</value>
   </data>
 
-  <!-- Settings: Playback (Screen 7.2) -->
+  
   <data name="Settings_PreciseSeeking_Title" xml:space="preserve">
     <value>Precise seeking</value>
   </data>
@@ -637,7 +622,7 @@
     <value>Also with T while playing</value>
   </data>
 
-  <!-- Settings: Video (Screens 7.3 and 7.4) -->
+  
   <data name="Settings_QualityPreset_Title" xml:space="preserve">
     <value>Quality preset</value>
   </data>
@@ -664,9 +649,6 @@
   </data>
   <data name="Settings_HardwareDecoding_Direct3D11Copy" xml:space="preserve">
     <value>Direct3D 11 copy</value>
-  </data>
-  <data name="Settings_RestartNotice" xml:space="preserve">
-    <value>Applies on restart · Restart engine</value>
   </data>
   <data name="Settings_RestartEngine" xml:space="preserve">
     <value>Restart engine</value>
@@ -720,7 +702,7 @@
     <value>Saturation</value>
   </data>
 
-  <!-- Settings: Audio (Screen 7.5) -->
+  
   <data name="Settings_OutputDevice_Title" xml:space="preserve">
     <value>Output device</value>
   </data>
@@ -746,7 +728,7 @@
     <value>Evens out loud and quiet files</value>
   </data>
 
-  <!-- Settings: Subtitles (Screen 7.6) -->
+  
   <data name="Settings_ShowSubtitlesByDefault_Title" xml:space="preserve">
     <value>Show subtitles by default</value>
   </data>
@@ -760,7 +742,7 @@
     <value>Font and size</value>
   </data>
 
-  <!-- Settings: Streaming (Screens 7.7 and 7.12) -->
+  
   <data name="Settings_StreamingQuality_Title" xml:space="preserve">
     <value>Quality</value>
   </data>
@@ -791,11 +773,8 @@
   <data name="Settings_YtDlp_UpdateAutomatically_Description" xml:space="preserve">
     <value>Checks once a day</value>
   </data>
-  <data name="Settings_YtDlp_AvailableOnceInstalled" xml:space="preserve">
-    <value>Available once yt-dlp is installed</value>
-  </data>
 
-  <!-- Settings: Shortcuts (Screen 7.8) -->
+  
   <data name="Settings_Shortcuts_PlayPause" xml:space="preserve">
     <value>Play or pause</value>
   </data>
@@ -804,6 +783,18 @@
   </data>
   <data name="Settings_Shortcuts_Forward5s" xml:space="preserve">
     <value>Forward 5 s</value>
+  </data>
+  <data name="Settings_Shortcuts_Back1s" xml:space="preserve">
+    <value>Back 1 s</value>
+  </data>
+  <data name="Settings_Shortcuts_Forward1s" xml:space="preserve">
+    <value>Forward 1 s</value>
+  </data>
+  <data name="Settings_Shortcuts_Back30s" xml:space="preserve">
+    <value>Back 30 s</value>
+  </data>
+  <data name="Settings_Shortcuts_Forward30s" xml:space="preserve">
+    <value>Forward 30 s</value>
   </data>
   <data name="Settings_Shortcuts_Back1Frame" xml:space="preserve">
     <value>Back 1 frame</value>
@@ -822,9 +813,6 @@
   </data>
   <data name="Settings_Shortcuts_PlayCopiedLink" xml:space="preserve">
     <value>Play a copied link</value>
-  </data>
-  <data name="Settings_Shortcuts_SetInOut" xml:space="preserve">
-    <value>Set in / Set out</value>
   </data>
   <data name="Settings_Shortcuts_SetIn" xml:space="preserve">
     <value>Set in</value>
@@ -859,6 +847,9 @@
   <data name="Settings_Shortcuts_SaveFrame" xml:space="preserve">
     <value>Save frame</value>
   </data>
+  <data name="Settings_Shortcuts_ExportClip" xml:space="preserve">
+    <value>Export clip</value>
+  </data>
   <data name="Settings_Shortcuts_Diagnostics" xml:space="preserve">
     <value>Diagnostics</value>
   </data>
@@ -866,7 +857,7 @@
     <value>Settings</value>
   </data>
 
-  <!-- Settings: Advanced (Screen 7.9) -->
+  
   <data name="Settings_CustomOptions_Title" xml:space="preserve">
     <value>Custom mpv options</value>
   </data>
@@ -880,7 +871,7 @@
     <value>Restores every setting to its default. Recent files are kept.</value>
   </data>
 
-  <!-- Settings: About (Screen 7.10) -->
+  
   <data name="Settings_About_Engine" xml:space="preserve">
     <value>Engine</value>
   </data>
@@ -899,6 +890,12 @@
   <data name="Settings_About_CopyDiagnostics" xml:space="preserve">
     <value>Copy diagnostics</value>
   </data>
+  <data name="Settings_About_GitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="Settings_About_GitHubDescription" xml:space="preserve">
+    <value>The author’s projects at github.com/rvyyv-n</value>
+  </data>
   <data name="Settings_About_Licences" xml:space="preserve">
     <value>Licences</value>
   </data>
@@ -911,11 +908,8 @@
   <data name="Settings_About_ReportIssueDescription" xml:space="preserve">
     <value>Opens the issue tracker on GitHub</value>
   </data>
-  <data name="Settings_About_Footer" xml:space="preserve">
-    <value>Aether is open source · github.com/rvyyv-n/aether · Report an issue</value>
-  </data>
 
-  <!-- Settings: Page Titles -->
+  
   <data name="Settings_Page_General" xml:space="preserve">
     <value>General</value>
   </data>
@@ -944,12 +938,9 @@
     <value>About</value>
   </data>
 
-  <!-- Settings: Additional Setting Titles and Descriptions -->
+  
   <data name="Settings_QualityPreset_High" xml:space="preserve">
     <value>High quality</value>
-  </data>
-  <data name="Settings_AudioOutputDevice_Title" xml:space="preserve">
-    <value>Audio output device</value>
   </data>
   <data name="Settings_SubtitleFont_Title" xml:space="preserve">
     <value>Subtitle font</value>
@@ -957,14 +948,8 @@
   <data name="Settings_SubtitleSize_Title" xml:space="preserve">
     <value>Subtitle size</value>
   </data>
-  <data name="Settings_CustomMpvOptions_Title" xml:space="preserve">
-    <value>Custom mpv options</value>
-  </data>
-  <data name="Settings_CustomMpvOptions_Description" xml:space="preserve">
-    <value>Advanced custom mpv options, one key=value per line</value>
-  </data>
 
-  <!-- Settings: Choice Values -->
+  
   <data name="Settings_Upscaling_Bilinear" xml:space="preserve">
     <value>Bilinear</value>
   </data>
@@ -1032,7 +1017,7 @@
     <value>Best</value>
   </data>
 
-  <!-- Settings: Mpv Option Errors -->
+  
   <data name="Settings_MpvOptions_Error_MissingEquals" xml:space="preserve">
     <value>Line {0}: Expected key=value</value>
   </data>
@@ -1049,7 +1034,7 @@
     <value>Line {0}: Duplicate option '{1}'</value>
   </data>
 
-  <!-- Settings: Notices and Actions -->
+  
   <data name="Settings_ResetToDefault" xml:space="preserve">
     <value>Reset to default</value>
   </data>
@@ -1068,24 +1053,18 @@
   <data name="Settings_Shortcuts_Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
-  <!-- Common -->
+  
   <data name="Common_On" xml:space="preserve">
     <value>On</value>
   </data>
   <data name="Common_Off" xml:space="preserve">
     <value>Off</value>
   </data>
-  <data name="Common_Auto" xml:space="preserve">
-    <value>Auto</value>
-  </data>
   <data name="Common_Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
   <data name="Common_Cancel" xml:space="preserve">
     <value>Cancel</value>
-  </data>
-  <data name="Common_Retry" xml:space="preserve">
-    <value>Retry</value>
   </data>
   <data name="Clips_Clips" xml:space="preserve">
     <value>Clips</value>
@@ -1164,5 +1143,259 @@
   </data>
   <data name="Settings_YtDlp_UpdateFailed" xml:space="preserve">
     <value>Couldn’t update. If you installed yt-dlp with a package manager, update it there.</value>
+  </data>
+  
+  <data name="Settings_Deinterlace_Title" xml:space="preserve">
+    <value>Deinterlace</value>
+  </data>
+  <data name="Settings_Deinterlace_Description" xml:space="preserve">
+    <value>Smooths the combing lines in interlaced video, such as old TV recordings</value>
+  </data>
+  <data name="Settings_DeinterlaceMode_Title" xml:space="preserve">
+    <value>Deinterlacing method</value>
+  </data>
+  <data name="Settings_DeinterlaceMode_Auto" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Settings_DeinterlaceMode_Yadif" xml:space="preserve">
+    <value>Yadif</value>
+  </data>
+  <data name="Settings_DeinterlaceMode_Bwdif" xml:space="preserve">
+    <value>Bwdif</value>
+  </data>
+  <data name="Settings_AspectRatio_Title" xml:space="preserve">
+    <value>Aspect ratio</value>
+  </data>
+  <data name="Settings_AspectRatio_Description" xml:space="preserve">
+    <value>Stretches the picture to a fixed shape. Automatic uses the video's own.</value>
+  </data>
+  <data name="Settings_AspectRatio_Auto" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Settings_Snapshots_Title" xml:space="preserve">
+    <value>Snapshots</value>
+  </data>
+  <data name="Settings_Snapshots_Description" xml:space="preserve">
+    <value>Where saved frames go and what they are called</value>
+  </data>
+  <data name="Settings_ScreenshotDirectory_Title" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Settings_ScreenshotDirectory_Description" xml:space="preserve">
+    <value>Leave empty to use the current folder</value>
+  </data>
+  <data name="Settings_ScreenshotFormat_Title" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="Settings_ScreenshotTemplate_Title" xml:space="preserve">
+    <value>File name</value>
+  </data>
+  <data name="Settings_ScreenshotTemplate_Description" xml:space="preserve">
+    <value>%F is the video name and %P the time in it</value>
+  </data>
+  <data name="Settings_PitchCorrection_Title" xml:space="preserve">
+    <value>Keep pitch when speed changes</value>
+  </data>
+  <data name="Settings_PitchCorrection_Description" xml:space="preserve">
+    <value>Voices stay natural at 0.5× or 2×</value>
+  </data>
+  <data name="Settings_StereoDownmix_Title" xml:space="preserve">
+    <value>Mix surround sound down to stereo</value>
+  </data>
+  <data name="Settings_StereoDownmix_Description" xml:space="preserve">
+    <value>For headphones or two speakers. Applies the next time audio starts.</value>
+  </data>
+  <data name="Settings_PreventSleep_Title" xml:space="preserve">
+    <value>Keep the screen awake while playing</value>
+  </data>
+  <data name="Settings_PreventSleep_Description" xml:space="preserve">
+    <value>The display won't dim or sleep during playback. It is released when you pause.</value>
+  </data>
+  <data name="Settings_NetworkCache_Title" xml:space="preserve">
+    <value>Network buffer</value>
+  </data>
+  <data name="Settings_NetworkCache_Description" xml:space="preserve">
+    <value>How much of a stream is loaded ahead of time</value>
+  </data>
+  <data name="Settings_NetworkCache_Value" xml:space="preserve">
+    <value>{0} MB</value>
+  </data>
+  <data name="Settings_HttpProxy_Title" xml:space="preserve">
+    <value>HTTP proxy</value>
+  </data>
+  <data name="Settings_HttpProxy_Description" xml:space="preserve">
+    <value>Sends web streams through a proxy. Empty means none.</value>
+  </data>
+  <data name="Settings_RtspTransport_Title" xml:space="preserve">
+    <value>RTSP transport</value>
+  </data>
+  <data name="Settings_RtspTransport_Description" xml:space="preserve">
+    <value>How camera and RTSP streams are carried. TCP is the safest.</value>
+  </data>
+  <data name="Settings_RtspTransport_Multicast" xml:space="preserve">
+    <value>UDP multicast</value>
+  </data>
+  <data name="Settings_RepairAviIndex_Title" xml:space="preserve">
+    <value>Repair damaged AVI files</value>
+  </data>
+  <data name="Settings_RepairAviIndex_Description" xml:space="preserve">
+    <value>Rebuilds the index of a broken AVI so it can be seeked. Slows opening those files.</value>
+  </data>
+  <data name="Settings_SkipDeblocking_Title" xml:space="preserve">
+    <value>Skip H.264 deblocking</value>
+  </data>
+  <data name="Settings_SkipDeblocking_Description" xml:space="preserve">
+    <value>Trades some picture quality for speed on slow PCs</value>
+  </data>
+  <data name="Settings_SkipDeblocking_Default" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings_SkipDeblocking_NonRef" xml:space="preserve">
+    <value>Non-reference frames</value>
+  </data>
+  <data name="Settings_SkipDeblocking_NonKey" xml:space="preserve">
+    <value>All but key frames</value>
+  </data>
+  <data name="Settings_SkipDeblocking_All" xml:space="preserve">
+    <value>All frames</value>
+  </data>
+  <data name="Settings_MotionStyle_Title" xml:space="preserve">
+    <value>Motion style (preview)</value>
+  </data>
+  <data name="Settings_MotionStyle_Description" xml:space="preserve">
+    <value>How the controls and toasts move. Temporary, to compare the two styles</value>
+  </data>
+  <data name="Settings_MotionStyle_Quick" xml:space="preserve">
+    <value>Quick</value>
+  </data>
+  <data name="Settings_MotionStyle_Springy" xml:space="preserve">
+    <value>Springy</value>
+  </data>
+  <data name="Tracks_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Tracks_DelayEarlier" xml:space="preserve">
+    <value>Earlier by 0.1 s</value>
+  </data>
+  <data name="Tracks_DelayLater" xml:space="preserve">
+    <value>Later by 0.1 s</value>
+  </data>
+  <data name="Tracks_TrackN" xml:space="preserve">
+    <value>Track {0}</value>
+  </data>
+  <data name="Tracks_Sdh" xml:space="preserve">
+    <value>SDH</value>
+  </data>
+  <data name="Tracks_Forced" xml:space="preserve">
+    <value>Forced</value>
+  </data>
+  <data name="Settings_ColorAndPosition_Title" xml:space="preserve">
+    <value>Colour and position</value>
+  </data>
+  <data name="Settings_SubtitleColor_Title" xml:space="preserve">
+    <value>Subtitle colour</value>
+  </data>
+  <data name="Settings_SubtitlePosition_Title" xml:space="preserve">
+    <value>Subtitle position</value>
+  </data>
+  <data name="Settings_SubtitleColor_White" xml:space="preserve">
+    <value>White</value>
+  </data>
+  <data name="Settings_SubtitleColor_Yellow" xml:space="preserve">
+    <value>Yellow</value>
+  </data>
+  <data name="Settings_SubtitleColor_Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="Settings_SubtitleColor_Cyan" xml:space="preserve">
+    <value>Cyan</value>
+  </data>
+  <data name="Settings_SubtitlePosition_Bottom" xml:space="preserve">
+    <value>Bottom</value>
+  </data>
+  <data name="Settings_SubtitlePosition_Raised" xml:space="preserve">
+    <value>Raised</value>
+  </data>
+  <data name="Settings_SubtitlePosition_Top" xml:space="preserve">
+    <value>Top</value>
+  </data>
+  <data name="Diagnostics_Software" xml:space="preserve">
+    <value>Software</value>
+  </data>
+  <data name="Diagnostics_Hardware" xml:space="preserve">
+    <value>Hardware ({0})</value>
+  </data>
+  <data name="Diagnostics_Playing" xml:space="preserve">
+    <value>playing</value>
+  </data>
+  <data name="Settings_HttpProxy_Placeholder" xml:space="preserve">
+    <value>http://host:port</value>
+  </data>
+  <data name="Settings_About_Windows" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="Settings_About_Architecture" xml:space="preserve">
+    <value>Architecture</value>
+  </data>
+<data name="Toast_ClipNothingMarked" xml:space="preserve"><value>Mark a clip first: set In and Out</value></data><data name="Toast_ClipStreamNotSupported" xml:space="preserve"><value>Save the file first to export clips</value></data><data name="EmptyState_SubtitleWithLink" xml:space="preserve"><value>Drop a file, paste a link or press {0}</value></data>
+  <data name="Tour_Name" xml:space="preserve">
+    <value>Welcome tour</value>
+  </data>
+  <data name="Tour_Progress" xml:space="preserve">
+    <value>{0} of {1}</value>
+  </data>
+  <data name="Tour_Skip" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="Tour_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Tour_Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Tour_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Tour_Open_Title" xml:space="preserve">
+    <value>Open a video</value>
+  </data>
+  <data name="Tour_Open_Body" xml:space="preserve">
+    <value>Choose Open file or Open URL, paste a link with Ctrl+V, or drop a file anywhere on the window.</value>
+  </data>
+  <data name="Tour_Controls_Title" xml:space="preserve">
+    <value>The controls</value>
+  </data>
+  <data name="Tour_Controls_Body" xml:space="preserve">
+    <value>While a video plays, the controls sit here. They shrink to a slim bar as you watch and grow back when you point at them.</value>
+  </data>
+  <data name="Tour_Rail_Title" xml:space="preserve">
+    <value>The side rail</value>
+  </data>
+  <data name="Tour_Rail_Body" xml:space="preserve">
+    <value>Rest the pointer on the left edge to open the rail: your saved clips, streaming and Settings.</value>
+  </data>
+  <data name="Tour_Menu_Title" xml:space="preserve">
+    <value>Right-click for more</value>
+  </data>
+  <data name="Tour_Menu_Body" xml:space="preserve">
+    <value>Right-click anywhere for recent files, speed, audio and subtitle tracks, picture adjustments and diagnostics.</value>
+  </data>
+  <data name="Tour_Shortcuts_Title" xml:space="preserve">
+    <value>Keys worth knowing</value>
+  </data>
+  <data name="Tour_Shortcuts_Body" xml:space="preserve">
+    <value>Mark where a clip starts and ends, then export it. Any key can be changed in Settings › Shortcuts.</value>
+  </data>
+  <data name="Tour_Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Tour_Settings_Body" xml:space="preserve">
+    <value>Playback, video, audio, subtitles and keys live behind the gear. You can see this tour again from Settings › About.</value>
+  </data>
+  <data name="Settings_About_Tour" xml:space="preserve">
+    <value>Show the tour again</value>
+  </data>
+  <data name="Settings_About_TourDescription" xml:space="preserve">
+    <value>A quick look at the controls, the side rail, the right-click menu and the keys</value>
   </data>
 </root>

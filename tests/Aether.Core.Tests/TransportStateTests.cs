@@ -15,6 +15,14 @@ public class TransportStateTests
         Assert.Equal(expected, TransportState.PlayButton(status));
 
     [Fact]
+    public void SkipDurations_AreFiveSecondsPlainOneSecondFineAndThirtyLong()
+    {
+        Assert.Equal(5, TransportState.SkipSeconds);
+        Assert.Equal(1, TransportState.FineSkipSeconds);
+        Assert.Equal(30, TransportState.LongSkipSeconds);
+    }
+
+    [Fact]
     public void DisplayPosition_EndedReadsTheFullDuration()
     {
         var state = PlayerState.Initial with { Position = 194.96, Duration = 195.2, Status = PlaybackStatus.Ended };

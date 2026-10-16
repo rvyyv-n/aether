@@ -146,3 +146,49 @@
     - Registers shell context menu ("Play with Aether") under `HKCU\Software\Classes\SystemFileAssociations\video\shell\Aether`.
   - **Portable Runner & Distribution (`tools/package-standalone.ps1`):** Generates `dist/Aether-portable/` and `dist/Aether-portable.zip` containing `Aether.cmd` and `run-portable.cmd` for zero-installation USB / portable drive usage.
 - **Status:** Accepted.
+
+## ADR-0018: Display Refresh Rate and High-Refresh Pacing (P7.4, P7.4a)
+- **Context:** With `video-sync=display-resample` (Smooth motion) mpv has no way to read the monitor's refresh rate through the render API on Windows, so it assumed 60 Hz and decimated 120 fps clips. 7.4a asked whether the render loop's pacing or VSync/tearing choice causes judder on 120, 144 and 240 Hz displays.
+- **Decision:**
+  - Aether reads the refresh rate of the monitor the window is on (`MonitorFromWindow` → `GetMonitorInfoW` → `EnumDisplaySettingsW`, current mode) and sets mpv's `display-fps-override` to it. It re-reads on `WM_DISPLAYCHANGE` (a second window-procedure subclass, `DisplayChangeWatcher`, chained under the aspect lock's) and when the window moves to another monitor (checked on `AppWindow.Changed`, which only re-reads when the monitor handle changes). A rate Windows reports as 0 or 1 ("hardware default"), or outside 10–1000 Hz, sends `0` (mpv's own choice). A `display-fps-override` line in the custom mpv options wins. The pure choice and change detection live in `DisplayRefreshTracker`.
+  - Audit of `MpvRenderLoop`: the wait order stands. The loop waits on the mpv frame event, polls (mpv requires `mpv_render_context_update` after every callback), then waits on the swap chain's frame-latency object, and only then renders and presents. Waiting last keeps the frame mpv picks at render time as fresh as possible; waiting first would let a frame go stale behind a busy swap chain. Latency is 1 with two buffers, which is the lowest setting and leaves a 240 Hz frame (4.2 ms) room: the blur pass costs about 0.5 ms (ADR-0013).
+  - No VRR/tearing change. The swap chain is a composition swap chain presented through DWM, so `DXGI_PRESENT_ALLOW_TEARING` has no dependable effect (tearing and VRR need an independent-flip swap chain that owns the screen, which a XAML panel is not), and a video player wants fixed vblank cadence: `display-resample` plans frame repeats against that cadence. The swap chain keeps the tearing capability flag but `VSync` stays on (`SyncInterval` 1).
+- **Limits:** `EnumDisplaySettingsW` returns whole hertz, so a 59.94 Hz or 119.88 Hz mode reads as 59/60 or 119/120 and mpv plans against that. This is not a problem for the 120 fps case on a 120 Hz display. Exact rates would need `QueryDisplayConfig` (rational vSync frequency). Not checked on 120/144/240 Hz hardware.
+- **Status:** Accepted. Needs an on-screen check on a high-refresh display: play a 120 fps clip with Smooth motion on, watch `display-fps` in the diagnostics panel and the dropped-frame count, and drag the window to a monitor with another rate.
+- **Addendum (Task 7.10 Physical Hardware Measurement & High-Refresh Display Findings):**
+  - **Measurement on Physical Hardware:** Tested on an AMD Radeon R7 350 paired with a 180 Hz display. Forcing display-fps-override = 180 under video-sync=display-resample forced mpv to evaluate 36-tap bicubic shaders (spline36) and debanding 180 times per second, pinning the GPU 3D engine at 97.8% utilization and dropping video throughput to 1 frame every 3 seconds (slideshow).
+  - **Resolution:** display-fps-override is strictly limited to standard refresh rates (<= 60 Hz) when SmoothMotion is enabled. On high-refresh displays (>60 Hz), display-fps-override is set to "0" (mpv native presentation clock, matching Pre-Pass 7 baseline d78f5c4 / 21d46ef). This prevents runaway shader loops while allowing high-framerate clips (60 fps, 120 fps) to present cleanly at their native rate.
+  - **Discrete GPU Parity (RTX 3060/3070+):** On high-end discrete GPUs, direct zero-copy d3d11va hardware decoding (NVDEC) and complex upscalers (spline36, ewa_lanczos) execute with ample GPU ALU headroom. For constrained or older GPUs where d3d11va-copy saturates the PCIe bus, software decoding (HardwareDecoding = "no") utilizing multi-threaded AVX2 FFmpeg decodes 1080p 60/120 fps at <9% CPU and runs smoothly with the efficient quality preset (bilinear scaling, zero deband/interpolation).
+
+## ADR-0019: Plain-text file name in the title bar (7.14)
+- **Context:** Screen 3 put the file name in a SurfaceOsd pill beside "Aether". In the build the pill read as a stray grey chip: its padding sat unevenly around text trimmed to the baseline, and it competed with the caption buttons.
+- **Decision:** No pill. "Aether", a muted middle dot, then the file name in TextSecondary, all Caption on one baseline and trimmed with an ellipsis at 320. The empty state still reads "Aether Alpha" with no dot. The top scrim keeps the text readable over bright video.
+- **Status:** Accepted (owner's choice in the Pass 7 UI finish).
+
+## ADR-0020: Link Playback Resolution, Error Classification & Process Isolation (Pass 9)
+- **Context:** Pass 9 adds web link playback (YouTube, Vimeo, Twitch, and 1000+ yt-dlp supported sites) directly into Aether. Resolving remote media URLs requires spawning `yt-dlp` CLI out-of-process. Previous mockups and dialogs had placeholders (`streamingAvailable: false`) and lacked robust process-tree cancellation, retry/edit UX, stderr classification for private/geo-blocked/unsupported streams, and direct empty-state clipboard pasting.
+- **Decision:**
+  - **Two-Stage Playback Architecture:**
+    - Instead of handing raw web links to libmpv's built-in ytdl hook (which blocks mpv event loop and obscures error specifics), Aether uses `IYtDlpStreamResolver` (`YtDlpStreamResolver`) to resolve the webpage URL ahead of time via `yt-dlp --dump-json --no-playlist`.
+    - Direct media URL, format ID, webpage title, duration, and HTTP request headers (User-Agent, Referer, Cookies, etc.) are extracted and supplied to `MpvPlaybackCore.LoadFile(streamUrl, httpHeaders)`.
+    - `OriginalWebLink` is preserved across engine re-initialization and `PlaybackCarryOver` to enable seamless reload and diagnostics.
+  - **Error Classification & User Agency:**
+    - `YtDlpErrorClassifier` parses stderr output and exit codes into typed `StreamFailureReason` (`PrivateVideo`, `SignInRequired`, `RegionBlocked`, `LiveNotStarted`, `Offline`, `SiteNotSupported`, `YtDlpMissing`, `Unknown`).
+    - Error messages are humanized with actionable remedies in the Hero failure frame: Retry, Edit link, Open in browser, and Cancel.
+  - **Process Isolation & Cancellation Lifecycle:**
+    - `IProcessRunner` / `DefaultProcessRunner` asynchronously drains stdout and stderr concurrently via `Task.WhenAll`.
+    - Upon user cancellation or timeout (default 30s), `process.Kill(entireProcessTree: true)` terminates python/yt-dlp worker subprocesses cleanly without leaking zombie processes.
+    - 10-second timer transitions hero loading spinner to informative "Still working..." note.
+  - **Clipboard & Home Integration:**
+    - Home screen empty-state subtitle updated to "Drop a file, paste a link or press Ctrl+O".
+    - `Ctrl+V` on the home screen detects clipboard web URLs and initiates resolution immediately without manual dialog navigation.
+    - Resolved remote streams persist to `RecentFiles` with resolved video title, duration, and web badge.
+  - **Safety & Export Boundaries:**
+    - Lossless clip export for remote streams is gracefully prevented via "Save the file first to export clips" toast.
+    - Frame copy (`Ctrl+C`) and frame snapshot (`Ctrl+Shift+S`) remain fully functional via mpv screenshot commands.
+- **Status:** Accepted.
+
+## ADR-0021: Auto-updater (7.28 plan)
+- **Context:** Aether ships unpackaged (ADR-0017) through a home-made per-user installer of about 215 MB and a portable zip, with no signing, no version number and no releases yet. 7.28 asked where releases live, how they are signed and whether updates are silent or prompted.
+- **Decision (proposed):** Velopack with releases on GitHub; WinGet later as an extra channel. Checks at most daily and on "Check for updates" in Settings › About; a found update downloads quietly and is applied on exit or on Restart from a toast, never mid-video. Pack ID `AetherPlayer` so uninstall never touches `%LOCALAPPDATA%\Aether` (user data). MSIX App Installer and the Store were rejected because they undo ADR-0017; a hand-made GitHub check was rejected for full 215 MB downloads and no safe swap. Full comparison, build steps and open questions in `docs/reviews/pass-7-auto-updater-plan.md`.
+- **Status:** Proposed; waiting on the owner's answers on signing, default on/off and repo visibility.

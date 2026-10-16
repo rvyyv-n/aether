@@ -12,6 +12,21 @@
             <settings:SettingsRow x:Name="PreferGpuDecodableFormatsRow" Glyph="&#xE964;">
                 <ToggleSwitch x:Name="PreferGpuDecodableFormatsToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
+            <settings:SettingsRow x:Name="NetworkCacheRow" Glyph="&#xE9D9;">
+                <settings:SettingsRow.Note>
+                    <TextBlock x:Name="NetworkCacheRestartNote" Margin="0,2,0,0" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                </settings:SettingsRow.Note>
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <Slider x:Name="NetworkCacheSlider" Style="{StaticResource AetherSettingsSliderStyle}" Minimum="20" Maximum="1000" StepFrequency="10" />
+                    <TextBlock x:Name="NetworkCacheValue" Width="64" VerticalAlignment="Center" HorizontalTextAlignment="Right" Style="{StaticResource AetherBodyTextStyle}" />
+                </StackPanel>
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="HttpProxyRow" Glyph="&#xE774;">
+                <TextBox x:Name="HttpProxyBox" Style="{StaticResource AetherSettingsTextBoxStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="RtspTransportRow" Glyph="&#xE968;">
+                <ComboBox x:Name="RtspTransportCombo" Style="{StaticResource AetherSettingsComboStyle}" />
+            </settings:SettingsRow>
             <settings:SettingsRow x:Name="YtDlpRow" Glyph="&#xE896;">
                 <Button x:Name="YtDlpActionButton" Style="{StaticResource AetherOutlinePillButtonStyle}" Visibility="Collapsed" />
             </settings:SettingsRow>

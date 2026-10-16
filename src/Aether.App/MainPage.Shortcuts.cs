@@ -1,3 +1,5 @@
+using Aether.Core.Playback;
+using Windows.ApplicationModel.DataTransfer;
 using Aether.Core.Playback.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -40,10 +42,21 @@ public sealed partial class MainPage
                     Modifiers = ToModifiers(combination.Modifiers),
                 };
                 accelerator.Invoked += HandlerFor(action);
+                accelerator.IsEnabled = !_tour.IsActive;
                 KeyboardAccelerators.Add(accelerator);
                 _shortcutAccelerators.Add(accelerator);
             }
         }
+
+        var pasteAccelerator = new KeyboardAccelerator
+        {
+            Key = Windows.System.VirtualKey.V,
+            Modifiers = Windows.System.VirtualKeyModifiers.Control,
+        };
+        pasteAccelerator.Invoked += OnPasteAccelerator;
+        pasteAccelerator.IsEnabled = !_tour.IsActive;
+        KeyboardAccelerators.Add(pasteAccelerator);
+        _shortcutAccelerators.Add(pasteAccelerator);
     }
 
     // The settings change on the thread pool when they load, so the page is updated on its own thread.
@@ -66,10 +79,10 @@ public sealed partial class MainPage
         ToolTipService.SetToolTip(OpenButton, Tip("Transport_OpenFile", ShortcutAction.OpenFile));
         Label(BackButton, "Transport_Back5s", ShortcutAction.SkipBack);
         Label(ForwardButton, "Transport_Forward5s", ShortcutAction.SkipForward);
-        Label(LoopButton, "Transport_Loop", ShortcutAction.Loop);
-        Label(AlwaysOnTopButton, "Transport_AlwaysOnTop", ShortcutAction.AlwaysOnTop);
         MoreLoopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Loop);
         MoreAlwaysOnTopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
+        ApplyContextMenuShortcuts();
+        ApplyRailShortcutLabels();
     }
 
     private static string Tip(string key, ShortcutAction action) => App.Shortcuts.Tip(AppStrings.Get(key), action);
@@ -77,8 +90,42 @@ public sealed partial class MainPage
     // The home line names the open-file key as it is now, and falls back to a plain prompt when that action has no key.
     private static string HomeFilesSubtitle() =>
         App.Shortcuts.Describe(ShortcutAction.OpenFile) is { Length: > 0 } keys
-            ? AppStrings.Format("EmptyState_SubtitleFilesOnly", keys)
+            ? (keys == "Ctrl+O"
+                ? AppStrings.Get("EmptyState_Subtitle")
+                : AppStrings.Format("EmptyState_SubtitleWithLink", keys))
             : AppStrings.Get("EmptyState_SubtitleFilesOnlyUnbound");
+
+    private void OnPasteAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (CanPasteLink())
+        {
+            args.Handled = true;
+            _ = TryPasteLinkAsync();
+        }
+    }
+
+    private bool CanPasteLink() =>
+        !HasVideo && _openUrl.Stage == OpenUrlStage.Closed && !IsTextInputFocused();
+
+    private async Task TryPasteLinkAsync()
+    {
+        try
+        {
+            DataPackageView content = Clipboard.GetContent();
+            if (content.Contains(StandardDataFormats.Text))
+            {
+                string text = await content.GetTextAsync();
+                if (WebLink.IsValid(text))
+                {
+                    StartResolvingStream(text.Trim());
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Clipboard is locked or holds incompatible data
+        }
+    }
 
     private TypedEventHandler<KeyboardAccelerator, KeyboardAcceleratorInvokedEventArgs> HandlerFor(ShortcutAction action) => action switch
     {
@@ -86,6 +133,10 @@ public sealed partial class MainPage
         ShortcutAction.OpenUrl => OnOpenUrlAccelerator,
         ShortcutAction.SkipBack => OnBackAccelerator,
         ShortcutAction.SkipForward => OnForwardAccelerator,
+        ShortcutAction.SkipBackFine => OnBackFineAccelerator,
+        ShortcutAction.SkipForwardFine => OnForwardFineAccelerator,
+        ShortcutAction.SkipBackLong => OnBackLongAccelerator,
+        ShortcutAction.SkipForwardLong => OnForwardLongAccelerator,
         ShortcutAction.SetIn => OnSetInAccelerator,
         ShortcutAction.SetOut => OnSetOutAccelerator,
         ShortcutAction.PlayPause => OnPlayPauseAccelerator,
@@ -93,6 +144,11 @@ public sealed partial class MainPage
         ShortcutAction.Mute => OnMuteAccelerator,
         ShortcutAction.Loop => OnLoopAccelerator,
         ShortcutAction.AlwaysOnTop => OnAlwaysOnTopAccelerator,
+        ShortcutAction.Diagnostics => OnDiagnosticsAccelerator,
+        ShortcutAction.Settings => OnSettingsAccelerator,
+        ShortcutAction.CopyFrame => OnCopyFrameAccelerator,
+        ShortcutAction.SaveFrame => OnSaveFrameAccelerator,
+        ShortcutAction.ExportClip => OnExportClipAccelerator,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 

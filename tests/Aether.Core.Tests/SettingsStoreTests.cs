@@ -111,12 +111,109 @@ public class SettingsStoreTests
     }
 
     [Fact]
+    public void Playback_Option_Settings_Default_As_Designed()
+    {
+        var s = new AetherSettings();
+
+        Assert.True(s.PreventSleep);
+        Assert.True(s.PitchCorrection);
+        Assert.False(s.StereoDownmix);
+        Assert.False(s.Deinterlace);
+        Assert.Equal("auto", s.DeinterlaceMode);
+        Assert.Equal("auto", s.AspectRatio);
+        Assert.Equal("", s.ScreenshotDirectory);
+        Assert.Equal("png", s.ScreenshotFormat);
+        Assert.Equal("Aether-%F-%P", s.ScreenshotTemplate);
+        Assert.Equal(150, s.NetworkCacheMegabytes);
+        Assert.Equal("", s.HttpProxy);
+        Assert.Equal("tcp", s.RtspTransport);
+        Assert.False(s.RepairAviIndex);
+        Assert.Equal("default", s.SkipDeblocking);
+    }
+
+    [Fact]
+    public void Playback_Option_Settings_Reset_To_Their_Defaults_And_Survive_Save_And_Load()
+    {
+        var storage = new FakeStorage();
+        var first = new SettingsStore(storage);
+        first.Set(SettingKeys.PreventSleep, false);
+        first.Set(SettingKeys.PitchCorrection, false);
+        first.Set(SettingKeys.StereoDownmix, true);
+        first.Set(SettingKeys.Deinterlace, true);
+        first.Set(SettingKeys.DeinterlaceMode, "bwdif");
+        first.Set(SettingKeys.AspectRatio, "21:9");
+        first.Set(SettingKeys.ScreenshotDirectory, @"D:\Shots");
+        first.Set(SettingKeys.ScreenshotFormat, "jpg");
+        first.Set(SettingKeys.ScreenshotTemplate, "shot-%n");
+        first.Set(SettingKeys.NetworkCacheMegabytes, 400);
+        first.Set(SettingKeys.HttpProxy, "http://proxy:3128");
+        first.Set(SettingKeys.RtspTransport, "udp");
+        first.Set(SettingKeys.RepairAviIndex, true);
+        first.Set(SettingKeys.SkipDeblocking, "all");
+        first.Save();
+
+        var second = new SettingsStore(storage);
+        second.Load();
+        Assert.Equal(first.Current, second.Current);
+
+        second.ResetAll();
+        Assert.Equal(new AetherSettings(), second.Current);
+    }
+
+    [Theory]
+    [InlineData(SettingKeys.DeinterlaceMode, "linear")]
+    [InlineData(SettingKeys.AspectRatio, "5:4")]
+    [InlineData(SettingKeys.ScreenshotFormat, "gif")]
+    [InlineData(SettingKeys.RtspTransport, "smoke")]
+    [InlineData(SettingKeys.SkipDeblocking, "none")]
+    public void Playback_Option_Choices_Reject_Unknown_Values(string key, string value)
+    {
+        var store = NewStore();
+
+        Assert.False(store.Set(key, value));
+        Assert.True(store.IsDefault(key));
+    }
+
+    [Theory]
+    [InlineData(15)]
+    [InlineData(2049)]
+    public void Network_Cache_Rejects_Out_Of_Range_Sizes(int megabytes)
+    {
+        var store = NewStore();
+
+        Assert.False(store.Set(SettingKeys.NetworkCacheMegabytes, megabytes));
+        Assert.Equal(150, store.Current.NetworkCacheMegabytes);
+    }
+
+    [Fact]
+    public void Network_Cache_Change_Waits_For_A_Restart_But_Sleep_Prevention_Does_Not()
+    {
+        var store = NewStore();
+
+        store.Set(SettingKeys.NetworkCacheMegabytes, 300);
+        store.Set(SettingKeys.PreventSleep, false);
+
+        Assert.True(store.IsRestartPending(SettingKeys.NetworkCacheMegabytes));
+        Assert.False(store.IsRestartPending(SettingKeys.PreventSleep));
+        Assert.False(store.RequiresRestart(SettingKeys.HttpProxy));
+    }
+
+    [Fact]
     public void Restart_Flags_Match_The_Design()
     {
         var store = NewStore();
         var flagged = SettingDefinitions.Keys.Where(store.RequiresRestart).ToArray();
 
-        Assert.Equal([SettingKeys.HardwareDecoding, SettingKeys.Passthrough, SettingKeys.CustomMpvOptions], flagged);
+        Assert.Equal(
+            [
+                SettingKeys.HardwareDecoding,
+                SettingKeys.Passthrough,
+                SettingKeys.NetworkCacheMegabytes,
+                SettingKeys.RepairAviIndex,
+                SettingKeys.SkipDeblocking,
+                SettingKeys.CustomMpvOptions,
+            ],
+            flagged);
     }
 
     [Fact]

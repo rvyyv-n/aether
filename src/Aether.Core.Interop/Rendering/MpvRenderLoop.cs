@@ -283,7 +283,11 @@ public sealed unsafe class MpvRenderLoop : IDisposable
                     }
                     else if (presenter.Present(_options.VSync) != PresentResult.DeviceLost)
                     {
-                        backend.ReportSwap();
+                        // A redraw without a new video frame (backdrop fade, resize) must not tell mpv a video frame was shown.
+                        if (frame)
+                        {
+                            backend.ReportSwap();
+                        }
                         Interlocked.Increment(ref _framesPresented);
                         force = _options.Backdrop?.NeedsFrame == true;
                     }

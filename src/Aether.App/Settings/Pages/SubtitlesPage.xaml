@@ -20,5 +20,11 @@
                 <ComboBox x:Name="SubtitleSizeCombo" MinWidth="112" Style="{StaticResource AetherSettingsComboStyle}" />
             </StackPanel>
         </settings:SettingsRow>
+        <settings:SettingsRow x:Name="SubtitleLookRow" Glyph="&#xE790;">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <ComboBox x:Name="SubtitleColorCombo" MinWidth="112" Style="{StaticResource AetherSettingsComboStyle}" />
+                <ComboBox x:Name="SubtitlePositionCombo" MinWidth="112" Style="{StaticResource AetherSettingsComboStyle}" />
+            </StackPanel>
+        </settings:SettingsRow>
     </settings:SettingsGroup>
 </Page>

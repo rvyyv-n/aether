@@ -9,6 +9,7 @@ namespace Aether_App.Settings.Pages;
 
 public sealed partial class AboutPage : Page
 {
+    private static readonly Uri Author = new("https://github.com/rvyyv-n");
     private static readonly Uri Repository = new("https://github.com/rvyyv-n/aether");
     private static readonly Uri Issues = new("https://github.com/rvyyv-n/aether/issues");
 
@@ -42,6 +43,18 @@ public sealed partial class AboutPage : Page
         CopyDiagnosticsText.Text = AppStrings.Get("Settings_About_CopyDiagnostics");
         AutomationProperties.SetName(CopyDiagnosticsButton, AppStrings.Get("Settings_About_CopyDiagnostics"));
         CopyDiagnosticsButton.Click += async (_, _) => await CopyDiagnosticsAsync();
+
+        GitHubTitle.Text = AppStrings.Get("Settings_About_GitHub");
+        GitHubDescription.Text = AppStrings.Get("Settings_About_GitHubDescription");
+        AutomationProperties.SetName(GitHubButton, GitHubTitle.Text);
+        AutomationProperties.SetHelpText(GitHubButton, GitHubDescription.Text);
+        GitHubButton.Click += async (_, _) => await Launcher.LaunchUriAsync(Author);
+
+        TourTitle.Text = AppStrings.Get("Settings_About_Tour");
+        TourDescription.Text = AppStrings.Get("Settings_About_TourDescription");
+        AutomationProperties.SetName(TourButton, TourTitle.Text);
+        AutomationProperties.SetHelpText(TourButton, TourDescription.Text);
+        TourButton.Click += (_, _) => App.ShowTour();
 
         LicencesTitle.Text = AppStrings.Get("Settings_About_Licences");
         LicencesDescription.Text = AppStrings.Get("Settings_About_LicencesDescription");
@@ -89,8 +102,8 @@ public sealed partial class AboutPage : Page
             $"{AppStrings.Get("Settings_About_Renderer")}: {_renderer}",
             $"{AppStrings.Get("Settings_About_MpvVersion")}: {_mpvVersion}",
             $"{AppStrings.Get("Settings_About_YtDlpVersion")}: {_ytDlpVersion}",
-            $"Windows: {RuntimeInformation.OSDescription}",
-            $"Architecture: {RuntimeInformation.OSArchitecture}");
+            $"{AppStrings.Get("Settings_About_Windows")}: {RuntimeInformation.OSDescription}",
+            $"{AppStrings.Get("Settings_About_Architecture")}: {RuntimeInformation.OSArchitecture}");
         var package = new DataPackage();
         package.SetText(text);
         Clipboard.SetContent(package);

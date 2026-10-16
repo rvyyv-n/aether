@@ -126,6 +126,10 @@ public sealed class ShortcutSettings
         ShortcutAction.OpenUrl => "Settings_Shortcuts_OpenUrl",
         ShortcutAction.SkipBack => "Settings_Shortcuts_Back5s",
         ShortcutAction.SkipForward => "Settings_Shortcuts_Forward5s",
+        ShortcutAction.SkipBackFine => "Settings_Shortcuts_Back1s",
+        ShortcutAction.SkipForwardFine => "Settings_Shortcuts_Forward1s",
+        ShortcutAction.SkipBackLong => "Settings_Shortcuts_Back30s",
+        ShortcutAction.SkipForwardLong => "Settings_Shortcuts_Forward30s",
         ShortcutAction.SetIn => "Settings_Shortcuts_SetIn",
         ShortcutAction.SetOut => "Settings_Shortcuts_SetOut",
         ShortcutAction.PlayPause => "Settings_Shortcuts_PlayPause",
@@ -133,6 +137,11 @@ public sealed class ShortcutSettings
         ShortcutAction.Mute => "Settings_Shortcuts_Mute",
         ShortcutAction.Loop => "Settings_Shortcuts_Loop",
         ShortcutAction.AlwaysOnTop => "Settings_Shortcuts_AlwaysOnTop",
+        ShortcutAction.Diagnostics => "Settings_Shortcuts_Diagnostics",
+        ShortcutAction.Settings => "Settings_Shortcuts_Settings",
+        ShortcutAction.CopyFrame => "Settings_Shortcuts_CopyFrame",
+        ShortcutAction.SaveFrame => "Settings_Shortcuts_SaveFrame",
+        ShortcutAction.ExportClip => "Settings_Shortcuts_ExportClip",
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 }

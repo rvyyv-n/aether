@@ -1,3 +1,4 @@
+using Aether.Core.Playback.Streams;
 ﻿using System.ComponentModel;
 using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
@@ -6,6 +7,7 @@ using Aether.Core.Playback.Input;
 using Aether.Core.Playback.Recents;
 using Aether.Core.Playback.Resume;
 using Aether.Core.Playback.Settings;
+using Aether.Core.Playback.Tracks;
 using Aether_App.Controls;
 using Aether_App.Playback;
 using Aether_App.Settings;
@@ -50,6 +52,7 @@ public sealed partial class MainPage : Page
     private readonly ChromeVisibility _chrome = new();
     private DispatcherQueueTimer? _chromeTimer;
     private ChromeFader? _fader;
+    private ToastService? _toasts;
     private IShellWindow? _host;
 
     private PlayerSession? _session;
@@ -75,16 +78,23 @@ public sealed partial class MainPage : Page
     private readonly HoverFlyout _volumeHover = new();
     private DispatcherQueueTimer? _volumeHoverTimer;
     private bool _volumeOpeningPinned;
-    private bool _volumeFlyoutShowing;
-    private string? _volumeTip;
 
     // Links cannot play until streaming lands, so Play in the dialog reports that instead (4.D5).
-    private readonly OpenUrlFlow _openUrl = new(TimeProvider.System, streamingAvailable: false);
+    private readonly OpenUrlFlow _openUrl = new(TimeProvider.System, streamingAvailable: true);
+    private readonly IYtDlpStreamResolver _streamResolver = new YtDlpStreamResolver();
+    private CancellationTokenSource? _streamResolutionCts;
+    private StreamFailureState? _streamFailure;
+    private string? _failedStreamLink;
+    private string? _currentWebLink;
+    private string? _streamTitle;
+
+    private sealed record StreamFailureState(StreamFailureReason Reason, string Title, string Subtitle, string Link);
     private DispatcherQueueTimer? _openUrlTimer;
     private DispatcherQueueTimer? _copiedTimer;
     private int _recentsVersion; // bumped to drop a missing-file check that a newer one replaced
     private bool _durationRecorded;
     private bool _settingsShown;
+    private bool _diagnosticsShown;
 
     public MainPage()
     {
@@ -99,6 +109,12 @@ public sealed partial class MainPage : Page
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
         InitializeTransport();
+        InitializeBar();
+        InitializeRail();
+        InitializeTour();
+        InitializeContextMenu();
+        InitializeTracks();
+        InitializeVideo();
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -120,6 +136,10 @@ public sealed partial class MainPage : Page
         OpenFileLabel.Text = AppStrings.Get("EmptyState_OpenFile");
         OpenUrlLabel.Text = AppStrings.Get("EmptyState_OpenUrl");
         StreamCancelButton.Content = AppStrings.Get("Stream_Cancel");
+        StreamRetryLabel.Text = AppStrings.Get("Stream_Retry");
+        StreamEditLinkLabel.Text = AppStrings.Get("Stream_EditLink");
+        StreamOpenInBrowserLabel.Text = AppStrings.Get("Stream_OpenInBrowser");
+        StreamFailureCancelLabel.Text = AppStrings.Get("Stream_Cancel");
         RecentsHeader.Text = AppStrings.Get("EmptyState_Recent");
         ClearRecentsButton.Content = AppStrings.Get("EmptyState_ClearList");
         OpenUrlTitle.Text = AppStrings.Get("OpenUrl_Title");
@@ -164,6 +184,15 @@ public sealed partial class MainPage : Page
         }
     }
 
+    /// <summary>Keeps the gear flush with the system caption buttons, whatever their width at this display scale.</summary>
+    public void SetCaptionInset(double width)
+    {
+        if (width > 0)
+        {
+            CaptionReserve.Width = width;
+        }
+    }
+
     /// <summary>A key-up never arrives once the window loses activation; release held keys and the cursor.</summary>
     public void OnWindowActivationChanged(bool active)
     {
@@ -203,7 +232,10 @@ public sealed partial class MainPage : Page
             _copiedTimer.Interval = TimeSpan.FromSeconds(2);
             _copiedTimer.IsRepeating = false;
             _copiedTimer.Tick += OnCopiedTimerTick;
+            _toasts = new ToastService(ToastCard, ToastLayer, _fader, DispatcherQueue, () => Focus(FocusState.Programmatic));
+            ClipLayer.SizeChanged += (_, _) => UpdateToastPlacement();
         }
+        AppToasts.Requested += OnToastRequested;
         if (_session is null)
         {
             StartEngine();
@@ -225,9 +257,11 @@ public sealed partial class MainPage : Page
         _volumeHoverTimer?.Stop();
         _openUrlTimer?.Stop();
         _copiedTimer?.Stop();
+        EndTour();
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
         App.Recents.Changed -= OnRecentsChanged;
         App.Shortcuts.Changed -= OnShortcutsChanged;
+        AppToasts.Requested -= OnToastRequested;
         SaveResumePosition(background: false);
         CursorVisibility.Show();
         if (_session is { } session)
@@ -240,7 +274,8 @@ public sealed partial class MainPage : Page
     }
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
-    private sealed record PlaybackCarryOver(string? Path, double? Position, bool Paused, double Volume, double Speed, bool Looping);
+    private sealed record PlaybackCarryOver(
+        string? Path, double? Position, bool Paused, double Volume, double Speed, bool Looping, TrackChoices? Tracks, string? OriginalWebLink = null);
 
     /// <param name="settings">The settings to start with, or null to wait for the saved ones (first start).</param>
     private async void StartEngine(AetherSettings? settings = null)
@@ -248,6 +283,7 @@ public sealed partial class MainPage : Page
         int version = ++_startupVersion;
         _startup = StartupPhase.Starting;
         _startupError = null;
+        _lastDecoder = null;
         Render();
 
         EngineStartupResult<MpvContext> result =
@@ -295,6 +331,7 @@ public sealed partial class MainPage : Page
                 }
                 SyncVolume();
                 OpenPending();
+                QueueLaunchTour();
                 break;
             case EngineStartupStatus.MissingBinary:
                 _startup = StartupPhase.MissingBinary;
@@ -322,14 +359,21 @@ public sealed partial class MainPage : Page
             // Another file opened during the restart replaces the one that was playing, without its position.
             PlaybackCarryOver? carry = _carryOver?.Path == pending ? _carryOver : null;
             _carryOver = null;
-            Open(pending, carry);
+            if (carry?.OriginalWebLink is { } originalLink && WebLink.IsValid(originalLink))
+            {
+                StartResolvingStream(originalLink, carry);
+            }
+            else
+            {
+                Open(pending, carry);
+            }
         }
     }
 
     /// <summary>
     /// Replaces the engine with one built from the current settings (Restart engine in Settings), so restart-only
     /// settings apply without relaunching. The open file comes back where it was, with its pause, volume, speed and
-    /// loop; mpv picks the same default tracks again.
+    /// loop, and the tracks and delays picked in the tracks flyout.
     /// </summary>
     public void RestartEngine()
     {
@@ -338,8 +382,9 @@ public sealed partial class MainPage : Page
             PlayerViewModel vm = session.ViewModel;
             string? path = _pendingOpen ?? _currentPath;
             bool playing = HasVideo && _pendingOpen is null;
+            string? webLink = _currentWebLink;
             _carryOver = new PlaybackCarryOver(
-                path, playing ? vm.Position : null, playing && vm.IsPaused, vm.Volume, vm.Speed, vm.IsLooping);
+                path, playing ? vm.Position : null, playing && vm.IsPaused, vm.Volume, vm.Speed, vm.IsLooping, _trackChoices, webLink);
             _pendingOpen = path;
             SaveResumePosition(background: true);
             session.ViewModel.PropertyChanged -= OnViewModelChanged;
@@ -397,11 +442,15 @@ public sealed partial class MainPage : Page
         {
             return;
         }
+        EndTour(); // the user has gone on to watch something
         SaveResumePosition(background: true);
         double? startAt = carry?.Position ?? (App.Settings.Current.ResumePlayback ? App.Resume.TryGet(path) : null);
         _currentPath = path;
         _fitWindowPending = carry is null; // after a restart the window keeps the size it has
         _durationRecorded = false;
+        _trackChoices = carry?.Tracks; // another file starts on mpv's own picks
+        _restoreTracks = carry?.Tracks;
+        ApplyVideoForOpen(afterRestart: carry is not null);
         TrySend(() =>
         {
             if (carry is { Paused: true })
@@ -410,8 +459,12 @@ public sealed partial class MainPage : Page
             }
             session.Open(path, startAt);
         });
-        string name = Path.GetFileName(path);
-        _ = Task.Run(() => App.Recents.Add(path, name, DateTimeOffset.Now));
+        if (_currentWebLink is null)
+        {
+            _streamTitle = null;
+            string name = Path.GetFileName(path);
+            _ = Task.Run(() => App.Recents.Add(path, name, DateTimeOffset.Now));
+        }
         Render();
     }
 
@@ -458,6 +511,10 @@ public sealed partial class MainPage : Page
     private bool HasVideo =>
         _session?.ViewModel.Status is PlaybackStatus.Playing or PlaybackStatus.Paused or PlaybackStatus.Ended;
 
+    private string? _lastDecoder;
+
+    private void OnToastRequested(ToastRequest request) => _toasts?.Show(request);
+
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
         PlayerViewModel vm = _session!.ViewModel;
@@ -487,10 +544,22 @@ public sealed partial class MainPage : Page
             case nameof(PlayerViewModel.Status):
                 UpdateClock(vm); // an ended file reads its full duration
                 RecordDuration(vm);
+                RestoreTracksOnceLoaded();
                 Render();
                 break;
             case nameof(PlayerViewModel.IsPaused):
                 Render();
+                break;
+            case nameof(PlayerViewModel.Decoder):
+                if (HardwareDecodeFallback.Occurred(_lastDecoder, vm.Decoder))
+                {
+                    _toasts?.Show("hwdec-failed", AppStrings.Get("Toast_HwDecFailed"), ToastTone.Failure,
+                        AppStrings.Get("Toast_Settings"), () => SetSettingsShown(true));
+                }
+                _lastDecoder = vm.Decoder;
+                break;
+            case nameof(PlayerViewModel.State) when _diagnosticsShown:
+                Diagnostics.Update(vm.State);
                 break;
         }
     }
@@ -510,6 +579,10 @@ public sealed partial class MainPage : Page
     /// <summary>Position and duration text and the seek bar. Both times change shape together from an hour.</summary>
     private void UpdateClock(PlayerViewModel vm)
     {
+        if (!_chromeShown && (Osd?.Visibility != Visibility.Visible))
+        {
+            return;
+        }
         DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
         SyncClipRange();
         SeekBar.Duration = vm.Duration;
@@ -548,11 +621,10 @@ public sealed partial class MainPage : Page
         }
         bool muted = TransportState.IsMuted(volume);
         VolumeButton.Content = muted ? MuteGlyph : VolumeGlyph;
-        _volumeTip = Tip(muted ? "Transport_Unmute" : "Transport_Mute", ShortcutAction.Mute);
-        if (!_volumeFlyoutShowing)
-        {
-            ToolTipService.SetToolTip(VolumeButton, _volumeTip);
-        }
+        // No tooltip: the hover flyout is the label, and a tooltip would open across its slider.
+        string name = AppStrings.Get(muted ? "Transport_Unmute" : "Transport_Mute");
+        int shortcut = name.LastIndexOf(" (", StringComparison.Ordinal);
+        AutomationProperties.SetName(VolumeButton, shortcut > 0 ? name[..shortcut] : name);
     }
 
     private void OnMuteAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -579,6 +651,41 @@ public sealed partial class MainPage : Page
         {
             args.Handled = true;
             host.ToggleAlwaysOnTop();
+        }
+    }
+
+    private void OnDiagnosticsAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (ArePlayerKeysPaused)
+        {
+            return;
+        }
+
+        args.Handled = true;
+        ToggleDiagnostics();
+    }
+
+    private void ToggleDiagnostics() => SetDiagnosticsShown(!_diagnosticsShown);
+
+    /// <summary>The panel drops in from the top edge it sits on and rises back out.</summary>
+    private void SetDiagnosticsShown(bool show)
+    {
+        _diagnosticsShown = show;
+        if (show && _session is { } session)
+        {
+            Diagnostics.Update(session.ViewModel.State);
+        }
+        if (_fader is null)
+        {
+            Diagnostics.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        }
+        else if (show)
+        {
+            _fader.Enter(Diagnostics, ChromeFader.FromAbove);
+        }
+        else
+        {
+            _fader.Exit(Diagnostics, ChromeFader.FromAbove);
         }
     }
 
@@ -680,9 +787,6 @@ public sealed partial class MainPage : Page
     private void ShowVolumeFlyout(bool pinned)
     {
         _volumeOpeningPinned = pinned;
-        // The button's tooltip opens above it, right across the slider, so it stays off while the flyout is up.
-        _volumeFlyoutShowing = true;
-        ToolTipService.SetToolTip(VolumeButton, null);
         // Transient: a hover-opened flyout must not take focus from the page's playback keys.
         VolumeFlyout.ShowAt(VolumeButton, new FlyoutShowOptions
         {
@@ -707,8 +811,6 @@ public sealed partial class MainPage : Page
     {
         _volumeHover.Closed();
         ArmVolumeHover();
-        _volumeFlyoutShowing = false;
-        ToolTipService.SetToolTip(VolumeButton, _volumeTip);
         _chrome.SetHold(ChromeHolds.Flyout, false);
         ApplyChrome();
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
@@ -800,7 +902,11 @@ public sealed partial class MainPage : Page
 
     private void OnEscapeAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (IsOpenUrlShown)
+        if (EndTour() || CloseRail())
+        {
+            args.Handled = true;
+        }
+        else if (IsOpenUrlShown)
         {
             args.Handled = true;
             CloseOpenUrl();
@@ -814,6 +920,11 @@ public sealed partial class MainPage : Page
         {
             args.Handled = true;
         }
+        else if (_diagnosticsShown)
+        {
+            args.Handled = true;
+            SetDiagnosticsShown(false);
+        }
         else if (_host is { IsFullScreen: true } host)
         {
             args.Handled = true;
@@ -823,8 +934,8 @@ public sealed partial class MainPage : Page
 
     private void OnAnyKeyDown(object sender, KeyRoutedEventArgs e) => NotifyActivity();
 
-    /// <summary>Player keys stand down while the Open URL field or settings has the keyboard.</summary>
-    private bool ArePlayerKeysPaused => IsOpenUrlShown || _settingsShown;
+    /// <summary>Player keys stand down while the Open URL field, settings or the tour has the keyboard.</summary>
+    private bool ArePlayerKeysPaused => IsOpenUrlShown || _settingsShown || _tour.IsActive;
 
     // ---- Settings (6.1) ----
 
@@ -839,14 +950,29 @@ public sealed partial class MainPage : Page
         {
             return;
         }
+        if (shown)
+        {
+            EndTour(); // the gear stays clickable during the tour
+        }
         _settingsShown = shown;
         if (shown)
         {
             SettingsHost.Child ??= new SettingsView();
             _host?.SetFullScreen(false);
         }
-        SettingsHost.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
-        SettingsBackButton.Visibility = SettingsHost.Visibility;
+        if (_fader is null)
+        {
+            SettingsHost.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        }
+        else if (shown)
+        {
+            _fader.Enter(SettingsHost, ChromeFader.FromBelow);
+        }
+        else
+        {
+            _fader.Exit(SettingsHost, ChromeFader.FromBelow); // fades off over the player, which is already back
+        }
+        SettingsBackButton.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
         SettingsButton.Visibility = shown ? Visibility.Collapsed : Visibility.Visible;
         _chrome.SetHold(ChromeHolds.Settings, shown);
         Render();
@@ -869,13 +995,13 @@ public sealed partial class MainPage : Page
     private void OnOpenUrlClick(object sender, RoutedEventArgs e) => ShowOpenUrl();
 
     /// <summary>Opens the dialog prefilled from the clipboard (a link only) with the text selected.</summary>
-    private async void ShowOpenUrl()
+    private async void ShowOpenUrl(string? prefill = null)
     {
         if (_session is null || _openUrl.Stage != OpenUrlStage.Closed)
         {
             return;
         }
-        string? clipboard = null;
+        string? clipboard = prefill;
         try
         {
             DataPackageView content = Clipboard.GetContent();
@@ -893,9 +1019,19 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        EndTour();
         _openUrl.Open(clipboard);
         OpenUrlBox.Text = _openUrl.Text;
-        OpenUrlOverlay.Visibility = Visibility.Visible;
+        if (_fader is null)
+        {
+            OpenUrlOverlay.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            // The scrim only fades; the dialog rises with it.
+            _fader.Enter(OpenUrlOverlay, null);
+            _fader.Slide(OpenUrlCard, true, ChromeFader.FromBelow);
+        }
         _chrome.SetHold(ChromeHolds.Dialog, true);
         ApplyChrome();
         RenderOpenUrl();
@@ -934,9 +1070,12 @@ public sealed partial class MainPage : Page
     {
         if (_openUrl.Submit() == OpenUrlSubmitResult.Started)
         {
+            string? link = _openUrl.Link;
             HideOpenUrlDialog();
-            ArmOpenUrlTimer();
-            Render();
+            if (link is not null)
+            {
+                StartResolvingStream(link);
+            }
         }
         else
         {
@@ -956,7 +1095,15 @@ public sealed partial class MainPage : Page
 
     private void HideOpenUrlDialog()
     {
-        OpenUrlOverlay.Visibility = Visibility.Collapsed;
+        if (_fader is null)
+        {
+            OpenUrlOverlay.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            _fader.Exit(OpenUrlOverlay, null);
+            _fader.Slide(OpenUrlCard, false, ChromeFader.FromBelow);
+        }
         _chrome.SetHold(ChromeHolds.Dialog, false);
         ApplyChrome();
         Focus(FocusState.Programmatic); // playback keys back on the page
@@ -964,8 +1111,180 @@ public sealed partial class MainPage : Page
 
     private void OnStreamCancelClick(object sender, RoutedEventArgs e)
     {
+        _streamResolutionCts?.Cancel();
+        _streamResolutionCts = null;
+        _openUrl.Close();
+        _streamFailure = null;
+        ArmOpenUrlTimer();
+        Render();
+    }
+
+    private async void StartResolvingStream(string link, PlaybackCarryOver? carry = null)
+    {
+        if (_session is null)
+        {
+            return;
+        }
+
+        EndTour();
+        _streamResolutionCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _streamResolutionCts = cts;
+
+        _streamFailure = null;
+        _failedStreamLink = null;
+
+        _openUrl.Open(link);
+        _openUrl.Submit();
+        ArmOpenUrlTimer();
+        Render();
+
+        string? ytDlpPath = ExternalTools.FindYtDlp();
+        var options = new StreamResolutionOptions(
+            YtDlpPath: ytDlpPath,
+            StreamingQuality: App.Settings.Current.StreamingQuality,
+            PreferGpuDecodableFormats: App.Settings.Current.PreferGpuDecodableFormats,
+            HttpProxy: string.IsNullOrWhiteSpace(App.Settings.Current.HttpProxy) ? null : App.Settings.Current.HttpProxy,
+            Timeout: TimeSpan.FromSeconds(30));
+
+        try
+        {
+            ResolvedStream resolved = await _streamResolver.ResolveAsync(link, options, cts.Token);
+            if (cts.IsCancellationRequested || !_isLoaded)
+            {
+                return;
+            }
+
+            _openUrl.Close();
+            ArmOpenUrlTimer();
+
+            _currentWebLink = link;
+            _streamTitle = string.IsNullOrWhiteSpace(resolved.Title) ? WebLink.Host(link) : resolved.Title;
+
+            if (resolved.HttpHeaders is { Count: > 0 } headers)
+            {
+                string headerFields = string.Join(",", headers.Select(kv => string.Concat(kv.Key, ": ", kv.Value)));
+                TrySend(() => _session.Context.SetProperty("http-header-fields", headerFields));
+            }
+
+            Open(resolved.StreamUrl, carry);
+
+            string displayName = _streamTitle ?? WebLink.Host(link) ?? link;
+            _ = Task.Run(() =>
+            {
+                App.Recents.Add(link, displayName, DateTimeOffset.Now);
+                if (resolved.DurationSeconds is { } dur && dur > 0)
+                {
+                    App.Recents.SetDuration(link, dur);
+                }
+            });
+
+            Render();
+        }
+        catch (OperationCanceledException)
+        {
+            if (!cts.IsCancellationRequested)
+            {
+                HandleStreamFailure(link, StreamFailureReason.Offline, "Stream resolution timed out.");
+            }
+        }
+        catch (StreamResolutionException ex)
+        {
+            HandleStreamFailure(link, ex.Reason, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            HandleStreamFailure(link, StreamFailureReason.Unknown, ex.Message);
+        }
+        finally
+        {
+            if (_streamResolutionCts == cts)
+            {
+                _streamResolutionCts = null;
+            }
+        }
+    }
+
+    private void HandleStreamFailure(string link, StreamFailureReason reason, string detail)
+    {
+        if (!_isLoaded)
+        {
+            return;
+        }
         _openUrl.Close();
         ArmOpenUrlTimer();
+
+        (string title, string subtitle) = reason switch
+        {
+            StreamFailureReason.PrivateVideo => (
+                AppStrings.Get("Stream_UnavailableTitle"),
+                AppStrings.Get("Stream_UnavailablePrivate")),
+
+            StreamFailureReason.Offline => (
+                AppStrings.Get("Stream_OfflineTitle"),
+                AppStrings.Get("Stream_OfflineMessage")),
+
+            StreamFailureReason.SignInRequired => (
+                AppStrings.Get("Stream_SignInRequiredTitle"),
+                AppStrings.Get("Stream_SignInRequiredMessage")),
+
+            StreamFailureReason.RegionBlocked => (
+                AppStrings.Get("Stream_RegionBlockedTitle"),
+                AppStrings.Get("Stream_RegionBlockedMessage")),
+
+            StreamFailureReason.LiveNotStarted => (
+                AppStrings.Get("Stream_LiveNotStartedTitle"),
+                AppStrings.Get("Stream_LiveNotStartedMessage")),
+
+            StreamFailureReason.SiteNotSupported => (
+                AppStrings.Get("Stream_SiteNotSupportedTitle"),
+                AppStrings.Get("Stream_SiteNotSupportedMessage")),
+
+            StreamFailureReason.YtDlpMissing => (
+                AppStrings.Get("Stream_UnavailableTitle"),
+                AppStrings.Get("Settings_Streaming_YtDlpMissing")),
+
+            _ => (
+                AppStrings.Get("Stream_UnavailableTitle"),
+                string.IsNullOrWhiteSpace(detail) ? AppStrings.Get("Stream_UnavailableTitle") : detail),
+        };
+
+        _streamFailure = new StreamFailureState(reason, title, subtitle, link);
+        _failedStreamLink = link;
+        Render();
+    }
+
+    private void OnStreamRetryClick(object sender, RoutedEventArgs e)
+    {
+        if (_failedStreamLink is { } link)
+        {
+            _streamFailure = null;
+            StartResolvingStream(link);
+        }
+    }
+
+    private void OnStreamEditLinkClick(object sender, RoutedEventArgs e)
+    {
+        string? linkToEdit = _failedStreamLink;
+        _streamFailure = null;
+        _failedStreamLink = null;
+        _openUrl.Close();
+        ShowOpenUrl(linkToEdit);
+    }
+
+    private async void OnStreamOpenInBrowserClick(object sender, RoutedEventArgs e)
+    {
+        if (_failedStreamLink is { } link && Uri.TryCreate(link, UriKind.Absolute, out Uri? uri))
+        {
+            await Windows.System.Launcher.LaunchUriAsync(uri);
+        }
+    }
+
+    private void OnStreamFailureCancelClick(object sender, RoutedEventArgs e)
+    {
+        _streamFailure = null;
+        _failedStreamLink = null;
+        _openUrl.Close();
         Render();
     }
 
@@ -1002,7 +1321,7 @@ public sealed partial class MainPage : Page
         {
             OpenUrlNote.Invalid => (AppStrings.Get("OpenUrl_InvalidLink"), Tone.Warning),
             OpenUrlNote.Unavailable => (AppStrings.Get("OpenUrl_NotAvailable"), Tone.Neutral),
-            _ => (AppStrings.Get("OpenUrl_NotAvailable"), (Tone?)null),
+            _ => (AppStrings.Get("OpenUrl_Hint"), (Tone?)null),
         };
         OpenUrlNoteText.Text = note;
         OpenUrlNoteDot.Visibility = dot is null ? Visibility.Collapsed : Visibility.Visible;
@@ -1038,14 +1357,30 @@ public sealed partial class MainPage : Page
         Render();
     }
 
-    /// <summary>A file that went missing since the list was drawn turns into the missing row instead of opening.</summary>
-    private async void OnRecentOpenRequested(object? sender, EventArgs e)
+    private void OnRecentOpenRequested(object? sender, EventArgs e)
     {
-        if (sender is not RecentRow { Item.IsLink: false } row || _session is null)
+        if (sender is RecentRow row)
+        {
+            OpenRecent(row.Item);
+        }
+    }
+
+    /// <summary>
+    /// Opens a recents entry from the empty state or the Recent menu. A file that went missing since the list was
+    /// drawn turns into the missing row instead of opening.
+    /// </summary>
+    private async void OpenRecent(RecentItem recent)
+    {
+        if (_session is null)
         {
             return;
         }
-        string path = row.Item.Location;
+        if (recent.IsLink)
+        {
+            StartResolvingStream(recent.Location);
+            return;
+        }
+        string path = recent.Location;
         bool exists = await Task.Run(() => File.Exists(path));
         if (!_isLoaded)
         {
@@ -1154,6 +1489,8 @@ public sealed partial class MainPage : Page
             return;
         }
         _lastPointer = position;
+        // Back on the mouse: a transport button left with Tab focus must not keep the card up for good.
+        _chrome.SetHold(ChromeHolds.KeyboardFocus, false);
         NotifyActivity();
     }
 
@@ -1198,6 +1535,10 @@ public sealed partial class MainPage : Page
         if (visible != _chromeShown && _fader is not null)
         {
             _chromeShown = visible;
+            if (visible && _session?.ViewModel is { } clockVm)
+            {
+                UpdateClock(clockVm);
+            }
             _fader.Fade(TopScrim, visible);
             _fader.Fade(TitleBar, visible);
             _fader.Fade(Osd, visible);
@@ -1207,7 +1548,11 @@ public sealed partial class MainPage : Page
             ClipLayer.IsHitTestVisible = visible;
             _host?.SetCaptionButtonsVisible(visible);
         }
+        SyncBar();
+        SyncRail(applyChrome: false);
         UpdateCursor();
+        UpdateToastPlacement();
+        _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog | ChromeHolds.Tour)) != 0);
 
         if (_chromeTimer is null)
         {
@@ -1223,6 +1568,14 @@ public sealed partial class MainPage : Page
         {
             _chromeTimer.Stop();
         }
+    }
+
+    /// <summary>The toast shares the spot above the card with the export chip and clip drawer, and sits above them.</summary>
+    private void UpdateToastPlacement()
+    {
+        bool controls = _chrome.IsVisible && Osd.Visibility == Visibility.Visible;
+        double chip = ClipLayer.Visibility == Visibility.Visible ? ClipLayer.ActualHeight : 0;
+        _toasts?.SetControlsShown(controls, Osd.Height, chip);
     }
 
     private void UpdateCursor()
@@ -1244,8 +1597,7 @@ public sealed partial class MainPage : Page
     /// <summary>Sizes the surface to the video's display aspect ratio, centred in the host.</summary>
     private void FitVideo()
     {
-        int width = _session?.ViewModel.VideoWidth ?? 0;
-        int height = _session?.ViewModel.VideoHeight ?? 0;
+        (int width, int height) = DisplayedVideoSize();
         double hostWidth = VideoHost.ActualWidth;
         double hostHeight = VideoHost.ActualHeight;
         if (width <= 0 || height <= 0 || hostWidth <= 0 || hostHeight <= 0)
@@ -1274,8 +1626,7 @@ public sealed partial class MainPage : Page
     private void SyncWindowToVideo()
     {
         _windowSyncQueued = false;
-        int width = _session?.ViewModel.VideoWidth ?? 0;
-        int height = _session?.ViewModel.VideoHeight ?? 0;
+        (int width, int height) = DisplayedVideoSize();
         if (width <= 0 || height <= 0)
         {
             _host?.SetVideoAspect(0);
@@ -1309,17 +1660,14 @@ public sealed partial class MainPage : Page
         VideoSurface.SetBackdropActive(hasVideo);
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
+        PlaceRail();
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
-        TitleBadgeText.Text = HasVideo || vm?.Status == PlaybackStatus.Loading
-            ? Path.GetFileName(_currentPath) ?? AppStrings.Get("App_Badge")
-            : AppStrings.Get("App_Badge");
+        string? fileName = _streamTitle ?? (HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null);
+        TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");
         // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
         TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
-        TitleBadge.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
-        // Only a playing title sits on the SurfaceOsd fill; "Alpha" on the empty state stays plain.
-        TitleBadge.Background = hasVideo ? (Brush)Application.Current.Resources["AetherSurfaceOsdBrush"] : null;
-        TitleBadge.Padding = hasVideo ? new Thickness(6, 2, 6, 2) : new Thickness(0);
-        TitleBadge.Margin = hasVideo ? new Thickness(0, 0, 0, -2) : new Thickness(0);
+        TitleBadgeText.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
+        TitleSeparator.Visibility = fileName is not null && !_settingsShown ? Visibility.Visible : Visibility.Collapsed;
 
         (string glyph, string label) = TransportState.PlayButton(vm?.Status ?? PlaybackStatus.Idle) switch
         {
@@ -1360,7 +1708,11 @@ public sealed partial class MainPage : Page
             _ => (Tone.Warning, AppStrings.Get("Shell_EngineNotRunning"), null),
         };
 
-        if (_dragging)
+        if (_streamFailure is { } streamFail)
+        {
+            SetHome(streamFail.Title, streamFail.Subtitle, Tone.Warning, engine);
+        }
+        else if (_dragging)
         {
             if (_dragSupported)
             {
@@ -1417,8 +1769,9 @@ public sealed partial class MainPage : Page
             SetHome(AppStrings.Get("EmptyState_Title"), HomeFilesSubtitle(), null, engine);
         }
 
+        bool streamFailed = _streamFailure is not null && !_dragging;
         StartupProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-        OpenActions.Visibility = failed || _dragging || streaming ? Visibility.Collapsed : Visibility.Visible;
+        OpenActions.Visibility = failed || _dragging || streaming || streamFailed ? Visibility.Collapsed : Visibility.Visible;
         OpenFileButton.IsEnabled = _session is not null;
         OpenUrlButton.IsEnabled = _session is not null;
         bool showStream = streaming && !_dragging;
@@ -1426,8 +1779,9 @@ public sealed partial class MainPage : Page
         StreamProgress.Visibility = showStream ? Visibility.Visible : Visibility.Collapsed;
         StreamProgress.IsActive = showStream;
         StreamCancelButton.Visibility = showStream ? Visibility.Visible : Visibility.Collapsed;
+        StreamFailureActions.Visibility = streamFailed ? Visibility.Visible : Visibility.Collapsed;
         // Recents belong to the plain empty state: hidden until there is history (2.10).
-        bool idle = _startup == StartupPhase.Ready && !_dragging && !streaming && vm?.Status != PlaybackStatus.Loading;
+        bool idle = _startup == StartupPhase.Ready && !_dragging && !streaming && !streamFailed && vm?.Status != PlaybackStatus.Loading;
         RecentsPanel.Visibility = idle && RecentsList.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         Visibility failure = failed && !_dragging ? Visibility.Visible : Visibility.Collapsed;
         DetailsPanel.Visibility = failure;

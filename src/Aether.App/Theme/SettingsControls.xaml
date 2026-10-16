@@ -22,6 +22,9 @@
                         Background="{TemplateBinding Background}"
                         Content="{TemplateBinding Content}"
                         CornerRadius="{StaticResource AetherOverlayCornerRadius}">
+                        <ContentPresenter.BackgroundTransition>
+                            <BrushTransition Duration="0:0:0.083" />
+                        </ContentPresenter.BackgroundTransition>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal" />
@@ -256,6 +259,9 @@
                         x:Name="Root"
                         Background="Transparent"
                         CornerRadius="{StaticResource AetherControlCornerRadius}">
+                        <Grid.BackgroundTransition>
+                            <BrushTransition Duration="0:0:0.083" />
+                        </Grid.BackgroundTransition>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal" />
@@ -357,6 +363,18 @@
         <Setter Property="Background" Value="{StaticResource AetherFillInputBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+    </Style>
+
+    <Style
+        x:Key="AetherSettingsTextBoxStyle"
+        BasedOn="{StaticResource DefaultTextBoxStyle}"
+        TargetType="TextBox">
+        <Setter Property="Width" Value="260" />
+        <Setter Property="MinHeight" Value="{StaticResource AetherSizeComboHeight}" />
+        <Setter Property="Background" Value="{StaticResource AetherFillInputBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+        <Setter Property="IsSpellCheckEnabled" Value="False" />
     </Style>
 
     <Style

@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     AllowDrop="True"
     Background="Transparent"
+    ContextRequested="OnPageContextRequested"
     DragEnter="OnDragEnter"
     DragLeave="OnDragLeave"
     DragOver="OnDragOver"
@@ -17,6 +18,55 @@
     PointerExited="OnPagePointerExited"
     PointerMoved="OnPagePointerMoved"
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <!--
+            Tracks flyout (9.2): opened from Audio and Subtitles in the right-click menu, centred above the pill. A solid
+            surface because Acrylic does not sample the swap chain (ADR-0013); the panel scrolls inside it (MainPage.Tracks.cs).
+        -->
+        <Flyout
+            x:Name="TracksFlyout"
+            Closed="OnTracksFlyoutClosed"
+            Opened="OnTracksFlyoutOpened"
+            Placement="Top">
+            <Flyout.FlyoutPresenterStyle>
+                <Style TargetType="FlyoutPresenter">
+                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="MinWidth" Value="0" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="MaxWidth" Value="600" />
+                    <Setter Property="MaxHeight" Value="2000" />
+                </Style>
+            </Flyout.FlyoutPresenterStyle>
+            <controls:TracksPanel x:Name="TracksPanel" />
+        </Flyout>
+
+        <!--  Video flyout (9.3): right-aligned to the pill, on the same solid surface as the tracks flyout (MainPage.Video.cs).  -->
+        <Flyout
+            x:Name="VideoFlyout"
+            Closed="OnVideoFlyoutClosed"
+            Opened="OnVideoFlyoutOpened"
+            Placement="TopEdgeAlignedRight">
+            <Flyout.FlyoutPresenterStyle>
+                <Style TargetType="FlyoutPresenter">
+                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="MinWidth" Value="0" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="MaxWidth" Value="600" />
+                    <Setter Property="MaxHeight" Value="2000" />
+                </Style>
+            </Flyout.FlyoutPresenterStyle>
+            <controls:VideoPanel x:Name="VideoPanel" />
+        </Flyout>
+    </Page.Resources>
 
     <!--  Escape is fixed. Every other shortcut is added from the shortcut settings (MainPage.Shortcuts.cs).  -->
     <Page.KeyboardAccelerators>
@@ -33,6 +83,157 @@
             Background="Transparent"
             DoubleTapped="OnVideoDoubleTapped"
             SizeChanged="OnVideoHostSizeChanged">
+            <FlyoutBase.AttachedFlyout>
+                <!--
+                    Right-click menu (9.1): solid like the transport menus, 276 wide (the Recent submenu 288). The
+                    item widths set that: 266 plus the 4 inset either side and the 1 px stroke. Labels, shortcuts and
+                    which entries are enabled come from the code (MainPage.ContextMenu.cs).
+                -->
+                <MenuFlyout
+                    x:Name="ContextMenu"
+                    Closed="OnContextMenuClosed"
+                    MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                    Opened="OnContextMenuOpened"
+                    Placement="BottomEdgeAlignedLeft">
+                    <MenuFlyoutItem
+                        x:Name="CtxOpenFile"
+                        Click="OnOpenFileClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE838;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxOpenUrl"
+                        Click="OnOpenUrlClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE71B;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutSubItem
+                        x:Name="CtxRecent"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuSubItemStyle}">
+                        <MenuFlyoutSubItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE81C;" />
+                        </MenuFlyoutSubItem.Icon>
+                    </MenuFlyoutSubItem>
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem
+                        x:Name="CtxAudio"
+                        Click="OnTracksMenuClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE767;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxSubtitles"
+                        Click="OnTracksMenuClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE7F0;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutSubItem
+                        x:Name="CtxSpeed"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuSubItemStyle}">
+                        <MenuFlyoutSubItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xEC4A;" />
+                        </MenuFlyoutSubItem.Icon>
+                    </MenuFlyoutSubItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxVideo"
+                        Click="OnVideoMenuClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE714;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem
+                        x:Name="CtxCopyFrame"
+                        Click="OnCopyFrameMenuClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8C8;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxSaveFrame"
+                        Click="OnSaveFrameMenuClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE74E;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem
+                        x:Name="CtxPictureInPicture"
+                        KeyboardAcceleratorTextOverride="P"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xEE49;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <ToggleMenuFlyoutItem
+                        x:Name="CtxAlwaysOnTop"
+                        Click="OnAlwaysOnTopClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherToggleMenuItemStyle}">
+                        <ToggleMenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE840;" />
+                        </ToggleMenuFlyoutItem.Icon>
+                    </ToggleMenuFlyoutItem>
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem
+                        x:Name="CtxDiagnostics"
+                        Click="OnDiagnosticsMenuClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE9D9;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxSettings"
+                        Click="OnSettingsMenuClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE713;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem
+                        x:Name="CtxClips"
+                        Click="OnClipsMenuClick"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8F1;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxStream"
+                        MinWidth="266"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE774;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                </MenuFlyout>
+            </FlyoutBase.AttachedFlyout>
             <controls:MpvVideoSurface
                 x:Name="VideoSurface"
                 HorizontalAlignment="Center"
@@ -52,9 +253,6 @@
             (screens 1 and 2): the hero centred above the status strip.
         -->
         <Grid x:Name="HomeView">
-            <Grid.OpacityTransition>
-                <ScalarTransition Duration="0:0:0.2" />
-            </Grid.OpacityTransition>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
@@ -273,6 +471,60 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
+                <StackPanel
+                    x:Name="StreamFailureActions"
+                    Margin="0,24,0,0"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Visibility="Collapsed">
+                    <Button
+                        x:Name="StreamRetryButton"
+                        MinWidth="120"
+                        Click="OnStreamRetryClick"
+                        Style="{StaticResource AetherEmphasisPillButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="{StaticResource AetherSizeIcon}"
+                                Glyph="&#xE72C;" />
+                            <TextBlock x:Name="StreamRetryLabel" Text="Retry" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="StreamEditLinkButton"
+                        MinWidth="120"
+                        Click="OnStreamEditLinkClick"
+                        Style="{StaticResource AetherOutlinePillButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="{StaticResource AetherSizeIcon}"
+                                Glyph="&#xE70F;" />
+                            <TextBlock x:Name="StreamEditLinkLabel" Text="Edit link" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="StreamOpenInBrowserButton"
+                        MinWidth="150"
+                        Click="OnStreamOpenInBrowserClick"
+                        Style="{StaticResource AetherOutlinePillButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="{StaticResource AetherSizeIcon}"
+                                Glyph="&#xE774;" />
+                            <TextBlock x:Name="StreamOpenInBrowserLabel" Text="Open in browser" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="StreamFailureCancelButton"
+                        MinWidth="100"
+                        Click="OnStreamFailureCancelClick"
+                        Style="{StaticResource AetherOutlinePillButtonStyle}">
+                        <TextBlock x:Name="StreamFailureCancelLabel" Text="Cancel" />
+                    </Button>
+                </StackPanel>
             </StackPanel>
 
             <!--
@@ -386,19 +638,22 @@
                         Style="{StaticResource AetherCaptionStrongTextStyle}"
                         Text="Aether"
                         TextLineBounds="TrimToBaseline" />
-                    <!--  The fill and padding appear once a video is playing; the -2 bottom margin keeps the baseline shared with the name.  -->
-                    <Border
-                        x:Name="TitleBadge"
+                    <!--  Plain text, no pill (7.14): a muted dot and file name while a video is open, "Alpha" otherwise.  -->
+                    <TextBlock
+                        x:Name="TitleSeparator"
+                        VerticalAlignment="Bottom"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        Text="·"
+                        TextLineBounds="TrimToBaseline"
+                        Visibility="Collapsed" />
+                    <TextBlock
+                        x:Name="TitleBadgeText"
                         MaxWidth="320"
                         VerticalAlignment="Bottom"
-                        CornerRadius="{StaticResource AetherControlCornerRadius}">
-                        <TextBlock
-                            x:Name="TitleBadgeText"
-                            Style="{StaticResource AetherCaptionTextStyle}"
-                            Text="Alpha"
-                            TextLineBounds="TrimToBaseline"
-                            TextTrimming="CharacterEllipsis" />
-                    </Border>
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        Text="Alpha"
+                        TextLineBounds="TrimToBaseline"
+                        TextTrimming="CharacterEllipsis" />
                 </StackPanel>
             </Grid>
             <Button
@@ -407,17 +662,102 @@
                 Click="OnSettingsClick"
                 Content="&#xE713;"
                 Style="{StaticResource AetherTitleBarButtonStyle}" />
-            <Border Grid.Column="3" Width="{StaticResource AetherSizeCaptionButtons}" />
+            <!--  The window sets the width to the system's real caption-button inset; 138 is the 100% default.  -->
+            <Border
+                x:Name="CaptionReserve"
+                Grid.Column="3"
+                Width="{StaticResource AetherSizeCaptionButtons}" />
         </Grid>
 
+        <!--  Diagnostics (Ctrl+I): top-left, 16 in from the edge and under the 32 px title bar.  -->
+        <controls:DiagnosticsPanel
+            x:Name="Diagnostics"
+            Margin="16,48,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Visibility="Collapsed" />
+
         <!--
-            Export chip and clip drawer (s5-03, 5.3): 8 above the 84 px card (24 + 84 + 8 = 116), right-aligned
-            to it by sharing its width and margins. Fades with the controls.
+            Hover rail (7.21, screen 6). A 4 px hot zone on the left edge under the title bar wakes it: resting there shows
+            the FillRange peek strip and opens the rail after 150 ms, a click opens it at once. 56 wide (padding 7 plus the
+            1 px stroke), 8 from the left, from 8 under the title bar to 8 above the pill; the page places it
+            (MainPage.Rail.cs). Solid SurfaceOverlayStrong: Acrylic cannot see the swap chain (ADR-0013).
+        -->
+        <Border
+            x:Name="RailHotZone"
+            Width="{StaticResource AetherSizeRailHotZone}"
+            Margin="0,32,0,0"
+            HorizontalAlignment="Left"
+            Background="Transparent"
+            PointerCanceled="OnRailHotZoneExited"
+            PointerEntered="OnRailHotZoneEntered"
+            PointerExited="OnRailHotZoneExited"
+            Tapped="OnRailHotZoneTapped">
+            <Border
+                x:Name="RailPeek"
+                Background="{StaticResource AetherFillRangeBrush}"
+                CornerRadius="0,2,2,0"
+                IsHitTestVisible="False"
+                Opacity="0" />
+        </Border>
+        <Border
+            x:Name="Rail"
+            Width="{StaticResource AetherSizeRailWidth}"
+            Margin="8,40,0,120"
+            Padding="7"
+            HorizontalAlignment="Left"
+            Background="{StaticResource AetherSurfaceOverlayStrongBrush}"
+            BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource AetherOverlayCornerRadius}"
+            PointerCanceled="OnRailPointerExited"
+            PointerEntered="OnRailPointerEntered"
+            PointerExited="OnRailPointerExited"
+            Visibility="Collapsed">
+            <Grid RowSpacing="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Button
+                    x:Name="RailPlayer"
+                    Click="OnRailPlayerClick"
+                    Content="&#xE714;"
+                    Style="{StaticResource AetherRailItemActiveStyle}" />
+                <Button
+                    x:Name="RailClips"
+                    Grid.Row="1"
+                    Click="OnRailClipsClick"
+                    Content="&#xE8F1;"
+                    Style="{StaticResource AetherRailItemStyle}" />
+                <!--  The LAN streamer lands in Pass 11.  -->
+                <Button
+                    x:Name="RailStream"
+                    Grid.Row="2"
+                    Content="&#xE774;"
+                    IsEnabled="False"
+                    Style="{StaticResource AetherRailItemStyle}" />
+                <Button
+                    x:Name="RailSettings"
+                    Grid.Row="4"
+                    Click="OnRailSettingsClick"
+                    Content="&#xE713;"
+                    Style="{StaticResource AetherRailItemStyle}" />
+            </Grid>
+        </Border>
+
+        <!--
+            Export chip and clip drawer (s5-03, 5.3): 8 above the card (24 + 88 + 8 = 120 over the full card, 80 over
+            the slim pill; the page moves it as the card grows), right-aligned to it by sharing its width and margins.
+            Fades with the controls.
         -->
         <Grid
             x:Name="ClipLayer"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
-            Margin="16,0,16,116"
+            Margin="16,0,16,120"
             VerticalAlignment="Bottom"
             PointerCanceled="OnOsdPointerExited"
             PointerEntered="OnOsdPointerEntered"
@@ -427,14 +767,16 @@
         </Grid>
 
         <!--
-            Transport card: the seek row, then the buttons, 4 apart. min(520, window - 32) wide and 84 tall:
-            padding 8 (7 here, the 1 px stroke is the eighth), a 32 px seek row and a 32 px button row.
-            A plain 62% ink tint with a hairline edge and radius 24 (16 button radius + 8 padding).
-            24 above the bottom.
-            Below a 520 px pill, frame step, loop and always on top move into More controls (5.7).
+            Transport card: the seek row, then the buttons, 4 apart. min(520, window - 32) wide and 88 tall:
+            padding 8 (7 here, the 1 px stroke is the eighth), a 32 px seek row and a 36 px button row.
+            A plain 62% ink tint with a hairline edge and radius 24. 24 above the bottom.
+            While a video plays it shrinks to the 48 px slim pill (7.11, s5-08): padding 6, and the seek row slides down
+            between Play and Mute while the other buttons fade (MainPage.Bar.cs). Both rows overlap in one grid for that.
+            min(520, window - 32) fits every button at any width, so there is no narrow layout any more (5.7 retired).
         -->
         <Border
             x:Name="Osd"
+            Height="{StaticResource AetherSizeOsdHeight}"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
             Margin="16,0,16,24"
             Padding="7"
@@ -443,41 +785,24 @@
             BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource AetherTransportCornerRadius}"
+            GettingFocus="OnOsdGettingFocus"
+            LosingFocus="OnOsdLosingFocus"
             PointerEntered="OnOsdPointerEntered"
             PointerExited="OnOsdPointerExited"
             PointerCanceled="OnOsdPointerExited"
             PointerCaptureLost="OnOsdPointerExited"
             SizeChanged="OnOsdSizeChanged"
             Visibility="Collapsed">
-            <Grid RowSpacing="4">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <!--  Row 1: current time, bar, duration, 12 apart and 8 in from the padding. TextPrimary only on the pill.  -->
-                <Grid Padding="8,0" ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
-                        x:Name="PositionText"
-                        VerticalAlignment="Center"
-                        Style="{StaticResource AetherTimecodeTextStyle}"
-                        Text="00:00" />
-                    <controls:PrecisionSeekBar x:Name="SeekBar" Grid.Column="1" />
-                    <TextBlock
-                        x:Name="DurationText"
-                        Grid.Column="2"
-                        VerticalAlignment="Center"
-                        Style="{StaticResource AetherTimecodeTextStyle}"
-                        Text="00:00" />
-                </Grid>
-
-                <!--  Row 2: 1fr / auto / 1fr, so the centre group is truly centred; 4 apart inside each group.  -->
-                <Grid Grid.Row="1" Height="{StaticResource AetherSizeControl}">
+            <Grid>
+                <!--
+                    Row 2, on the bottom edge: 1fr / auto / 1fr, so the centre group is truly centred; 4 apart inside each group.
+                    Left: Open, Speed. Centre: Back 5 s, Play, Forward 5 s. Right: Mute, More, Full screen. Frame steps, Loop and
+                    Always on top live in More (owner's call, Pass 7: the row read as crowded with them out).
+                -->
+                <Grid
+                    x:Name="ButtonRow"
+                    Height="{StaticResource AetherSizeTransportButton}"
+                    VerticalAlignment="Bottom">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -485,6 +810,7 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel
+                        x:Name="LeftGroup"
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Spacing="4">
@@ -514,6 +840,7 @@
 
                     <!--  Skip 5 s is Segoe Fluent's circular arrow with a "5" set inside it; the numbered Fluent skip glyphs only come as 10 and 30.  -->
                     <StackPanel
+                        x:Name="CentreGroup"
                         Grid.Column="1"
                         Orientation="Horizontal"
                         Spacing="4">
@@ -528,24 +855,12 @@
                             </Grid>
                         </Button>
                         <Button
-                            x:Name="BackFrameButton"
-                            Click="OnBackFrameClick"
-                            Content="&#xE892;"
-                            Style="{StaticResource AetherTransportIconButtonStyle}"
-                            ToolTipService.Placement="Top" />
-                        <Button
                             x:Name="PlayPauseButton"
                             Click="OnPlayPauseClick"
                             Content="&#xF5B0;"
                             Style="{StaticResource AetherPlayButtonStyle}"
                             ToolTipService.Placement="Top"
                             ToolTipService.ToolTip="Play (Space)" />
-                        <Button
-                            x:Name="ForwardFrameButton"
-                            Click="OnForwardFrameClick"
-                            Content="&#xE893;"
-                            Style="{StaticResource AetherTransportIconButtonStyle}"
-                            ToolTipService.Placement="Top" />
                         <Button
                             x:Name="ForwardButton"
                             Click="OnForwardClick"
@@ -559,23 +874,12 @@
                     </StackPanel>
 
                     <StackPanel
+                        x:Name="RightGroup"
                         Grid.Column="2"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Spacing="4">
-                        <ToggleButton
-                            x:Name="LoopButton"
-                            Click="OnLoopClick"
-                            Content="&#xE8EE;"
-                            Style="{StaticResource AetherTransportToggleButtonStyle}"
-                            ToolTipService.Placement="Top" />
-                        <ToggleButton
-                            x:Name="AlwaysOnTopButton"
-                            Click="OnAlwaysOnTopClick"
-                            Content="&#xE718;"
-                            Style="{StaticResource AetherTransportToggleButtonStyle}"
-                            ToolTipService.Placement="Top" />
                         <!--
                             Volume lives in a flyout (5.8): 72 px slider, thumb 12 white. Clicking mutes; the
                             flyout opens on hover, or pinned from right-click or Shift+F10 so the keyboard can
@@ -653,31 +957,48 @@
                             Click="OnMoreClick"
                             Content="&#xE712;"
                             Style="{StaticResource AetherTransportIconButtonStyle}"
-                            ToolTipService.Placement="Top"
-                            Visibility="Collapsed">
+                            ToolTipService.Placement="Top">
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="MoreMenu"
+                                    Closed="OnMoreMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    Opened="OnMoreMenuOpened"
                                     Placement="TopEdgeAlignedRight">
                                     <MenuFlyoutItem
                                         x:Name="MoreBackFrameItem"
                                         Click="OnBackFrameClick"
                                         KeyboardAcceleratorTextOverride=","
-                                        Style="{StaticResource AetherMenuItemStyle}" />
+                                        Style="{StaticResource AetherMenuItemStyle}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE892;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
                                     <MenuFlyoutItem
                                         x:Name="MoreForwardFrameItem"
                                         Click="OnForwardFrameClick"
                                         KeyboardAcceleratorTextOverride="."
-                                        Style="{StaticResource AetherMenuItemStyle}" />
+                                        Style="{StaticResource AetherMenuItemStyle}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE893;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreLoopItem"
                                         Click="OnLoopClick"
-                                        Style="{StaticResource AetherToggleMenuItemStyle}" />
+                                        Style="{StaticResource AetherToggleMenuItemStyle}">
+                                        <ToggleMenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8EE;" />
+                                        </ToggleMenuFlyoutItem.Icon>
+                                    </ToggleMenuFlyoutItem>
                                     <ToggleMenuFlyoutItem
                                         x:Name="MoreAlwaysOnTopItem"
                                         Click="OnAlwaysOnTopClick"
-                                        Style="{StaticResource AetherToggleMenuItemStyle}" />
+                                        Style="{StaticResource AetherToggleMenuItemStyle}">
+                                        <ToggleMenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE718;" />
+                                        </ToggleMenuFlyoutItem.Icon>
+                                    </ToggleMenuFlyoutItem>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
                         </Button>
@@ -690,8 +1011,49 @@
                             ToolTipService.ToolTip="Full screen (F)" />
                     </StackPanel>
                 </Grid>
+
+                <!--
+                    Row 1: current time, bar, duration, 12 apart and 8 in from the padding. TextPrimary only on the pill.
+                    Last, so it stays on top of the buttons it slides between in the slim pill.
+                -->
+                <Grid
+                    x:Name="SeekRow"
+                    Height="{StaticResource AetherSizeSeekHitArea}"
+                    Padding="8,0"
+                    VerticalAlignment="Top"
+                    ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="PositionText"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherTimecodeTextStyle}"
+                        Text="00:00" />
+                    <controls:PrecisionSeekBar x:Name="SeekBar" Grid.Column="1" />
+                    <TextBlock
+                        x:Name="DurationText"
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherTimecodeSecondaryTextStyle}"
+                        Text="00:00" />
+                </Grid>
             </Grid>
         </Border>
+
+        <!--
+            Toasts (screen 10): bottom centre, min(360, window - 32) wide. The margin below follows the controls
+            (ToastService.SetControlsShown); the page code fills in the toast.
+        -->
+        <Grid
+            x:Name="ToastLayer"
+            Margin="16,0,16,24"
+            VerticalAlignment="Bottom"
+            Visibility="Collapsed">
+            <controls:Toast x:Name="ToastCard" />
+        </Grid>
 
         <!--
             Open URL (2.5): scrim over the whole window, the strip dimmed with everything else. The
@@ -703,6 +1065,7 @@
             Background="{StaticResource AetherSurfaceScrimBrush}"
             Visibility="Collapsed">
             <Border
+                x:Name="OpenUrlCard"
                 MaxWidth="{StaticResource AetherSizeDialogWidth}"
                 Margin="16"
                 Padding="24"
@@ -770,6 +1133,101 @@
                             Click="OnOpenUrlCancelClick"
                             Content="Cancel"
                             Style="{StaticResource AetherOutlinePillButtonStyle}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!--
+            First-run tour (7.26, docs/reviews/pass-7-first-run-tour-spec.md). The scrim starts under the title bar,
+            which stays live; its hole and the ring are placed per frame from MainPage.Tour.cs as the light moves. The
+            blocker keeps clicks off the controls underneath. The card is placed beside each target in code.
+        -->
+        <Grid
+            x:Name="TourLayer"
+            SizeChanged="OnTourLayerSizeChanged"
+            Visibility="Collapsed">
+            <Border x:Name="TourBlocker" Background="Transparent" />
+            <Path
+                x:Name="TourScrim"
+                Fill="{StaticResource AetherSurfaceScrimBrush}"
+                IsHitTestVisible="False" />
+            <Rectangle
+                x:Name="TourRing"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                IsHitTestVisible="False"
+                Stroke="{StaticResource AetherStrokeInputFocusBrush}"
+                StrokeThickness="2" />
+            <Border
+                x:Name="TourCard"
+                Width="{StaticResource AetherSizeTourCard}"
+                Padding="16"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="{StaticResource AetherSurfaceDialogFallbackBrush}"
+                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AetherOverlayCornerRadius}"
+                KeyDown="OnTourCardKeyDown">
+                <StackPanel TabFocusNavigation="Cycle">
+                    <Grid>
+                        <TextBlock
+                            x:Name="TourProgress"
+                            VerticalAlignment="Center"
+                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Style="{StaticResource AetherCaptionTextStyle}" />
+                        <Button
+                            x:Name="TourSkipButton"
+                            Margin="0,-6,-8,-6"
+                            Padding="8,0"
+                            HorizontalAlignment="Right"
+                            AllowFocusOnInteraction="True"
+                            BorderBrush="Transparent"
+                            Click="OnTourSkipClick"
+                            FontSize="{StaticResource AetherCaptionFontSize}"
+                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Style="{StaticResource AetherOutlinePillButtonStyle}" />
+                    </Grid>
+                    <StackPanel x:Name="TourContent" Margin="0,12,0,0" Spacing="4">
+                        <TextBlock
+                            x:Name="TourTitle"
+                            Style="{StaticResource AetherSubtitleTextStyle}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="TourBody"
+                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Style="{StaticResource AetherBodyTextStyle}"
+                            TextWrapping="Wrap" />
+                        <StackPanel
+                            x:Name="TourKeys"
+                            Margin="0,8,0,0"
+                            Spacing="6"
+                            Visibility="Collapsed" />
+                    </StackPanel>
+                    <Grid Margin="0,16,0,0" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel
+                            x:Name="TourDots"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="4" />
+                        <Button
+                            x:Name="TourBackButton"
+                            Grid.Column="1"
+                            AllowFocusOnInteraction="True"
+                            Click="OnTourBackClick"
+                            Style="{StaticResource AetherOutlinePillButtonStyle}" />
+                        <Button
+                            x:Name="TourNextButton"
+                            Grid.Column="2"
+                            AllowFocusOnInteraction="True"
+                            Click="OnTourNextClick"
+                            Style="{StaticResource AetherEmphasisPillButtonStyle}" />
                     </Grid>
                 </StackPanel>
             </Border>

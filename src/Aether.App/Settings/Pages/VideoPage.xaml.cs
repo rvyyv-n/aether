@@ -25,6 +25,39 @@ public sealed partial class VideoPage : Page
 
         binder.Toggle(SmoothMotionRow, SmoothMotionToggle, SettingKeys.SmoothMotion, "Settings_SmoothMotion_Title", "Settings_SmoothMotion_Description");
 
+        binder.Toggle(DeinterlaceRow, DeinterlaceToggle, SettingKeys.Deinterlace, "Settings_Deinterlace_Title", "Settings_Deinterlace_Description");
+        binder.Choose(DeinterlaceModeRow, DeinterlaceModeCombo, SettingKeys.DeinterlaceMode,
+            [
+                new("auto", AppStrings.Get("Settings_DeinterlaceMode_Auto")),
+                new("yadif", AppStrings.Get("Settings_DeinterlaceMode_Yadif")),
+                new("bwdif", AppStrings.Get("Settings_DeinterlaceMode_Bwdif")),
+            ],
+            "Settings_DeinterlaceMode_Title");
+        binder.Track(() => DeinterlaceModeRow.IsEnabled = App.Settings.Get(SettingKeys.Deinterlace) is true);
+
+        binder.Choose(AspectRatioRow, AspectRatioCombo, SettingKeys.AspectRatio,
+            [
+                new("auto", AppStrings.Get("Settings_AspectRatio_Auto")),
+                new("16:9", "16:9"),
+                new("4:3", "4:3"),
+                new("21:9", "21:9"),
+                new("1:1", "1:1"),
+                new("2.35:1", "2.35:1"),
+            ],
+            "Settings_AspectRatio_Title", "Settings_AspectRatio_Description");
+
+        SnapshotsExpander.Header = AppStrings.Get("Settings_Snapshots_Title");
+        SnapshotsExpander.Description = AppStrings.Get("Settings_Snapshots_Description");
+        binder.TextEntry(ScreenshotDirectoryRow, ScreenshotDirectoryBox, SettingKeys.ScreenshotDirectory, "Settings_ScreenshotDirectory_Title", "Settings_ScreenshotDirectory_Description");
+        binder.Choose(ScreenshotFormatRow, ScreenshotFormatCombo, SettingKeys.ScreenshotFormat,
+            [
+                new("png", "PNG"),
+                new("jpg", "JPEG"),
+                new("webp", "WebP"),
+            ],
+            "Settings_ScreenshotFormat_Title");
+        binder.TextEntry(ScreenshotTemplateRow, ScreenshotTemplateBox, SettingKeys.ScreenshotTemplate, "Settings_ScreenshotTemplate_Title", "Settings_ScreenshotTemplate_Description");
+
         ScalingExpander.Header = AppStrings.Get("Settings_ScalingAndFilters_Title");
         ScalingExpander.Description = AppStrings.Get("Settings_ScalingAndFilters_Description");
         binder.Choose(UpscalingRow, UpscalingCombo, SettingKeys.Upscaling,
@@ -72,6 +105,8 @@ public sealed partial class VideoPage : Page
 
         // A setting that is not at its default stays in view rather than hiding in a closed expander.
         AdjustmentsExpander.IsExpanded = adjustments.Any(key => !App.Settings.IsDefault(key));
+        SnapshotsExpander.IsExpanded = new[] { SettingKeys.ScreenshotDirectory, SettingKeys.ScreenshotFormat, SettingKeys.ScreenshotTemplate }
+            .Any(key => !App.Settings.IsDefault(key));
         ScalingExpander.IsExpanded = new[] { SettingKeys.Upscaling, SettingKeys.Downscaling, SettingKeys.Debanding, SettingKeys.HdrToneMapping }
             .Any(key => !App.Settings.IsDefault(key));
     }

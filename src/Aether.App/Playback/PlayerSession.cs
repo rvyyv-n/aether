@@ -19,6 +19,8 @@ namespace Aether_App.Playback;
 /// </summary>
 public sealed class PlayerSession : IDisposable
 {
+    private const string DisplayFpsOverride = "display-fps-override";
+
     private readonly MpvContext _context;
     private readonly MpvEventLoop _events;
     private readonly PlayerEventDispatcher _dispatcher;
@@ -29,6 +31,8 @@ public sealed class PlayerSession : IDisposable
     private readonly LoopRestart _loop = new();
     private readonly FileEnd _fileEnd = new();
     private readonly MpvSettingsSync _settingsSync;
+    private readonly DisplayRefreshSync? _display;
+    private readonly DisplayWakeLock _wake = new();
     private bool _disposed;
 
     private PlayerSession(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
@@ -55,11 +59,22 @@ public sealed class PlayerSession : IDisposable
             App.Settings.Changed += OnSettingChanged;
             PowerManager.PowerSourceKindChanged += OnPowerSourceChanged;
             ApplySettings();
+
+            _display = App.DisplaySync;
+            if (_display is not null)
+            {
+                _display.Changed += OnDisplayRefreshChanged;
+                SendDisplayRefresh();
+            }
         }
         catch
         {
             App.Settings.Changed -= OnSettingChanged;
             PowerManager.PowerSourceKindChanged -= OnPowerSourceChanged;
+            if (_display is not null)
+            {
+                _display.Changed -= OnDisplayRefreshChanged;
+            }
             _keys?.Dispose();
             _events?.Dispose();
             _context.Dispose();
@@ -92,6 +107,7 @@ public sealed class PlayerSession : IDisposable
             {
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
+                BackBufferSize = MpvSettingsMap.BackBufferSize(s),
                 AdditionalOptions = startOptions,
             });
         }
@@ -103,6 +119,7 @@ public sealed class PlayerSession : IDisposable
             {
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
+                BackBufferSize = MpvSettingsMap.BackBufferSize(s),
             });
         }
     }
@@ -170,9 +187,9 @@ public sealed class PlayerSession : IDisposable
     public void SetVolume(double volume) =>
         _context.CommandAsync(new MpvCommand("set", "volume", Math.Clamp(volume, 0, 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)));
 
-    /// <summary>Back or Forward 5 s from the pill or the arrow keys. Non-blocking.</summary>
+    /// <summary>Skips from the pill or the arrow keys; a held key collapses into one seek at a time. Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
-    public void SeekBy(double seconds) => _context.CommandAsync(TransportState.SeekBy(seconds));
+    public void SeekBy(double seconds) => _seekCoalescer.SeekBy(seconds);
 
     /// <summary>Speed from the speed menu, 0.1× to 4.0×. Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
@@ -184,7 +201,15 @@ public sealed class PlayerSession : IDisposable
     /// <summary>Releases a held step key, e.g. when the window is deactivated.</summary>
     public void ReleaseKeys() => _keys.ReleaseAll();
 
-    private void OnSettingChanged(object? sender, SettingChangedEventArgs e) => ApplySettings();
+    private void OnSettingChanged(object? sender, SettingChangedEventArgs e)
+    {
+        ApplySettings();
+        UpdateWake();
+    }
+
+    /// <summary>UI thread: the screen stays awake only while a file plays and the setting is on.</summary>
+    private void UpdateWake() =>
+        _wake.Set(!_disposed && App.Settings.Current.PreventSleep && ViewModel.State.Status == PlaybackStatus.Playing);
 
     private void OnPowerSourceChanged(object? sender, object e) => ApplySettings();
 
@@ -201,6 +226,41 @@ public sealed class PlayerSession : IDisposable
         try
         {
             _settingsSync.Apply(App.Settings.Current, IsOnBattery());
+        }
+        catch (Exception exception) when (exception is MpvException or ObjectDisposedException)
+        {
+            // The core is shutting down.
+        }
+    }
+
+    private void OnDisplayRefreshChanged(object? sender, EventArgs e) => SendDisplayRefresh();
+
+    /// <summary>
+    /// UI thread: tells mpv the refresh rate of the window's monitor, so <c>video-sync=display-resample</c> does not
+    /// assume 60 Hz and drop frames of a 120 fps clip. Sent as a one-off, since <see cref="MpvSettingsSync"/> only
+    /// carries settings; a <c>display-fps-override</c> in the custom options wins.
+    /// </summary>
+    private void SendDisplayRefresh()
+    {
+        if (_disposed || _display is null)
+        {
+            return;
+        }
+        foreach (KeyValuePair<string, string> option in MpvSettingsMap.CustomOptions(App.Settings.Current.CustomMpvOptions))
+        {
+            if (option.Key.Equals(DisplayFpsOverride, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+        }
+        try
+        {
+            string targetFps = "0";
+            if (App.Settings.Current.SmoothMotion && int.TryParse(_display.Current, out int hz) && hz is > 0 and <= 60)
+            {
+                targetFps = _display.Current;
+            }
+            _context.CommandAsync(new MpvCommand("set", DisplayFpsOverride, targetFps));
         }
         catch (Exception exception) when (exception is MpvException or ObjectDisposedException)
         {
@@ -228,6 +288,7 @@ public sealed class PlayerSession : IDisposable
         // The first frame sits at time 0 (or within half a frame of it when the container starts later).
         double halfFrame = state.FramesPerSecond > 0 ? 0.5 / state.FramesPerSecond : 0;
         _stepper.SetBounds(atStart: state.Position <= halfFrame, atEnd: state.IsAtEnd);
+        UpdateWake();
         if (_loop.ShouldRestart(state.IsAtEnd, ViewModel.IsLooping))
         {
             try
@@ -256,6 +317,11 @@ public sealed class PlayerSession : IDisposable
         _disposed = true;
         App.Settings.Changed -= OnSettingChanged;
         PowerManager.PowerSourceKindChanged -= OnPowerSourceChanged;
+        if (_display is not null)
+        {
+            _display.Changed -= OnDisplayRefreshChanged;
+        }
+        _wake.Dispose();
         _seekCoalescer.Reset();
         _keys.Dispose();
         _events.Dispose();
