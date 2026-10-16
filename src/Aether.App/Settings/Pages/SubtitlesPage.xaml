@@ -26,5 +26,25 @@
                 <ComboBox x:Name="SubtitlePositionCombo" MinWidth="112" Style="{StaticResource AetherSettingsComboStyle}" />
             </StackPanel>
         </settings:SettingsRow>
+        <settings:SettingsRow x:Name="SubtitleBoldRow" Glyph="&#xE8DD;">
+            <ToggleSwitch x:Name="SubtitleBoldToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+        </settings:SettingsRow>
+        <settings:SettingsRow x:Name="SubtitleOutlineRow" Glyph="&#xE7C6;">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <ComboBox x:Name="SubtitleOutlineCombo" MinWidth="112" Style="{StaticResource AetherSettingsComboStyle}" />
+                <ComboBox x:Name="SubtitleOutlineColorCombo" MinWidth="112" Style="{StaticResource AetherSettingsComboStyle}" />
+            </StackPanel>
+        </settings:SettingsRow>
+        <settings:SettingsRow x:Name="SubtitleBackgroundRow" Glyph="&#xE91B;">
+            <ComboBox x:Name="SubtitleBackgroundCombo" MinWidth="112" Style="{StaticResource AetherSettingsComboStyle}" />
+        </settings:SettingsRow>
+        <settings:SettingsRow x:Name="SubtitleOverrideRow" Glyph="&#xE771;">
+            <ToggleSwitch x:Name="SubtitleOverrideToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+        </settings:SettingsRow>
+        <Border x:Name="PreviewFrame" Padding="16" MinHeight="88" CornerRadius="8" Background="#FF1B1B1F">
+            <Border x:Name="PreviewBox" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="8,2" CornerRadius="3">
+                <TextBlock x:Name="PreviewText" TextAlignment="Center" TextWrapping="Wrap" />
+            </Border>
+        </Border>
     </settings:SettingsGroup>
 </Page>

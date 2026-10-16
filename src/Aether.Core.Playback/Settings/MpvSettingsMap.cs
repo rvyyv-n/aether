@@ -153,6 +153,13 @@ public static class MpvSettingsMap
             new("sub-font-size", SubtitleFontSize(settings.SubtitleSize)),
             new("sub-color", SubtitleColor(settings.SubtitleColor)),
             new("sub-pos", SubtitlePosition(settings.SubtitlePosition)),
+            new("sub-bold", YesNo(settings.SubtitleBold)),
+            new("sub-border-size", SubtitleOutlineSize(settings.SubtitleOutline)),
+            new("sub-border-color", SubtitleOutlineColor(settings.SubtitleOutlineColor)),
+            new("sub-border-style", settings.SubtitleBackground == "none" ? "outline-and-shadow" : "background-box"),
+            new("sub-back-color", SubtitleBackColor(settings.SubtitleBackground)),
+            // Without this, a subtitle file that carries its own styling keeps its own font, colour and size.
+            new("sub-ass-override", settings.SubtitleOverrideStyled ? "force" : "scale"),
             new("ytdl-format", YtdlFormat(settings.StreamingQuality, settings.PreferGpuDecodableFormats)),
             new("deinterlace", YesNo(settings.Deinterlace && settings.DeinterlaceMode == "auto")),
             new("video-aspect-override", settings.AspectRatio == "auto" ? "-1" : settings.AspectRatio),
@@ -183,7 +190,32 @@ public static class MpvSettingsMap
     {
         "small" => "40",
         "large" => "75",
+        "xlarge" => "95",
         _ => "55",
+    };
+
+    /// <summary>Outline width in the same scaled pixels; mpv's own is 3.</summary>
+    public static string SubtitleOutlineSize(string outline) => outline switch
+    {
+        "none" => "0",
+        "thin" => "1.5",
+        "thick" => "5",
+        _ => "3",
+    };
+
+    public static string SubtitleOutlineColor(string color) => color switch
+    {
+        "gray" => "#404040",
+        "white" => "#FFFFFF",
+        _ => "#000000",
+    };
+
+    /// <summary>Colour of the box behind the text (mpv reads <c>#AARRGGBB</c>); fully clear when there is no box.</summary>
+    public static string SubtitleBackColor(string background) => background switch
+    {
+        "soft" => "#99000000",
+        "solid" => "#FF000000",
+        _ => "#00000000",
     };
 
     public static string SubtitleColor(string color) => color switch

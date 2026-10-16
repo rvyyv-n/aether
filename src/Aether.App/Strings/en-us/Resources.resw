@@ -589,6 +589,24 @@
   <data name="Settings_SingleInstance_Description" xml:space="preserve">
     <value>Instead of opening a new window</value>
   </data>
+  <data name="Settings_ClearRecents_Title" xml:space="preserve">
+    <value>Recent files</value>
+  </data>
+  <data name="Settings_ClearRecents_Description" xml:space="preserve">
+    <value>Remove the files and links shown on the start screen</value>
+  </data>
+  <data name="Settings_ClearRecents_Button" xml:space="preserve">
+    <value>Clear recent files</value>
+  </data>
+  <data name="Settings_ClearResume_Title" xml:space="preserve">
+    <value>Saved positions</value>
+  </data>
+  <data name="Settings_ClearResume_Description" xml:space="preserve">
+    <value>Forget where you stopped in every file, so each starts from the beginning</value>
+  </data>
+  <data name="Settings_ClearResume_Button" xml:space="preserve">
+    <value>Forget positions</value>
+  </data>
 
   
   <data name="Settings_PreciseSeeking_Title" xml:space="preserve">
@@ -1318,6 +1336,60 @@
   </data>
   <data name="Settings_SubtitlePosition_Top" xml:space="preserve">
     <value>Top</value>
+  </data>
+  <data name="Settings_SubtitleSize_ExtraLarge" xml:space="preserve">
+    <value>Extra large</value>
+  </data>
+  <data name="Settings_SubtitleBold_Title" xml:space="preserve">
+    <value>Bold text</value>
+  </data>
+  <data name="Settings_Outline_Title" xml:space="preserve">
+    <value>Outline and colour</value>
+  </data>
+  <data name="Settings_SubtitleOutlineSize_Title" xml:space="preserve">
+    <value>Subtitle outline size</value>
+  </data>
+  <data name="Settings_SubtitleOutlineColor_Title" xml:space="preserve">
+    <value>Subtitle outline colour</value>
+  </data>
+  <data name="Settings_SubtitleOutline_None" xml:space="preserve">
+    <value>No outline</value>
+  </data>
+  <data name="Settings_SubtitleOutline_Thin" xml:space="preserve">
+    <value>Thin</value>
+  </data>
+  <data name="Settings_SubtitleOutline_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Settings_SubtitleOutline_Thick" xml:space="preserve">
+    <value>Thick</value>
+  </data>
+  <data name="Settings_SubtitleOutlineColor_Black" xml:space="preserve">
+    <value>Black</value>
+  </data>
+  <data name="Settings_SubtitleOutlineColor_Gray" xml:space="preserve">
+    <value>Dark grey</value>
+  </data>
+  <data name="Settings_SubtitleBackground_Title" xml:space="preserve">
+    <value>Background box</value>
+  </data>
+  <data name="Settings_SubtitleBackground_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Settings_SubtitleBackground_Soft" xml:space="preserve">
+    <value>See-through</value>
+  </data>
+  <data name="Settings_SubtitleBackground_Solid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="Settings_SubtitleOverride_Title" xml:space="preserve">
+    <value>Use my style on styled subtitles</value>
+  </data>
+  <data name="Settings_SubtitleOverride_Description" xml:space="preserve">
+    <value>Some subtitle files bring their own font, colour and position. Turn this on to replace them with the style above.</value>
+  </data>
+  <data name="Settings_SubtitlePreview_Text" xml:space="preserve">
+    <value>This is how your subtitles will look.</value>
   </data>
   <data name="Diagnostics_Software" xml:space="preserve">
     <value>Software</value>

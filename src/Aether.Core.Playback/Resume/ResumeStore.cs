@@ -72,6 +72,8 @@ public sealed class ResumeStore(ISettingsStorage storage)
 
     public void Remove(string location) => Update(entries => entries.Where(e => !SameLocation(e.Location, location)).ToArray());
 
+    public void Clear() => Update(_ => []);
+
     private static ResumeEntry[] Prune(ResumeEntry[] entries) =>
         entries.Length <= MaxEntries
             ? entries

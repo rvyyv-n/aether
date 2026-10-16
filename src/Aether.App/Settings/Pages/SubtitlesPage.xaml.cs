@@ -1,7 +1,9 @@
 using System.Globalization;
 using Aether.Core.Playback.Settings;
 using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 
 namespace Aether_App.Settings.Pages;
 
@@ -32,6 +34,7 @@ public sealed partial class SubtitlesPage : Page
                 new("small", AppStrings.Get("Settings_SubtitleSize_Small")),
                 new("medium", AppStrings.Get("Settings_SubtitleSize_Medium")),
                 new("large", AppStrings.Get("Settings_SubtitleSize_Large")),
+                new("xlarge", AppStrings.Get("Settings_SubtitleSize_ExtraLarge")),
             ],
             "Settings_FontAndSize_Title");
         binder.Choose(SubtitleLookRow, SubtitleColorCombo, SettingKeys.SubtitleColor,
@@ -49,7 +52,39 @@ public sealed partial class SubtitlesPage : Page
                 new("top", AppStrings.Get("Settings_SubtitlePosition_Top")),
             ],
             "Settings_ColorAndPosition_Title");
-        AutomationProperties.SetName(SubtitleColorCombo, AppStrings.Get("Settings_SubtitleColor_Title"));
+        binder.Toggle(SubtitleBoldRow, SubtitleBoldToggle, SettingKeys.SubtitleBold, "Settings_SubtitleBold_Title");
+        binder.Choose(SubtitleOutlineRow, SubtitleOutlineCombo, SettingKeys.SubtitleOutline,
+            [
+                new("none", AppStrings.Get("Settings_SubtitleOutline_None")),
+                new("thin", AppStrings.Get("Settings_SubtitleOutline_Thin")),
+                new("normal", AppStrings.Get("Settings_SubtitleOutline_Normal")),
+                new("thick", AppStrings.Get("Settings_SubtitleOutline_Thick")),
+            ],
+            "Settings_Outline_Title");
+        binder.Choose(SubtitleOutlineRow, SubtitleOutlineColorCombo, SettingKeys.SubtitleOutlineColor,
+            [
+                new("black", AppStrings.Get("Settings_SubtitleOutlineColor_Black")),
+                new("gray", AppStrings.Get("Settings_SubtitleOutlineColor_Gray")),
+                new("white", AppStrings.Get("Settings_SubtitleColor_White")),
+            ],
+            "Settings_Outline_Title");
+        binder.Choose(SubtitleBackgroundRow, SubtitleBackgroundCombo, SettingKeys.SubtitleBackground,
+            [
+                new("none", AppStrings.Get("Settings_SubtitleBackground_None")),
+                new("soft", AppStrings.Get("Settings_SubtitleBackground_Soft")),
+                new("solid", AppStrings.Get("Settings_SubtitleBackground_Solid")),
+            ],
+            "Settings_SubtitleBackground_Title");
+        binder.Toggle(SubtitleOverrideRow, SubtitleOverrideToggle, SettingKeys.SubtitleOverrideStyled,
+            "Settings_SubtitleOverride_Title", "Settings_SubtitleOverride_Description");
+        AutomationProperties.SetName(SubtitleOutlineCombo, AppStrings.Get("Settings_SubtitleOutlineSize_Title"));
+        AutomationProperties.SetName(SubtitleOutlineColorCombo, AppStrings.Get("Settings_SubtitleOutlineColor_Title"));
+
+        PreviewText.Text = AppStrings.Get("Settings_SubtitlePreview_Text");
+        AutomationProperties.SetAccessibilityView(PreviewFrame, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+        binder.Track(UpdatePreview);
+
+        AutomationProperties.SetName(SubtitleColorCombo,AppStrings.Get("Settings_SubtitleColor_Title"));
         AutomationProperties.SetName(SubtitlePositionCombo, AppStrings.Get("Settings_SubtitlePosition_Title"));
         AutomationProperties.SetName(SubtitleFontCombo, AppStrings.Get("Settings_SubtitleFont_Title"));
         AutomationProperties.SetName(SubtitleSizeCombo, AppStrings.Get("Settings_SubtitleSize_Title"));
@@ -65,6 +100,25 @@ public sealed partial class SubtitlesPage : Page
                 SettingsSaver.Save();
             }
         };
+    }
+
+    // The preview follows the same maps as mpv, so what it shows is what the video gets. The outline is not drawn.
+    private void UpdatePreview()
+    {
+        AetherSettings s = App.Settings.Current;
+        PreviewText.FontFamily = new FontFamily(s.SubtitleFont);
+        PreviewText.FontWeight = s.SubtitleBold ? FontWeights.Bold : FontWeights.Normal;
+        PreviewText.FontSize = double.Parse(MpvSettingsMap.SubtitleFontSize(s.SubtitleSize), CultureInfo.InvariantCulture) * 0.4;
+        PreviewText.Foreground = new SolidColorBrush(ParseColour(MpvSettingsMap.SubtitleColor(s.SubtitleColor)));
+        PreviewBox.Background = new SolidColorBrush(ParseColour(MpvSettingsMap.SubtitleBackColor(s.SubtitleBackground)));
+    }
+
+    // "#RRGGBB" or "#AARRGGBB".
+    private static Windows.UI.Color ParseColour(string hex)
+    {
+        uint value = uint.Parse(hex.AsSpan(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        byte alpha = hex.Length == 9 ? (byte)(value >> 24) : (byte)255;
+        return Windows.UI.Color.FromArgb(alpha, (byte)(value >> 16), (byte)(value >> 8), (byte)value);
     }
 
     private static List<Choice> Languages()
