@@ -914,11 +914,11 @@
   <data name="Settings_About_CopyDiagnostics" xml:space="preserve">
     <value>Copy diagnostics</value>
   </data>
-  <data name="Settings_About_GitHub" xml:space="preserve">
-    <value>GitHub</value>
+  <data name="Settings_About_CardTagline" xml:space="preserve">
+    <value>Everything stays on this device.</value>
   </data>
-  <data name="Settings_About_GitHubDescription" xml:space="preserve">
-    <value>The author’s projects at github.com/rvyyv-n</value>
+  <data name="Settings_About_CardLink" xml:space="preserve">
+    <value>Source on GitHub · @rvyyv-n</value>
   </data>
   <data name="Settings_About_Licences" xml:space="preserve">
     <value>Licences</value>
