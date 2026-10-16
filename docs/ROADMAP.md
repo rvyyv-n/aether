@@ -183,6 +183,24 @@ Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
 
 ---
 
+### Pre-Pass 8: Polish From Hands-On Testing
+
+Notes from using the app. Items 8.1, 8.5 and 8.6 are design work (Opus asks questions and plans first, Sonnet builds); the rest are Sonnet fixes. Find the cause of 8.7 before changing anything, and fold it in with the stutter check in 7.10.
+
+| # | Task | Effort |
+|:---|:---|:---:|
+| P8.1 | Sidebar: give it the same blur and tint as the player bar, and make it small and out of the way (a compact floating card) instead of a strip running the full height of the window | M |
+| P8.2 | General settings page only has two settings (battery saver, open files in the running window). Decide what belongs there (for example start-up behaviour, language, remember window size and position, recent files, updates) and add it, or merge the page into another | S |
+| P8.3 | Settings list: a small stray shade or light patch fills the bottom corner of the selected row (and of an active setting). Find which layer draws it and clip it to the row's rounded shape | S |
+| P8.4 | Subtitle font picker does nothing: make the chosen font actually reach mpv (`sub-font`), then add more subtitle styling: size, colour, outline, background box, position and bold, with a live preview | M |
+| P8.5 | About page: replace the "the author's projects at github.com/rvyyv-n" row with a closing card like Rise's (app name and version, a line that everything stays on this device, "Source on GitHub · @rvyyv-n") so it no longer calls the user the author | S |
+| P8.6 | Onboarding tour: (a) card 2 runs off the bottom of the window and hides Next until the window is resized, so keep each card fully inside the window; (b) "Skip tour" is clipped at its edge; (c) the sidebar must not exist during the tour, so its slide-in no longer plays before the next card; (d) make the tour livelier, with cards that slide and fade between steps, a gentle pulse on the highlighted spot and a progress bar that animates, all off with reduced motion; (e) move the keyboard-keys card into open space (centred, not on top of the file list) | M |
+| P8.7 | Video stutters whenever the player bar (or any overlay) appears, resizes, grows or hides, and plays smoothly once it is gone. Suspect the card blur pass (about 0.5 ms a frame, ADR-0013) and layout changes forcing extra redraws of the swap chain during the fade. Measure dropped frames with the blur off and on, then fix: for example skip the blur while the card animates, animate with transform/opacity only (no resize), or lower the blur cost | M |
+
+**Pre-Pass 8 means:** The sidebar stays out of the way, settings pages are complete and clean, the subtitle font works, the About page ends on a proper card, the tour reads well at any window size, and the video stays smooth while the bar moves.
+
+---
+
 ### Pass 8: Picture in Picture
 
 Mockups: screens 8.3–8.4.
