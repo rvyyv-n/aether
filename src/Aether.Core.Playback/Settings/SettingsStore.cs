@@ -115,10 +115,12 @@ public sealed class SettingsStore(ISettingsStorage storage)
     public void ResetAll()
     {
         AetherSettings before;
-        AetherSettings after = new();
+        AetherSettings after;
         lock (_gate)
         {
             before = _current;
+            // Not a preference: resetting must not replay the first-run tour.
+            after = new AetherSettings { TourSeen = before.TourSeen };
             _current = after;
         }
         RaiseDifferences(before, after);
@@ -225,6 +227,11 @@ public sealed class SettingsStore(ISettingsStorage storage)
                 {
                     result = definition.TryRead(result, property.Value) ?? result;
                 }
+            }
+            // A file saved before the tour existed belongs to someone who already knows the app.
+            if (!document.RootElement.TryGetProperty(SettingKeys.TourSeen, out _))
+            {
+                result = result with { TourSeen = true };
             }
         }
         catch (JsonException)

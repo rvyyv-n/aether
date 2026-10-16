@@ -8,6 +8,12 @@ namespace Aether.Core.Tests;
 
 public class FirstRunTourTests
 {
+    private sealed class NullStorage : ISettingsStorage
+    {
+        public string? Read() => null;
+        public void Write(string content) { }
+    }
+
     [Fact]
     public void Steps_RunInTheSpecOrder()
     {
@@ -124,6 +130,27 @@ public class FirstRunTourTests
     {
         Assert.False(new AetherSettings().TourSeen);
         Assert.Contains(SettingKeys.TourSeen, SettingDefinitions.Keys);
+    }
+
+    [Fact]
+    public void SettingsFileFromBeforeTheTour_CountsAsSeen()
+    {
+        Assert.True(SettingsStore.Parse("{ \"version\": 1 }").TourSeen);
+    }
+
+    [Fact]
+    public void NoSettingsFile_StillShowsTheTour()
+    {
+        Assert.False(SettingsStore.Parse(null).TourSeen);
+    }
+
+    [Fact]
+    public void ResetAll_KeepsTheTourSeen()
+    {
+        var store = new SettingsStore(new NullStorage());
+        store.Set(SettingKeys.TourSeen, true);
+        store.ResetAll();
+        Assert.True(store.Current.TourSeen);
     }
 }
 
