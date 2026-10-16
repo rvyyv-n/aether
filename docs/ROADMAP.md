@@ -250,8 +250,14 @@ Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for st
 | 9.3 | Empty-state hint switches to "Drop a file, paste a link or press Ctrl+O"; recents store links with their title — **Done** (empty-state subtitle updated, Ctrl+V pastes and resolves links directly on home screen, recents store web URLs with video title & duration) | S |
 | 9.4 | Clip and frame export from a streamed link, or a clear "save the file first" message — **Done** (clip export blocked for stream sources with neutral toast "Save the file first to export clips"; frame copy Ctrl+C and save Ctrl+Shift+S work via mpv screenshot) | S |
 | 9.5 | Tests for link resolving, failure mapping and the dialog flow — **Done** (unit tests for YtDlpArgumentsBuilder, YtDlpErrorClassifier, and YtDlpStreamResolver; all 1066 core tests pass) | S |
+| 9.6 | Chapter marks on the seek bar for links that have chapters (title on hover) and Next/Previous chapter keys. Opus designs the marks, Sonnet builds | S |
+| 9.7 | Optional chapter auto-skip: a setting (off by default) with a list of chapter names to skip, such as Sponsor, Intro and Outro, and a small toast when one is skipped | S |
+| 9.8 | Quality picker for links (resolution and format, remembered), using the formats yt-dlp already reports | S |
+| 9.9 | Remember the playback position per link and offer to resume; use YouTube's own subtitle tracks through yt-dlp | S |
 
-**Pass 9 means:** Paste a YouTube or other supported link and watch it with the same controls as a local file.
+**Pass 9 means:** Paste a YouTube or other supported link and watch it with the same controls as a local file, with chapters, a quality choice and resume.
+
+SponsorBlock and other online skip lists are parked (see Parked): they need an outgoing network call and a privacy decision.
 
 ---
 
@@ -264,8 +270,12 @@ Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for st
 | 10.3 | Optional size limit for a clip, progress, cancel and cleanup of partial files | M |
 | 10.4 | Tests for encoder selection, fallback and cancel | S |
 | 10.5 | Keyframe markers on the In and Out points in Fast mode, showing where a lossless cut will really land | S |
+| 10.6 | Video filters in the Video panel: colour-grading presets and LUT looks, sharpen and grain, all applied live to playback. Opus designs the panel and presets, Sonnet builds on `VideoAdjustments` | M |
+| 10.7 | Denoise (mpv `hqdn3d`): Off, Light, Medium, Strong. Off by default and meant for machines with a dedicated GPU; check dropped frames with it on before shipping | S |
+| 10.8 | Option in the clip drawer to bake the chosen filters and denoise into the exported clip (Precise mode only, since a fast cut can't change the picture) | M |
+| 10.9 | Tests for filter settings, the export filter chain and the Fast-mode fallback message | S |
 
-**Pass 10 means:** Clips can start and end on any frame, not just keyframes, and can be sized to fit a limit.
+**Pass 10 means:** Clips can start and end on any frame, not just keyframes, and can be sized to fit a limit. Playback can be colour graded and denoised, and the clip export can include the same look.
 
 ---
 
@@ -288,6 +298,7 @@ Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for st
 
 ### Parked
 
+- **SponsorBlock auto-skip:** needs a lookup to sponsor.ajay.app, which conflicts with "everything stays on this device". If built later: opt-in, off by default, credited on the About card and in `THIRD_PARTY.md`.
 - **Hover rail (screen 6):** now task 7.21 in Pass 7. Clips and Stream also stay in the right-click menu and shortcuts.
 - **GPU timing row in Diagnostics:** libmpv doesn't expose it. Would need our own D3D11 timestamp queries.
 - **10-bit HDR swap chain output** (`R10G10B10A2_UNORM`): after v1. Playback tone-maps to 8-bit today.
