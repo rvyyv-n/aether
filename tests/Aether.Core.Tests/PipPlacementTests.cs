@@ -26,14 +26,13 @@ public class PipPlacementTests
     }
 
     [Fact]
-    public void PictureSize_NineToSixteen_KeepsDefaultAreaAndAspect()
+    public void PictureSize_NineToSixteen_KeepsAspectAndGrowsToMinimumWidth()
     {
-        // 9:16 portrait video should keep the same area (400*225 = 90000) and 9:16 aspect.
-        // NOTE: If production PipPlacement enforces MinWidth (256) on portrait width, it grows to 256x455.11 (area 116508.44).
+        // The default area would make a portrait window narrower than the minimum width, so it grows.
         (double width, double height) = PipPlacement.PictureSize(9.0 / 16.0);
 
         Assert.Equal(9.0 / 16.0, width / height, 0.001);
-        Assert.Equal(400.0 * 225.0, width * height, 0.01);
+        Assert.Equal(PipPlacement.MinWidth, width, 0.01);
     }
 
     [Fact]
