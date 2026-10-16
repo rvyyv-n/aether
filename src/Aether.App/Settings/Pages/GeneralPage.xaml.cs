@@ -13,6 +13,8 @@ public sealed partial class GeneralPage : Page
         var binder = new SettingsPageBinder(this);
         binder.Toggle(BatterySaverRow, BatterySaverToggle, SettingKeys.BatterySaver, "Settings_BatterySaver_Title", "Settings_BatterySaver_Description");
         binder.Toggle(OpenInRunningWindowRow, OpenInRunningWindowToggle, SettingKeys.OpenInRunningWindow, "Settings_SingleInstance_Title", "Settings_SingleInstance_Description");
+        binder.Toggle(RememberWindowSizeRow, RememberWindowSizeToggle, SettingKeys.RememberWindowSize, "Settings_RememberWindowSize_Title", "Settings_RememberWindowSize_Description");
+        binder.Toggle(AlwaysOnTopRow, AlwaysOnTopToggle, SettingKeys.AlwaysOnTop, "Settings_AlwaysOnTop_Title", "Settings_AlwaysOnTop_Description");
 
         SettingsPageBinder.Describe(ClearRecentsRow, "Settings_ClearRecents_Title", "Settings_ClearRecents_Description");
         SettingsPageBinder.Describe(ClearResumeRow, "Settings_ClearResume_Title", "Settings_ClearResume_Description");

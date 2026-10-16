@@ -214,7 +214,7 @@ Notes from using the app. Items 8.1, 8.5 and 8.6 are design work (Opus asks ques
 | # | Task | Effort |
 |:---|:---|:---:|
 | P8.1 | Sidebar: give it the same blur and tint as the player bar, and make it small and out of the way (a compact floating card) instead of a strip running the full height of the window — **Done** (build and tests pass; checked on screen by the owner) | M |
-| P8.2 | General settings page only has two settings (battery saver, open files in the running window). Decide what belongs there (for example start-up behaviour, language, remember window size and position, recent files, updates) and add it, or merge the page into another | S |
+| P8.2 | General settings page only has two settings (battery saver, open files in the running window). Decide what belongs there (for example start-up behaviour, language, remember window size and position, recent files, updates) and add it, or merge the page into another — **Done** (window size and always-on-top moved here from Playback; build pending owner check) | S |
 | P8.3 | Settings list: a small stray shade or light patch fills the bottom corner of the selected row (and of an active setting). Find which layer draws it and clip it to the row's rounded shape | S | **Done** (owner confirmed)
 | P8.4 | Subtitle font picker does nothing: make the chosen font actually reach mpv (`sub-font`), then add more subtitle styling: size, colour, outline, background box, position and bold, with a live preview | M |
 | P8.5 | About page: replace the "the author's projects at github.com/rvyyv-n" row with a closing card like Rise's (app name and version, a line that everything stays on this device, "Source on GitHub · @rvyyv-n") so it no longer calls the user the author | S |

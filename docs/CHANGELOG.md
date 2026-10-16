@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Settings › General now holds the window settings (remember window size, always on top) next to battery saver and history, instead of leaving them on the Playback page.
+
 ### Added
 - First-run tour: on the first launch Aether lights up its real controls one at a time (opening a video, the bar, the side rail, the right-click menu, the keys and the gear) with a short note beside each; skip it at any time, or see it again from Settings › About.
 - Settings › About now has a GitHub row that opens the author's page (github.com/rvyyv-n) in the browser.
