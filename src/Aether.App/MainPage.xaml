@@ -966,21 +966,19 @@
                                     Opened="OnMoreMenuOpened"
                                     Placement="TopEdgeAlignedRight">
                                     <MenuFlyoutItem
-                                        x:Name="MoreBackFrameItem"
-                                        Click="OnBackFrameClick"
-                                        KeyboardAcceleratorTextOverride=","
+                                        x:Name="MoreAudioItem"
+                                        Click="OnTracksMenuClick"
                                         Style="{StaticResource AetherMenuItemStyle}">
                                         <MenuFlyoutItem.Icon>
-                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE892;" />
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE767;" />
                                         </MenuFlyoutItem.Icon>
                                     </MenuFlyoutItem>
                                     <MenuFlyoutItem
-                                        x:Name="MoreForwardFrameItem"
-                                        Click="OnForwardFrameClick"
-                                        KeyboardAcceleratorTextOverride="."
+                                        x:Name="MoreSubtitlesItem"
+                                        Click="OnTracksMenuClick"
                                         Style="{StaticResource AetherMenuItemStyle}">
                                         <MenuFlyoutItem.Icon>
-                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE893;" />
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE7F0;" />
                                         </MenuFlyoutItem.Icon>
                                     </MenuFlyoutItem>
                                     <ToggleMenuFlyoutItem
@@ -999,6 +997,15 @@
                                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE718;" />
                                         </ToggleMenuFlyoutItem.Icon>
                                     </ToggleMenuFlyoutItem>
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem
+                                        x:Name="MoreSettingsItem"
+                                        Click="OnSettingsMenuClick"
+                                        Style="{StaticResource AetherMenuItemStyle}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE713;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
                         </Button>

@@ -94,8 +94,9 @@ public sealed partial class MainPage
         AutomationProperties.SetName(SeekBar, AppStrings.Get("Transport_Seek"));
         Label(MoreButton, "Transport_MoreControls");
         ToolTipService.SetToolTip(SpeedButton, AppStrings.Get("Transport_Speed"));
-        MoreBackFrameItem.Text = AppStrings.Get("Menu_Back1Frame");
-        MoreForwardFrameItem.Text = AppStrings.Get("Menu_Forward1Frame");
+        MoreAudioItem.Text = AppStrings.Get("Menu_Audio");
+        MoreSubtitlesItem.Text = AppStrings.Get("Menu_Subtitles");
+        MoreSettingsItem.Text = AppStrings.Get("Menu_Settings");
         MoreLoopItem.Text = AppStrings.Get("Menu_Loop");
         MoreAlwaysOnTopItem.Text = AppStrings.Get("Menu_AlwaysOnTop");
     }
@@ -151,18 +152,6 @@ public sealed partial class MainPage
 
     private void OnForwardLongAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
         OnTransportKey(args, () => SkipBy(TransportState.LongSkipSeconds));
-
-    private void OnBackFrameClick(object sender, RoutedEventArgs e) => StepFrame(FrameStepDirection.Backward);
-
-    private void OnForwardFrameClick(object sender, RoutedEventArgs e) => StepFrame(FrameStepDirection.Forward);
-
-    private void StepFrame(FrameStepDirection direction)
-    {
-        if (_session is { } session && HasVideo)
-        {
-            session.StepFrame(direction);
-        }
-    }
 
     /// <summary>Playback keys do nothing without a video, and leave the Open URL field and settings their keys.</summary>
     private void OnTransportKey(KeyboardAcceleratorInvokedEventArgs args, Action action)
@@ -247,6 +236,8 @@ public sealed partial class MainPage
     private void OnMoreMenuOpened(object sender, object e)
     {
         MoreButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        // The tracks flyout has nothing to list without a file, as in the right-click menu.
+        MoreAudioItem.IsEnabled = MoreSubtitlesItem.IsEnabled = HasVideo;
         HoldForMenu(true);
     }
 
@@ -254,6 +245,7 @@ public sealed partial class MainPage
     {
         MoreButton.ClearValue(BackgroundProperty);
         HoldForMenu(false);
+        ShowTracksIfRequested();
     }
 
     private void HoldForMenu(bool open)
@@ -262,7 +254,7 @@ public sealed partial class MainPage
         ApplyChrome();
     }
 
-    /// <summary>Below a 560 px card (5.7), frame step, loop and always on top move into More controls; the slim pill hides them anyway.</summary>
+    /// <summary>Below a 560 px card (5.7), the tracks, loop, always on top and settings live in More controls; the slim pill hides them anyway.</summary>
     private void OnOsdSizeChanged(object sender, SizeChangedEventArgs e) => RefreshTourLayout(); // the tour can light the growing bar
 
     // Loop and Always on top: the buttons and their More items follow the state, whoever changed it.
