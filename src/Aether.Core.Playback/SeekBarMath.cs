@@ -21,4 +21,34 @@ public static class SeekBarMath
     /// </summary>
     public static double CentreWithin(double centre, double size, double min, double max) =>
         max - min <= size ? min : Math.Clamp(centre - size / 2, min, max - size);
+
+    /// <summary>
+    /// The pieces of a bar <paramref name="width"/> wide once a <paramref name="gap"/>-wide cut is made at each chapter
+    /// start (sorted 0..1 <paramref name="fractions"/>). A start closer than <paramref name="minSpacing"/> to the last cut
+    /// or to either end gets no cut, so many short chapters never shred the bar into slivers.
+    /// </summary>
+    public static IReadOnlyList<(double Start, double End)> ChapterSegments(
+        IReadOnlyList<double> fractions, double width, double gap, double minSpacing)
+    {
+        if (!(width > 0))
+        {
+            return [];
+        }
+        var segments = new List<(double, double)>();
+        double start = 0;
+        double lastCut = 0;
+        foreach (double fraction in fractions)
+        {
+            double x = fraction * width;
+            if (!double.IsFinite(x) || x - lastCut < minSpacing || width - x < minSpacing)
+            {
+                continue;
+            }
+            segments.Add((start, x - gap / 2));
+            start = x + gap / 2;
+            lastCut = x;
+        }
+        segments.Add((start, width));
+        return segments;
+    }
 }

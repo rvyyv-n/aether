@@ -8,8 +8,9 @@
     <!--
         Seek row bar (screen 5): the whole 32 px row is the hit area, the 4 px track is centred in it.
         Back to front: in/out band (20 px, FillRange, radius 4), track (ProgressTrack 12%), buffered
-        (FillRange 20%), played (white), in/out ticks (2×24 white), pointer line (1×16 TextSecondary),
-        thumb (12 white with a black 20% ring, 16 while dragging). Positions are set from code.
+        (FillRange 20%), played (white), all three cut by a 2 px gap where a chapter starts (9.6), in/out
+        ticks (2×24 white), pointer line (1×16 TextSecondary), thumb (12 white with a black 20% ring, 16
+        while dragging). Positions are set from code.
     -->
     <Grid
         x:Name="Root"
@@ -31,25 +32,8 @@
                 Background="{StaticResource AetherFillRangeBrush}"
                 CornerRadius="{StaticResource AetherControlCornerRadius}"
                 Visibility="Collapsed" />
-            <Border
-                x:Name="Track"
-                Canvas.Top="14"
-                Height="4"
-                Background="{StaticResource AetherFillProgressTrackBrush}"
-                CornerRadius="2" />
-            <Border
-                x:Name="Buffered"
-                Canvas.Top="14"
-                Height="4"
-                Background="{StaticResource AetherFillRangeBrush}"
-                CornerRadius="2"
-                Visibility="Collapsed" />
-            <Border
-                x:Name="Played"
-                Canvas.Top="14"
-                Height="4"
-                Background="{StaticResource AetherTextPrimaryBrush}"
-                CornerRadius="2" />
+            <!--  Track, buffered and played, one set per chapter piece (9.6); built in code  -->
+            <Canvas x:Name="Pieces" Canvas.Top="14" />
             <Rectangle
                 x:Name="InTick"
                 Canvas.Top="4"
@@ -82,9 +66,9 @@
         </Canvas>
 
         <!--
-            Time bubble, 16 above the pill (BubbleLift is measured from the bar's top). Solid dialog
-            fallback: in-app Acrylic would not sample the swap chain under it (ADR-0013). Padding 4,8
-            less the hairline.
+            Time bubble, with the chapter's name above the time when it has one, 16 above the pill
+            (BubbleLift is measured from the bar's top). Solid dialog fallback: in-app Acrylic would not
+            sample the swap chain under it (ADR-0013). Padding 4,8 less the hairline.
         -->
         <Popup
             x:Name="BubblePopup"
@@ -100,7 +84,18 @@
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherControlCornerRadius}"
                 IsHitTestVisible="False">
-                <TextBlock x:Name="BubbleText" Style="{StaticResource AetherTimecodeTextStyle}" />
+                <StackPanel>
+                    <TextBlock
+                        x:Name="ChapterText"
+                        MaxWidth="240"
+                        HorizontalAlignment="Center"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        Visibility="Collapsed" />
+                    <TextBlock
+                        x:Name="BubbleText"
+                        HorizontalAlignment="Center"
+                        Style="{StaticResource AetherTimecodeTextStyle}" />
+                </StackPanel>
             </Border>
         </Popup>
     </Grid>

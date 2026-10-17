@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Recents integration: remote streams saved in recent history with extracted video titles, durations, and original URLs.
   - Remote stream clipping guard: lossless clip export displays neutral toast "Save the file first to export clips" while frame copy (`Ctrl+C`) and frame save (`Ctrl+Shift+S`) continue working via mpv screenshot.
   - Engine restart carry-over: preserves `OriginalWebLink` across engine re-initialization and settings changes.
+  - Chapter marks: the seek bar shows small gaps where chapters start and the hover bubble names the chapter; `Page Down` / `Page Up` jump to the next / previous chapter (changeable on the Shortcuts page), for links and files with chapters.
   - Chapter auto-skip (off by default): Settings › Playback skips chapters whose names match a list (Sponsor, Intro, Outro to start), whole words only, once per video and never after you seek into one yourself, with a "Skipped … · Back" toast.
 - Playback & high-refresh display pacing: bypassed forced display-fps-override on high-refresh displays (>60 Hz), restoring native presentation timing ("0") to prevent GPU 3D engine starvation under display-resample and spline36 on high-refresh displays (120/144/180 Hz).
 - Playback performance: software decoding fallback under auto-safe now retains full frame readahead queue (fix R2); XAML layout updates and string allocations for clock and seek bar gated while controls are hidden (fix R3).

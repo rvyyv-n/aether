@@ -18,7 +18,7 @@ public sealed partial class MainPage
     /// <summary>Forgets the last file's chapters; the new ones load once the file plays.</summary>
     private void ResetChapters(IReadOnlyList<StreamChapter>? linkChapters)
     {
-        _chapters = ChapterList.Empty;
+        ShowChapters(ChapterList.Empty);
         _linkChapters = linkChapters;
         _chaptersPending = true;
     }
@@ -32,7 +32,7 @@ public sealed partial class MainPage
         _chaptersPending = false;
         if (_linkChapters is { } linkChapters)
         {
-            _chapters = ChapterList.Create(linkChapters.Select(c => (c.Start, c.Title)));
+            ShowChapters(ChapterList.Create(linkChapters.Select(c => (c.Start, c.Title))));
             return;
         }
         string? path = _currentPath;
@@ -52,17 +52,24 @@ public sealed partial class MainPage
             {
                 if (_session == session && _currentPath == path)
                 {
-                    _chapters = chapters;
+                    ShowChapters(chapters);
                 }
             });
         });
+    }
+
+    /// <summary>Keeps the seek bar's chapter marks in step with the chapters the keys and auto-skip use.</summary>
+    private void ShowChapters(ChapterList chapters)
+    {
+        _chapters = chapters;
+        SeekBar.Chapters = chapters;
     }
 
     private void OnNextChapterAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         if (_chapters.Count > 0 && _session?.ViewModel.Position is { } position && _chapters.NextStart(position) is { } target)
         {
-            OnTransportKey(args, () => SeekToChapter(target));
+            OnTransportKey(args, () => UserSeekToChapter(target));
         }
     }
 
@@ -70,8 +77,15 @@ public sealed partial class MainPage
     {
         if (_chapters.Count > 0 && _session?.ViewModel.Position is { } position)
         {
-            OnTransportKey(args, () => SeekToChapter(_chapters.PreviousStart(position)));
+            OnTransportKey(args, () => UserSeekToChapter(_chapters.PreviousStart(position)));
         }
+    }
+
+    // Jumping into a chapter on purpose must not be undone by auto-skip.
+    private void UserSeekToChapter(double target)
+    {
+        _chapterSkipper.OnUserSeek(target);
+        SeekToChapter(target);
     }
 
     private void SeekToChapter(double target)
