@@ -368,6 +368,12 @@
   <data name="Transport_QualityDefaultFromSettings" xml:space="preserve">
     <value>Default from Settings</value>
   </data>
+  <data name="Transport_QualityAudioOnly" xml:space="preserve">
+    <value>Audio only</value>
+  </data>
+  <data name="Transport_SkipChapter" xml:space="preserve">
+    <value>Skip {0}</value>
+  </data>
 
   
   <data name="Rail_Player" xml:space="preserve">
@@ -1258,6 +1264,9 @@
   </data>
   <data name="Toast_ChapterSkipBack" xml:space="preserve">
     <value>Back</value>
+  </data>
+  <data name="Toast_QualitySwitchFailed" xml:space="preserve">
+    <value>Couldn’t switch quality</value>
   </data>
   <data name="Toast_ResumedAt" xml:space="preserve">
     <value>Resumed at {0}</value>

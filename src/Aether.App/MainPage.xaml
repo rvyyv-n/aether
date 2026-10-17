@@ -868,6 +868,23 @@
                                     Placement="TopEdgeAlignedLeft" />
                             </FlyoutBase.AttachedFlyout>
                         </Button>
+                        <!--  Links only (9.8): names the size playing, like Speed names the speed; its menu lists the link's sizes.  -->
+                        <Button
+                            x:Name="QualityButton"
+                            Click="OnQualityClick"
+                            Content="Auto"
+                            Style="{StaticResource AetherSpeedPillButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed">
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout
+                                    x:Name="QualityMenu"
+                                    Closed="OnQualityMenuClosed"
+                                    MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    Opened="OnQualityMenuOpened"
+                                    Placement="TopEdgeAlignedLeft" />
+                            </FlyoutBase.AttachedFlyout>
+                        </Button>
                     </StackPanel>
 
                     <!--  Skip 5 s is Segoe Fluent's circular arrow with a "5" set inside it; the numbered Fluent skip glyphs only come as 10 and 30.  -->
@@ -1081,6 +1098,43 @@
                 </Grid>
             </Grid>
         </Border>
+
+        <!--
+            Skip chapter (9.7): a prompt while a chapter to skip plays and auto-skip is off. Bottom right, 16 in from the
+            edge like the other layers, clear of the sidebar card (top left); the page keeps its bottom in step with the
+            toasts' and lifts it over a toast it would touch. The bar's tint and hairline, as a 36 px pill.
+        -->
+        <Grid
+            x:Name="SkipChapterLayer"
+            Margin="16,0,16,24"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            PointerCanceled="OnSkipChapterPointerExited"
+            PointerEntered="OnSkipChapterPointerEntered"
+            PointerExited="OnSkipChapterPointerExited"
+            Visibility="Collapsed">
+            <Button
+                x:Name="SkipChapterButton"
+                Height="{StaticResource AetherSizeTransportButton}"
+                Padding="12,0,14,0"
+                Background="{StaticResource AetherSurfaceOsdBrush}"
+                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                Click="OnSkipChapterClick"
+                Style="{StaticResource AetherOutlinePillButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon
+                        VerticalAlignment="Center"
+                        FontSize="{StaticResource AetherSizeIcon}"
+                        Glyph="&#xE893;" />
+                    <TextBlock
+                        x:Name="SkipChapterText"
+                        MaxWidth="220"
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Button>
+        </Grid>
 
         <!--
             Toasts (screen 10): bottom centre, min(360, window - 32) wide. The margin below follows the controls

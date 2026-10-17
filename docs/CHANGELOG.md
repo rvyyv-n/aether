@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Recents integration: remote streams saved in recent history with extracted video titles, durations, and original URLs.
   - Remote stream clipping guard: lossless clip export displays neutral toast "Save the file first to export clips" while frame copy (`Ctrl+C`) and frame save (`Ctrl+Shift+S`) continue working via mpv screenshot.
   - Engine restart carry-over: preserves `OriginalWebLink` across engine re-initialization and settings changes.
+  - Quality picker: a button on the pill (links only) lists Auto, each size the video offers and Audio only; your pick is remembered for future links and switches the video in place at the same moment.
+  - Skip button: with chapter auto-skip off, a discreet "Skip Sponsor" button shows for the first seconds of a matching chapter.
   - Resume: a "Resumed at 12:34" toast with Start over when a file or link picks up where you left it; links are remembered by page address, so the saved place survives expiring stream addresses.
   - YouTube subtitles: a link's own subtitle tracks (and automatic captions in your preferred language, labelled "(auto)") appear in the tracks flyout and use your caption font and size.
   - YouTube links now play with their sound (the separate audio stream is passed to the player).

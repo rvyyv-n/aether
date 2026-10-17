@@ -134,4 +134,40 @@ public class QualityOptionsTests
         Assert.Equal("", new AetherSettings().StreamQualityChoice);
         Assert.Equal("streaming.qualityChoice", SettingKeys.StreamQualityChoice);
     }
+
+    [Theory]
+    [InlineData(null, "auto")]
+    [InlineData("", "auto")]
+    [InlineData("auto", "auto")]
+    [InlineData("nonsense", "auto")]
+    [InlineData("h720", "h720")]
+    [InlineData("h1080f60", "h1080f60")]
+    [InlineData("audio", "audio")]
+    public void ForKey_RebuildsTheRememberedOption(string? key, string expected)
+    {
+        Assert.Equal(expected, QualityOptions.ForKey(key).Key);
+    }
+
+    [Fact]
+    public void ForKey_SelectorMatchesTheListedOption()
+    {
+        var listed = QualityOptions.From([Video(1080, 60), Video(720)]);
+
+        Assert.Equal(listed[1].FormatSelector(), QualityOptions.ForKey("h1080f60").FormatSelector());
+        Assert.Equal(listed[2].FormatSelector(), QualityOptions.ForKey("h720").FormatSelector());
+        Assert.Equal("Audio only", QualityOptions.ForKey("audio").Label);
+    }
+
+    [Fact]
+    public void FirstResolveSelector_AutoLeavesTheStreamingSetting()
+    {
+        Assert.Null(QualityOptions.FirstResolveSelector("", "bv*+ba/b"));
+        Assert.Null(QualityOptions.FirstResolveSelector("auto", "bv*+ba/b"));
+    }
+
+    [Fact]
+    public void FirstResolveSelector_FallsBackToTheStreamingSettingWhenNothingIsThatSmall()
+    {
+        Assert.Equal("bv*[height<=480]+ba/b[height<=480]/bv*+ba/b", QualityOptions.FirstResolveSelector("h480", "bv*+ba/b"));
+    }
 }

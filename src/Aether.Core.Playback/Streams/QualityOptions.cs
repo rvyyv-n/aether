@@ -38,6 +38,8 @@ public static class QualityOptions
 
     public static QualityOption Auto { get; } = new(QualityOption.AutoKey, "Auto", 0, false, false);
 
+    public static QualityOption AudioOnly { get; } = new(QualityOption.AudioKey, "Audio only", 0, false, true);
+
     /// <summary>Auto, then each distinct resolution highest first, then Audio only when the stream has an audio-only format.</summary>
     public static IReadOnlyList<QualityOption> From(IReadOnlyList<StreamFormat>? formats)
     {
@@ -67,7 +69,7 @@ public static class QualityOptions
         }
         if (hasAudioOnly)
         {
-            options.Add(new QualityOption(QualityOption.AudioKey, "Audio only", 0, false, true));
+            options.Add(AudioOnly);
         }
         return options;
     }
@@ -99,6 +101,27 @@ public static class QualityOptions
             ?? video.Where(o => o.Height < height).OrderByDescending(o => o.Height).ThenByDescending(o => o.HighFps == highFps).FirstOrDefault()
             ?? fallback;
     }
+
+    /// <summary>
+    /// The option a remembered key stands for before the link's sizes are known, so the first resolve can already ask
+    /// for it: its selector falls back to the nearest lower size by itself. Auto for an empty or unreadable key.
+    /// </summary>
+    public static QualityOption ForKey(string? savedKey)
+    {
+        if (savedKey == QualityOption.AudioKey)
+        {
+            return AudioOnly;
+        }
+        return savedKey is not null && TryParseKey(savedKey, out int height, out bool highFps) ? ForResolution(height, highFps) : Auto;
+    }
+
+    /// <summary>
+    /// The yt-dlp selector for a link's first resolve under a remembered key: the key's own, then
+    /// <paramref name="streamingSelector"/> (the Streaming quality setting's) for a link with nothing that small, which
+    /// <see cref="Resolve"/> shows as Auto. Null for Auto.
+    /// </summary>
+    public static string? FirstResolveSelector(string? savedKey, string streamingSelector) =>
+        ForKey(savedKey).FormatSelector() is { } own ? $"{own}/{streamingSelector}" : null;
 
     private static QualityOption ForResolution(int height, bool highFps)
     {

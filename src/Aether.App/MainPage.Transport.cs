@@ -37,7 +37,7 @@ public sealed partial class MainPage
         ShowSpeed(PlaybackSpeed.Normal);
         foreach (Button button in new[]
         {
-            OpenButton, SpeedButton, BackButton, PlayPauseButton, ForwardButton,
+            OpenButton, SpeedButton, QualityButton, BackButton, PlayPauseButton, ForwardButton,
             VolumeButton, MoreButton, FullScreenButton,
         })
         {
@@ -94,6 +94,7 @@ public sealed partial class MainPage
         AutomationProperties.SetName(SeekBar, AppStrings.Get("Transport_Seek"));
         Label(MoreButton, "Transport_MoreControls");
         ToolTipService.SetToolTip(SpeedButton, AppStrings.Get("Transport_Speed"));
+        ToolTipService.SetToolTip(QualityButton, AppStrings.Get("Transport_Quality"));
         MoreAudioItem.Text = AppStrings.Get("Menu_Audio");
         MoreSubtitlesItem.Text = AppStrings.Get("Menu_Subtitles");
         MoreSettingsItem.Text = AppStrings.Get("Menu_Settings");

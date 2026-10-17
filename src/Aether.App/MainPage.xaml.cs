@@ -120,7 +120,11 @@ public sealed partial class MainPage : Page
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         LayoutUpdated += (_, _) => PostBackdropRegion();
-        SizeChanged += (_, _) => PlaceRail();
+        SizeChanged += (_, _) =>
+        {
+            PlaceRail();
+            UpdateToastPlacement();
+        };
         VideoSurface.CompositionScaleChanged += (_, _) => PostBackdropRegion();
         VideoSurface.PlayerReady += (_, _) => OpenPending();
     }
@@ -241,6 +245,10 @@ public sealed partial class MainPage : Page
             _copiedTimer.Tick += OnCopiedTimerTick;
             _toasts = new ToastService(ToastCard, ToastLayer, _fader, DispatcherQueue, () => Focus(FocusState.Programmatic));
             ClipLayer.SizeChanged += (_, _) => UpdateToastPlacement();
+            // The Skip button steps over a toast it would touch, so it follows the toast coming and going.
+            ToastLayer.RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => UpdateToastPlacement());
+            ToastLayer.SizeChanged += (_, _) => UpdateToastPlacement();
+            SkipChapterLayer.SizeChanged += (_, _) => UpdateToastPlacement();
         }
         AppToasts.Requested += OnToastRequested;
         if (_session is null)
@@ -281,9 +289,10 @@ public sealed partial class MainPage : Page
     }
 
     /// <summary>What a resolved link brings to <see cref="Open"/> beyond the stream address.</summary>
+    /// <param name="Qualities">The sizes the quality picker lists; <paramref name="Quality"/> is the one playing.</param>
     private sealed record OpenedLink(
         string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl, IReadOnlyList<StreamChapter>? Chapters,
-        IReadOnlyList<StreamSubtitle>? Subtitles);
+        IReadOnlyList<StreamSubtitle>? Subtitles, IReadOnlyList<QualityOption> Qualities, QualityOption Quality);
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
     private sealed record PlaybackCarryOver(
@@ -465,6 +474,7 @@ public sealed partial class MainPage : Page
         _streamTitle = link?.Title;
         ResetChapters(link?.Chapters);
         ResetLinkSubtitles(link?.Subtitles, carry);
+        ResetQuality(link);
         // A restart carries the position over by itself; only a saved position is worth announcing.
         ResetResumeOffer(carry is null ? startAt : null, resumeKey);
         string headerFields = link?.HttpHeaders is { Count: > 0 } headers
@@ -574,6 +584,7 @@ public sealed partial class MainPage : Page
                 LoadChaptersOnceLoaded();
                 AddLinkSubtitlesOnceLoaded();
                 ShowResumeOfferOnceLoaded();
+                EndQualitySwitchOnceLoaded();
                 Render();
                 break;
             case nameof(PlayerViewModel.IsPaused):
@@ -1173,6 +1184,7 @@ public sealed partial class MainPage : Page
         }
 
         EndTour();
+        CancelQualitySwitch();
         _streamResolutionCts?.Cancel();
         var cts = new CancellationTokenSource();
         _streamResolutionCts = cts;
@@ -1185,13 +1197,9 @@ public sealed partial class MainPage : Page
         ArmOpenUrlTimer();
         Render();
 
-        string? ytDlpPath = ExternalTools.FindYtDlp();
-        var options = new StreamResolutionOptions(
-            YtDlpPath: ytDlpPath,
-            StreamingQuality: App.Settings.Current.StreamingQuality,
-            PreferGpuDecodableFormats: App.Settings.Current.PreferGpuDecodableFormats,
-            HttpProxy: string.IsNullOrWhiteSpace(App.Settings.Current.HttpProxy) ? null : App.Settings.Current.HttpProxy,
-            Timeout: TimeSpan.FromSeconds(30));
+        // A remembered size is asked for from the start; yt-dlp lists every size whatever was asked for.
+        string savedQuality = App.Settings.Current.StreamQualityChoice;
+        StreamResolutionOptions options = StreamOptions(RememberedQualitySelector());
 
         try
         {
@@ -1205,7 +1213,10 @@ public sealed partial class MainPage : Page
             ArmOpenUrlTimer();
 
             string displayName = string.IsNullOrWhiteSpace(resolved.Title) ? WebLink.Host(link) ?? link : resolved.Title;
-            Open(resolved.StreamUrl, carry, new OpenedLink(link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters, resolved.Subtitles));
+            IReadOnlyList<QualityOption> qualities = QualityOptions.From(resolved.Formats);
+            Open(resolved.StreamUrl, carry, new OpenedLink(
+                link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters, resolved.Subtitles,
+                qualities, QualityOptions.Resolve(savedQuality, qualities)));
 
             _ = Task.Run(() =>
             {
@@ -1593,6 +1604,7 @@ public sealed partial class MainPage : Page
         UpdateToastPlacement();
         // Toasts wait for the full window: in the overlay they would cover most of the picture.
         _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog | ChromeHolds.Tour)) != 0 || IsPictureInPicture);
+        SyncSkipChapter();
 
         if (_chromeTimer is null)
         {
@@ -1616,6 +1628,7 @@ public sealed partial class MainPage : Page
         bool controls = _chrome.IsVisible && Osd.Visibility == Visibility.Visible;
         double chip = ClipLayer.Visibility == Visibility.Visible ? ClipLayer.ActualHeight : 0;
         _toasts?.SetControlsShown(controls, Osd.Height, chip);
+        PlaceSkipChapter(controls, chip);
     }
 
     private void UpdateCursor()
@@ -1700,8 +1713,9 @@ public sealed partial class MainPage : Page
             LeavePictureInPicture(); // raises PictureInPictureChanged, which renders again
             return;
         }
-        // Between two files of a folder the overlay keeps its look rather than flashing the home screen.
-        bool hasVideo = (HasVideo || pip) && !_settingsShown;
+        // Between two files of a folder the overlay keeps its look rather than flashing the home screen; so does a
+        // link switching quality while its new stream loads.
+        bool hasVideo = (HasVideo || pip || _qualitySwitching) && !_settingsShown;
         bool fullScreen = _host?.IsFullScreen == true;
 
         // Video, scrims and controls.
