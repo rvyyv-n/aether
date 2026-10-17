@@ -1259,6 +1259,12 @@
   <data name="Toast_ChapterSkipBack" xml:space="preserve">
     <value>Back</value>
   </data>
+  <data name="Toast_ResumedAt" xml:space="preserve">
+    <value>Resumed at {0}</value>
+  </data>
+  <data name="Toast_StartOver" xml:space="preserve">
+    <value>Start over</value>
+  </data>
   <data name="Settings_NetworkCache_Title" xml:space="preserve">
     <value>Network buffer</value>
   </data>

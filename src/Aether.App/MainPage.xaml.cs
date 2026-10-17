@@ -282,7 +282,8 @@ public sealed partial class MainPage : Page
 
     /// <summary>What a resolved link brings to <see cref="Open"/> beyond the stream address.</summary>
     private sealed record OpenedLink(
-        string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl, IReadOnlyList<StreamChapter>? Chapters);
+        string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl, IReadOnlyList<StreamChapter>? Chapters,
+        IReadOnlyList<StreamSubtitle>? Subtitles);
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
     private sealed record PlaybackCarryOver(
@@ -463,6 +464,9 @@ public sealed partial class MainPage : Page
         _currentWebLink = link?.WebLink;
         _streamTitle = link?.Title;
         ResetChapters(link?.Chapters);
+        ResetLinkSubtitles(link?.Subtitles, carry);
+        // A restart carries the position over by itself; only a saved position is worth announcing.
+        ResetResumeOffer(carry is null ? startAt : null, resumeKey);
         string headerFields = link?.HttpHeaders is { Count: > 0 } headers
             ? string.Join(",", headers.Select(kv => string.Concat(kv.Key, ": ", kv.Value)))
             : string.Empty;
@@ -568,6 +572,8 @@ public sealed partial class MainPage : Page
                 RecordDuration(vm);
                 RestoreTracksOnceLoaded();
                 LoadChaptersOnceLoaded();
+                AddLinkSubtitlesOnceLoaded();
+                ShowResumeOfferOnceLoaded();
                 Render();
                 break;
             case nameof(PlayerViewModel.IsPaused):
@@ -1199,7 +1205,7 @@ public sealed partial class MainPage : Page
             ArmOpenUrlTimer();
 
             string displayName = string.IsNullOrWhiteSpace(resolved.Title) ? WebLink.Host(link) ?? link : resolved.Title;
-            Open(resolved.StreamUrl, carry, new OpenedLink(link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters));
+            Open(resolved.StreamUrl, carry, new OpenedLink(link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters, resolved.Subtitles));
 
             _ = Task.Run(() =>
             {
