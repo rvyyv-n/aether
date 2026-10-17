@@ -7,7 +7,6 @@ public enum TourStep
 {
     Open,
     Controls,
-    Rail,
     Menu,
     Shortcuts,
     Settings,
@@ -30,7 +29,7 @@ public enum TourPlacement
 public sealed class FirstRunTour
 {
     public static IReadOnlyList<TourStep> Steps { get; } =
-        [TourStep.Open, TourStep.Controls, TourStep.Rail, TourStep.Menu, TourStep.Shortcuts, TourStep.Settings];
+        [TourStep.Open, TourStep.Controls, TourStep.Menu, TourStep.Shortcuts, TourStep.Settings];
 
     /// <summary>The keys the Shortcuts step lists, with the user's current bindings.</summary>
     public static IReadOnlyList<ShortcutAction> Keys { get; } =
@@ -66,10 +65,9 @@ public sealed class FirstRunTour
     {
         TourStep.Open => TourPlacement.Below,
         TourStep.Controls => TourPlacement.Above,
-        TourStep.Rail => TourPlacement.Right,
         TourStep.Menu => TourPlacement.Right,
         TourStep.Settings => TourPlacement.Below,
-        _ => TourPlacement.Centre,
+        _ => TourPlacement.Right,
     };
 
     /// <summary>Whether the step lights up a control; the Shortcuts step only has its card.</summary>

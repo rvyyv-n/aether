@@ -75,6 +75,15 @@ public sealed record AetherSettings
     public string SubtitleColor { get; init; } = "white";
     /// <summary><c>bottom</c>, <c>raised</c> or <c>top</c>.</summary>
     public string SubtitlePosition { get; init; } = "bottom";
+    public bool SubtitleBold { get; init; }
+    /// <summary><c>none</c>, <c>thin</c>, <c>normal</c> or <c>thick</c>; normal is mpv's own width.</summary>
+    public string SubtitleOutline { get; init; } = "normal";
+    /// <summary><c>black</c>, <c>gray</c> or <c>white</c>.</summary>
+    public string SubtitleOutlineColor { get; init; } = "black";
+    /// <summary><c>none</c>, <c>soft</c> (see-through box) or <c>solid</c> (opaque box) behind the text.</summary>
+    public string SubtitleBackground { get; init; } = "none";
+    /// <summary>Applies the style above to subtitles that bring their own (styled ASS/SSA), not only to plain ones.</summary>
+    public bool SubtitleOverrideStyled { get; init; }
 
     // Streaming
     /// <summary>Maximum stream height: <c>480p</c>, <c>720p</c>, <c>1080p</c>, <c>1440p</c>, <c>2160p</c> or <c>best</c>.</summary>
@@ -120,4 +129,5 @@ public sealed record AetherSettings
     public string ShortcutCopyFrame { get; init; } = "";
     public string ShortcutSaveFrame { get; init; } = "";
     public string ShortcutExportClip { get; init; } = "";
+    public string ShortcutSidebar { get; init; } = "";
 }

@@ -9,7 +9,6 @@ namespace Aether_App.Settings.Pages;
 
 public sealed partial class AboutPage : Page
 {
-    private static readonly Uri Author = new("https://github.com/rvyyv-n");
     private static readonly Uri Repository = new("https://github.com/rvyyv-n/aether");
     private static readonly Uri Issues = new("https://github.com/rvyyv-n/aether/issues");
 
@@ -25,8 +24,11 @@ public sealed partial class AboutPage : Page
         Version? version = typeof(App).Assembly.GetName().Version;
         _appVersion = version is null ? AppStrings.Get("Settings_About_Unknown") : $"{version.Major}.{version.Minor}.{version.Build}";
 
-        AppRow.Header = AppStrings.Get("App_Name");
-        AppRow.Description = $"{AppStrings.Get("App_Badge")} {_appVersion}";
+        CardName.Text = AppStrings.Get("App_Name");
+        CardVersion.Text = $"{AppStrings.Get("App_Badge")} {_appVersion}";
+        CardTagline.Text = AppStrings.Get("Settings_About_CardTagline");
+        CardLink.Content = AppStrings.Get("Settings_About_CardLink");
+        CardLink.NavigateUri = Repository;
 
         // The engine is not asked what it settled on; the decoder shown is the one chosen in Video settings.
         string hwdec = App.Settings.Get(SettingKeys.HardwareDecoding) as string ?? "";
@@ -43,12 +45,6 @@ public sealed partial class AboutPage : Page
         CopyDiagnosticsText.Text = AppStrings.Get("Settings_About_CopyDiagnostics");
         AutomationProperties.SetName(CopyDiagnosticsButton, AppStrings.Get("Settings_About_CopyDiagnostics"));
         CopyDiagnosticsButton.Click += async (_, _) => await CopyDiagnosticsAsync();
-
-        GitHubTitle.Text = AppStrings.Get("Settings_About_GitHub");
-        GitHubDescription.Text = AppStrings.Get("Settings_About_GitHubDescription");
-        AutomationProperties.SetName(GitHubButton, GitHubTitle.Text);
-        AutomationProperties.SetHelpText(GitHubButton, GitHubDescription.Text);
-        GitHubButton.Click += async (_, _) => await Launcher.LaunchUriAsync(Author);
 
         TourTitle.Text = AppStrings.Get("Settings_About_Tour");
         TourDescription.Text = AppStrings.Get("Settings_About_TourDescription");

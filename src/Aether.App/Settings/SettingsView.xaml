@@ -16,16 +16,18 @@
             <Setter Property="Padding" Value="12,0" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <!-- The row's fills and the focus ring both follow this radius; a Grid root let a square fill show in the corner. -->
+            <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
-                        <Grid
+                        <Border
                             x:Name="Root"
                             Background="Transparent"
-                            CornerRadius="{StaticResource AetherControlCornerRadius}">
-                            <Grid.BackgroundTransition>
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                            <Border.BackgroundTransition>
                                 <BrushTransition Duration="0:0:0.083" />
-                            </Grid.BackgroundTransition>
+                            </Border.BackgroundTransition>
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup x:Name="CommonStates">
                                     <VisualState x:Name="Normal" />
@@ -62,7 +64,7 @@
                                 VerticalContentAlignment="Center"
                                 Content="{TemplateBinding Content}"
                                 ContentTemplate="{TemplateBinding ContentTemplate}" />
-                        </Grid>
+                        </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

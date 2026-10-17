@@ -27,4 +27,5 @@ public enum ShortcutAction
     CopyFrame,
     SaveFrame,
     ExportClip,
+    Sidebar,
 }

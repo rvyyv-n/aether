@@ -2,6 +2,7 @@ using Aether.Core.Playback.Streams;
 ﻿using System.ComponentModel;
 using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
+using Aether.Core.Interop.Rendering;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Input;
 using Aether.Core.Playback.Recents;
@@ -119,6 +120,7 @@ public sealed partial class MainPage : Page
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         LayoutUpdated += (_, _) => PostBackdropRegion();
+        SizeChanged += (_, _) => PlaceRail();
         VideoSurface.CompositionScaleChanged += (_, _) => PostBackdropRegion();
         VideoSurface.PlayerReady += (_, _) => OpenPending();
     }
@@ -1566,7 +1568,7 @@ public sealed partial class MainPage : Page
             _fader.Fade(PipChrome, visible);
             PipChrome.IsHitTestVisible = visible;
             _fader.Fade(Osd, visible);
-            VideoSurface.FadeBackdrop(visible, _fader.DurationMilliseconds(visible));
+            VideoSurface.FadeBackdrop(BackdropSlot.Bar, visible, _fader.DurationMilliseconds(visible));
             Osd.IsHitTestVisible = visible;
             _fader.Fade(ClipLayer, visible);
             ClipLayer.IsHitTestVisible = visible;
@@ -1632,8 +1634,18 @@ public sealed partial class MainPage : Page
             return;
         }
         double scale = Math.Min(hostWidth / width, hostHeight / height);
-        VideoSurface.Width = Math.Round(width * scale);
-        VideoSurface.Height = Math.Round(height * scale);
+        VideoSurface.Width = SnapToHost(Math.Round(width * scale), hostWidth);
+        VideoSurface.Height = SnapToHost(Math.Round(height * scale), hostHeight);
+    }
+
+    /// <summary>
+    /// The window keeps the video's shape only to the whole pixel, so a fitted side can come out a pixel short and
+    /// leave a hairline of backdrop at the edge. Within that, it takes the host's full size; the stretch can't be seen.
+    /// </summary>
+    private static double SnapToHost(double fitted, double host)
+    {
+        const double SnapDips = 2;
+        return host - fitted <= SnapDips ? host : fitted;
     }
 
     /// <summary>
@@ -1691,7 +1703,8 @@ public sealed partial class MainPage : Page
         ClipLayer.Visibility = Osd.Visibility;
         PipChrome.Visibility = hasVideo && pip ? Visibility.Visible : Visibility.Collapsed;
         // ADR-0013: no blur in picture in picture; there is no card to blur behind.
-        VideoSurface.SetBackdropActive(hasVideo && !pip);
+        VideoSurface.SetBackdropActive(BackdropSlot.Bar, hasVideo && !pip);
+        VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, hasVideo && !pip);
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         PlaceRail();

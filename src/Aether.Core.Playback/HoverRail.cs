@@ -72,6 +72,20 @@ public sealed class HoverRail
         return true;
     }
 
+    /// <summary>
+    /// The keyboard shortcut: closes an open rail, or opens it held (as <see cref="SetPinned"/>) so it stays until Esc,
+    /// an item or the shortcut again, since there is no pointer to keep it open. True if it opened.
+    /// </summary>
+    public bool Toggle()
+    {
+        if (IsOpen)
+        {
+            Close();
+            return false;
+        }
+        return SetPinned(true);
+    }
+
     /// <summary>Opens the rail if it can. True if it opened.</summary>
     public bool Open()
     {

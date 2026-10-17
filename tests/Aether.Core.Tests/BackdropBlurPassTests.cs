@@ -126,7 +126,7 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
         Assert.Equal(255, rig.Red(319, 280));
         Assert.Equal(0, rig.Red(320, 280));
 
-        rig.Pass.Draw(Frame(), Width, Height);
+        rig.Pass.Draw([Frame()], Width, Height);
 
         // Inside the card the hard white/black edge is now a ramp.
         int edge = rig.Red(320, 280);
@@ -150,7 +150,7 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
 
         using Rig rig = Rig.Create();
         rig.FillSplit(600); // white across the card
-        rig.Pass.Draw(Frame(), Width, Height);
+        rig.Pass.Draw([Frame()], Width, Height);
 
         // The card is rows 250..310 from the top. Shadow is offset 8 down, so below is darker than above.
         int below = rig.Red(320, 318);
@@ -173,7 +173,7 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
 
         using Rig rig = Rig.Create();
         rig.FillSplit(221); // white up to the card's left edge, black inside it
-        rig.Pass.Draw(Frame(), Width, Height);
+        rig.Pass.Draw([Frame()], Width, Height);
 
         int corner = rig.Red(222, 251); // outside the radius-24 curve: untouched black
         int middle = rig.Red(222, 280); // inside the card: blurred towards the white side
@@ -190,11 +190,11 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
 
         using Rig rig = Rig.Create();
         rig.FillSplit(320);
-        rig.Pass.Draw(Frame(opacity: 0f), Width, Height);
+        rig.Pass.Draw([Frame(opacity: 0f)], Width, Height);
         Assert.Equal(255, rig.Red(319, 280));
         Assert.Equal(0, rig.Red(320, 280));
 
-        rig.Pass.Draw(Frame(opacity: 0.5f), Width, Height);
+        rig.Pass.Draw([Frame(opacity: 0.5f)], Width, Height);
         Assert.InRange(rig.Red(319, 280), 160, 254);
     }
 
@@ -219,7 +219,7 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
         rig.Enable(GL_BLEND);
         int blendSrc = rig.GetInt(GL_BLEND_SRC_RGB);
 
-        rig.Pass.Draw(Frame(), Width, Height);
+        rig.Pass.Draw([Frame()], Width, Height);
 
         int* viewport = stackalloc int[4];
         rig.GetIntegerv(GL_VIEWPORT, viewport);
@@ -234,6 +234,47 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void Draw_TwoCards_EachBlursItsOwnSurroundings_AndStateIsRestoredOnce()
+    {
+        if (!AngleTestEnvironment.IsAvailable)
+        {
+            return;
+        }
+
+        using Rig rig = Rig.Create();
+        rig.FillSplit(320);
+
+        uint texture;
+        rig.GenTextures(1, &texture);
+        rig.ActiveTexture(GL_TEXTURE1);
+        rig.BindTexture(GL_TEXTURE_2D, texture);
+        rig.Viewport(5, 6, 7, 8);
+        rig.Enable(GL_SCISSOR_TEST);
+        rig.Scissor(0, 0, 10, 10);
+        rig.Enable(GL_BLEND);
+
+        // A small card of a different size on the white/black edge, and the usual one further down in the black half.
+        BackdropFrame small = new(new BackdropRegion(296, 40, 48, 120, 24, 1f, Width, Height), 1f, (int)BackdropSlot.Sidebar);
+        BackdropFrame wide = new(new BackdropRegion(420, 250, 200, 60, 24, 1f, Width, Height), 1f, (int)BackdropSlot.Bar);
+        rig.Pass.Draw([wide, small], Width, Height);
+
+        Assert.InRange(rig.Red(320, 100), 90, 170); // the small card blurred the edge it sits on
+        Assert.True(rig.Red(300, 100) > rig.Red(340, 100));
+        Assert.Equal(0, rig.Red(520, 280)); // the other card sits on black, which stays black
+        Assert.Equal(255, rig.Red(100, 40));
+
+        int* viewport = stackalloc int[4];
+        rig.GetIntegerv(GL_VIEWPORT, viewport);
+        Assert.Equal([5, 6, 7, 8], new[] { viewport[0], viewport[1], viewport[2], viewport[3] });
+        Assert.Equal((int)GL_TEXTURE1, rig.GetInt(GL_ACTIVE_TEXTURE));
+        Assert.Equal((int)texture, rig.GetInt(GL_TEXTURE_BINDING_2D));
+        Assert.True(rig.IsEnabled(GL_SCISSOR_TEST) != 0);
+        Assert.True(rig.IsEnabled(GL_BLEND) != 0);
+        Assert.Equal(0, rig.GetInt(GL_CURRENT_PROGRAM));
+        Assert.Equal(0, rig.GetInt(GL_DRAW_FRAMEBUFFER_BINDING));
+    }
+
+    [Fact]
     public void Draw_NoAllocationPerFrame_AndTimings()
     {
         if (!AngleTestEnvironment.IsAvailable)
@@ -241,14 +282,18 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
             return;
         }
 
-        // The real bar at 1080p: 520 x 84 DIPs, 24 above the bottom.
+        // The real bar at 1080p (520 x 84 DIPs, 24 above the bottom) and the sidebar (48 x 168, centred, 16 in).
         const uint W = 1920, H = 1080;
         using Rig rig = Rig.Create(W, H);
         rig.FillSplit(960);
-        var frame = new BackdropFrame(new BackdropRegion(700, 972, 520, 84, 24, 1f, W, H), 1f);
+        BackdropFrame[] frames =
+        [
+            new(new BackdropRegion(700, 972, 520, 84, 24, 1f, W, H), 1f, (int)BackdropSlot.Bar),
+            new(new BackdropRegion(16, 456, 48, 168, 24, 1f, W, H), 1f, (int)BackdropSlot.Sidebar),
+        ];
         for (int i = 0; i < 10; i++)
         {
-            rig.Pass.Draw(frame, W, H);
+            rig.Pass.Draw(frames, W, H);
             rig.Bridge.Flush();
         }
 
@@ -258,7 +303,7 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
         long start = Stopwatch.GetTimestamp();
         for (int i = 0; i < Frames; i++)
         {
-            rig.Pass.Draw(frame, W, H);
+            rig.Pass.Draw(frames, W, H);
             rig.Bridge.Flush();
         }
         long issued = Stopwatch.GetTimestamp();

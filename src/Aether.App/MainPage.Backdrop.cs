@@ -12,10 +12,12 @@ namespace Aether_App;
 public sealed partial class MainPage
 {
     private BackdropRegion _postedBackdrop;
+    private BackdropRegion _postedSidebarBackdrop;
 
-    /// <summary>Re-measures the card against the video surface and posts it if it moved, resized or the scale changed.</summary>
+    /// <summary>Re-measures the cards against the video surface and posts each if it moved, resized or the scale changed.</summary>
     private void PostBackdropRegion()
     {
+        PostSidebarRegion();
         if (!_isLoaded || Osd.Visibility != Visibility.Visible || !Osd.IsLoaded || !VideoSurface.IsLoaded)
         {
             return;
@@ -33,6 +35,34 @@ public sealed partial class MainPage
             return;
         }
         _postedBackdrop = region;
-        VideoSurface.PostBackdrop(region);
+        VideoSurface.PostBackdrop(BackdropSlot.Bar, region);
+    }
+
+    /// <summary>
+    /// The same for the sidebar, from where the page placed it plus the slide's offset (a Translation is not part of what
+    /// TransformToVisual reports). Runs on every step of the slide and on layout, but only posts when the rectangle changed,
+    /// so an idle sidebar costs the render thread nothing.
+    /// </summary>
+    private void PostSidebarRegion()
+    {
+        if (!_isLoaded || !VideoSurface.IsLoaded)
+        {
+            return;
+        }
+
+        float scaleX = VideoSurface.CompositionScaleX;
+        float scaleY = VideoSurface.CompositionScaleY;
+        Point origin = VideoSurface.TransformToVisual(this).TransformPoint(new Point(0, 0));
+        SwapChainTargetSize surface = DxgiPresenter.ComputeTargetSize(VideoSurface.ActualWidth, VideoSurface.ActualHeight, scaleX, scaleY);
+        var region = new BackdropRegion(
+            (float)((Rail.Margin.Left + RailSlideOffset - origin.X) * scaleX), (float)((_railTop - origin.Y) * scaleY),
+            (float)(Rail.Width * scaleX), (float)(Rail.Height * scaleY),
+            (float)(Rail.CornerRadius.TopLeft * scaleX), scaleX, surface.Width, surface.Height);
+        if (region == _postedSidebarBackdrop)
+        {
+            return;
+        }
+        _postedSidebarBackdrop = region;
+        VideoSurface.PostBackdrop(BackdropSlot.Sidebar, region);
     }
 }

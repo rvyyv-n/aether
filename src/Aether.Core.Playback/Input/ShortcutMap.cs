@@ -127,6 +127,7 @@ public sealed class ShortcutMap
         ShortcutAction.CopyFrame => settings.ShortcutCopyFrame,
         ShortcutAction.SaveFrame => settings.ShortcutSaveFrame,
         ShortcutAction.ExportClip => settings.ShortcutExportClip,
+        ShortcutAction.Sidebar => settings.ShortcutSidebar,
         _ => "",
     };
 }

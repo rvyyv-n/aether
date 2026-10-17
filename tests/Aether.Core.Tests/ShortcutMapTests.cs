@@ -44,9 +44,41 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.CopyFrame, "Ctrl+C")]
     [InlineData(ShortcutAction.SaveFrame, "Ctrl+Shift+S")]
     [InlineData(ShortcutAction.ExportClip, "Ctrl+E")]
+    [InlineData(ShortcutAction.Sidebar, "B")]
     public void Defaults_Are_Todays_Keys(ShortcutAction action, string expected)
     {
         Assert.Equal([expected], Defaults(action));
+    }
+
+    [Fact]
+    public void Sidebar_Shortcut_Is_Configurable_Conflicts_And_Resets_On_Its_Own()
+    {
+        Assert.Equal(ShortcutAction.Sidebar, ShortcutMap.Defaults.Find(Key("B")));
+        Assert.Equal("shortcuts.sidebar", ShortcutActions.SettingKey(ShortcutAction.Sidebar));
+
+        ShortcutMap map = ShortcutMap.Defaults.With(ShortcutAction.Sidebar, [Key("M")]);
+        Assert.Equal([ShortcutAction.Mute], map.ConflictsOf(ShortcutAction.Sidebar));
+        Assert.True(map.HasConflict(ShortcutAction.Mute));
+        Assert.Equal("M", map.Encode(ShortcutAction.Sidebar));
+
+        ShortcutMap reset = map.Reset(ShortcutAction.Sidebar);
+        Assert.True(reset.IsDefault(ShortcutAction.Sidebar));
+        Assert.False(reset.HasConflict(ShortcutAction.Mute));
+        Assert.Equal("", reset.Encode(ShortcutAction.Sidebar));
+    }
+
+    [Fact]
+    public void A_Saved_Sidebar_Shortcut_Survives_Save_And_Load()
+    {
+        var storage = new FakeStorage();
+        var first = new SettingsStore(storage);
+        ShortcutMap.Defaults.With(ShortcutAction.Sidebar, [Key("Ctrl+B")]).WriteTo(first);
+        first.Save();
+
+        var second = new SettingsStore(storage);
+        second.Load();
+
+        Assert.Equal([Key("Ctrl+B")], ShortcutMap.From(second.Current).Get(ShortcutAction.Sidebar));
     }
 
     [Fact]

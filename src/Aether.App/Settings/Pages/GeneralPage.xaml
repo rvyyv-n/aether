@@ -13,5 +13,21 @@
                 <ToggleSwitch x:Name="OpenInRunningWindowToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
         </settings:SettingsGroup>
+        <settings:SettingsGroup>
+            <settings:SettingsRow x:Name="RememberWindowSizeRow" Glyph="&#xE740;">
+                <ToggleSwitch x:Name="RememberWindowSizeToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="AlwaysOnTopRow" Glyph="&#xE718;">
+                <ToggleSwitch x:Name="AlwaysOnTopToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
+        </settings:SettingsGroup>
+        <settings:SettingsGroup>
+            <settings:SettingsRow x:Name="ClearRecentsRow" Glyph="&#xE81C;">
+                <Button x:Name="ClearRecentsButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="ClearResumeRow" Glyph="&#xE777;">
+                <Button x:Name="ClearResumeButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
+            </settings:SettingsRow>
+        </settings:SettingsGroup>
     </StackPanel>
 </Page>

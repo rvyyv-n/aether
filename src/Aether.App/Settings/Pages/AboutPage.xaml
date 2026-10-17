@@ -13,8 +13,8 @@
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
     </Page.Resources>
+    <StackPanel Spacing="24">
     <settings:SettingsGroup>
-        <settings:SettingsRow x:Name="AppRow" Glyph="&#xE946;" />
         <settings:SettingsRow x:Name="EngineRow" Glyph="&#xE950;" VerticalContentAlignment="Top">
             <settings:SettingsRow.Note>
                 <Grid Margin="0,8,0,0" ColumnSpacing="16" RowSpacing="8">
@@ -65,25 +65,6 @@
             </Grid>
         </Button>
         <Button
-            x:Name="GitHubButton"
-            MinHeight="{StaticResource AetherSizeSettingsRow}"
-            Padding="16,12"
-            Style="{StaticResource AetherRecentRowButtonStyle}">
-            <Grid ColumnSpacing="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <FontIcon Width="20" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16" Glyph="&#xE71B;" />
-                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                    <TextBlock x:Name="GitHubTitle" Style="{StaticResource AetherBodyTextStyle}" />
-                    <TextBlock x:Name="GitHubDescription" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
-                </StackPanel>
-                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{StaticResource AetherTextSecondaryBrush}" Glyph="&#xE8A7;" />
-            </Grid>
-        </Button>
-        <Button
             x:Name="LicencesButton"
             MinHeight="{StaticResource AetherSizeSettingsRow}"
             Padding="16,12"
@@ -122,4 +103,11 @@
             </Grid>
         </Button>
     </settings:SettingsGroup>
+    <StackPanel HorizontalAlignment="Center" Padding="0,8,0,16" Spacing="4">
+        <TextBlock x:Name="CardName" HorizontalAlignment="Center" Style="{StaticResource AetherBodyTextStyle}" />
+        <TextBlock x:Name="CardVersion" HorizontalAlignment="Center" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" />
+        <TextBlock x:Name="CardTagline" HorizontalAlignment="Center" Margin="0,8,0,0" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" />
+        <HyperlinkButton x:Name="CardLink" HorizontalAlignment="Center" />
+    </StackPanel>
+    </StackPanel>
 </Page>
