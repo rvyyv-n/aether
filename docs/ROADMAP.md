@@ -253,7 +253,7 @@ Mockups: the link-failure and yt-dlp frames of screen 2 that were waiting for st
 | 9.5 | Tests for link resolving, failure mapping and the dialog flow — **Done** (unit tests for YtDlpArgumentsBuilder, YtDlpErrorClassifier, and YtDlpStreamResolver; all 1066 core tests pass) | S |
 | 9.6 | Chapter marks on the seek bar for links that have chapters (title on hover) and Next/Previous chapter keys. Opus designs the marks, Sonnet builds — **Done, on-screen check pending** (2 px gaps at chapter starts, chapter name above the time in the hover bubble, Page Up/Page Down keys; files and links) | S |
 | 9.7 | Optional chapter auto-skip: a setting (off by default) with a list of chapter names to skip, such as Sponsor, Intro and Outro, and a small toast when one is skipped — **Engine, setting and auto-skip done, on-screen check pending** (Settings › Playback toggle and names list, "Skipped X · Back" toast; the discreet Skip button for when auto-skip is off is still to build) | S |
-| 9.8 | Quality picker for links (resolution and format, remembered), using the formats yt-dlp already reports | S |
+| 9.8 | Quality picker for links (resolution and format, remembered), using the formats yt-dlp already reports — **Engine done, picker button and in-place switch still to build** (size list from yt-dlp formats, remembered choice setting, yt-dlp format override) | S |
 | 9.9 | Remember the playback position per link and offer to resume; use YouTube's own subtitle tracks through yt-dlp | S |
 
 **Pass 9 means:** Paste a YouTube or other supported link and watch it with the same controls as a local file, with chapters, a quality choice and resume.

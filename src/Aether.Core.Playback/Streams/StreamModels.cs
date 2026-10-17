@@ -18,7 +18,8 @@ public sealed record StreamResolutionOptions(
     string StreamingQuality = "1080p",
     bool PreferGpuDecodableFormats = true,
     string? HttpProxy = null,
-    TimeSpan? Timeout = null);
+    TimeSpan? Timeout = null,
+    string? FormatSelectorOverride = null);
 
 public sealed record StreamChapter(double Start, double End, string Title);
 

@@ -95,6 +95,8 @@ public sealed record AetherSettings
     public bool PreferGpuDecodableFormats { get; init; } = true;
     public bool YtDlpAutoUpdate { get; init; } = true;
     /// <summary>Most data mpv buffers ahead (<c>demuxer-max-bytes</c>), in MiB.</summary>
+    /// <summary>The link quality picker's remembered choice (a <c>QualityOption</c> key); empty means Auto.</summary>
+    public string StreamQualityChoice { get; init; } = "";
     public int NetworkCacheMegabytes { get; init; } = 150;
     /// <summary>mpv <c>http-proxy</c>, e.g. <c>http://host:3128</c>; empty means none.</summary>
     public string HttpProxy { get; init; } = "";

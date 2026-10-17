@@ -54,6 +54,7 @@ public static class SettingKeys
     public const string SubtitleBackground = "subtitles.background";
     public const string SubtitleOverrideStyled = "subtitles.overrideStyled";
     public const string StreamingQuality = "streaming.quality";
+    public const string StreamQualityChoice = "streaming.qualityChoice";
     public const string PreferGpuDecodableFormats = "streaming.preferGpuDecodable";
     public const string YtDlpAutoUpdate = "streaming.ytdlpAutoUpdate";
     public const string NetworkCacheMegabytes = "streaming.cacheMegabytes";
@@ -226,6 +227,7 @@ public static class SettingDefinitions
 
         Choice(SettingKeys.StreamingQuality, s => s.StreamingQuality, (s, v) => s with { StreamingQuality = v }, false, "480p", "720p", "1080p", "1440p", "2160p", "best"),
         Flag(SettingKeys.PreferGpuDecodableFormats, s => s.PreferGpuDecodableFormats, (s, v) => s with { PreferGpuDecodableFormats = v }),
+        Text(SettingKeys.StreamQualityChoice, s => s.StreamQualityChoice, (s, v) => s with { StreamQualityChoice = v }),
         Flag(SettingKeys.YtDlpAutoUpdate, s => s.YtDlpAutoUpdate, (s, v) => s with { YtDlpAutoUpdate = v }),
         Range(SettingKeys.NetworkCacheMegabytes, s => s.NetworkCacheMegabytes, (s, v) => s with { NetworkCacheMegabytes = v }, 16, 2048, restart: true),
         Text(SettingKeys.HttpProxy, s => s.HttpProxy, (s, v) => s with { HttpProxy = v }),

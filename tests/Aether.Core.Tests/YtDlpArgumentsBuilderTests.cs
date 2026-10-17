@@ -36,6 +36,30 @@ public class YtDlpArgumentsBuilderTests
         Assert.Contains("720", args);
     }
 
+    [Fact]
+    public void BuildArguments_WithSelectorOverride_ReplacesSettingsSelector()
+    {
+        var options = new StreamResolutionOptions(StreamingQuality: "720p", FormatSelectorOverride: "bv*[height<=1080]+ba/b[height<=1080]");
+        string args = YtDlpArgumentsBuilder.BuildArguments("https://youtu.be/test", options);
+
+        Assert.Contains("-f \"bv*[height<=1080]+ba/b[height<=1080]\" ", args);
+        Assert.DoesNotContain("720", args);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void BuildArguments_BlankOverride_UsesSettingsSelector(string? selector)
+    {
+        var withOverride = new StreamResolutionOptions(StreamingQuality: "720p", FormatSelectorOverride: selector);
+        var plain = new StreamResolutionOptions(StreamingQuality: "720p");
+
+        Assert.Equal(
+            YtDlpArgumentsBuilder.BuildArguments("https://youtu.be/test", plain),
+            YtDlpArgumentsBuilder.BuildArguments("https://youtu.be/test", withOverride));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
