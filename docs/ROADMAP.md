@@ -296,6 +296,21 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 
 ---
 
+### v1.1: Themes & Customisation (after the v1 release)
+
+Design work: Opus asks questions and plans first, Sonnet builds. Check blur over live video for stutter before shipping (ADR-0013).
+
+| # | Task | Effort |
+|:---|:---|:---:|
+| 12.1 | Light mode, plus a Theme choice in Settings: Dark, Light or follow Windows. Every screen, flyout and the player bar read well in both | M |
+| 12.2 | "Native" look beside the current one: Windows 11 Fluent Acrylic panels, the system accent colour and system corner radii for menus, flyouts, sidebar and settings | L |
+| 12.3 | More customisation: accent colour choice, player bar size and opacity, and which controls the bar shows | M |
+| 12.4 | Check both looks in light and dark on a real screen, with video blur against frame drops | S |
+
+**v1.1 means:** Aether can follow Windows or be set to light, dark or the native Fluent look, with a few personal touches, without costing smoothness.
+
+---
+
 ### Parked
 
 - **SponsorBlock auto-skip:** needs a lookup to sponsor.ajay.app, which conflicts with "everything stays on this device". If built later: opt-in, off by default, credited on the About card and in `THIRD_PARTY.md`.
