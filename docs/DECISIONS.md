@@ -201,3 +201,14 @@
   - Ordering, close handling and edge cases are in `docs/reviews/pass-8-pip-handover-spec.md`: the aspect lock's minimum drops to 256×144 before the switch in and returns to 640×400 after the switch out; work areas are read before switching; closing the overlay returns to the full window instead of exiting.
   - The page swaps its chrome: blur off (ADR-0013), no transport card, clip chip, rail, title text, gear or toasts; a top shade with "Back to full window" beside Close, a 48 px centre play/pause and a thin seek line along the bottom, all on the main player's chrome fade.
 - **Status:** Accepted.
+
+## ADR-0023: Link Sound, Resume by Page Address, Chapters and Quality (Pass 9)
+- **Context:** YouTube serves video and audio as separate streams (`requested_formats`, the audio entry has `vcodec` "none"). Only the video URL was handed to mpv, so links most likely played without sound. Stream URLs also expire, so a position saved under one is lost, and a signed URL cannot be replayed later.
+- **Decision:**
+  - **Sound:** the audio URL goes to mpv as the per-file option `audio-files-append` on `loadfile <url> replace -1 <options>`, with each value written as `%<UTF-8 byte count>%value` so commas, equals signs and semicolons in signed URLs arrive intact (`MpvLoadOptions`).
+  - **Resume:** a link's position is stored in `resume.json` under its page address (`OriginalWebLink`), never the stream URL. A file opened after a link does not inherit the link's address, headers or title.
+  - **Chapters:** links use yt-dlp `chapters[]` because mpv only sees the bare stream; files use mpv `chapter-list`. Page Up / Page Down are the defaults and are changeable on the Shortcuts page. Previous returns to the start of the current chapter when more than 3 s in.
+  - **Auto-skip:** off by default. Names match whole words only, each chapter is skipped at most once per video, never when the user seeked into it, and an Outro that runs to the end jumps to the end. When off, a Skip button is offered instead for the first 8 s of a matching chapter. Online skip lists (SponsorBlock) stay parked: they need an outgoing network call.
+  - **Quality:** the list comes from the formats yt-dlp already reports; the choice is remembered globally (`streaming.qualityChoice`, empty = Auto) and falls back to the nearest lower size. A switch re-resolves the link with a format override and reopens at the same position while the old stream keeps playing.
+  - **Subtitles:** a link's own subtitle tracks are added after load. Automatic captions are kept only for the video's own language (or the preferred language), because YouTube lists one per translation language.
+- **Status:** Accepted. Needs an on-screen check: link sound, resume, chapter marks and keys, quality switch, Skip button and toasts.
