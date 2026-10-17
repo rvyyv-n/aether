@@ -18,7 +18,7 @@ public class FirstRunTourTests
     public void Steps_RunInTheSpecOrder()
     {
         Assert.Equal(
-            [TourStep.Open, TourStep.Controls, TourStep.Rail, TourStep.Menu, TourStep.Shortcuts, TourStep.Settings],
+            [TourStep.Open, TourStep.Controls, TourStep.Menu, TourStep.Shortcuts, TourStep.Settings],
             FirstRunTour.Steps);
     }
 
@@ -122,7 +122,14 @@ public class FirstRunTourTests
         Assert.Equal(
             [TourStep.Menu, TourStep.Shortcuts],
             FirstRunTour.Steps.Where(s => !FirstRunTour.HasSpotlight(s)));
-        Assert.Equal(TourPlacement.Centre, FirstRunTour.PlacementOf(TourStep.Shortcuts));
+        Assert.Equal(TourPlacement.Right, FirstRunTour.PlacementOf(TourStep.Shortcuts));
+    }
+
+    [Fact]
+    public void TheTourHasNoSidebarStep()
+    {
+        Assert.DoesNotContain("Rail", Enum.GetNames<TourStep>());
+        Assert.Equal(5, FirstRunTour.Steps.Count);
     }
 
     [Fact]

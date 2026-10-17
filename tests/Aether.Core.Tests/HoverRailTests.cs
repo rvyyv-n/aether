@@ -138,4 +138,31 @@ public class HoverRailTests
         rail.Open();
         Assert.Equal(HoverRailAction.Close, rail.Decide());
     }
+
+    [Fact]
+    public void Toggle_OpensHeldWithThePointerAway_AndClosesOnTheSecondPress()
+    {
+        var rail = new HoverRail();
+        Assert.True(rail.Toggle());
+        Assert.True(rail.IsOpen);
+        Assert.Equal(HoverRailAction.None, rail.Decide());
+
+        Assert.False(rail.Toggle());
+        Assert.False(rail.IsOpen);
+        Assert.Equal(HoverRailAction.None, rail.Decide());
+    }
+
+    [Fact]
+    public void Toggle_DoesNothingWhileUnavailable_AndEscapeStillClosesIt()
+    {
+        var rail = new HoverRail();
+        rail.SetAvailable(false);
+        Assert.False(rail.Toggle());
+        Assert.False(rail.IsOpen);
+
+        rail.SetAvailable(true);
+        rail.Toggle();
+        Assert.True(rail.Close());
+        Assert.False(rail.IsOpen);
+    }
 }

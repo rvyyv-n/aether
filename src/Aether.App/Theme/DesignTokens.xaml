@@ -165,6 +165,7 @@
     <CornerRadius x:Key="AetherPillCornerRadius">8</CornerRadius>
     <CornerRadius x:Key="AetherTransportCornerRadius">24</CornerRadius>  <!-- Half the 48 px slim pill, kept by the full card; the round 36 px play button + 6 padding is concentric with it -->
     <CornerRadius x:Key="AetherTransportButtonCornerRadius">6</CornerRadius>  <!-- Transport icon, toggle and speed buttons: 8 → 6 with the 36 px targets, for a crisper shape -->
+    <CornerRadius x:Key="AetherSidebarItemCornerRadius">18</CornerRadius>  <!-- Half the 36 px sidebar item: a circle, like the Play button -->
     <CornerRadius x:Key="AetherTileCornerRadius">16</CornerRadius>
 
     <!--  Sizes  -->
@@ -208,11 +209,12 @@
     <x:Double x:Key="AetherSizeClipDrawerWidth">360</x:Double>  <!-- The chip grown into the clip drawer -->
     <x:Double x:Key="AetherSizeClipThumbWidth">64</x:Double>  <!-- Clip row thumbnail, 16:9, radius 4 -->
     <x:Double x:Key="AetherSizeClipThumbHeight">36</x:Double>
-    <x:Double x:Key="AetherSizeMenuItem">32</x:Double>  <!-- Menu items: 4 px inset, radius 4, check column 16, gap 12, hover fill.subtle.hover; menus on surface -->
+    <x:Double x:Key="AetherSizeMenuItem">32</x:Double>  <!-- Menu items: 4 px inset, padding 12, icon/check column 16, gap 12, shortcut gap 24, radius 4, hover fill.subtle.hover; menus on surface -->
     <x:Double x:Key="AetherSizeSpeedPill">40</x:Double>  <!-- Min width of the speed button: 36 tall like the transport buttons, Caption 12 semibold tabular -->
-    <x:Double x:Key="AetherSizeRailWidth">56</x:Double>  <!-- Hover rail: 8 from the left edge, from 8 below the title bar to 8 above the pill, padding 8, Surface -->
-    <x:Double x:Key="AetherSizeRailItem">40</x:Double>  <!-- Rail items 40×40, radius 8, gap 4, 20 px icons; active = FillEmphasisRest + StrokeControl; labels as -->
-    <x:Double x:Key="AetherSizeRailHotZone">4</x:Double>  <!-- Left-edge strip that wakes the rail; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
+    <x:Double x:Key="AetherSizeSidebarWidth">48</x:Double>  <!-- Sidebar: a floating pill 16 from the left edge, centred vertically; padding 6 around four 36 px items 4 apart (168 tall), the surface.osd tint with the bar's blur -->
+    <x:Double x:Key="AetherSizeSidebarItem">36</x:Double>  <!-- Sidebar items: 36 circles, 14 px glyphs; active = FillEmphasisRest + StrokeControl -->
+    <x:Double x:Key="AetherSizeSidebarPadding">6</x:Double>  <!-- Outside the 1 px stroke; 6 + 18 = 24 is concentric with the pill's radius -->
+    <x:Double x:Key="AetherSizeRailHotZone">4</x:Double>  <!-- Left-edge strip that wakes the sidebar; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
     <x:Double x:Key="AetherSizeSettingsNav">220</x:Double>  <!-- Settings section list width; items 36 tall (navItem), radius 4, gap 2, 16 px icons -->
     <x:Double x:Key="AetherSizeNavItem">36</x:Double>  <!-- Settings section list item height -->
     <x:Double x:Key="AetherSizeSettingsRow">60</x:Double>  <!-- Settings row card min height: padding 12,16, 20 px icon, title Body + description Caption TextSecond -->
@@ -223,7 +225,8 @@
     <x:Double x:Key="AetherSizeSegmentedItem">28</x:Double>  <!-- Segmented: 32 container (FillInput, StrokeControl, radius 4, padding 2), 28 items, selected FillEmph -->
     <x:Double x:Key="AetherSizeComboHeight">32</x:Double>  <!-- Combo box: FillInput, StrokeControl, radius 4, padding 0,10,0,12, 12 px chevron TextSecondary -->
     <x:Double x:Key="AetherSizeKeycap">24</x:Double>  <!-- Shortcut keycap: 24 tall, min 24 wide, padding 0,8, FillInput, StrokeControl, radius 4, Caption -->
-    <x:Double x:Key="AetherSizeContextMenu">276</x:Double>  <!-- Right-click menu width; submenu 288; items 32 with 16 px icon column and right-aligned shortcut (Cap -->
+    <x:Double x:Key="AetherSizeContextMenu">276</x:Double>  <!-- Room the tour leaves for the right-click menu, which fits its content (about 220 in English); submenu 288; items 32 with 16 px icon column and right-aligned shortcut (Caption) -->
+    <x:Double x:Key="AetherSizeMenuMaxWidth">320</x:Double>  <!-- Any menu: labels trim past this -->
     <x:Double x:Key="AetherSizeTracksFlyout">536</x:Double>  <!-- Tracks flyout: 2 columns, padding 12, delay steppers with 32 px buttons and a 56 px tabular value -->
     <x:Double x:Key="AetherSizeVideoFlyout">340</x:Double>  <!-- Video flyout: padding 12,16, 32 px rows -->
     <x:Double x:Key="AetherSizeDiagnosticsWidth">300</x:Double>  <!-- Diagnostics overlay: top-left, 16 in (48 when the title bar shows), padding 8,8,12,16, rows 76 / *,  -->
@@ -442,15 +445,15 @@
         <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeIcon}" />
     </Style>
-    <!--  Hover rail items (6.3): 40 square, radius 8, 20 px glyphs; the active one (Player) adds AetherRailItemActiveStyle  -->
-    <Style x:Key="AetherRailItemStyle" BasedOn="{StaticResource AetherIconButtonStyle}" TargetType="Button">
-        <Setter Property="Width" Value="{StaticResource AetherSizeRailItem}" />
-        <Setter Property="Height" Value="{StaticResource AetherSizeRailItem}" />
-        <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
-        <Setter Property="FontSize" Value="{StaticResource AetherSizeIconLarge}" />
+    <!--  Sidebar items: 36 px circles with the transport's 14 px glyphs; the active one (Player) adds AetherSidebarItemActiveStyle  -->
+    <Style x:Key="AetherSidebarItemStyle" BasedOn="{StaticResource AetherTransportIconButtonStyle}" TargetType="Button">
+        <Setter Property="Width" Value="{StaticResource AetherSizeSidebarItem}" />
+        <Setter Property="Height" Value="{StaticResource AetherSizeSidebarItem}" />
+        <Setter Property="CornerRadius" Value="{StaticResource AetherSidebarItemCornerRadius}" />
+        <Setter Property="FocusVisualMargin" Value="-3" />
         <Setter Property="ToolTipService.Placement" Value="Right" />
     </Style>
-    <Style x:Key="AetherRailItemActiveStyle" BasedOn="{StaticResource AetherRailItemStyle}" TargetType="Button">
+    <Style x:Key="AetherSidebarItemActiveStyle" BasedOn="{StaticResource AetherSidebarItemStyle}" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
     </Style>
@@ -617,31 +620,286 @@
         <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
-        <Setter Property="Padding" Value="0,4" />
+        <Setter Property="Padding" Value="0,3" />
+        <Setter Property="MaxWidth" Value="{StaticResource AetherSizeMenuMaxWidth}" />
     </Style>
-    <Style x:Key="AetherToggleMenuItemStyle" BasedOn="{StaticResource DefaultToggleMenuFlyoutItemStyle}" TargetType="ToggleMenuFlyoutItem">
+    <!--
+        Menu rows (Pre-Pass 8): one column layout for every row, so the menu is as wide as its longest label and
+        shortcut and no wider. Padding 12, a 16 px icon column (check marks share it), gap 12, the label, then a
+        right-aligned trailing column that holds the shortcut or the submenu chevron, at least 24 from the label.
+        The stock templates reserved a 28 px check column beside the icons, sat inside a second 4 px inset,
+        and left-aligned the shortcut on toggle rows. They also bound the shortcut to the presenter's
+        TemplateSettings.KeyboardAcceleratorTextMinWidth, which counts the shortcut's margin and so pads the menu
+        by about 40 px from the second opening on; right-aligned in the last column, every shortcut and chevron
+        already ends on the same edge without it.
+        Rows are 32 tall with 1 px above and below, so neighbouring hover fills keep a 2 px gap.
+    -->
+    <Thickness x:Key="AetherMenuItemPadding">12,0</Thickness>
+    <Thickness x:Key="AetherMenuItemIconMargin">0,0,12,0</Thickness>
+    <Thickness x:Key="AetherMenuItemTrailingMargin">24,0,0,0</Thickness>
+    <Style x:Key="AetherMenuItemStyle" TargetType="MenuFlyoutItem">
         <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
-        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="Margin" Value="4,1" />
+        <Setter Property="Padding" Value="{StaticResource AetherMenuItemPadding}" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
         <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
         <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
         <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="KeyboardAcceleratorPlacementMode" Value="Hidden" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuFlyoutItem">
+                    <Grid x:Name="LayoutRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Viewbox x:Name="IconRoot" Width="{StaticResource AetherSizeIcon}" Height="{StaticResource AetherSizeIcon}" Margin="{StaticResource AetherMenuItemIconMargin}" VerticalAlignment="Center" Visibility="Collapsed">
+                            <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{TemplateBinding Foreground}" />
+                        </Viewbox>
+                        <TextBlock x:Name="TextBlock" Grid.Column="1" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}" Text="{TemplateBinding Text}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="KeyboardAcceleratorTextBlock" Grid.Column="2" Margin="{StaticResource AetherMenuItemTrailingMargin}" HorizontalAlignment="Right" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" FontSize="{StaticResource AetherCaptionFontSize}" Foreground="{StaticResource AetherTextSecondaryBrush}" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" TextAlignment="Right" Visibility="Collapsed" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="LayoutRoot.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="LayoutRoot.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="TextBlock.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                        <Setter Target="IconContent.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                        <Setter Target="KeyboardAcceleratorTextBlock.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <!--  Icons and check marks share one column, so any placeholder is the same 16 + 12 indent.  -->
+                            <VisualStateGroup x:Name="CheckPlaceholderStates">
+                                <VisualState x:Name="NoPlaceholder" />
+                                <VisualState x:Name="CheckPlaceholder">
+                                    <VisualState.Setters>
+                                        <Setter Target="IconRoot.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="IconPlaceholder">
+                                    <VisualState.Setters>
+                                        <Setter Target="IconRoot.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckAndIconPlaceholder">
+                                    <VisualState.Setters>
+                                        <Setter Target="IconRoot.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="PaddingSizeStates">
+                                <VisualState x:Name="DefaultPadding" />
+                                <VisualState x:Name="NarrowPadding" />
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="KeyboardAcceleratorTextVisibility">
+                                <VisualState x:Name="KeyboardAcceleratorTextCollapsed" />
+                                <VisualState x:Name="KeyboardAcceleratorTextVisible">
+                                    <VisualState.Setters>
+                                        <Setter Target="KeyboardAcceleratorTextBlock.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
-    <Style x:Key="AetherMenuSubItemStyle" BasedOn="{StaticResource DefaultMenuFlyoutSubItemStyle}" TargetType="MenuFlyoutSubItem">
+    <!--
+        A toggle row's check mark sits in the icon column. A toggle with an icon (Always on top, Loop) keeps its icon
+        and shows it on a FillEmphasisRest plate with a StrokeControl edge while on, the same "on" look as the
+        transport toggles.
+    -->
+    <Style x:Key="AetherToggleMenuItemStyle" TargetType="ToggleMenuFlyoutItem">
         <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
-        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="Margin" Value="4,1" />
+        <Setter Property="Padding" Value="{StaticResource AetherMenuItemPadding}" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
         <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
         <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
         <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="KeyboardAcceleratorPlacementMode" Value="Hidden" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleMenuFlyoutItem">
+                    <Grid x:Name="LayoutRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid Width="{StaticResource AetherSizeIcon}" Height="{StaticResource AetherSizeIcon}" Margin="{StaticResource AetherMenuItemIconMargin}" VerticalAlignment="Center">
+                            <Border x:Name="CheckPlate" Width="24" Height="24" Margin="-4" Background="{StaticResource AetherFillEmphasisRestBrush}" BorderBrush="{StaticResource AetherStrokeControlBrush}" BorderThickness="1" CornerRadius="{StaticResource AetherControlCornerRadius}" Visibility="Collapsed" />
+                            <FontIcon x:Name="CheckGlyph" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{TemplateBinding Foreground}" Glyph="&#xE73E;" Opacity="0" />
+                            <Viewbox x:Name="IconRoot" Visibility="Collapsed">
+                                <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{TemplateBinding Foreground}" />
+                            </Viewbox>
+                        </Grid>
+                        <TextBlock x:Name="TextBlock" Grid.Column="1" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}" Text="{TemplateBinding Text}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="KeyboardAcceleratorTextBlock" Grid.Column="2" Margin="{StaticResource AetherMenuItemTrailingMargin}" HorizontalAlignment="Right" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" FontSize="{StaticResource AetherCaptionFontSize}" Foreground="{StaticResource AetherTextSecondaryBrush}" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" TextAlignment="Right" Visibility="Collapsed" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="LayoutRoot.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="LayoutRoot.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="TextBlock.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                        <Setter Target="IconContent.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                        <Setter Target="CheckGlyph.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                        <Setter Target="KeyboardAcceleratorTextBlock.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CheckStates">
+                                <VisualState x:Name="Unchecked" />
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckGlyph.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="UncheckedWithIcon">
+                                    <VisualState.Setters>
+                                        <Setter Target="IconRoot.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedWithIcon">
+                                    <VisualState.Setters>
+                                        <Setter Target="IconRoot.Visibility" Value="Visible" />
+                                        <Setter Target="CheckPlate.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="PaddingSizeStates">
+                                <VisualState x:Name="DefaultPadding" />
+                                <VisualState x:Name="NarrowPadding" />
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="KeyboardAcceleratorTextVisibility">
+                                <VisualState x:Name="KeyboardAcceleratorTextCollapsed" />
+                                <VisualState x:Name="KeyboardAcceleratorTextVisible">
+                                    <VisualState.Setters>
+                                        <Setter Target="KeyboardAcceleratorTextBlock.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
-    <Style x:Key="AetherMenuItemStyle" BasedOn="{StaticResource DefaultMenuFlyoutItemStyle}" TargetType="MenuFlyoutItem">
+    <!--  The chevron takes the trailing column, so its right edge lines up with the shortcuts above and below.  -->
+    <Style x:Key="AetherMenuSubItemStyle" TargetType="MenuFlyoutSubItem">
         <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
-        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="Margin" Value="4,1" />
+        <Setter Property="Padding" Value="{StaticResource AetherMenuItemPadding}" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
         <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
         <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
         <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuFlyoutSubItem">
+                    <Grid x:Name="LayoutRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Viewbox x:Name="IconRoot" Width="{StaticResource AetherSizeIcon}" Height="{StaticResource AetherSizeIcon}" Margin="{StaticResource AetherMenuItemIconMargin}" VerticalAlignment="Center" Visibility="Collapsed">
+                            <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{TemplateBinding Foreground}" />
+                        </Viewbox>
+                        <TextBlock x:Name="TextBlock" Grid.Column="1" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}" Text="{TemplateBinding Text}" TextTrimming="CharacterEllipsis" />
+                        <FontIcon x:Name="SubItemChevron" Grid.Column="2" Margin="{StaticResource AetherMenuItemTrailingMargin}" HorizontalAlignment="Right" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{StaticResource AetherTextSecondaryBrush}" Glyph="&#xE974;" MirroredWhenRightToLeft="True" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="LayoutRoot.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="LayoutRoot.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="SubMenuOpened">
+                                    <VisualState.Setters>
+                                        <Setter Target="LayoutRoot.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="TextBlock.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                        <Setter Target="IconContent.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                        <Setter Target="SubItemChevron.Foreground" Value="{StaticResource AetherTextDisabledBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CheckPlaceholderStates">
+                                <VisualState x:Name="NoPlaceholder" />
+                                <VisualState x:Name="CheckPlaceholder">
+                                    <VisualState.Setters>
+                                        <Setter Target="IconRoot.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="IconPlaceholder">
+                                    <VisualState.Setters>
+                                        <Setter Target="IconRoot.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckAndIconPlaceholder">
+                                    <VisualState.Setters>
+                                        <Setter Target="IconRoot.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="PaddingSizeStates">
+                                <VisualState x:Name="DefaultPadding" />
+                                <VisualState x:Name="NarrowPadding" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <!--
         Title bar gear and Back: 46×32 and square like the system caption buttons, and coloured like them:

@@ -85,47 +85,58 @@ public class BackdropTests
         Assert.Equal(0f, BackdropGeometry.FadeOpacity(1f, 0f, 900, 300));
     }
 
+    private const BackdropSlot Bar = BackdropSlot.Bar;
+    private const BackdropSlot Sidebar = BackdropSlot.Sidebar;
+
+    private static int Frames(BackdropSource source, long timestamp, out BackdropFrame first)
+    {
+        Span<BackdropFrame> frames = stackalloc BackdropFrame[BackdropSource.SlotCount];
+        int count = source.TryGetFrames(timestamp, frames);
+        first = count > 0 ? frames[0] : default;
+        return count;
+    }
+
     [Fact]
     public void Source_StartsShown_ButOffUntilActivated()
     {
         var source = new BackdropSource();
-        source.Post(Card());
+        source.Post(Bar, Card());
 
-        Assert.False(source.TryGetFrame(Ms(0), out _));
+        Assert.Equal(0, Frames(source, Ms(0), out _));
 
-        source.SetActive(true);
-        Assert.True(source.TryGetFrame(Ms(0), out BackdropFrame frame));
+        source.SetActive(Bar, true);
+        Assert.Equal(1, Frames(source, Ms(0), out BackdropFrame frame));
         Assert.Equal(1f, frame.Opacity);
         Assert.Equal(Card(), frame.Region);
+        Assert.Equal((int)Bar, frame.Slot);
     }
 
     [Fact]
     public void Source_NoCardPosted_DrawsNothing()
     {
         var source = new BackdropSource();
-        source.SetActive(true);
+        source.SetActive(Bar, true);
 
-        Assert.False(source.TryGetFrame(Ms(0), out _));
+        Assert.Equal(0, Frames(source, Ms(0), out _));
     }
 
     [Fact]
     public void Source_HideFade_KeepsAskingForFramesUntilTheLastOneIsDrawn()
     {
         var source = new BackdropSource();
-        source.Post(Card());
-        source.SetActive(true);
+        source.Post(Bar, Card());
+        source.SetActive(Bar, true);
 
-        source.Fade(visible: false, durationMilliseconds: 300, Ms(1000));
+        source.Fade(Bar, visible: false, durationMilliseconds: 300, Ms(1000));
         Assert.True(source.NeedsFrameAt(Ms(1000)));
 
-        Assert.True(source.TryGetFrame(Ms(1100), out BackdropFrame mid));
+        Assert.Equal(1, Frames(source, Ms(1100), out BackdropFrame mid));
         Assert.InRange(mid.Opacity, 0.01f, 0.99f);
         Assert.True(source.NeedsFrameAt(Ms(1100)));
 
         // Time has passed the end, but the frame at 0 has not been drawn yet.
         Assert.True(source.NeedsFrameAt(Ms(1310)));
-        Assert.False(source.TryGetFrame(Ms(1310), out BackdropFrame last));
-        Assert.Equal(0f, last.Opacity);
+        Assert.Equal(0, Frames(source, Ms(1310), out _));
         Assert.False(source.NeedsFrameAt(Ms(1311)));
     }
 
@@ -133,7 +144,7 @@ public class BackdropTests
     public void Source_FadeNobodyRenders_StopsAskingAfterAGraceTime()
     {
         var source = new BackdropSource();
-        source.Fade(visible: false, durationMilliseconds: 300, Ms(0));
+        source.Fade(Bar, visible: false, durationMilliseconds: 300, Ms(0));
 
         Assert.True(source.NeedsFrameAt(Ms(350)));
         Assert.False(source.NeedsFrameAt(Ms(500)));
@@ -143,31 +154,89 @@ public class BackdropTests
     public void Source_ReducedMotion_JumpsWithoutRequestingFrames()
     {
         var source = new BackdropSource();
-        source.Post(Card());
-        source.SetActive(true);
+        source.Post(Bar, Card());
+        source.SetActive(Bar, true);
 
-        source.Fade(visible: false, durationMilliseconds: 0, Ms(1000));
+        source.Fade(Bar, visible: false, durationMilliseconds: 0, Ms(1000));
 
         Assert.False(source.NeedsFrameAt(Ms(1000)));
-        Assert.False(source.TryGetFrame(Ms(1000), out _));
+        Assert.Equal(0, Frames(source, Ms(1000), out _));
     }
 
     [Fact]
     public void Source_ReversingMidFade_StartsFromTheCurrentOpacity()
     {
         var source = new BackdropSource();
-        source.Post(Card());
-        source.SetActive(true);
+        source.Post(Bar, Card());
+        source.SetActive(Bar, true);
 
-        source.Fade(visible: false, durationMilliseconds: 300, Ms(0));
-        source.TryGetFrame(Ms(60), out BackdropFrame before);
-        source.Fade(visible: true, durationMilliseconds: 150, Ms(60));
-        source.TryGetFrame(Ms(60), out BackdropFrame after);
+        source.Fade(Bar, visible: false, durationMilliseconds: 300, Ms(0));
+        Frames(source, Ms(60), out BackdropFrame before);
+        source.Fade(Bar, visible: true, durationMilliseconds: 150, Ms(60));
+        Frames(source, Ms(60), out BackdropFrame after);
 
         Assert.InRange(before.Opacity, 0.01f, 0.99f);
         Assert.Equal(before.Opacity, after.Opacity, 4);
 
-        source.TryGetFrame(Ms(210), out BackdropFrame done);
+        Frames(source, Ms(210), out BackdropFrame done);
         Assert.Equal(1f, done.Opacity);
+    }
+
+    [Fact]
+    public void Source_TwoSlots_FadeOnTheirOwn()
+    {
+        var source = new BackdropSource();
+        source.Post(Bar, Card());
+        source.Post(Sidebar, Card(x: 16, w: 48, h: 168));
+        source.SetActive(Bar, true);
+        source.SetActive(Sidebar, true);
+        source.Fade(Sidebar, visible: false, durationMilliseconds: 0, Ms(0));
+
+        // Only the bar draws while the sidebar is faded out.
+        Assert.Equal(1, Frames(source, Ms(0), out BackdropFrame barOnly));
+        Assert.Equal((int)Bar, barOnly.Slot);
+
+        // Fading the sidebar in leaves the bar's opacity alone.
+        source.Fade(Sidebar, visible: true, durationMilliseconds: 200, Ms(1000));
+        Span<BackdropFrame> frames = stackalloc BackdropFrame[BackdropSource.SlotCount];
+        Assert.Equal(2, source.TryGetFrames(Ms(1100), frames));
+        Assert.Equal(1f, frames[0].Opacity);
+        Assert.Equal((int)Sidebar, frames[1].Slot);
+        Assert.InRange(frames[1].Opacity, 0.01f, 0.99f);
+        Assert.Equal(48f, frames[1].Region.Width);
+    }
+
+    [Fact]
+    public void Source_NeedsFrame_WhileEitherSlotIsFading()
+    {
+        var source = new BackdropSource();
+        source.Fade(Bar, visible: true, durationMilliseconds: 0, Ms(0));
+        source.Fade(Sidebar, visible: true, durationMilliseconds: 0, Ms(0));
+        Assert.False(source.NeedsFrameAt(Ms(10)));
+
+        source.Fade(Sidebar, visible: false, durationMilliseconds: 200, Ms(1000));
+        Assert.True(source.NeedsFrameAt(Ms(1100)));
+
+        // Drawing the last frame of the sidebar's fade ends the request, whatever the bar is doing.
+        Span<BackdropFrame> frames = stackalloc BackdropFrame[BackdropSource.SlotCount];
+        source.TryGetFrames(Ms(1250), frames);
+        Assert.False(source.NeedsFrameAt(Ms(1251)));
+
+        source.Fade(Bar, visible: false, durationMilliseconds: 200, Ms(2000));
+        Assert.True(source.NeedsFrameAt(Ms(2100)));
+    }
+
+    [Fact]
+    public void Source_InactiveSlot_DrawsNothingEvenWhenShown()
+    {
+        var source = new BackdropSource();
+        source.Post(Sidebar, Card(x: 16, w: 48, h: 168));
+        source.SetActive(Bar, true);
+
+        Assert.Equal(0, Frames(source, Ms(0), out _));
+
+        source.SetActive(Sidebar, true);
+        Assert.Equal(1, Frames(source, Ms(0), out BackdropFrame frame));
+        Assert.Equal((int)Sidebar, frame.Slot);
     }
 }

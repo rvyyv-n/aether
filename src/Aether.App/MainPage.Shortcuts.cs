@@ -81,6 +81,7 @@ public sealed partial class MainPage
         Label(ForwardButton, "Transport_Forward5s", ShortcutAction.SkipForward);
         MoreLoopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Loop);
         MoreAlwaysOnTopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
+        MoreSettingsItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Settings);
         ApplyContextMenuShortcuts();
         ApplyRailShortcutLabels();
     }
@@ -152,6 +153,7 @@ public sealed partial class MainPage
         ShortcutAction.ExportClip => OnExportClipAccelerator,
         ShortcutAction.NextChapter => OnNextChapterAccelerator,
         ShortcutAction.PreviousChapter => OnPreviousChapterAccelerator,
+        ShortcutAction.Sidebar => OnSidebarAccelerator,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 

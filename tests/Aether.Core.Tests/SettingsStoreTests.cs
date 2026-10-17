@@ -525,6 +525,10 @@ public class SettingsStoreTests
         Assert.False(store.Set(SettingKeys.Downscaling, "area"));
         Assert.False(store.Set(SettingKeys.HdrToneMapping, "unsupported"));
         Assert.False(store.Set(SettingKeys.SubtitleSize, "gigantic"));
+        Assert.False(store.Set(SettingKeys.SubtitleOutline, "huge"));
+        Assert.False(store.Set(SettingKeys.SubtitleOutlineColor, "pink"));
+        Assert.False(store.Set(SettingKeys.SubtitleBackground, "striped"));
+        Assert.False(store.Set(SettingKeys.SubtitleBold, "yes"));
         Assert.False(store.Set(SettingKeys.StreamingQuality, "8k"));
 
         Assert.False(store.Set(SettingKeys.Brightness, -101));

@@ -145,6 +145,7 @@ public sealed class ShortcutSettings
         ShortcutAction.ExportClip => "Settings_Shortcuts_ExportClip",
         ShortcutAction.NextChapter => "Settings_Shortcuts_NextChapter",
         ShortcutAction.PreviousChapter => "Settings_Shortcuts_PreviousChapter",
+        ShortcutAction.Sidebar => "Settings_Shortcuts_Sidebar",
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 }

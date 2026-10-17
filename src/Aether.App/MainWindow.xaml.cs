@@ -496,6 +496,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         {
             _aspectLock.AspectRatio = aspect;
         }
+        WindowBorder.SetShown(WinRT.Interop.WindowNative.GetWindowHandle(this), shown: aspect <= 0);
     }
 
     private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)

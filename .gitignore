@@ -46,3 +46,6 @@ dist/
 Thumbs.db
 *.part
 *.tmp
+
+# Build specs stay local
+docs/specs/

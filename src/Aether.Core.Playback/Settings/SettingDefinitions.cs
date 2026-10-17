@@ -48,6 +48,11 @@ public static class SettingKeys
     public const string SubtitleSize = "subtitles.size";
     public const string SubtitleColor = "subtitles.color";
     public const string SubtitlePosition = "subtitles.position";
+    public const string SubtitleBold = "subtitles.bold";
+    public const string SubtitleOutline = "subtitles.outline";
+    public const string SubtitleOutlineColor = "subtitles.outlineColor";
+    public const string SubtitleBackground = "subtitles.background";
+    public const string SubtitleOverrideStyled = "subtitles.overrideStyled";
     public const string StreamingQuality = "streaming.quality";
     public const string PreferGpuDecodableFormats = "streaming.preferGpuDecodable";
     public const string YtDlpAutoUpdate = "streaming.ytdlpAutoUpdate";
@@ -81,6 +86,7 @@ public static class SettingKeys
     public const string ShortcutExportClip = "shortcuts.exportClip";
     public const string ShortcutNextChapter = "shortcuts.nextChapter";
     public const string ShortcutPreviousChapter = "shortcuts.previousChapter";
+    public const string ShortcutSidebar = "shortcuts.sidebar";
 }
 
 /// <summary>One setting: key, restart flag, validation and (de)serialisation. No reflection, so it is AOT-safe.</summary>
@@ -209,9 +215,14 @@ public static class SettingDefinitions
         Text(SettingKeys.PreferredAudioLanguage, s => s.PreferredAudioLanguage, (s, v) => s with { PreferredAudioLanguage = v }),
         Text(SettingKeys.PreferredSubtitleLanguage, s => s.PreferredSubtitleLanguage, (s, v) => s with { PreferredSubtitleLanguage = v }),
         Text(SettingKeys.SubtitleFont, s => s.SubtitleFont, (s, v) => s with { SubtitleFont = v }),
-        Choice(SettingKeys.SubtitleSize, s => s.SubtitleSize, (s, v) => s with { SubtitleSize = v }, false, "small", "medium", "large"),
+        Choice(SettingKeys.SubtitleSize, s => s.SubtitleSize, (s, v) => s with { SubtitleSize = v }, false, "small", "medium", "large", "xlarge"),
         Choice(SettingKeys.SubtitleColor, s => s.SubtitleColor, (s, v) => s with { SubtitleColor = v }, false, "white", "yellow", "green", "cyan"),
         Choice(SettingKeys.SubtitlePosition, s => s.SubtitlePosition, (s, v) => s with { SubtitlePosition = v }, false, "bottom", "raised", "top"),
+        Flag(SettingKeys.SubtitleBold, s => s.SubtitleBold, (s, v) => s with { SubtitleBold = v }),
+        Choice(SettingKeys.SubtitleOutline, s => s.SubtitleOutline, (s, v) => s with { SubtitleOutline = v }, false, "none", "thin", "normal", "thick"),
+        Choice(SettingKeys.SubtitleOutlineColor, s => s.SubtitleOutlineColor, (s, v) => s with { SubtitleOutlineColor = v }, false, "black", "gray", "white"),
+        Choice(SettingKeys.SubtitleBackground, s => s.SubtitleBackground, (s, v) => s with { SubtitleBackground = v }, false, "none", "soft", "solid"),
+        Flag(SettingKeys.SubtitleOverrideStyled, s => s.SubtitleOverrideStyled, (s, v) => s with { SubtitleOverrideStyled = v }),
 
         Choice(SettingKeys.StreamingQuality, s => s.StreamingQuality, (s, v) => s with { StreamingQuality = v }, false, "480p", "720p", "1080p", "1440p", "2160p", "best"),
         Flag(SettingKeys.PreferGpuDecodableFormats, s => s.PreferGpuDecodableFormats, (s, v) => s with { PreferGpuDecodableFormats = v }),
@@ -248,6 +259,7 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutExportClip, s => s.ShortcutExportClip, (s, v) => s with { ShortcutExportClip = v }),
         Shortcut(SettingKeys.ShortcutNextChapter, s => s.ShortcutNextChapter, (s, v) => s with { ShortcutNextChapter = v }),
         Shortcut(SettingKeys.ShortcutPreviousChapter, s => s.ShortcutPreviousChapter, (s, v) => s with { ShortcutPreviousChapter = v }),
+        Shortcut(SettingKeys.ShortcutSidebar, s => s.ShortcutSidebar, (s, v) => s with { ShortcutSidebar = v }),
     ];
 
     private static readonly Dictionary<string, SettingDefinition> ByKey = All.ToDictionary(d => d.Key, StringComparer.Ordinal);

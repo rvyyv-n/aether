@@ -6,12 +6,14 @@ using Aether.Core.Playback.Tour;
 using Aether_App.Controls;
 using Aether_App.Input;
 using Aether_App.Settings;
+using Microsoft.UI.Composition;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
@@ -38,6 +40,7 @@ public sealed partial class MainPage
     private double _lightRadiusFrom;
     private double _lightRadiusTo;
     private bool _tourMenuShown;
+    private bool _tourBarShown;
 
     private readonly record struct TourTarget(TourRect Rect, double Radius, bool Dashed = false);
 
@@ -115,6 +118,8 @@ public sealed partial class MainPage
         ClipDrawer.Close();
 
         _lightFrom = _lightTo = default;
+        _tourBarShown = false;
+        StartRingPulse();
         _fader.Enter(TourLayer, null);
         ShowTourStep(animate: false);
     }
@@ -129,6 +134,7 @@ public sealed partial class MainPage
         }
         LeaveTourStep();
         _tourLight.Stop();
+        StopRingPulse();
         if (_fader is not null)
         {
             _fader.Exit(TourCard, ChromeFader.FromBelow);
@@ -201,11 +207,9 @@ public sealed partial class MainPage
         PlaceTourCard();
     }
 
-    /// <summary>Undoes what a step opened for itself: the pinned rail and the menu.</summary>
+    /// <summary>Undoes what a step opened for itself: the menu.</summary>
     private void LeaveTourStep()
     {
-        _rail.SetPinned(false);
-        CloseRail();
         if (_tourMenuShown)
         {
             _tourMenuShown = false;
@@ -218,13 +222,7 @@ public sealed partial class MainPage
     {
         TourStep step = _tour.Current;
         LeaveTourStep();
-        if (step == TourStep.Rail)
-        {
-            SyncRail();
-            _rail.SetPinned(true);
-            SyncRail();
-        }
-        UpdateLayout(); // the rail just became visible, and the bar may have grown
+        UpdateLayout(); // the bar may have grown
 
         MoveLight(TourTargetOf(step), animate);
         if (step == TourStep.Menu)
@@ -291,8 +289,6 @@ public sealed partial class MainPage
                 var slot = new TourRect(
                     (TourLayer.ActualWidth - width) / 2, TourLayer.ActualHeight - Osd.Margin.Bottom - height, width, height);
                 return new TourTarget(slot.Inflate(LightPadding), Osd.CornerRadius.TopLeft + LightPadding, Dashed: true);
-            case TourStep.Rail:
-                return Rail.Visibility == Visibility.Visible ? Target(Rail, Rail.CornerRadius.TopLeft + LightPadding) : null;
             case TourStep.Settings:
                 // The gear sits flush with the top edge, so its ring goes just inside it.
                 return TitleBar.Visibility == Visibility.Visible && SettingsButton.Visibility == Visibility.Visible
@@ -415,7 +411,6 @@ public sealed partial class MainPage
         {
             TourStep.Open => ("Tour_Open_Title", "Tour_Open_Body"),
             TourStep.Controls => ("Tour_Controls_Title", "Tour_Controls_Body"),
-            TourStep.Rail => ("Tour_Rail_Title", "Tour_Rail_Body"),
             TourStep.Menu => ("Tour_Menu_Title", "Tour_Menu_Body"),
             TourStep.Shortcuts => ("Tour_Shortcuts_Title", "Tour_Shortcuts_Body"),
             _ => ("Tour_Settings_Title", "Tour_Settings_Body"),
@@ -424,7 +419,7 @@ public sealed partial class MainPage
         TourTitle.Text = AppStrings.Get(title);
         TourBody.Text = AppStrings.Get(body);
         FillTourKeys(step == TourStep.Shortcuts);
-        FillTourDots();
+        FillTourBar(animate: _tourBarShown);
         TourBackButton.Visibility = _tour.IsFirst ? Visibility.Collapsed : Visibility.Visible;
         TourNextButton.Content = AppStrings.Get(_tour.IsLast ? "Tour_Done" : "Tour_Next");
         AutomationProperties.SetName(TourNextButton, (string)TourNextButton.Content);
@@ -449,14 +444,33 @@ public sealed partial class MainPage
         double height = TourLayer.ActualHeight;
         // The margin is the card's position, so it is cleared first or the measured height would include it.
         TourCard.Margin = default;
+        // A collapsed card measures as nothing, which put it where its real height ran off the window.
+        bool wasCollapsed = TourCard.Visibility != Visibility.Visible;
+        if (wasCollapsed)
+        {
+            TourCard.Visibility = Visibility.Visible;
+        }
         TourCard.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-        TourRect? target = step == TourStep.Menu
-            ? (_tourMenuShown ? new TourRect(TourLayout.MenuInset, TitleBarInset, TourLayout.MenuWidth, height - TitleBarInset) : null)
-            : TourTargetOf(step)?.Rect;
+        if (wasCollapsed)
+        {
+            TourCard.Visibility = Visibility.Collapsed;
+        }
+        TourRect? target = step switch
+        {
+            TourStep.Menu => _tourMenuShown ? new TourRect(TourLayout.MenuInset, TitleBarInset, TourLayout.MenuWidth, height - TitleBarInset) : null,
+            // Beside the home screen's content, in the open space, rather than over the file list.
+            TourStep.Shortcuts => HomeContentBounds(),
+            _ => TourTargetOf(step)?.Rect,
+        };
         (double x, double y) = TourLayout.PlaceCard(
             target, TourCard.Width, TourCard.DesiredSize.Height, width, height, FirstRunTour.PlacementOf(step));
         TourCard.Margin = new Thickness(x, y, 0, 0);
     }
+
+    private TourRect? HomeContentBounds() =>
+        HomeView.Visibility == Visibility.Visible && HomeHero.ActualWidth > 0 && Target(HomeHero, 0, padding: 0) is { } home
+            ? home.Rect
+            : null;
 
     /// <summary>The Shortcuts step lists the user's keys as they are now; unbound ones are left out.</summary>
     private void FillTourKeys(bool show)
@@ -491,21 +505,54 @@ public sealed partial class MainPage
         }
     }
 
-    private void FillTourDots()
+    /// <summary>The progress bar fills to the current step; it grows from where it was unless motion is off.</summary>
+    private void FillTourBar(bool animate)
     {
-        TourDots.Children.Clear();
-        var current = (Brush)Application.Current.Resources["AetherTextPrimaryBrush"];
-        var other = (Brush)Application.Current.Resources["AetherTextTertiaryBrush"];
-        for (int i = 0; i < _tour.Count; i++)
+        float fraction = (_tour.Index + 1f) / _tour.Count;
+        Visual visual = ElementCompositionPreview.GetElementVisual(TourBarFill);
+        visual.StopAnimation("Scale.X");
+        if (animate && Motion.AnimationsEnabled)
         {
-            bool here = i == _tour.Index;
-            TourDots.Children.Add(new Border
-            {
-                Width = here ? 16 : 6,
-                Height = 6,
-                CornerRadius = new CornerRadius(3),
-                Background = here ? current : other,
-            });
+            Compositor compositor = visual.Compositor;
+            ScalarKeyFrameAnimation grow = compositor.CreateScalarKeyFrameAnimation();
+            grow.InsertExpressionKeyFrame(0f, "this.StartingValue");
+            grow.InsertKeyFrame(1f, fraction, compositor.CreateCubicBezierEasingFunction(
+                new Vector2(Motion.EaseOut.X, Motion.EaseOut.Y), new Vector2(Motion.EaseOut.Z, Motion.EaseOut.W)));
+            grow.Duration = TimeSpan.FromMilliseconds(Motion.Token("AetherMotionQuickGrowMilliseconds"));
+            visual.StartAnimation("Scale.X", grow);
         }
+        else
+        {
+            visual.Scale = new Vector3(fraction, 1, 1);
+        }
+        _tourBarShown = true;
+    }
+
+    /// <summary>A gentle pulse on the ring round the lit control; none with Windows animations off.</summary>
+    private void StartRingPulse()
+    {
+        Visual visual = ElementCompositionPreview.GetElementVisual(TourRing);
+        visual.StopAnimation("Opacity");
+        visual.Opacity = 1f;
+        if (!Motion.AnimationsEnabled)
+        {
+            return;
+        }
+        Compositor compositor = visual.Compositor;
+        ScalarKeyFrameAnimation pulse = compositor.CreateScalarKeyFrameAnimation();
+        CubicBezierEasingFunction ease = compositor.CreateCubicBezierEasingFunction(new Vector2(0.37f, 0), new Vector2(0.63f, 1));
+        pulse.InsertKeyFrame(0f, 1f);
+        pulse.InsertKeyFrame(0.5f, 0.4f, ease);
+        pulse.InsertKeyFrame(1f, 1f, ease);
+        pulse.Duration = TimeSpan.FromMilliseconds(1800);
+        pulse.IterationBehavior = AnimationIterationBehavior.Forever;
+        visual.StartAnimation("Opacity", pulse);
+    }
+
+    private void StopRingPulse()
+    {
+        Visual visual = ElementCompositionPreview.GetElementVisual(TourRing);
+        visual.StopAnimation("Opacity");
+        visual.Opacity = 1f;
     }
 }

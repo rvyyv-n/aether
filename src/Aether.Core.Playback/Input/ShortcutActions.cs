@@ -36,6 +36,7 @@ public static class ShortcutActions
         ShortcutAction.ExportClip => SettingKeys.ShortcutExportClip,
         ShortcutAction.NextChapter => SettingKeys.ShortcutNextChapter,
         ShortcutAction.PreviousChapter => SettingKeys.ShortcutPreviousChapter,
+        ShortcutAction.Sidebar => SettingKeys.ShortcutSidebar,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 
@@ -78,6 +79,7 @@ public static class ShortcutActions
         ShortcutAction.ExportClip => [KeyCombination.Letter('E', KeyModifiers.Ctrl)],
         ShortcutAction.NextChapter => [new KeyCombination(KeyCombination.PageDown)],
         ShortcutAction.PreviousChapter => [new KeyCombination(KeyCombination.PageUp)],
+        ShortcutAction.Sidebar => [KeyCombination.Letter('B')],
         _ => [],
     };
 

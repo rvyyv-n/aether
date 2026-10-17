@@ -29,4 +29,5 @@ public enum ShortcutAction
     ExportClip,
     NextChapter,
     PreviousChapter,
+    Sidebar,
 }
