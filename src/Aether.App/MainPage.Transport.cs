@@ -117,6 +117,7 @@ public sealed partial class MainPage
         {
             return;
         }
+        _chapterSkipper.OnUserSeek(seconds);
         _chrome.SetHold(ChromeHolds.Interaction, dragging);
         ApplyChrome();
         PositionText.Text = Timecode.FormatClock(seconds, session.ViewModel.Duration);
@@ -127,6 +128,7 @@ public sealed partial class MainPage
     {
         if (_session is { } session && HasVideo)
         {
+            _chapterSkipper.OnUserSeek(Math.Max(0, session.ViewModel.Position + seconds));
             TrySend(() => session.SeekBy(seconds));
         }
     }

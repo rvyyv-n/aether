@@ -1241,6 +1241,24 @@
   <data name="Settings_PreventSleep_Description" xml:space="preserve">
     <value>The display won't dim or sleep during playback. It is released when you pause.</value>
   </data>
+  <data name="Settings_ChapterAutoSkip_Title" xml:space="preserve">
+    <value>Skip chapters automatically</value>
+  </data>
+  <data name="Settings_ChapterAutoSkip_Description" xml:space="preserve">
+    <value>Jump over chapters whose title matches the names below, such as a Sponsor or Intro.</value>
+  </data>
+  <data name="Settings_ChapterSkipNames_Title" xml:space="preserve">
+    <value>Chapter names to skip</value>
+  </data>
+  <data name="Settings_ChapterSkipNames_Description" xml:space="preserve">
+    <value>Separate names with commas. A name matches whole words, so Intro skips "Intro" but not "Introduction".</value>
+  </data>
+  <data name="Toast_ChapterSkipped" xml:space="preserve">
+    <value>Skipped {0}</value>
+  </data>
+  <data name="Toast_ChapterSkipBack" xml:space="preserve">
+    <value>Back</value>
+  </data>
   <data name="Settings_NetworkCache_Title" xml:space="preserve">
     <value>Network buffer</value>
   </data>

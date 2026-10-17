@@ -542,6 +542,7 @@ public sealed partial class MainPage : Page
         switch (e.PropertyName)
         {
             case nameof(PlayerViewModel.Position):
+                OnChapterSkipPosition(vm);
                 UpdateClock(vm);
                 break;
             case nameof(PlayerViewModel.Duration):
