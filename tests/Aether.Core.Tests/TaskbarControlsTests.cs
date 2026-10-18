@@ -52,4 +52,12 @@ public class TaskbarControlsTests
             new TaskbarControls(false, PlayButtonAction.Pause, true, false),
             TaskbarControls.From(PlaybackStatus.Playing, default));
     }
+
+    [Fact]
+    public void Title_Keeps_The_App_Name_Before_The_File_Name()
+    {
+        Assert.Equal("Aether - Holiday.mp4", TaskbarControls.Title("Aether", "Holiday.mp4"));
+        Assert.Equal("Aether", TaskbarControls.Title("Aether", null));
+        Assert.Equal("Aether", TaskbarControls.Title("Aether", ""));
+    }
 }

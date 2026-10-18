@@ -27,4 +27,8 @@ public readonly record struct TaskbarControls(bool PreviousEnabled, PlayButtonAc
             status != PlaybackStatus.Loading,
             neighbours.Next is not null);
     }
+
+    /// <summary>The window title, which the taskbar preview shows: the app name, then the file name when one is open.</summary>
+    public static string Title(string appName, string? fileName) =>
+        string.IsNullOrEmpty(fileName) ? appName : $"{appName} - {fileName}";
 }

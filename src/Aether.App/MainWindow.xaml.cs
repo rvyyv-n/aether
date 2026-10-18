@@ -462,7 +462,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     public void SetTaskbar(string? fileName, in TaskbarControls controls)
     {
         // The taskbar preview's title is the window title.
-        string title = fileName ?? AppStrings.Get("App_Name");
+        string title = TaskbarControls.Title(AppStrings.Get("App_Name"), fileName);
         if (!string.Equals(Title, title, StringComparison.Ordinal))
         {
             Title = title;
