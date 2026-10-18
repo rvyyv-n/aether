@@ -11,10 +11,14 @@
 
 .PARAMETER SkipZip
     Skip zip compression.
+
+.PARAMETER Version
+    SemVer to stamp into the build (the release workflow passes the tag without its leading v). Defaults to the version in Directory.Build.props.
 #>
 [CmdletBinding()]
 param(
     [switch]$SkipZip,
+    [string]$Version = "",
     [string]$Configuration = "Release",
     [string]$Platform = "x64"
 )
@@ -55,6 +59,9 @@ $publishArgs = @(
     "-p:NuGetAudit=false",
     "-o", $PortableDir
 )
+if ($Version) {
+    $publishArgs += "-p:Version=$Version"
+}
 & dotnet @publishArgs
 if ($LASTEXITCODE -ne 0) {
     Write-Error "[Error] Publishing Aether.App failed with exit code $LASTEXITCODE."
