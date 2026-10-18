@@ -54,12 +54,11 @@
     <ProjectReference Include="..\Aether.Server.LanHost\Aether.Server.LanHost.csproj" />
   </ItemGroup>
 
-  <!-- Publish Properties -->
-  <PropertyGroup>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <!-- Trimming breaks WinUI 3 XAML reflection and type metadata in unpackaged apps -->
-    <PublishTrimmed>False</PublishTrimmed>
+  <!-- Publish Properties: Release publishes are Native AOT (ADR-0001); Debug stays plain IL so builds and tests are fast -->
+  <PropertyGroup Condition="'$(Configuration)' != 'Debug'">
+    <PublishAot>true</PublishAot>
+    <!-- Only the single "assembly produced trim warnings" summary for the Windows SDK and WinRT projections, which we cannot edit; our own code and every other trim or AOT warning still fail the build -->
+    <NoWarn>$(NoWarn);IL2104</NoWarn>
   </PropertyGroup>
 
   <!-- Unpackaged WinUI 3 PRI unification: guarantee resources.pri is always present next to the executable -->

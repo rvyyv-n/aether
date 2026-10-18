@@ -1,90 +1,109 @@
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Aether_App.Settings;
 
 /// <summary>The font families installed on this PC (for everyone and for the current user), read through DirectWrite, the same names mpv matches.</summary>
-internal static class InstalledFonts
+internal static unsafe partial class InstalledFonts
 {
-    [DllImport("dwrite.dll")]
-    private static extern int DWriteCreateFactory(int factoryType, ref Guid iid, [MarshalAs(UnmanagedType.IUnknown)] out object factory);
+    [LibraryImport("dwrite.dll")]
+    private static partial int DWriteCreateFactory(int factoryType, in Guid iid, out nint factory);
 
-    // Only the methods up to the ones used are declared, but every slot before them must be present, in order.
-    [ComImport, Guid("b859ee5a-d838-4b5b-a2e8-1adc7d93db48"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IDWriteFactory
-    {
-        [PreserveSig] int GetSystemFontCollection(out IDWriteFontCollection collection, [MarshalAs(UnmanagedType.Bool)] bool checkForUpdates);
-    }
+    private static readonly Guid FactoryIid = new("b859ee5a-d838-4b5b-a2e8-1adc7d93db48");
 
-    [ComImport, Guid("a84cee02-3eea-4eee-a827-87c1a02a0fcc"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IDWriteFontCollection
-    {
-        [PreserveSig] uint GetFontFamilyCount();
-        [PreserveSig] int GetFontFamily(uint index, out IDWriteFontFamily family);
-    }
+    // The DirectWrite objects are called through their vtables because Native AOT cannot marshal [ComImport] interfaces.
+    // Slot numbers count IUnknown's three methods first, then the interface's own in declaration order.
+    private static void** Vtbl(nint p) => *(void***)p;
 
-    [ComImport, Guid("da20d8ef-812a-4c43-9802-62ec4abd7add"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IDWriteFontFamily
-    {
-        // IDWriteFontList slots.
-        [PreserveSig] int GetFontCollection(out IDWriteFontCollection collection);
-        [PreserveSig] uint GetFontCount();
-        [PreserveSig] int GetFont(uint index, [MarshalAs(UnmanagedType.IUnknown)] out object font);
-        [PreserveSig] int GetFamilyNames(out IDWriteLocalizedStrings names);
-    }
-
-    [ComImport, Guid("08256209-099a-4b34-b86d-c22b110e7771"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IDWriteLocalizedStrings
-    {
-        [PreserveSig] uint GetCount();
-        [PreserveSig] int FindLocaleName([MarshalAs(UnmanagedType.LPWStr)] string localeName, out uint index, [MarshalAs(UnmanagedType.Bool)] out bool exists);
-        // Without these two locale-name slots, GetStringLength and GetString call the wrong methods and every family reads "en-us".
-        [PreserveSig] int GetLocaleNameLength(uint index, out uint length);
-        [PreserveSig] int GetLocaleName(uint index, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder buffer, uint size);
-        [PreserveSig] int GetStringLength(uint index, out uint length);
-        [PreserveSig] int GetString(uint index, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder buffer, uint size);
-    }
+    private static void Release(nint p) => ((delegate* unmanaged[Stdcall]<nint, uint>)Vtbl(p)[2])(p);
 
     /// <summary>Family names in English where the font has one, otherwise in its first language. Empty if DirectWrite is unavailable.</summary>
     public static List<string> Families()
     {
         List<string> names = [];
+        nint factory = 0;
+        nint collection = 0;
         try
         {
-            Guid factoryIid = typeof(IDWriteFactory).GUID;
-            if (DWriteCreateFactory(0, ref factoryIid, out object created) < 0
-                || ((IDWriteFactory)created).GetSystemFontCollection(out IDWriteFontCollection collection, false) < 0)
+            if (DWriteCreateFactory(0, in FactoryIid, out factory) < 0
+                || ((delegate* unmanaged[Stdcall]<nint, nint*, int, int>)Vtbl(factory)[3])(factory, &collection, 0) < 0)
             {
                 return names;
             }
 
-            uint count = collection.GetFontFamilyCount();
+            uint count = ((delegate* unmanaged[Stdcall]<nint, uint>)Vtbl(collection)[3])(collection);
             for (uint i = 0; i < count; i++)
             {
-                if (collection.GetFontFamily(i, out IDWriteFontFamily family) < 0
-                    || family.GetFamilyNames(out IDWriteLocalizedStrings strings) < 0)
+                string? name = FamilyName(collection, i);
+                if (name is not null)
                 {
-                    continue;
-                }
-                if (strings.FindLocaleName("en-us", out uint index, out bool exists) < 0 || !exists)
-                {
-                    index = 0;
-                }
-                if (strings.GetStringLength(index, out uint length) < 0)
-                {
-                    continue;
-                }
-                var buffer = new StringBuilder((int)length + 1);
-                if (strings.GetString(index, buffer, length + 1) >= 0)
-                {
-                    names.Add(buffer.ToString());
+                    names.Add(name);
                 }
             }
         }
-        catch (Exception e) when (e is COMException or InvalidCastException or DllNotFoundException or EntryPointNotFoundException)
+        catch (Exception e) when (e is DllNotFoundException or EntryPointNotFoundException)
         {
             // The picker falls back to its built-in list.
         }
+        finally
+        {
+            if (collection != 0)
+            {
+                Release(collection);
+            }
+            if (factory != 0)
+            {
+                Release(factory);
+            }
+        }
         return names;
+    }
+
+    private static string? FamilyName(nint collection, uint familyIndex)
+    {
+        nint family = 0;
+        nint strings = 0;
+        try
+        {
+            if (((delegate* unmanaged[Stdcall]<nint, uint, nint*, int>)Vtbl(collection)[4])(collection, familyIndex, &family) < 0
+                || ((delegate* unmanaged[Stdcall]<nint, nint*, int>)Vtbl(family)[6])(family, &strings) < 0)
+            {
+                return null;
+            }
+
+            uint index;
+            int exists;
+            fixed (char* locale = "en-us")
+            {
+                if (((delegate* unmanaged[Stdcall]<nint, char*, uint*, int*, int>)Vtbl(strings)[4])(strings, locale, &index, &exists) < 0 || exists == 0)
+                {
+                    index = 0;
+                }
+            }
+
+            uint length;
+            if (((delegate* unmanaged[Stdcall]<nint, uint, uint*, int>)Vtbl(strings)[7])(strings, index, &length) < 0)
+            {
+                return null;
+            }
+
+            char[] buffer = new char[length + 1];
+            fixed (char* text = buffer)
+            {
+                return ((delegate* unmanaged[Stdcall]<nint, uint, char*, uint, int>)Vtbl(strings)[8])(strings, index, text, length + 1) >= 0
+                    ? new string(text)
+                    : null;
+            }
+        }
+        finally
+        {
+            if (strings != 0)
+            {
+                Release(strings);
+            }
+            if (family != 0)
+            {
+                Release(family);
+            }
+        }
     }
 }
