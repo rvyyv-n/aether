@@ -10,6 +10,7 @@ namespace Aether_App.Settings.Pages;
 public sealed partial class AboutPage : Page
 {
     private static readonly Uri Repository = new("https://github.com/rvyyv-n/aether");
+    private static readonly Uri Licence = new("https://github.com/rvyyv-n/aether/blob/master/LICENSE");
     private static readonly Uri Issues = new("https://github.com/rvyyv-n/aether/issues");
 
     private readonly string _appVersion;
@@ -28,6 +29,9 @@ public sealed partial class AboutPage : Page
         CreditVersionRow.Header = AppStrings.Get("Settings_About_CreditVersion");
         CreditVersion.Text = $"{AppStrings.Get("App_Badge")} {_appVersion}";
         CreditPrivacyRow.Header = AppStrings.Get("Settings_About_CardTagline");
+        CreditLicenceRow.Header = AppStrings.Get("Settings_About_CreditLicence");
+        CreditLicenceLink.Content = AppStrings.Get("Settings_About_CreditLicenceLink");
+        CreditLicenceLink.NavigateUri = Licence;
         CreditLinkRow.Header = AppStrings.Get("Settings_About_CreditSource");
         CreditLink.Content = AppStrings.Get("Settings_About_CardLink");
         CreditLink.NavigateUri = Repository;

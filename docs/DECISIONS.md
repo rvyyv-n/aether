@@ -125,7 +125,7 @@
   - Distribution: Aether and companion utilities are distributed under a single parent suite/studio banner, sharing unified design tokens, typography ramp, and installer packaging.
   - Licensing & fork protection: The application shell, presentation layer, C# playback logic, and companion utilities are proprietary / source-available with a restrictive license prohibiting unauthorized commercial redistribution, re-branding, or closed forks.
   - LGPL compliance: `libmpv` is consumed exclusively as an unmanaged shared library (`libmpv-2.dll`) via standard C-ABI dynamic linking (`[LibraryImport]` / source-generated P/Invoke in `Aether.Core.Interop`). In accordance with LGPL v2.1+ requirements, the application dynamically links the library, allowing end users to inspect and replace `libmpv-2.dll` with alternative compatible builds without requiring the host C# application code to be GPL/LGPL licensed.
-- **Status:** Accepted.
+- **Status:** Superseded by ADR-0025 on licensing (proprietary terms and the LGPL libmpv requirement); the shared suite design stands.
 
 ## ADR-0017: Unpackaged WinUI 3 Deployment, Standalone Runner & Per-User Installer
 - **Context:** Running and distributing Aether previously relied on MSIX packaging or Windows Developer Mode loose package registration via `Add-AppxPackage`. Default unpackaged builds (`WindowsPackageType=None`) failed during WinUI 3 startup with `E_XAMLPARSEFAILED` (`0x802B000A`), and MSIX packages required administrative privileges and test code-signing certificates installed to the Local Machine Root trust store.
@@ -221,3 +221,14 @@
   - A quote in a LUT path needs two levels of escaping (`'\\''`), because ffmpeg unquotes the filter graph and then the option. The old single escape silently dropped the apostrophe, so playback and export now share the corrected form.
   - Include Look is the `clips.includeLook` setting, on by default, and uses the Look and sliders as playback has them when the export starts.
 - **Status:** Accepted. Needs an on-screen check of a graded clip against playback.
+
+## ADR-0025: Aether Is Released Under GPLv3 With Section 7 Terms (Pass 11, 2026-10-19)
+- **Context:** ADR-0016 planned a proprietary or source-available Aether that linked only an LGPL libmpv. The libmpv build in use is GPL (`gpl` feature on), and the FFmpeg bundle is GPL-3.0 (`--enable-gpl --enable-version3`). Swapping to LGPL builds would also drop the `hqdn3d` filter that live denoise uses. The owner is happy to open the code and wants credit for it.
+- **Decision:**
+  - Aether is licensed GPL-3.0-only. The full text is in `LICENSE`.
+  - `NOTICE.md` adds the extra terms GPLv3 section 7 allows: keep the author attribution and legal notices (including the About screen line), no misrepresenting the origin, mark modified versions as different, and no trademark rights in the name "Aether", its logo or branding. No term restricts commercial use, forks or who may use the app.
+  - `TRADEMARKS.md` explains the branding rules for forks in plain English.
+  - The icon, logo and brand artwork are not covered by the GPL and stay all rights reserved.
+  - The About screen shows the attribution line and links to the licence.
+- **Consequences:** No LGPL libmpv swap is needed (roadmap 11.15 cancelled). The full GPL text lives in `LICENSE`, and `THIRD_PARTY.md` points to it (11.16 done). The written source offer for libmpv and FFmpeg stays. Official releases, the signing certificate and the update channel remain the project's own.
+- **Status:** Accepted. A lawyer has not reviewed the section 7 wording.

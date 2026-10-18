@@ -106,6 +106,9 @@
                 <TextBlock x:Name="CreditVersion" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherBodyTextStyle}" />
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="CreditPrivacyRow" />
+            <settings:SettingsRow x:Name="CreditLicenceRow">
+                <HyperlinkButton x:Name="CreditLicenceLink" />
+            </settings:SettingsRow>
             <settings:SettingsRow x:Name="CreditLinkRow">
                 <HyperlinkButton x:Name="CreditLink" />
             </settings:SettingsRow>

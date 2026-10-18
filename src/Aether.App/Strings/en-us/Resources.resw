@@ -938,6 +938,12 @@
   <data name="Settings_About_CreditSource" xml:space="preserve">
     <value>Source code</value>
   </data>
+  <data name="Settings_About_CreditLicence" xml:space="preserve">
+    <value>Aether by rvyyv-n, licensed under GPL-3.0</value>
+  </data>
+  <data name="Settings_About_CreditLicenceLink" xml:space="preserve">
+    <value>Read the licence</value>
+  </data>
   <data name="Settings_About_Licences" xml:space="preserve">
     <value>Licences</value>
   </data>

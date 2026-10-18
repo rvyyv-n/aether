@@ -293,15 +293,15 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 | 11.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations; confirm the low-pause GC settings (workstation, non-concurrent, SustainedLowLatency) are really configured | M |
 | 11.6 | `EngineResilience`: attach/detach context cleanup, attached core disposal device-loss safety, queue overflow resync, background core destruction | M |
 | 11.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S |
-| 11.8 | `THIRD_PARTY.md` licence and attribution file for libmpv, FFmpeg, yt-dlp, ANGLE and the other bundled parts, included in the installer and portable zip — **Done, with a release blocker** (versions filled in. The staged libmpv is a GPL build and must be swapped for an LGPL build before release; the bundled FFmpeg is GPL, fine as a separate program with the source offer. The full GPL-3.0 text is still a link, to paste in before release; see `docs/reviews/third-party-notes.md`) | S |
+| 11.8 | `THIRD_PARTY.md` licence and attribution file for libmpv, FFmpeg, yt-dlp, ANGLE and the other bundled parts, included in the installer and portable zip — **Done** (versions filled in. libmpv and FFmpeg are GPL builds, fine under the GPLv3 licence of ADR-0025, with the source offer kept; see `docs/reviews/third-party-notes.md`) | S |
 | 11.9 | Self-sufficient yt-dlp: build P8.8 (bundled copy, one-click install, hash check, scheduled updates) | M |
 | 11.10 | Auto updater: build from `docs/reviews/pass-7-auto-updater-plan.md` (ADR-0021). **Decided:** ships unsigned, off by default until the first signed release, public repo | M |
 | 11.11 | Caption buttons ignore transparency: decide between drawing our own caption buttons or accepting them always visible and matching the gear — **Decided:** keep the system buttons always visible and match the gear to them | S |
 | 11.12 | Settings sections get accessible names for screen readers | S |
 | 11.13 | Set the app's version and publisher before the first release | S |
 | 11.14 | Taskbar preview: hovering the taskbar icon shows the file name as the title and previous, Play/Pause and next buttons under the live preview, like Spotify's; the buttons follow the player state | M |
-| 11.15 | **Release blocker:** replace the bundled GPL libmpv with an LGPL build (see ADR-0016 and `docs/reviews/third-party-notes.md`), wire it into the packaging scripts and CI, and re-run the playback smoke test (11.7) on it | M |
-| 11.16 | Paste the full GPL-3.0 text into `THIRD_PARTY.md` (it is only a link now) | S |
+| 11.15 | ~~**Release blocker:** replace the bundled GPL libmpv with an LGPL build~~ — **Cancelled** (licence switched to GPLv3, ADR-0025, so no LGPL libmpv swap is needed) | — |
+| 11.16 | Paste the full GPL-3.0 text into `THIRD_PARTY.md` (it is only a link now) — **Done** (full GPL text is in `LICENSE`) | S |
 
 **Pass 11 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
 

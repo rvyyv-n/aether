@@ -177,9 +177,14 @@ dotnet test AetherPlayer.sln -c Debug -p:Platform=x64 --no-build
 
 ---
 
-## Suite Architecture & Licensing
+## Suite Architecture
 
-Aether is part of a unified suite of Windows 11 performance utilities (including system debloating and tuning tools) sharing core design tokens (`DesignTokens.xaml`), Mica Alt aesthetics, and zero-allocation performance principles (see [ADR-0016](docs/DECISIONS.md#adr-0016-unified-utility-suite-proprietary-licensing--lgpl-architecture)).
+Aether is part of a unified suite of Windows 11 performance utilities (including system debloating and tuning tools) sharing core design tokens (`DesignTokens.xaml`), Mica Alt aesthetics, and zero-allocation performance principles (see [ADR-0016](docs/DECISIONS.md)).
 
-- **Application Code & Assets:** Proprietary / All rights reserved. Unauthorized reproduction, forking, redistribution, or modification of the application shell, suite components, and binaries is prohibited.
-- **libmpv Dynamic Linking:** Uses standard C-ABI dynamic linking (`libmpv-2.dll`) adhering to LGPL v2.1+.
+## License
+
+Aether by [rvyyv-n](https://github.com/rvyyv-n), licensed under the GNU General Public License v3.0 only (GPL-3.0-only). See [LICENSE](LICENSE) for the full text.
+
+- [NOTICE.md](NOTICE.md): the copyright line and the additional terms allowed by GPLv3 section 7 (keep the attribution, don't misrepresent the origin, mark modified versions). The icon, logo and brand artwork are not covered by the GPL and stay all rights reserved.
+- [TRADEMARKS.md](TRADEMARKS.md): what forks may and may not do with the name and logo.
+- [THIRD_PARTY.md](THIRD_PARTY.md): licences of the bundled components (libmpv and FFmpeg are GPL builds) and the written source offer.

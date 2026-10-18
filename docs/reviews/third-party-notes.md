@@ -1,15 +1,15 @@
 # Third-Party Attribution & Licensing Notes
 
 **Branch / Checkout:** `wip/pass-11` (`D:\Code\Worktrees\aether\wip-pass-11`)  
-**Related Documents:** [ADR-0016 (Licensing & Architecture)](../../docs/DECISIONS.md#adr-0016-unified-utility-suite-proprietary-licensing--lgpl-architecture), [ROADMAP Task 11.8](../../docs/ROADMAP.md#pass-11-embedded-kestrel-lan-streamer--release-verification), [THIRD_PARTY.md](../../THIRD_PARTY.md)
+**Related Documents:** [ADR-0025 (GPLv3 licensing)](../../docs/DECISIONS.md#adr-0025-aether-is-released-under-gplv3-with-section-7-terms-pass-11-2026-10-19), [ROADMAP Task 11.8](../../docs/ROADMAP.md#pass-11-embedded-kestrel-lan-streamer--release-verification), [THIRD_PARTY.md](../../THIRD_PARTY.md)
 
 ---
 
-## 1. The GPL vs. LGPL Question (Priority 1 Audit Results)
+## 1. GPL Build Flavours (Audit Results)
 
-The most critical licensing constraint for Aether is the **build flavour of `libmpv` (`libmpv-2.dll`) and `FFmpeg` (`ffmpeg.exe`)**.
+Aether is GPL-3.0-only (ADR-0025). The licensing facts to track are the **build flavour of `libmpv` (`libmpv-2.dll`) and `FFmpeg` (`ffmpeg.exe`)**.
 
-### A. libmpv (`libmpv-2.dll`): CRITICAL RELEASE BLOCKER
+### A. libmpv (`libmpv-2.dll`): GPL build, compatible with GPLv3
 - **Binary Inspected:** `src\Aether.App\Native\x64\libmpv-2.dll` (staged size: 120,938,496 bytes)
 - **Reported Version:** `v0.41.0-1122-gaccb7b282` (Client API 2.5)
 - **Binary Metadata (VersionInfo Comments):**  
@@ -19,11 +19,10 @@ The most critical licensing constraint for Aether is the **build flavour of `lib
   Meson cross configuration: `-Ddefault_library=shared -Dprefer_static=true -Dlibmpv=true -Dpdf-build=enabled -Dlua=enabled -Djavascript=enabled -Dsdl2-gamepad=enabled -Dlibarchive=enabled -Dlibbluray=enabled -Ddvdnav=enabled -Duchardet=enabled -Drubberband=enabled -Dlcms2=enabled -Dopenal=enabled -Dspirv-cross=enabled -Dvulkan=enabled -Dvapoursynth=enabled -Dsubrandr=enabled -Dsixel=enabled -Dgl=enabled -Degl-angle=enabled -Dlibcurl=enabled ...`  
   **Active Enabled Features:** `amf build-date cplugins cuda-hwaccel cuda-interop d3d-hwaccel d3d11 d3d9-hwaccel debug direct3d dos-paths dvda dvdnav dxgi-debug-d3d11 egl-angle egl-angle-win32 ffmpeg ffnvcodec gl gl-dxinterop gl-dxinterop-d3d9 gl-win32 glob glob-win32 gpl iconv javascript jpeg lcms2 libarchive libass libavdevice libbluray libcurl libplacebo luajit openal rubberband rubberband-3 sdl2-gamepad shaderc sixel spirv-cross subrandr uchardet vaapi vaapi-win32 vapoursynth vector vk-khr-display vulkan wasapi win32 win32-desktop win32-executable win32-smtc win32-threads zimg zimg-st428 zlib`
 - **Flavour Determination:** **GPL v2.0 or later (GPL-2.0+)**. The binary has the `gpl` feature explicitly active.
-- **Architectural & Legal Impact ([ADR-0016](../../docs/DECISIONS.md#adr-0016-unified-utility-suite-proprietary-licensing--lgpl-architecture)):**  
-  Aether dynamically links `libmpv-2.dll` in-process using standard C-ABI P/Invoke in `Aether.Core.Interop`. If Aether distributes a GPL-built `libmpv-2.dll` bundled inside `AetherInstaller.exe` or `Aether-portable.zip`, the combined executable work falls under the GPL copyleft clause, legally compelling Aether to open-source its proprietary C# application code.
-- **Action Required:** **DO NOT SHIP THIS BINARY.** Replace `libmpv-2.dll` with an LGPL-compiled build (`-Dgpl=false` / `--enable-lgpl`) before creating release installers or publishing portable packages.
+- **Architectural & Legal Impact ([ADR-0025](../../docs/DECISIONS.md#adr-0025-aether-is-released-under-gplv3-with-section-7-terms-pass-11-2026-10-19)):**  
+  Aether is licensed GPL-3.0-only, so shipping a GPL libmpv is fine. No LGPL swap is needed. The written source offer in [THIRD_PARTY.md](../../THIRD_PARTY.md) stays.
 
-### B. FFmpeg (`ffmpeg.exe`): GPL CLI Tool (Safe via Process Execution; Written Offer Drafted)
+### B. FFmpeg (`ffmpeg.exe`): GPL CLI Tool (Compatible; Written Offer Drafted)
 - **Binary Inspected:** `ffmpeg.exe` located on system PATH (`C:\Users\rayyan\AppData\Local\Microsoft\WinGet\Links\ffmpeg.exe`)
 - **Reported Version:** `ffmpeg version 9.0.2-full_build-www.gyan.dev` (built with gcc 16.2.0, MSYS2)
 - **Build Configuration:**  
@@ -35,7 +34,7 @@ The most critical licensing constraint for Aether is the **build flavour of `lib
   FFmpeg is currently unbundled in `dist/Aether-portable/`. If Aether ever bundles `ffmpeg.exe` into `AetherInstaller.exe` or portable packages, Aether must:
   1. Accompany the distribution with a written offer valid for at least three (3) years to provide the exact corresponding FFmpeg source code and build scripts (or provide direct source access).
   2. Include the full text of the GNU General Public License Version 3.  
-  *Both requirements have been drafted and included in [THIRD_PARTY.md](../../THIRD_PARTY.md).*
+  *The offer is in [THIRD_PARTY.md](../../THIRD_PARTY.md); the licence text is in [LICENSE](../../LICENSE).*
 
 ---
 
@@ -76,7 +75,7 @@ Verified against `Directory.Build.props`, project files in `src/` and `tests/`, 
    - *Staged location:* `src/Aether.App/Native/x64/libmpv-2.dll`
    - *Runtime loading:* Dynamically loaded via standard C-ABI P/Invoke in `Aether.Core.Interop.NativeLibraries`.
    - *Audited version:* `v0.41.0-1122-gaccb7b282` (Client API 2.5).
-   - *Licence / Flavour:* **GPL-2.0+ (current staged binary; release blocker)**. Target release build must be **LGPL-2.1+**.
+   - *Licence / Flavour:* **GPL-2.0+ (GPL build; compatible with GPLv3)**.
 2. **`ANGLE` (`libEGL.dll` and `libGLESv2.dll`):**
    - *Staged location:* `src/Aether.App/Native/x64/`
    - *Runtime loading:* Loaded by `Aether.Core.Interop.Angle.AngleBridge` before mpv render context creation.
@@ -105,7 +104,7 @@ Verified against `Directory.Build.props`, project files in `src/` and `tests/`, 
    - *Licence:* Microsoft Windows App SDK asset.
 4. **`AppIcon.ico` & Branding Artwork:**
    - *Usage:* Application icon (pale star), installer icon, README logo, and web streamer tab icon. Generated by `tools/make_app_icon.py`.
-   - *Licence:* Proprietary / Copyright © Aether Project. All rights reserved.
+   - *Licence:* Copyright © rvyyv-n. Not covered by the GPL; all rights reserved (see `NOTICE.md`).
 
 ---
 
@@ -113,8 +112,8 @@ Verified against `Directory.Build.props`, project files in `src/` and `tests/`, 
 
 | # | Item | Current State | Resolved Status & Required Action |
 |:---|:---|:---|:---|
-| **1** | **`libmpv-2.dll` Build Flavour** | Binary inspected: `v0.41.0-1122-gaccb7b282` with `gpl` feature enabled. | **CRITICAL RELEASE BLOCKER.** The current binary is GPL-2.0+. It CANNOT be bundled with Aether under ADR-0016 without infecting Aether's C# code under GPL copyleft. **Action:** Replace with an LGPL-built binary (`-Dgpl=false` / `--enable-lgpl`) before publishing releases. |
-| **2** | **Native Binary Sourcing & CI** | `src/Aether.App/Native/*/*.dll` is gitignored; `.github/workflows/build-aot.yml` builds without native DLLs. | **In Progress.** A clean LGPL libmpv and ANGLE binary download step must be added to release packaging workflows once the LGPL binary artifact URL is established. |
+| **1** | **`libmpv-2.dll` Build Flavour** | Binary inspected: `v0.41.0-1122-gaccb7b282` with `gpl` feature enabled. | **Resolved.** The GPL build is compatible with Aether's GPL-3.0-only licence (ADR-0025). No LGPL swap needed. |
+| **2** | **Native Binary Sourcing & CI** | `src/Aether.App/Native/*/*.dll` is gitignored; `.github/workflows/build-aot.yml` builds without native DLLs. | **In Progress.** A libmpv and ANGLE download step must be added to release packaging workflows once the binary artifact URL is established. |
 | **3** | **FFmpeg Distribution Mode** | `ClipExportService` resolves `ffmpeg.exe` from `PATH`. System binary is GPL-3.0 (`9.0.2-full_build-www.gyan.dev`). | **Compliant.** Process execution via `Process.Start` constitutes "mere aggregation" and does not infect Aether. If bundled in the future, the 3-year written source code offer and GPL-3.0 text added to `THIRD_PARTY.md` satisfy distribution compliance. |
 | **4** | **yt-dlp Distribution Mode** | Looked up on `PATH` or adjacent; version `2026.07.04` verified on dev machine. | **Ready for Roadmap 11.9.** yt-dlp is public domain (The Unlicense). May be safely bundled into installer/portable zip or downloaded on demand with zero copyleft risk. |
 | **5** | **Exact Version Pinning** | All components audited from project files, packages, and binaries. | **Complete.** Exact versions pinned across `THIRD_PARTY.md` and this document: Windows App SDK 2.5.1, WebView2 1.0.3719.77, BuildTools 10.0.28000.2705, QRCoder 1.6.0, ASP.NET Core 9.0, ANGLE 2.1.0.0, FFmpeg 9.0.2, yt-dlp 2026.07.04, libmpv v0.41.0-1122-gaccb7b282. |
