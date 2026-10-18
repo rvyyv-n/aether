@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- yt-dlp now comes with Aether, so the first web link plays with no setup. If it is ever missing, Install on the link-failure screen or the Streaming page downloads it with a progress count, checks the download against the release's published checksum, and starts using it at once. Aether runs the newest of its downloaded copy, the bundled copy and one on PATH, checks once a day for a newer one (switch off with Update automatically), and uninstalling removes the downloaded copy.
 ### Changed
 - Subtitles no longer sit behind the transport bar: while the bar shows they are lifted just above it (following the bar as it grows and shrinks) and ease back down when it hides, in windowed and full screen. The Position setting still applies on top, and Top is never lifted. Only the part of the bar over the picture counts, so a letterboxed video keeps its subtitles where they were. A `sub-margin-y` in the custom mpv options turns the lift off.
 - The Small subtitle size is about a quarter smaller (30 instead of 40 on mpv's 720-high scale), so it no longer looks nearly as big as Medium on the video. Medium, Large and Extra large are unchanged, and the Settings preview follows the same sizes.
