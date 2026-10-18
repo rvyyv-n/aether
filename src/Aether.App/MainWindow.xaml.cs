@@ -47,9 +47,6 @@ public interface IShellWindow
 
     void ToggleAlwaysOnTop();
 
-    /// <summary>Fades the minimize/maximize/close glyphs with the rest of the chrome (they stay clickable).</summary>
-    void SetCaptionButtonsVisible(bool visible);
-
     /// <summary>
     /// Raised when the pointer moves over the title strip or the caption buttons. Those are
     /// non-client regions, so the page gets no pointer events there and could not wake the controls.
@@ -82,11 +79,6 @@ public sealed partial class MainWindow : Window, IShellWindow
     private readonly Color _captionHover;
     private readonly Color _captionPressed;
     private readonly AspectRatioLock? _aspectLock;
-    private readonly CaptionGlyphFade _captionFade = new();
-    private readonly DispatcherQueueTimer _captionTimer;
-    private readonly TimeSpan _chromeShow;
-    private readonly TimeSpan _chromeHide;
-    private bool _captionsVisible = true;
     private Windows.Foundation.Point _lastNonClientPointer = new(double.NaN, double.NaN);
     private RectInt32? _normalBounds; // where the window sits when neither maximised nor full screen
     private bool _maximized;
@@ -115,14 +107,8 @@ public sealed partial class MainWindow : Window, IShellWindow
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonBackgroundColor = Colors.Transparent;
         titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        ApplyCaptionGlyphs(1);
+        ApplyCaptionGlyphs();
 
-        _chromeShow = TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeShowMilliseconds"]);
-        _chromeHide = TimeSpan.FromMilliseconds((double)resources["AetherMotionChromeHideMilliseconds"]);
-        _captionTimer = DispatcherQueue.CreateTimer();
-        _captionTimer.Interval = TimeSpan.FromMilliseconds(16);
-        _captionTimer.IsRepeating = true;
-        _captionTimer.Tick += OnCaptionTimerTick;
 
         try
         {
@@ -150,7 +136,6 @@ public sealed partial class MainWindow : Window, IShellWindow
         Activated += OnActivated;
         Closed += (_, _) =>
         {
-            _captionTimer.Stop();
             DisplaySync.Dispose(); // before the aspect lock: it sits on top of that subclass
             _aspectLock?.Dispose();
             App.Settings.Changed -= OnSettingChanged;
@@ -422,29 +407,6 @@ public sealed partial class MainWindow : Window, IShellWindow
         TitleBarPointerMoved?.Invoke(this, EventArgs.Empty);
     }
 
-    public void SetCaptionButtonsVisible(bool visible)
-    {
-        if (visible == _captionsVisible)
-        {
-            return;
-        }
-        _captionsVisible = visible;
-        TimeSpan duration = Motion.AnimationsEnabled ? (visible ? _chromeShow : _chromeHide) : TimeSpan.Zero;
-        _captionFade.Start(visible, duration);
-        OnCaptionTimerTick(_captionTimer, null);
-        _captionTimer.Start();
-    }
-
-    private void OnCaptionTimerTick(DispatcherQueueTimer sender, object? args)
-    {
-        bool running = _captionFade.Step();
-        ApplyCaptionGlyphs(_captionFade.Opacity);
-        if (!running)
-        {
-            sender.Stop();
-        }
-    }
-
     /// <summary>
     /// The pale star on a dark taskbar, the graphite one on a light taskbar. The exe's own icon (Start, shortcuts)
     /// is always the pale one, since Windows gives unpackaged apps no per-theme icon there.
@@ -460,20 +422,16 @@ public sealed partial class MainWindow : Window, IShellWindow
     // Raised off the UI thread when the Windows light/dark setting changes.
     private void OnSystemColoursChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(ApplyTaskbarIcon);
 
-    private void ApplyCaptionGlyphs(double opacity)
+    private void ApplyCaptionGlyphs()
     {
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
-        titleBar.ButtonForegroundColor = Scale(_captionForeground, opacity);
-        titleBar.ButtonInactiveForegroundColor = Scale(_captionInactiveForeground, opacity);
-        // Hover and press fade too, so an invisible button doesn't light up under the pointer.
-        titleBar.ButtonHoverBackgroundColor = Scale(_captionHover, opacity);
-        titleBar.ButtonPressedBackgroundColor = Scale(_captionPressed, opacity);
-        titleBar.ButtonHoverForegroundColor = Scale(Colors.White, opacity);
-        titleBar.ButtonPressedForegroundColor = Scale(Colors.White, opacity);
+        titleBar.ButtonForegroundColor = _captionForeground;
+        titleBar.ButtonInactiveForegroundColor = _captionInactiveForeground;
+        titleBar.ButtonHoverBackgroundColor = _captionHover;
+        titleBar.ButtonPressedBackgroundColor = _captionPressed;
+        titleBar.ButtonHoverForegroundColor = Colors.White;
+        titleBar.ButtonPressedForegroundColor = Colors.White;
     }
-
-    private static Color Scale(Color color, double opacity) =>
-        Color.FromArgb((byte)Math.Round(color.A * opacity), color.R, color.G, color.B);
 
     public void FitToVideo(int videoWidth, int videoHeight)
     {

@@ -1589,7 +1589,8 @@ public sealed partial class MainPage : Page
                 UpdateClock(clockVm);
             }
             _fader.Fade(TopScrim, visible);
-            _fader.Fade(TitleBar, visible);
+            // The gear, Back and the system caption buttons stay put; only the name fades.
+            _fader.Fade(TitleText, visible);
             _fader.Fade(PipChrome, visible);
             PipChrome.IsHitTestVisible = visible;
             _fader.Fade(Osd, visible);
@@ -1597,7 +1598,6 @@ public sealed partial class MainPage : Page
             Osd.IsHitTestVisible = visible;
             _fader.Fade(ClipLayer, visible);
             ClipLayer.IsHitTestVisible = visible;
-            _host?.SetCaptionButtonsVisible(visible);
         }
         SyncBar();
         SyncSubtitleLift();
