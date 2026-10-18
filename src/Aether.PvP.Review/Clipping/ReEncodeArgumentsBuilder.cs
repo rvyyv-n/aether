@@ -27,7 +27,11 @@ public static class ReEncodeArgumentsBuilder
         if (videoBitsPerSecond is { } bitrate)
         {
             string rate = bitrate.ToString(CultureInfo.InvariantCulture);
-            args.AddRange(["-b:v", rate, "-maxrate", rate, "-bufsize", (bitrate * 2).ToString(CultureInfo.InvariantCulture)]);
+            // A big buffer lets a short clip spend most of its budget in the first burst; 1 s of
+            // buffer for short clips, growing to 2 s once the clip is long enough to average out.
+            double bufferSeconds = Math.Clamp((request.EndTimeSeconds - request.StartTimeSeconds) / 5, 1, 2);
+            string buffer = ((long)(bitrate * bufferSeconds)).ToString(CultureInfo.InvariantCulture);
+            args.AddRange(["-b:v", rate, "-maxrate", rate, "-bufsize", buffer]);
             if (encoder == VideoEncoder.Amf) args.AddRange(["-rc", "vbr_peak"]);
         }
         else

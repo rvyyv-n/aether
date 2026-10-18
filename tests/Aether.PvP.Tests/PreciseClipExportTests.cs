@@ -153,6 +153,49 @@ public sealed class PreciseClipExportTests : IDisposable
     }
 
     [Fact]
+    public async Task Detector_DoesNotCacheEmptyOrFailedResults()
+    {
+        bool broken = true;
+        var runner = new FakeRunner(async (args, consumer, _) =>
+        {
+            if (args.Contains("-encoders"))
+            {
+                if (broken) return new ProcessOutcome(1, "cold start");
+                await consumer!(new StringReader(" V....D libx264   libx264 H.264"));
+            }
+            return Ok;
+        });
+        var detector = new FfmpegEncoderDetector(runner, "ffmpeg");
+
+        Assert.Empty(await detector.GetAvailableEncodersAsync());
+        broken = false;
+
+        Assert.Equal([VideoEncoder.X264], await detector.GetAvailableEncodersAsync());
+    }
+
+    [Fact]
+    public async Task Detector_DoesNotCacheAProbeTimeout()
+    {
+        bool hang = true;
+        var runner = new FakeRunner(async (args, consumer, ct) =>
+        {
+            if (args.Contains("-encoders"))
+            {
+                await consumer!(new StringReader(" V....D h264_nvenc   NVIDIA\n V....D libx264   libx264"));
+                return Ok;
+            }
+            if (hang && EncoderOf(args) == "h264_nvenc") await Task.Delay(Timeout.Infinite, ct);
+            return Ok;
+        });
+        var detector = new FfmpegEncoderDetector(runner, "ffmpeg", TimeSpan.FromMilliseconds(100));
+
+        Assert.Equal([VideoEncoder.X264], await detector.GetAvailableEncodersAsync());
+        hang = false;
+
+        Assert.Equal([VideoEncoder.Nvenc, VideoEncoder.X264], await detector.GetAvailableEncodersAsync());
+    }
+
+    [Fact]
     public void Order_PutsPreferredFirstOnlyWhenAvailable()
     {
         VideoEncoder[] available = [VideoEncoder.Nvenc, VideoEncoder.Amf, VideoEncoder.X264];
@@ -295,6 +338,179 @@ public sealed class PreciseClipExportTests : IDisposable
     }
 
     [Fact]
+    public async Task Export_WhenEveryEncoderFails_DoesNotCrossAnyEncoderOff()
+    {
+        var detector = new FakeDetector(VideoEncoder.Nvenc, VideoEncoder.X264);
+        var runner = new FakeRunner((_, _, _) => Task.FromResult(new ProcessOutcome(1, "disk full")));
+        using var service = new ClipExportService("ffmpeg", runner, detector);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ExportAsync(Request(MakeSource())));
+
+        Assert.Empty(detector.Failed);
+    }
+
+    [Fact]
+    public async Task Export_NeverCrossesOffX264()
+    {
+        var detector = new FakeDetector(VideoEncoder.X264, VideoEncoder.Nvenc);
+        var runner = new FakeRunner((args, _, _) =>
+        {
+            File.WriteAllText(OutputOf(args), "data");
+            return Task.FromResult(EncoderOf(args) == "libx264" ? new ProcessOutcome(1, "bad") : Ok);
+        });
+        using var service = new ClipExportService("ffmpeg", runner, detector);
+
+        var result = await service.ExportAsync(Request(MakeSource(), preferred: VideoEncoder.X264));
+
+        Assert.Equal(VideoEncoder.Nvenc, result.EncoderUsed);
+        Assert.Empty(detector.Failed);
+    }
+
+    [Fact]
+    public async Task Export_Cancel_WhileEncoderExitsNonZero_DoesNotCrossItOff()
+    {
+        var detector = new FakeDetector(VideoEncoder.Nvenc, VideoEncoder.X264);
+        using var cts = new CancellationTokenSource();
+        var runner = new FakeRunner((args, _, _) =>
+        {
+            cts.Cancel();
+            return Task.FromResult(new ProcessOutcome(1, "killed"));
+        });
+        using var service = new ClipExportService("ffmpeg", runner, detector);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.ExportAsync(Request(MakeSource()), cts.Token));
+
+        Assert.Empty(detector.Failed);
+        Assert.Single(runner.Calls);
+        Assert.Empty(OutputFiles());
+    }
+
+    [Fact]
+    public async Task Export_SizeLimitOvershoot_RetriesOnceAtLowerRate()
+    {
+        var sizes = new Queue<int>([1_300_000, 900_000]);
+        var runner = new FakeRunner((args, _, _) =>
+        {
+            File.WriteAllBytes(OutputOf(args), new byte[sizes.Dequeue()]);
+            return Task.FromResult(Ok);
+        });
+        using var service = new ClipExportService("ffmpeg", runner, new FakeDetector(VideoEncoder.X264));
+
+        var result = await service.ExportAsync(Request(MakeSource(), target: 1_000_000));
+
+        Assert.Equal(2, runner.Calls.Count);
+        long first = long.Parse(runner.Calls[0][runner.Calls[0].ToList().IndexOf("-b:v") + 1]);
+        long second = long.Parse(runner.Calls[1][runner.Calls[1].ToList().IndexOf("-b:v") + 1]);
+        Assert.Equal((long)Math.Floor(first * 1_000_000.0 / 1_300_000 * 0.97), second);
+        Assert.Equal(900_000, result.SizeBytes);
+        Assert.Single(OutputFiles());
+    }
+
+    [Fact]
+    public async Task Export_SizeLimitStillOverAfterRetry_FailsClearlyAndLeavesNoFiles()
+    {
+        var runner = new FakeRunner((args, _, _) =>
+        {
+            File.WriteAllBytes(OutputOf(args), new byte[1_300_000]);
+            return Task.FromResult(Ok);
+        });
+        using var service = new ClipExportService("ffmpeg", runner, new FakeDetector(VideoEncoder.X264));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.ExportAsync(Request(MakeSource(), target: 1_000_000)));
+
+        Assert.Contains("limit", ex.Message);
+        Assert.Equal(2, runner.Calls.Count);
+        Assert.Empty(OutputFiles());
+    }
+
+    [Fact]
+    public async Task Export_UnderTheSizeLimit_RunsOnlyOnce()
+    {
+        var runner = new FakeRunner((args, _, _) =>
+        {
+            File.WriteAllBytes(OutputOf(args), new byte[500_000]);
+            return Task.FromResult(Ok);
+        });
+        using var service = new ClipExportService("ffmpeg", runner, new FakeDetector(VideoEncoder.X264));
+
+        await service.ExportAsync(Request(MakeSource(), target: 1_000_000));
+
+        Assert.Single(runner.Calls);
+    }
+
+    [Fact]
+    public async Task Export_ReservesNameBeforeEncoderDetectionFinishes()
+    {
+        var gate = new TaskCompletionSource();
+        var detector = new SlowDetector(gate.Task, VideoEncoder.X264);
+        var runner = new FakeRunner((args, _, _) =>
+        {
+            File.WriteAllText(OutputOf(args), "data");
+            return Task.FromResult(Ok);
+        });
+        using var service = new ClipExportService("ffmpeg", runner, detector);
+        string source = MakeSource();
+
+        var first = service.ExportAsync(Request(source));
+        var second = service.ExportAsync(Request(source));
+        gate.SetResult();
+        var results = await Task.WhenAll(first, second);
+
+        Assert.NotEqual(results[0].OutputPath, results[1].OutputPath);
+        Assert.Equal(2, OutputFiles().Length);
+    }
+
+    [Fact]
+    public void Reserve_SameSecondTwice_GetsDistinctNamesAndPartFiles()
+    {
+        var request = new ClipRequest(MakeSource(), 1.0, 11.0, Path.Combine(_dir, "out"), "Clip");
+        Directory.CreateDirectory(request.DestinationDirectory);
+        string first = ClipExportService.ReserveOutputPath(request);
+        string second = ClipExportService.ReserveOutputPath(request);
+
+        Assert.NotEqual(first, second);
+        Assert.True(File.Exists(first + ".part"));
+        Assert.True(File.Exists(second + ".part"));
+    }
+
+    [Fact]
+    public async Task Export_SharesOneDetectorAcrossConcurrentExports()
+    {
+        int probes = 0;
+        var runner = new FakeRunner(async (args, consumer, _) =>
+        {
+            if (args.Contains("-encoders"))
+            {
+                Interlocked.Increment(ref probes);
+                await Task.Delay(50);
+                await consumer!(new StringReader(" V....D libx264   libx264 H.264"));
+                return Ok;
+            }
+            if (args.Contains("lavfi")) return Ok;
+            File.WriteAllText(OutputOf(args), "data");
+            return Ok;
+        });
+        using var service = new ClipExportService("ffmpeg", runner);
+        string source = MakeSource();
+
+        await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => service.ExportAsync(Request(source))));
+
+        Assert.Equal(1, probes);
+    }
+
+    private sealed class SlowDetector(Task gate, params VideoEncoder[] available) : IHardwareEncoderDetector
+    {
+        public async Task<IReadOnlyList<VideoEncoder>> GetAvailableEncodersAsync(CancellationToken ct = default)
+        {
+            await gate;
+            return available;
+        }
+
+        public void ReportFailure(VideoEncoder encoder) { }
+    }
+
+    [Fact]
     public async Task Export_Cancel_RemovesPartFile()
     {
         var started = new TaskCompletionSource();
@@ -415,6 +631,15 @@ public sealed class PreciseClipExportTests : IDisposable
         Assert.False(BitrateCalculator.Plan(minimum / 2, 10).IsFeasible);
     }
 
+    [Fact]
+    public void Bitrate_LeavesRoomForContainerOverhead()
+    {
+        var plan = BitrateCalculator.Plan(25_000_000, 37.3);
+
+        double projectedBytes = (plan.VideoBitsPerSecond + BitrateCalculator.AudioBitsPerSecond) * 37.3 / 8;
+        Assert.True(projectedBytes <= 25_000_000 * 0.92);
+    }
+
     [Theory]
     [InlineData(0, 10)]
     [InlineData(-5, 10)]
@@ -453,6 +678,16 @@ public sealed class PreciseClipExportTests : IDisposable
         Assert.Equal("2000000", args[args.IndexOf("-maxrate") + 1]);
         Assert.Equal("4000000", args[args.IndexOf("-bufsize") + 1]);
         Assert.DoesNotContain("-crf", args);
+    }
+
+    [Fact]
+    public void Args_SizeLimited_ShortClipGetsOneSecondBuffer()
+    {
+        var short3s = Request("in.mp4") with { StartTimeSeconds = 0, EndTimeSeconds = 3 };
+
+        var args = ReEncodeArgumentsBuilder.Build(short3s, "o.mp4.part", VideoEncoder.X264, 2_000_000).ToList();
+
+        Assert.Equal("2000000", args[args.IndexOf("-bufsize") + 1]);
     }
 
     [Fact]
@@ -581,8 +816,7 @@ public sealed class PreciseClipExportTests : IDisposable
 
     // ---- real process runner ----
 
-    [Fact]
-    public async Task SystemProcessRunner_DrainsLargeOutputOnBothPipes()
+    private string MakeChattyScript()
     {
         string path;
         if (OperatingSystem.IsWindows())
@@ -598,6 +832,13 @@ public sealed class PreciseClipExportTests : IDisposable
                 "#!/bin/sh\ni=0\nwhile [ $i -lt 3000 ]; do echo \"stdout line $i padding padding padding padding padding\"; echo \"stderr line $i padding padding padding padding padding\" >&2; i=$((i+1)); done\nexit 0\n");
             File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
         }
+        return path;
+    }
+
+    [Fact]
+    public async Task SystemProcessRunner_DrainsLargeOutputOnBothPipes()
+    {
+        string path = MakeChattyScript();
 
         int lines = 0;
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
@@ -609,5 +850,31 @@ public sealed class PreciseClipExportTests : IDisposable
         Assert.Equal(0, outcome.ExitCode);
         Assert.Equal(3000, lines);
         Assert.Contains("stderr line 2999", outcome.StandardError);
+    }
+
+    [Fact]
+    public async Task SystemProcessRunner_ConsumerThatThrows_StillDrainsAndFinishes()
+    {
+        string path = MakeChattyScript();
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        var outcome = await new SystemProcessRunner().RunAsync(path, [], reader =>
+        {
+            reader.ReadLine();
+            throw new InvalidOperationException("progress UI blew up");
+        }, cts.Token);
+
+        Assert.Equal(0, outcome.ExitCode);
+        Assert.Contains("stderr line 2999", outcome.StandardError);
+    }
+
+    [Fact]
+    public async Task SystemProcessRunner_AlreadyCancelled_DoesNotStartTheProcess()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => new SystemProcessRunner().RunAsync(Path.Combine(_dir, "does-not-exist.exe"), [], null, cts.Token));
     }
 }

@@ -35,6 +35,8 @@ public sealed class SystemProcessRunner : IProcessRunner
         foreach (var a in arguments)
             startInfo.ArgumentList.Add(a);
 
+        ct.ThrowIfCancellationRequested();
+
         Process process;
         try
         {
@@ -70,9 +72,19 @@ public sealed class SystemProcessRunner : IProcessRunner
 
     private static async Task DrainAsync(StreamReader reader, Func<TextReader, Task>? consumer)
     {
-        if (consumer is not null)
-            await consumer(reader).ConfigureAwait(false);
-        // A consumer that stops early must not leave the pipe unread.
-        await reader.ReadToEndAsync().ConfigureAwait(false);
+        try
+        {
+            if (consumer is not null)
+                await consumer(reader).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // A faulty progress callback must not break the export; the pipe is still drained below.
+        }
+        finally
+        {
+            // A consumer that stops early or throws must not leave the pipe unread.
+            await reader.ReadToEndAsync().ConfigureAwait(false);
+        }
     }
 }

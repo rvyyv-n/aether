@@ -10,12 +10,16 @@ public sealed class ClipExportService : IDisposable
 {
     private static readonly TimeSpan PreWarmTimeout = TimeSpan.FromSeconds(5);
 
+    // Slightly under the exact ratio so the second try lands under the limit, not on it.
+    private const double RetryRateMargin = 0.97;
+
     private readonly CancellationTokenSource _lifetime = new();
     private volatile string _ffmpegPath;
     private volatile bool _isFfmpegAvailable;
     private readonly IProcessRunner _runner;
     private IHardwareEncoderDetector? _detector;
     private string? _detectorPath;
+    private readonly object _detectorLock = new();
 
     public ClipExportService(
         string ffmpegPath = "ffmpeg.exe",
@@ -145,7 +149,7 @@ public sealed class ClipExportService : IDisposable
                     throw new InvalidOperationException($"FFmpeg stream copy failed with exit code {process.ExitCode}: {errors}");
             }
 
-            if (!File.Exists(tempPath))
+            if (!HasContent(tempPath))
                 throw new InvalidOperationException("FFmpeg finished without writing an output file.");
 
             // The final name was chosen before ffmpeg ran, so a clip made in the same second
@@ -175,40 +179,51 @@ public sealed class ClipExportService : IDisposable
             videoBitrate = plan.VideoBitsPerSecond;
         }
 
-        var detector = GetDetector();
-        var ladder = Order(await detector.GetAvailableEncodersAsync(token).ConfigureAwait(false), request.PreferredEncoder);
-        if (ladder.Count == 0)
-            throw new InvalidOperationException("No H.264 encoder is available in this copy of FFmpeg.");
-
+        // The name is claimed before the slow encoder detection so a second export can't take it meanwhile.
         string outputPath = ReserveOutputPath(request, PreciseExtension(request.SourceFilePath));
         string tempPath = outputPath + ".part";
 
         bool committed = false;
         try
         {
+            var detector = GetDetector();
+            var ladder = Order(await detector.GetAvailableEncodersAsync(token).ConfigureAwait(false), request.PreferredEncoder);
+            if (ladder.Count == 0)
+                throw new InvalidOperationException("No H.264 encoder is available in this copy of FFmpeg.");
+
             string lastError = "";
+            var failedEncoders = new List<VideoEncoder>();
             foreach (var encoder in ladder)
             {
-                var parser = new FfmpegProgressParser(duration);
-                var outcome = await _runner.RunAsync(
-                    _ffmpegPath,
-                    ReEncodeArgumentsBuilder.Build(request, tempPath, encoder, videoBitrate),
-                    reader => parser.ReadAsync(reader, progress, token),
-                    token).ConfigureAwait(false);
+                token.ThrowIfCancellationRequested();
 
-                if (outcome.ExitCode == 0 && File.Exists(tempPath))
+                var outcome = await EncodeAsync(request, tempPath, encoder, videoBitrate, duration, progress, token).ConfigureAwait(false);
+
+                if (outcome.ExitCode == 0 && HasContent(tempPath))
                 {
+                    if (request.TargetSizeBytes is { } limit && videoBitrate is { } rate)
+                        await FitToLimitAsync(request, tempPath, encoder, rate, limit, duration, progress, token).ConfigureAwait(false);
+
                     // The final name was chosen before ffmpeg ran, so the rename never overwrites an earlier export.
                     File.Move(tempPath, outputPath, overwrite: false);
                     committed = true;
+
+                    // A hardware encoder is only written off once a later one handled the same clip,
+                    // so a bad clip or a full disk can't disable the graphics card for the session.
+                    foreach (var failed in failedEncoders.Where(e => e != VideoEncoder.X264))
+                        detector.ReportFailure(failed);
+
                     stopwatch.Stop();
                     return new ClipResult(outputPath, new FileInfo(outputPath).Length, stopwatch.Elapsed, encoder);
                 }
 
+                // A cancel can make ffmpeg exit non-zero; that is not the encoder's fault.
+                token.ThrowIfCancellationRequested();
+
                 // Drivers can pass the test encode and still fail on a real clip: skip to the next encoder.
                 lastError = $"{encoder.FfmpegName()} exited with code {outcome.ExitCode}: {outcome.StandardError}";
-                detector.ReportFailure(encoder);
-                TryDelete(tempPath);
+                failedEncoders.Add(encoder);
+                ResetReservation(tempPath);
             }
 
             throw new InvalidOperationException($"FFmpeg re-encode failed with every available encoder. Last error: {lastError}");
@@ -219,15 +234,57 @@ public sealed class ClipExportService : IDisposable
         }
     }
 
+    private async Task<ProcessOutcome> EncodeAsync(
+        ClipRequest request, string tempPath, VideoEncoder encoder, long? videoBitrate, double duration,
+        IProgress<ClipProgress>? progress, CancellationToken token)
+    {
+        var parser = new FfmpegProgressParser(duration);
+        return await _runner.RunAsync(
+            _ffmpegPath,
+            ReEncodeArgumentsBuilder.Build(request, tempPath, encoder, videoBitrate),
+            reader => parser.ReadAsync(reader, progress, token),
+            token).ConfigureAwait(false);
+    }
+
+    // Encoders and containers overshoot the requested rate, so a finished file can still exceed the
+    // limit. One retry at a rate scaled by how far it overshot; after that the export fails.
+    private async Task FitToLimitAsync(
+        ClipRequest request, string tempPath, VideoEncoder encoder, long videoBitrate, long limit, double duration,
+        IProgress<ClipProgress>? progress, CancellationToken token)
+    {
+        long actual = new FileInfo(tempPath).Length;
+        if (actual <= limit) return;
+
+        long lowerRate = (long)Math.Floor(videoBitrate * (double)limit / actual * RetryRateMargin);
+        if (lowerRate < BitrateCalculator.MinimumVideoBitsPerSecond)
+            throw new ClipTargetTooSmallException(BitrateCalculator.Plan(limit, duration).MinimumSizeBytes);
+
+        var outcome = await EncodeAsync(request, tempPath, encoder, lowerRate, duration, progress, token).ConfigureAwait(false);
+        token.ThrowIfCancellationRequested();
+        if (outcome.ExitCode != 0 || !HasContent(tempPath))
+            throw new InvalidOperationException(
+                $"FFmpeg failed while re-encoding to fit the size limit ({encoder.FfmpegName()} exited with code {outcome.ExitCode}): {outcome.StandardError}");
+
+        actual = new FileInfo(tempPath).Length;
+        if (actual > limit)
+            throw new InvalidOperationException(
+                $"The clip came out at {actual / 1024.0 / 1024.0:F1} MB, over the {limit / 1024.0 / 1024.0:F1} MB limit even after a second try. Choose a larger limit or a shorter clip.");
+    }
+
     private IHardwareEncoderDetector GetDetector()
     {
         // The path can change in PreWarmAsync, and a detector caches results for one binary.
-        if (_detector is null || (_detectorPath is not null && _detectorPath != _ffmpegPath))
+        // The lock lets concurrent exports share one detection instead of each probing.
+        lock (_detectorLock)
         {
-            _detector = new FfmpegEncoderDetector(_runner, _ffmpegPath);
-            _detectorPath = _ffmpegPath;
+            string path = _ffmpegPath;
+            if (_detector is null || (_detectorPath is not null && _detectorPath != path))
+            {
+                _detector = new FfmpegEncoderDetector(_runner, path);
+                _detectorPath = path;
+            }
+            return _detector;
         }
-        return _detector;
     }
 
     // The preferred encoder goes first when it is usable; the rest keep the ladder order as fallbacks.
@@ -258,16 +315,37 @@ public sealed class ClipExportService : IDisposable
             throw new ArgumentException("End timestamp must be strictly greater than start timestamp.");
     }
 
+    // The .part file is created here, not just the name picked: CreateNew fails if another export got
+    // there first, so two exports in the same second can never share a file.
     internal static string ReserveOutputPath(ClipRequest request, string? extension = null)
     {
         string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
         extension ??= Path.GetExtension(request.SourceFilePath);
         string baseName = $"{request.ClipNamePrefix}_{timestamp}";
 
-        string candidate = Path.Combine(request.DestinationDirectory, baseName + extension);
-        for (int i = 1; File.Exists(candidate) || File.Exists(candidate + ".part"); i++)
-            candidate = Path.Combine(request.DestinationDirectory, $"{baseName}_{i}{extension}");
-        return candidate;
+        for (int i = 0; ; i++)
+        {
+            string candidate = Path.Combine(request.DestinationDirectory, i == 0 ? baseName + extension : $"{baseName}_{i}{extension}");
+            if (File.Exists(candidate)) continue;
+            try
+            {
+                new FileStream(candidate + ".part", FileMode.CreateNew, FileAccess.Write, FileShare.None).Dispose();
+                return candidate;
+            }
+            catch (IOException) when (File.Exists(candidate + ".part"))
+            {
+                // Taken by another export.
+            }
+        }
+    }
+
+    // ffmpeg writes over the reserved .part, so an empty one means it never wrote anything.
+    private static bool HasContent(string path) => File.Exists(path) && new FileInfo(path).Length > 0;
+
+    // Emptying instead of deleting keeps the name reserved while the next encoder runs.
+    private static void ResetReservation(string path)
+    {
+        try { new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None).Dispose(); } catch { /* best effort */ }
     }
 
     private static void Kill(Process process)

@@ -20,9 +20,9 @@ public static class BitrateCalculator
     // Below this the picture is unusable blocks, so a smaller target is refused rather than encoded.
     public const int MinimumVideoBitsPerSecond = 100_000;
 
-    // Encoders overshoot the requested rate and the container adds its own overhead, so only
-    // this share of the limit is budgeted.
-    public const double SafetyMargin = 0.93;
+    // Encoders overshoot the requested rate and the container adds its own overhead (about
+    // 1.5% for MP4), so only this share of the limit is budgeted.
+    public const double SafetyMargin = 0.915;
 
     public static BitratePlan Plan(long targetSizeBytes, double durationSeconds)
     {
