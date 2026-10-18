@@ -12,12 +12,16 @@
 .PARAMETER SkipZip
     Skip zip compression.
 
+.PARAMETER NativeAot
+    Publish as Native AOT (needs the Visual Studio C++ tools). Off by default until the AOT build is verified.
+
 .PARAMETER Version
     SemVer to stamp into the build (the release workflow passes the tag without its leading v). Defaults to the version in Directory.Build.props.
 #>
 [CmdletBinding()]
 param(
     [switch]$SkipZip,
+    [switch]$NativeAot,
     [string]$Version = "",
     [string]$Configuration = "Release",
     [string]$Platform = "x64"
@@ -53,7 +57,6 @@ $publishArgs = @(
     "--self-contained", "true",
     "-p:WindowsPackageType=None",
     "-p:WindowsAppSDKSelfContained=true",
-    "-p:PublishTrimmed=false",
     "-p:PublishSingleFile=false",
     "-warnaserror",
     "-p:NuGetAudit=false",
@@ -61,6 +64,12 @@ $publishArgs = @(
 )
 if ($Version) {
     $publishArgs += "-p:Version=$Version"
+}
+# Native AOT needs the C++ build tools and has not been verified end to end yet, so the default stays a plain self-contained publish.
+if ($NativeAot) {
+    $publishArgs += "-p:PublishAot=true"
+} else {
+    $publishArgs += "-p:PublishAot=false", "-p:PublishTrimmed=false", "-p:PublishReadyToRun=true"
 }
 & dotnet @publishArgs
 if ($LASTEXITCODE -ne 0) {
