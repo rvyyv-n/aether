@@ -143,6 +143,7 @@ public sealed partial class MainPage : Page
         OpenUrlLabel.Text = AppStrings.Get("EmptyState_OpenUrl");
         StreamCancelButton.Content = AppStrings.Get("Stream_Cancel");
         StreamRetryLabel.Text = AppStrings.Get("Stream_Retry");
+        StreamInstallLabel.Text = AppStrings.Get("Stream_InstallYtDlp");
         StreamEditLinkLabel.Text = AppStrings.Get("Stream_EditLink");
         StreamOpenInBrowserLabel.Text = AppStrings.Get("Stream_OpenInBrowser");
         StreamFailureCancelLabel.Text = AppStrings.Get("Stream_Cancel");
@@ -223,6 +224,7 @@ public sealed partial class MainPage : Page
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _isLoaded = true;
+        YtDlpManager.StartScheduledUpdates();
         if (_fader is null)
         {
             var resources = Application.Current.Resources;
@@ -1303,6 +1305,38 @@ public sealed partial class MainPage : Page
         Render();
     }
 
+    /// <summary>Downloads yt-dlp from the failure screen and, once it is in place, plays the link that was waiting.</summary>
+    private async void OnStreamInstallClick(object sender, RoutedEventArgs e)
+    {
+        if (_failedStreamLink is not { } link)
+        {
+            return;
+        }
+        StreamInstallButton.IsEnabled = false;
+        StreamInstallLabel.Text = AppStrings.Format("YtDlp_InstallProgress", 0);
+        var progress = new Progress<double>(fraction =>
+            StreamInstallLabel.Text = AppStrings.Format("YtDlp_InstallProgress", (int)(fraction * 100)));
+        (YtDlpInstallOutcome outcome, string? version) = await YtDlpManager.InstallLatestAsync(onlyIfNewer: false, progress);
+        StreamInstallButton.IsEnabled = true;
+        if (!_isLoaded || _failedStreamLink != link)
+        {
+            return;
+        }
+        if (outcome == YtDlpInstallOutcome.Installed)
+        {
+            AppToasts.Show("ytdlp-update", AppStrings.Format("Toast_YtDlpInstalled", version ?? ""), ToastTone.Success);
+            StartResolvingStream(link);
+            return;
+        }
+        // The screen stays up with the reason and the same button, now reading Retry.
+        StreamInstallLabel.Text = AppStrings.Get("Stream_Retry");
+        if (_streamFailure is { } failure)
+        {
+            _streamFailure = failure with { Subtitle = AppStrings.Get(YtDlpManager.FailureKey(outcome)) };
+        }
+        Render();
+    }
+
     private void OnStreamRetryClick(object sender, RoutedEventArgs e)
     {
         if (_failedStreamLink is { } link)
@@ -1862,6 +1896,10 @@ public sealed partial class MainPage : Page
         StreamProgress.IsActive = showStream;
         StreamCancelButton.Visibility = showStream ? Visibility.Visible : Visibility.Collapsed;
         StreamFailureActions.Visibility = streamFailed ? Visibility.Visible : Visibility.Collapsed;
+        // Without yt-dlp a plain Retry cannot succeed, so Install takes its place.
+        bool needsInstall = _streamFailure?.Reason == StreamFailureReason.YtDlpMissing;
+        StreamInstallButton.Visibility = needsInstall ? Visibility.Visible : Visibility.Collapsed;
+        StreamRetryButton.Visibility = needsInstall ? Visibility.Collapsed : Visibility.Visible;
         // Recents belong to the plain empty state: hidden until there is history (2.10).
         bool idle = _startup == StartupPhase.Ready && !_dragging && !streaming && !streamFailed && vm?.Status != PlaybackStatus.Loading;
         RecentsPanel.Visibility = idle && RecentsList.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;

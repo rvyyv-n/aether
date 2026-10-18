@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Aether.Core.Interop;
+using Aether.Core.Playback.Streams;
 
 namespace Aether_App.Settings;
 
@@ -7,32 +8,79 @@ namespace Aether_App.Settings;
 internal static class ExternalTools
 {
     private static readonly TimeSpan VersionTimeout = TimeSpan.FromSeconds(3);
-    private static readonly TimeSpan UpdateTimeout = TimeSpan.FromMinutes(2);
+    private static readonly Dictionary<string, string?> YtDlpVersionCache = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>The yt-dlp that streaming would use: next to the app, else the first one on PATH. Null when there is none.</summary>
+    /// <summary>
+    /// The yt-dlp that streaming would use: the newest of Aether's downloaded copy, the one shipped beside the app and the
+    /// first on PATH. Versions come from the last <see cref="RefreshYtDlpAsync"/>; until then the order alone decides.
+    /// Null when there is none.
+    /// </summary>
     public static string? FindYtDlp()
     {
+        var found = new List<(string Path, string? Version)>();
+        foreach (string path in YtDlpCandidates())
+        {
+            found.Add((path, CachedVersion(path)));
+        }
+        return YtDlpVersions.Choose(found);
+    }
+
+    /// <summary>Reads the version of every yt-dlp copy so <see cref="FindYtDlp"/> can pick the newest; returns its choice.</summary>
+    public static async Task<string?> RefreshYtDlpAsync()
+    {
+        var versions = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (string path in YtDlpCandidates())
+        {
+            versions[path] = await YtDlpVersionAsync(path).ConfigureAwait(false);
+        }
+        lock (YtDlpVersionCache)
+        {
+            YtDlpVersionCache.Clear();
+            foreach ((string path, string? version) in versions)
+            {
+                YtDlpVersionCache[path] = version;
+            }
+        }
+        return FindYtDlp();
+    }
+
+    public static string? CachedVersion(string path)
+    {
+        lock (YtDlpVersionCache)
+        {
+            return YtDlpVersionCache.GetValueOrDefault(path);
+        }
+    }
+
+    private static IEnumerable<string> YtDlpCandidates()
+    {
+        if (File.Exists(YtDlpManager.DownloadedPath))
+        {
+            yield return YtDlpManager.DownloadedPath;
+        }
         string beside = Path.Combine(AppContext.BaseDirectory, "yt-dlp.exe");
         if (File.Exists(beside))
         {
-            return beside;
+            yield return beside;
         }
         foreach (string folder in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
         {
+            string candidate;
             try
             {
-                string candidate = Path.Combine(folder.Trim().Trim('"'), "yt-dlp.exe");
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
+                candidate = Path.Combine(folder.Trim().Trim('"'), "yt-dlp.exe");
             }
             catch (ArgumentException)
             {
                 // A malformed PATH entry; the rest may still be good.
+                continue;
+            }
+            if (File.Exists(candidate))
+            {
+                yield return candidate;
+                yield break;
             }
         }
-        return null;
     }
 
     /// <summary>The output of <c>yt-dlp --version</c>, or null when it does not answer in a few seconds.</summary>
@@ -68,47 +116,6 @@ internal static class ExternalTools
         catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
         {
             return null;
-        }
-    }
-
-    /// <summary>
-    /// Runs <c>yt-dlp -U</c>, which replaces the program with the latest release. False when it fails, takes over
-    /// two minutes, or was installed by a package manager that has to update it instead.
-    /// </summary>
-    public static async Task<bool> UpdateYtDlpAsync(string path)
-    {
-        try
-        {
-            var start = new ProcessStartInfo(path, "-U")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            using Process? process = Process.Start(start);
-            if (process is null)
-            {
-                return false;
-            }
-            using var timeout = new CancellationTokenSource(UpdateTimeout);
-            try
-            {
-                // Both streams are drained so a chatty update cannot fill a pipe and stall.
-                Task<string> output = process.StandardOutput.ReadToEndAsync(timeout.Token);
-                Task<string> error = process.StandardError.ReadToEndAsync(timeout.Token);
-                await Task.WhenAll(output, error, process.WaitForExitAsync(timeout.Token)).ConfigureAwait(false);
-                return process.ExitCode == 0;
-            }
-            catch (OperationCanceledException)
-            {
-                process.Kill(entireProcessTree: true);
-                return false;
-            }
-        }
-        catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
-        {
-            return false;
         }
     }
 

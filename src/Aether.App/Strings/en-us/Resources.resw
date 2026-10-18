@@ -789,7 +789,7 @@
     <value>Not found, so links won’t play. Aether can download it again.</value>
   </data>
   <data name="Settings_YtDlp_Download" xml:space="preserve">
-    <value>Download yt-dlp</value>
+    <value>Install yt-dlp</value>
   </data>
   <data name="Settings_YtDlp_UpdateNow" xml:space="preserve">
     <value>Update now</value>
@@ -1189,8 +1189,29 @@
   <data name="Settings_YtDlp_Updating" xml:space="preserve">
     <value>Updating…</value>
   </data>
-  <data name="Settings_YtDlp_UpdateFailed" xml:space="preserve">
-    <value>Couldn’t update. If you installed yt-dlp with a package manager, update it there.</value>
+  <data name="YtDlp_InstallProgress" xml:space="preserve">
+    <value>Installing… {0}%</value>
+  </data>
+  <data name="YtDlp_InstallFailedOffline" xml:space="preserve">
+    <value>Couldn’t reach GitHub. Check your connection, then try again.</value>
+  </data>
+  <data name="YtDlp_InstallFailedHash" xml:space="preserve">
+    <value>The download didn’t match its published checksum, so it was thrown away. Try again.</value>
+  </data>
+  <data name="YtDlp_InstallFailedOther" xml:space="preserve">
+    <value>yt-dlp couldn’t be installed. Try again.</value>
+  </data>
+  <data name="Stream_InstallYtDlp" xml:space="preserve">
+    <value>Install yt-dlp</value>
+  </data>
+  <data name="Toast_YtDlpInstalled" xml:space="preserve">
+    <value>yt-dlp {0} installed</value>
+  </data>
+  <data name="Toast_YtDlpInstallFailed" xml:space="preserve">
+    <value>yt-dlp could not be installed</value>
+  </data>
+  <data name="Toast_YtDlpUpToDate" xml:space="preserve">
+    <value>yt-dlp is already up to date</value>
   </data>
   
   <data name="Settings_Deinterlace_Title" xml:space="preserve">

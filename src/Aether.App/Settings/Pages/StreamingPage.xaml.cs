@@ -2,14 +2,11 @@ using Aether.Core.Playback;
 using Aether.Core.Playback.Settings;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Windows.System;
 
 namespace Aether_App.Settings.Pages;
 
 public sealed partial class StreamingPage : Page
 {
-    private static readonly Uri YtDlpReleases = new("https://github.com/yt-dlp/yt-dlp/releases/latest");
-
     private string? _ytDlpPath;
 
     public StreamingPage()
@@ -54,13 +51,13 @@ public sealed partial class StreamingPage : Page
 
     private async Task LoadYtDlpAsync()
     {
-        _ytDlpPath = await Task.Run(ExternalTools.FindYtDlp);
+        _ytDlpPath = await ExternalTools.RefreshYtDlpAsync();
         if (_ytDlpPath is null)
         {
             ShowYtDlp(missing: true, AppStrings.Get("Settings_YtDlp_MissingMessage"));
             return;
         }
-        string? version = await ExternalTools.YtDlpVersionAsync(_ytDlpPath);
+        string? version = ExternalTools.CachedVersion(_ytDlpPath);
         ShowYtDlp(missing: false, version is null
             ? AppStrings.Format("Settings_Streaming_InstalledAt", _ytDlpPath)
             : AppStrings.Format("Settings_About_Version", version));
@@ -68,24 +65,27 @@ public sealed partial class StreamingPage : Page
 
     private async Task OnYtDlpActionAsync()
     {
-        if (_ytDlpPath is null)
-        {
-            await Launcher.LaunchUriAsync(YtDlpReleases);
-            return;
-        }
+        bool installing = _ytDlpPath is null;
         YtDlpActionButton.IsEnabled = false;
         YtDlpActionButton.Content = AppStrings.Get("Settings_YtDlp_Updating");
-        bool updated = await ExternalTools.UpdateYtDlpAsync(_ytDlpPath);
+        var progress = new Progress<double>(fraction =>
+            YtDlpActionButton.Content = AppStrings.Format("YtDlp_InstallProgress", (int)(fraction * 100)));
+        (YtDlpInstallOutcome outcome, string? version) = await YtDlpManager.InstallLatestAsync(onlyIfNewer: !installing, progress);
         YtDlpActionButton.IsEnabled = true;
         await LoadYtDlpAsync();
-        if (!updated)
+        switch (outcome)
         {
-            YtDlpRow.Description = AppStrings.Get("Settings_YtDlp_UpdateFailed");
-            AppToasts.Show("ytdlp-update", AppStrings.Get("Toast_YtDlpUpdateFailed"), ToastTone.Failure);
-        }
-        else if (await ExternalTools.YtDlpVersionAsync(_ytDlpPath) is { } version)
-        {
-            AppToasts.Show("ytdlp-update", AppStrings.Format("Toast_YtDlpUpdated", version), ToastTone.Success);
+            case YtDlpInstallOutcome.Installed:
+                AppToasts.Show("ytdlp-update", AppStrings.Format(installing ? "Toast_YtDlpInstalled" : "Toast_YtDlpUpdated", version ?? ""), ToastTone.Success);
+                break;
+            case YtDlpInstallOutcome.AlreadyCurrent:
+                AppToasts.Show("ytdlp-update", AppStrings.Get("Toast_YtDlpUpToDate"), ToastTone.Success);
+                break;
+            default:
+                YtDlpRow.Description = AppStrings.Get(YtDlpManager.FailureKey(outcome));
+                YtDlpActionButton.Content = AppStrings.Get("Stream_Retry");
+                AppToasts.Show("ytdlp-update", AppStrings.Get(installing ? "Toast_YtDlpInstallFailed" : "Toast_YtDlpUpdateFailed"), ToastTone.Failure);
+                break;
         }
     }
 

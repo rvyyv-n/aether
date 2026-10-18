@@ -465,6 +465,20 @@
                     Spacing="8"
                     Visibility="Collapsed">
                     <Button
+                        x:Name="StreamInstallButton"
+                        MinWidth="150"
+                        Click="OnStreamInstallClick"
+                        Style="{StaticResource AetherEmphasisPillButtonStyle}"
+                        Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="{StaticResource AetherSizeIcon}"
+                                Glyph="&#xE896;" />
+                            <TextBlock x:Name="StreamInstallLabel" Text="Install yt-dlp" />
+                        </StackPanel>
+                    </Button>
+                    <Button
                         x:Name="StreamRetryButton"
                         MinWidth="120"
                         Click="OnStreamRetryClick"

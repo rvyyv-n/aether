@@ -150,6 +150,9 @@ public partial class App : Application
         }
     }
 
+    /// <summary>Any thread: runs <paramref name="action"/> on the UI thread; dropped if the window is gone.</summary>
+    public static void RunOnUi(Action action) => s_queue?.TryEnqueue(() => action());
+
     /// <summary>UI thread: starts the playback engine again with the current settings, keeping the open file.</summary>
     public static void RestartEngine() => s_window?.RestartEngine();
 
