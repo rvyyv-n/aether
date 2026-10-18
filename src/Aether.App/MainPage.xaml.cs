@@ -1720,9 +1720,7 @@ public sealed partial class MainPage : Page
 
         // Video, scrims and controls.
         VideoSurface.Opacity = hasVideo ? 1 : 0;
-        // Bars are black in every window state while a video shows; a maximised window rarely matches the video's
-        // shape, and the wallpaper tint beside the picture reads as part of it. Home and Settings keep the backdrop.
-        VideoHost.Background = hasVideo
+        VideoHost.Background = (fullScreen || pip) && hasVideo
             ? (Brush)Application.Current.Resources["AetherSurfaceLetterboxBrush"]
             : null;
         HomeView.Visibility = !_settingsShown && (!hasVideo || _dragging) ? Visibility.Visible : Visibility.Collapsed;
