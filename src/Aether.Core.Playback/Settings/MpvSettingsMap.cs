@@ -149,7 +149,7 @@ public static class MpvSettingsMap
             new("sub-visibility", YesNo(settings.ShowSubtitles)),
             new("alang", settings.PreferredAudioLanguage),
             new("slang", settings.PreferredSubtitleLanguage),
-            new("sub-font", settings.SubtitleFont),
+            new("sub-font", SubtitleFontFamily(settings.SubtitleFont)),
             new("sub-font-size", SubtitleFontSize(settings.SubtitleSize)),
             new("sub-color", SubtitleColor(settings.SubtitleColor)),
             new("sub-pos", SubtitlePosition(settings.SubtitlePosition)),
@@ -183,6 +183,16 @@ public static class MpvSettingsMap
         }
         string? deinterlacer = settings.Deinterlace && settings.DeinterlaceMode != "auto" && !custom.Contains("vf") ? settings.DeinterlaceMode : null;
         return new MpvRuntimePlan(properties, settings.VolumeNormalisation && !custom.Contains("af"), deinterlacer);
+    }
+
+    /// <summary>
+    /// The family mpv is asked for. Its subtitle renderer cannot draw Windows' variable Segoe UI fonts (it quietly
+    /// falls back to Arial), so those names get the static Segoe UI it can draw, which is what they look like anyway.
+    /// </summary>
+    public static string SubtitleFontFamily(string font)
+    {
+        string name = font.Trim();
+        return name.StartsWith("Segoe UI Variable", StringComparison.OrdinalIgnoreCase) ? "Segoe UI" : name;
     }
 
     /// <summary>Text size in mpv's scaled pixels (it is 55 at a 720-pixel-high window).</summary>

@@ -26,7 +26,7 @@ public class MpvSettingsMapTests
         Assert.Equal("yes", p["sub-visibility"]);
         Assert.Equal("en", p["alang"]);
         Assert.Equal("en", p["slang"]);
-        Assert.Equal("Segoe UI Variable", p["sub-font"]);
+        Assert.Equal("Segoe UI", p["sub-font"]);
         Assert.Equal("55", p["sub-font-size"]);
         Assert.Equal("#FFFFFF", p["sub-color"]);
         Assert.Equal("100", p["sub-pos"]);
@@ -499,4 +499,12 @@ public class MpvSettingsMapTests
     [InlineData("top", "10")]
     public void Subtitle_Position_Maps_To_Sub_Pos(string position, string expected) =>
         Assert.Equal(expected, Runtime(new AetherSettings { SubtitlePosition = position })["sub-pos"]);
+
+    [Theory]
+    [InlineData("Segoe UI Variable", "Segoe UI")]
+    [InlineData("segoe ui variable display", "Segoe UI")]
+    [InlineData("  Georgia ", "Georgia")]
+    [InlineData("Bricolage Grotesque", "Bricolage Grotesque")]
+    public void SubtitleFontFamily_swaps_only_the_variable_segoe_names(string typed, string expected)
+        => Assert.Equal(expected, MpvSettingsMap.SubtitleFontFamily(typed));
 }

@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Subtitles now use a font mpv can really draw: the default Segoe UI Variable was silently replaced by Arial on the video, so it is now sent as Segoe UI. Fonts that are only installed as variable fonts (for example Bricolage Grotesque) still cannot be drawn on the video by the bundled mpv and fall back to Arial.
 - The subtitle font list in Settings now shows the installed fonts. It used to read every name as "en-us" because of a mistake in how font names were read from Windows, so the list was effectively empty.
 - Timecodes are a little larger (14 instead of 13) and keep their even-width digits, so the clock and seek bubble read more easily and do not shift as they tick. The title bar file name keeps its 320 wide limit, now set by a shared size, and a few stray font settings moved onto the shared ones. The font itself stays Segoe UI Variable.
 - First-run tour: the cards now stay fully inside the window (the second one no longer hides Next), Skip tour is no longer clipped, the side rail is left out of the tour and stays shut while it runs, the keys card sits beside the home content instead of over the file list, the first card mentions web links, and the lit ring pulses gently while a progress bar fills as you go (both off when Windows animations are off).
