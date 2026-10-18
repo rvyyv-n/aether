@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using Aether.Core.Interop.DirectX;
 using Aether.Core.Interop.DirectX.Native;
@@ -75,6 +76,19 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     private double _logicalWidth = 1, _logicalHeight = 1;
     private float _scaleX = 1f, _scaleY = 1f;
     private bool _sizePending;
+    private long _lastBufferResize;
+    private static readonly TimeSpan ResizeInterval = TimeSpan.FromMilliseconds(33);
+
+    private bool SizePending
+    {
+        get
+        {
+            lock (_sizeLock)
+            {
+                return _sizePending;
+            }
+        }
+    }
 
     private volatile bool _stop;
     private int _redraw;
@@ -147,6 +161,8 @@ public sealed unsafe class MpvRenderLoop : IDisposable
             _scaleY = compositionScaleY;
             _sizePending = true;
         }
+        // Stretch the last frame over the new area now, not when the render thread gets round to it.
+        Volatile.Read(ref _presenter)?.StretchToTarget(logicalWidth, logicalHeight, compositionScaleX, compositionScaleY);
         Wake();
     }
 
@@ -290,6 +306,10 @@ public sealed unsafe class MpvRenderLoop : IDisposable
                         }
                         Interlocked.Increment(ref _framesPresented);
                         force = _options.Backdrop?.NeedsFrame == true;
+                        if (!SizePending)
+                        {
+                            presenter.EndStretch();
+                        }
                     }
 
                     if (presenter.IsDeviceLost)
@@ -343,20 +363,33 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     {
         double w, h;
         float sx, sy;
+        DxgiPresenter presenter = _presenter!;
         lock (_sizeLock)
         {
             if (!_sizePending)
             {
                 return false;
             }
-            _sizePending = false;
             w = _logicalWidth;
             h = _logicalHeight;
             sx = _scaleX;
             sy = _scaleY;
+
+            // During a drag, reallocating the buffers on every step costs more than a frame. Keep the
+            // stretched picture and redraw (paced by vsync) until the interval has passed; the last size always lands.
+            SwapChainTargetSize wanted = DxgiPresenter.ComputeTargetSize(w, h, sx, sy);
+            bool bufferChange = wanted.Width != presenter.PixelWidth || wanted.Height != presenter.PixelHeight;
+            if (bufferChange && Stopwatch.GetElapsedTime(_lastBufferResize) < ResizeInterval)
+            {
+                return true;
+            }
+            _sizePending = false;
+            if (bufferChange)
+            {
+                _lastBufferResize = Stopwatch.GetTimestamp();
+            }
         }
 
-        DxgiPresenter presenter = _presenter!;
         presenter.SetTargetSize(w, h, sx, sy);
         SwapChainTargetSize size = DxgiPresenter.ComputeTargetSize(w, h, sx, sy);
         if (size.Width == presenter.PixelWidth && size.Height == presenter.PixelHeight)
@@ -423,7 +456,7 @@ public sealed unsafe class MpvRenderLoop : IDisposable
 
         int generation = Interlocked.Increment(ref _generation);
         _device = device;
-        _presenter = presenter;
+        Volatile.Write(ref _presenter, presenter);
         _backend = backend;
         _state = RenderLoopState.Running;
 
@@ -463,7 +496,7 @@ public sealed unsafe class MpvRenderLoop : IDisposable
         DxgiPresenter? presenter = _presenter;
         D3D11DeviceManager? device = _device;
         _backend = null;
-        _presenter = null;
+        Volatile.Write(ref _presenter, null);
         _device = null;
         DisposeQuietly(backend);
         DisposeQuietly(presenter);
