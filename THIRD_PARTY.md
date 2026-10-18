@@ -16,7 +16,7 @@ Aether incorporates or interfaces with several open-source and third-party softw
 | **FFmpeg** (`ffmpeg.exe`) | `9.0.2-full_build-www.gyan.dev` | GPL-3.0-or-later (`--enable-gpl --enable-version3`) | https://ffmpeg.org | External process execution (`Process.Start` for stream-copy clipping); loaded from `PATH` or bundled with written source offer |
 | **yt-dlp** (`yt-dlp.exe`) | `2026.07.04` *(bundling target in 11.9)* | The Unlicense (Public Domain) | https://github.com/yt-dlp/yt-dlp | External process execution (web stream resolution); loaded from `PATH`, adjacent, or downloaded on demand |
 | **Windows App SDK** | `2.5.1` | MIT | https://github.com/microsoft/WindowsAppSDK | Managed framework runtime (WinUI 3 desktop shell and composition) |
-| **Microsoft.Web.WebView2** | `1.0.3719.77` | Microsoft Software License | https://developer.microsoft.com/microsoft-edge/webview2/ | Transitive runtime dependency of Windows App SDK |
+| **Microsoft.Web.WebView2** (SDK files: `WebView2Loader.dll`, `Microsoft.Web.WebView2.Core*.dll`) | `1.0.3719.77` | BSD-3-Clause (confirmed from the package's own `LICENSE.txt`; the Edge WebView2 runtime itself is not bundled and comes from Windows) | https://developer.microsoft.com/microsoft-edge/webview2/ | Transitive runtime dependency of Windows App SDK |
 | **Microsoft.Windows.SDK.BuildTools** | `10.0.28000.2705` | Microsoft Software License | https://aka.ms/WinSDK | Build-time MSBuild targets and PRI resource tooling |
 | **QRCoder** | `1.6.0` | MIT | https://github.com/codebude/QRCoder | Managed library dependency in `Aether.Server.LanHost` (LAN streaming QR code generation) |
 | **ASP.NET Core (Kestrel)** | `9.0` (.NET 9 BCL) | MIT | https://github.com/dotnet/aspnetcore | Managed framework reference in `Aether.Server.LanHost` (LAN HTTP 206 streaming server) |
@@ -63,7 +63,7 @@ Aether loads `libmpv-2.dll` as a separate library file. You may replace it with 
 ---
 
 ### 2. BSD 3-Clause License
-*Applies to: **ANGLE** (`libEGL.dll`, `libGLESv2.dll`)*
+*Applies to: **ANGLE** (`libEGL.dll`, `libGLESv2.dll`); the WebView2 SDK files use the same BSD-3-Clause terms, copyright Microsoft Corporation*
 
 ```text
 Copyright (C) 2018 The ANGLE Project Authors.
@@ -363,6 +363,6 @@ FROM OTHER DEALINGS IN THE FONT SOFTWARE.
 ---
 
 ### 7. Microsoft Software License Notices
-*Applies to: **Microsoft.Windows.SDK.BuildTools**, **Microsoft.Web.WebView2**, **Microsoft.NET.Test.Sdk**, **Segoe UI Variable**, and **Segoe Fluent Icons***
+*Applies to: **Microsoft.Windows.SDK.BuildTools**, **Microsoft.NET.Test.Sdk**, **Segoe UI Variable**, and **Segoe Fluent Icons***
 
 Microsoft software components, build tools, runtimes, test adapters, and system fonts are licensed under Microsoft Software License Terms. Use of Windows SDK tools and WebView2 is governed by their respective Microsoft Developer and Redistribution licenses. System fonts (Segoe UI Variable, Segoe Fluent Icons) are referenced through Windows system typography ramps and are licensed as part of the Windows operating system.
