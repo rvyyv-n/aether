@@ -676,7 +676,7 @@
                         Visibility="Collapsed" />
                     <TextBlock
                         x:Name="TitleBadgeText"
-                        MaxWidth="320"
+                        MaxWidth="{StaticResource AetherSizeBadgeMaxWidth}"
                         VerticalAlignment="Bottom"
                         Style="{StaticResource AetherCaptionTextStyle}"
                         Text="Alpha"
@@ -1126,6 +1126,7 @@
                         VerticalAlignment="Center"
                         FontSize="{StaticResource AetherSizeIcon}"
                         Glyph="&#xE893;" />
+                    <!--  Body size like the button label it replaces, but SemiBold; no shared style is body-sized and bold.  -->
                     <TextBlock
                         x:Name="SkipChapterText"
                         MaxWidth="220"

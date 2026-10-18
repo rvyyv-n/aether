@@ -122,7 +122,6 @@
                     FontSize="{StaticResource AetherCaptionFontSize}"
                     Foreground="{StaticResource AetherTextSecondaryBrush}"
                     Style="{StaticResource AetherIconButtonStyle}"
-                    FontFamily="{StaticResource AetherUiFont}"
                     Width="Auto" />
                 <Border
                     Height="1"

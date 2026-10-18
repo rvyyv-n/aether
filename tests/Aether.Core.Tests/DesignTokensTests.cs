@@ -49,7 +49,6 @@ public class DesignTokensTests
         "AetherNeutralDotBrush",
         "AetherLetterboxFullScreenColor",
         "AetherLetterboxFullScreenBrush",
-        "AetherTitleFontSize",
         "AetherTitleBarHeight",
         "AetherPanelCornerRadius",
         "AetherBadgeCornerRadius",
@@ -166,5 +165,29 @@ public class DesignTokensTests
             .ToList();
 
         Assert.Empty(missing);
+    }
+
+    [Theory]
+    [InlineData("AetherTimecodeFontSize", "14")]
+    [InlineData("AetherTimecodeLineHeight", "20")]
+    [InlineData("AetherSizeBadgeMaxWidth", "320")]
+    public void Type_And_Badge_Tokens_Keep_Their_Values(string key, string expected)
+    {
+        var element = LoadDesignTokens().Descendants()
+            .Single(e => (string?)e.Attribute(XNamespace + "Key") == key);
+
+        Assert.Equal(expected, element.Value);
+    }
+
+    [Fact]
+    public void Headings_Use_The_Display_Font_At_SemiBold()
+    {
+        var style = LoadDesignTokens().Descendants(XamlNamespace + "Style")
+            .Single(e => (string?)e.Attribute(XNamespace + "Key") == "AetherSubtitleTextStyle");
+        string? Setter(string property) => style.Elements(XamlNamespace + "Setter")
+            .Single(e => (string?)e.Attribute("Property") == property).Attribute("Value")?.Value;
+
+        Assert.Contains("AetherDisplayFont", Setter("FontFamily"));
+        Assert.Equal("SemiBold", Setter("FontWeight"));
     }
 }

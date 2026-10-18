@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Timecodes are a little larger (14 instead of 13) and keep their even-width digits, so the clock and seek bubble read more easily and do not shift as they tick. The title bar file name keeps its 320 wide limit, now set by a shared size, and a few stray font settings moved onto the shared ones. The font itself stays Segoe UI Variable.
 - First-run tour: the cards now stay fully inside the window (the second one no longer hides Next), Skip tour is no longer clipped, the side rail is left out of the tour and stays shut while it runs, the keys card sits beside the home content instead of over the file list, the first card mentions web links, and the lit ring pulses gently while a progress bar fills as you go (both off when Windows animations are off).
 - Settings › General now holds the window settings (remember window size, always on top) next to battery saver and history, instead of leaving them on the Playback page.
 

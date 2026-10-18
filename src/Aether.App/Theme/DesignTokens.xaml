@@ -144,8 +144,9 @@
     <x:Double x:Key="AetherBodyLineHeight">20</x:Double>
     <x:Double x:Key="AetherSubtitleFontSize">20</x:Double>
     <x:Double x:Key="AetherSubtitleLineHeight">28</x:Double>
-    <x:Double x:Key="AetherTimecodeFontSize">13</x:Double>
-    <x:Double x:Key="AetherTimecodeLineHeight">16</x:Double>
+    <x:Double x:Key="AetherTimecodeFontSize">14</x:Double>
+    <x:Double x:Key="AetherTimecodeLineHeight">20</x:Double>
+    <x:Double x:Key="AetherCodeFontSize">13</x:Double>
 
     <!--  Spacing  -->
     <x:Double x:Key="AetherSpace2">2</x:Double>
@@ -197,7 +198,7 @@
     <x:Double x:Key="AetherSizeProgressRing">40</x:Double>  <!-- In the hero tile. WinUI draws its own stroke -->
     <x:Double x:Key="AetherSizeRecentsColumn">400</x:Double>  <!-- Max width of the recents list; at most 3 rows, hidden with no history -->
     <x:Double x:Key="AetherSizeDropTargetInset">8</x:Double>  <!-- Drag-over border inset from the window edges, top inset 8 below the title bar -->
-    <x:Double x:Key="AetherSizeBadgeMaxWidth">240</x:Double>  <!-- Title-bar badge trims with an ellipsis; 240 for stream titles, 320 for file names -->
+    <x:Double x:Key="AetherSizeBadgeMaxWidth">320</x:Double>  <!-- Title-bar badge trims with an ellipsis past this -->
     <x:Double x:Key="AetherSizeTimecodeGap">6</x:Double>  <!-- Equal gaps either side of the slash so it sits centred -->
     <x:Double x:Key="AetherSizeVolumeSlider">72</x:Double>  <!-- Width inside a 32 px hit area; rail 4 px fill.range, value white, thumb 12 white -->
     <x:Double x:Key="AetherSizeQualityPill">32</x:Double>  <!-- Streams only. Outline pill, Caption 12, padding 0 10 -->
@@ -301,7 +302,6 @@
         <Setter Property="LineHeight" Value="{StaticResource AetherSubtitleLineHeight}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
-    <!--  Timecodes only. Tabular digits come with the monospace face.  -->
     <!--  Timecodes (7.12): the UI font with tabular figures, so digits keep their width without a monospace face  -->
     <Style x:Key="AetherTimecodeTextStyle" BasedOn="{StaticResource AetherBodyTextStyle}" TargetType="TextBlock">
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -317,7 +317,7 @@
     <!--  The one named monospace exception: Settings › Advanced › Custom mpv options  -->
     <Style x:Key="AetherCustomOptionsTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
         <Setter Property="FontFamily" Value="{StaticResource AetherMonoFont}" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{StaticResource AetherCodeFontSize}" />
         <Setter Property="AcceptsReturn" Value="True" />
         <Setter Property="TextWrapping" Value="NoWrap" />
         <Setter Property="IsSpellCheckEnabled" Value="False" />
@@ -1021,7 +1021,6 @@
     <SolidColorBrush x:Key="AetherLetterboxFullScreenBrush" Color="{StaticResource AetherSurfaceLetterboxColor}" />
 
     <!--  Dimensions and Motion  -->
-    <x:Double x:Key="AetherTitleFontSize">20</x:Double>
     <x:Double x:Key="AetherTitleBarHeight">32</x:Double>
     <CornerRadius x:Key="AetherPanelCornerRadius">6</CornerRadius>
     <CornerRadius x:Key="AetherBadgeCornerRadius">3</CornerRadius>
