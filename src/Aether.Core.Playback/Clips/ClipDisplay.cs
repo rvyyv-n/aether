@@ -32,9 +32,15 @@ public static class ClipDisplay
             ? ffmpegAvailable ? ClipChipMode.Export : ClipChipMode.ExportUnavailable
             : savedClips > 0 ? ClipChipMode.Clips : ClipChipMode.Hidden;
 
-    /// <summary>The grey line under a row's name: "4.2 MB · 00:40 · 18:02".</summary>
-    public static string Details(SavedClip clip, DateTimeOffset now, CultureInfo culture, string yesterday) =>
-        $"{FormatSize(clip.SizeBytes, culture)} · {Timecode.FormatClock(clip.Length, clip.Length)} · {FormatSaved(clip.SavedAt, now, culture, yesterday)}";
+    /// <summary>
+    /// The grey line under a row's name: "4.2 MB · 00:40 · 18:02", then " · NVIDIA" for a Precise clip
+    /// (<paramref name="encoderName"/> is the encoder's short name).
+    /// </summary>
+    public static string Details(SavedClip clip, DateTimeOffset now, CultureInfo culture, string yesterday, string? encoderName = null)
+    {
+        string details = $"{FormatSize(clip.SizeBytes, culture)} · {Timecode.FormatClock(clip.Length, clip.Length)} · {FormatSaved(clip.SavedAt, now, culture, yesterday)}";
+        return encoderName is { Length: > 0 } ? $"{details} · {encoderName}" : details;
+    }
 
     /// <summary>
     /// Explorer-style sizes in 1024 steps: "512 B", "1.5 KB", "340 KB", "4.2 MB". One decimal below 100,

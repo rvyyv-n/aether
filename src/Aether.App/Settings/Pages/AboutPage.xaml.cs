@@ -24,11 +24,13 @@ public sealed partial class AboutPage : Page
         Version? version = typeof(App).Assembly.GetName().Version;
         _appVersion = version is null ? AppStrings.Get("Settings_About_Unknown") : $"{version.Major}.{version.Minor}.{version.Build}";
 
-        CardName.Text = AppStrings.Get("App_Name");
-        CardVersion.Text = $"{AppStrings.Get("App_Badge")} {_appVersion}";
-        CardTagline.Text = AppStrings.Get("Settings_About_CardTagline");
-        CardLink.Content = AppStrings.Get("Settings_About_CardLink");
-        CardLink.NavigateUri = Repository;
+        CreditExpander.Header = AppStrings.Get("App_Name");
+        CreditVersionRow.Header = AppStrings.Get("Settings_About_CreditVersion");
+        CreditVersion.Text = $"{AppStrings.Get("App_Badge")} {_appVersion}";
+        CreditPrivacyRow.Header = AppStrings.Get("Settings_About_CardTagline");
+        CreditLinkRow.Header = AppStrings.Get("Settings_About_CreditSource");
+        CreditLink.Content = AppStrings.Get("Settings_About_CardLink");
+        CreditLink.NavigateUri = Repository;
 
         // The engine is not asked what it settled on; the decoder shown is the one chosen in Video settings.
         string hwdec = App.Settings.Get(SettingKeys.HardwareDecoding) as string ?? "";

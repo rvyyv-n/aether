@@ -113,6 +113,22 @@ public sealed record AetherSettings
     /// <summary>Motion style preview (7.15): <c>quick</c> or <c>springy</c>. Temporary, until the owner picks one.</summary>
     public string MotionStyle { get; init; } = "quick";
 
+    // Clips
+    /// <summary>Clip export mode: <c>fast</c> (stream copy) or <c>precise</c> (re-encode).</summary>
+    public string ClipExportMode { get; init; } = "fast";
+    /// <summary>Largest clip a Precise export may produce, in megabytes (1 MB = 1,000,000 bytes); 0 means no limit.</summary>
+    public int ClipSizeLimitMb { get; init; }
+
+    // Look (video flyout), kept as last used
+    /// <summary>The colour grade: <c>none</c>, a built-in id such as <c>warm</c>, or <c>user:</c> and a file name from the looks folder.</summary>
+    public string LookGrade { get; init; } = "none";
+    /// <summary>Sharpen amount, 0 (off) to 100.</summary>
+    public int LookSharpen { get; init; }
+    /// <summary>Film grain amount, 0 (off) to 100.</summary>
+    public int LookGrain { get; init; }
+    /// <summary>Denoise strength: <c>off</c>, <c>light</c>, <c>medium</c> or <c>strong</c>.</summary>
+    public string LookDenoise { get; init; } = "off";
+
     // Shortcuts: empty means the default keys, "None" unbound, otherwise e.g. "Ctrl+O" or "F, F11" (see ShortcutMap).
     public string ShortcutOpenFile { get; init; } = "";
     public string ShortcutOpenUrl { get; init; } = "";

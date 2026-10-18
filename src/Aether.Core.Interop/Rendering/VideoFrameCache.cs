@@ -52,6 +52,8 @@ internal sealed unsafe class VideoFrameCache : IDisposable
 
     private uint _texture, _fbo;
     private int _width, _height;
+    private int _capacityWidth, _capacityHeight;
+    private const int CapacityStep = 128;
 
     private VideoFrameCache(AngleBridge bridge)
     {
@@ -106,8 +108,17 @@ internal sealed unsafe class VideoFrameCache : IDisposable
         {
             return true;
         }
-        reallocated = true;
+        reallocated = true; // the picture is gone either way: mpv draws at the new size
 
+        // Resizing in steps would reallocate the texture every time; keep it while it is big enough and not wasteful.
+        if ((int)width <= _capacityWidth && (int)height <= _capacityHeight
+            && _capacityWidth - (int)width < CapacityStep * 2 && _capacityHeight - (int)height < CapacityStep * 2)
+        {
+            (_width, _height) = ((int)width, (int)height);
+            return true;
+        }
+
+        int capacityWidth = RoundUp((int)width), capacityHeight = RoundUp((int)height);
         int activeTexture, texture, draw;
         _glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTexture);
         _glActiveTexture(GL_TEXTURE0);
@@ -115,7 +126,7 @@ internal sealed unsafe class VideoFrameCache : IDisposable
         _glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw);
 
         _glBindTexture(GL_TEXTURE_2D, _texture);
-        _glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, (int)width, (int)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
+        _glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, capacityWidth, capacityHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
         _glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         _glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
@@ -126,9 +137,13 @@ internal sealed unsafe class VideoFrameCache : IDisposable
         _glBindTexture(GL_TEXTURE_2D, (uint)texture);
         _glActiveTexture((uint)activeTexture);
 
-        (_width, _height) = complete ? ((int)width, (int)height) : (0, 0);
+        (_width, _height, _capacityWidth, _capacityHeight) = complete
+            ? ((int)width, (int)height, capacityWidth, capacityHeight)
+            : (0, 0, 0, 0);
         return complete;
     }
+
+    private static int RoundUp(int value) => (value + CapacityStep - 1) / CapacityStep * CapacityStep;
 
     /// <summary>Copies the cached picture 1:1 to the back buffer (framebuffer 0).</summary>
     public void CopyToBackBuffer()
@@ -168,6 +183,6 @@ internal sealed unsafe class VideoFrameCache : IDisposable
         _glDeleteTextures(1, names);
         names[0] = _fbo;
         _glDeleteFramebuffers(1, names);
-        (_texture, _fbo, _width, _height) = (0, 0, 0, 0);
+        (_texture, _fbo, _width, _height, _capacityWidth, _capacityHeight) = (0, 0, 0, 0, 0, 0);
     }
 }

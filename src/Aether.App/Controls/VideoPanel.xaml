@@ -6,7 +6,8 @@
 
     <!--
         Video flyout (screen 9.3): 340 wide, padding 12,16. Zoom with its readout and Reset, Rotate as a segmented control,
-        Aspect ratio as a combo, then the four colour sliders with Reset colours. The flyout supplies the solid surface
+        Aspect ratio as a combo, then the four colour sliders with Reset colours and, under a divider, the Look (grade,
+        sharpen, grain, denoise, Reset look). The flyout supplies the solid surface
         (ADR-0013); the scroll area keeps it inside a short window (9.5).
     -->
     <ScrollViewer
@@ -75,6 +76,90 @@
                 x:Name="ResetColoursButton"
                 HorizontalAlignment="Left"
                 Click="OnResetColoursClick"
+                Style="{StaticResource AetherSettingsTextButtonStyle}" />
+
+            <Border Height="1" Margin="-16,4,-16,4" Background="{StaticResource AetherStrokeDividerBrush}" />
+            <TextBlock x:Name="LookHeading" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="GradeLabel" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                <ComboBox
+                    x:Name="GradeCombo"
+                    MinWidth="0"
+                    HorizontalAlignment="Stretch"
+                    SelectionChanged="OnGradeChanged"
+                    Style="{StaticResource AetherSettingsComboStyle}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="SharpenLabel" VerticalAlignment="Center" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                    <TextBlock
+                        x:Name="SharpenValue"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherBodyTextStyle}"
+                        Typography.NumeralAlignment="Tabular" />
+                </Grid>
+                <Slider
+                    x:Name="SharpenSlider"
+                    Width="Auto"
+                    IsThumbToolTipEnabled="False"
+                    Maximum="100"
+                    Minimum="0"
+                    SmallChange="5"
+                    StepFrequency="5"
+                    Style="{StaticResource AetherSettingsSliderStyle}"
+                    ValueChanged="OnAmountChanged" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="GrainLabel" VerticalAlignment="Center" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                    <TextBlock
+                        x:Name="GrainValue"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherBodyTextStyle}"
+                        Typography.NumeralAlignment="Tabular" />
+                </Grid>
+                <Slider
+                    x:Name="GrainSlider"
+                    Width="Auto"
+                    IsThumbToolTipEnabled="False"
+                    Maximum="100"
+                    Minimum="0"
+                    SmallChange="5"
+                    StepFrequency="5"
+                    Style="{StaticResource AetherSettingsSliderStyle}"
+                    ValueChanged="OnAmountChanged" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="DenoiseLabel" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                <ListBox
+                    x:Name="DenoiseList"
+                    HorizontalAlignment="Stretch"
+                    SelectionChanged="OnDenoiseChanged"
+                    Style="{StaticResource AetherSegmentedStyle}" />
+                <TextBlock
+                    x:Name="DenoiseHint"
+                    Style="{StaticResource AetherCaptionTextStyle}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Button
+                x:Name="ResetLookButton"
+                HorizontalAlignment="Left"
+                Click="OnResetLookClick"
                 Style="{StaticResource AetherSettingsTextButtonStyle}" />
         </StackPanel>
     </ScrollViewer>

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Clips;
 using Aether.Core.Playback.Settings;
@@ -195,5 +195,29 @@ public class ClipDrawerLogicTests
     public void Name_IsTheFileName()
     {
         Assert.Equal("match-01_20261011_180203.mp4", Clip(@"C:\c\match-01_20261011_180203.mp4").Name);
+    }
+
+    [Fact]
+    public void Shelf_KeepsTheEncoderOfAPreciseClip_AndOlderEntriesHaveNone()
+    {
+        var storage = new FakeStorage();
+        ClipShelf shelf = NewShelf(storage);
+        shelf.Add(new SavedClip(@"C:\c.mp4", 1000, 40, Now, "Nvenc"));
+        shelf.Add(Clip(@"C:\c.mp4"));
+
+        ClipShelf reloaded = NewShelf(storage);
+
+        Assert.Null(reloaded.Items[0].Encoder);
+        Assert.Equal("Nvenc", reloaded.Items[1].Encoder);
+        Assert.DoesNotContain("encoder", ClipShelf.Serialize([Clip(@"C:\c.mp4")]));
+    }
+
+    [Fact]
+    public void Details_AddsTheEncoderOnlyWhenGiven()
+    {
+        SavedClip clip = Clip(@"C:\c.mp4", size: 4_404_019, length: 40);
+        string plain = ClipDisplay.Details(clip, Now, Invariant, "Yesterday");
+
+        Assert.Equal(plain + " · NVIDIA", ClipDisplay.Details(clip, Now, Invariant, "Yesterday", "NVIDIA"));
     }
 }

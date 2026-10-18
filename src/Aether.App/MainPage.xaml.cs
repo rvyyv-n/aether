@@ -305,6 +305,7 @@ public sealed partial class MainPage : Page
         _startup = StartupPhase.Starting;
         _startupError = null;
         _lastDecoder = null;
+        _lookApplied = false; // a new core starts with its own decoder and no filters
         Render();
 
         EngineStartupResult<MpvContext> result =

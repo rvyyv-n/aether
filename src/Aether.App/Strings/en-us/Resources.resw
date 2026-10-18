@@ -930,7 +930,13 @@
     <value>Everything stays on this device.</value>
   </data>
   <data name="Settings_About_CardLink" xml:space="preserve">
-    <value>Source on GitHub · @rvyyv-n</value>
+    <value>GitHub · @rvyyv-n</value>
+  </data>
+  <data name="Settings_About_CreditVersion" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Settings_About_CreditSource" xml:space="preserve">
+    <value>Source code</value>
   </data>
   <data name="Settings_About_Licences" xml:space="preserve">
     <value>Licences</value>
@@ -1508,5 +1514,158 @@
   </data>
   <data name="Settings_About_TourDescription" xml:space="preserve">
     <value>A quick look at the controls, the side rail, the right-click menu and the keys</value>
+  </data>
+  <data name="Clips_Mode" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="Clips_ModeFast" xml:space="preserve">
+    <value>Fast</value>
+  </data>
+  <data name="Clips_ModePrecise" xml:space="preserve">
+    <value>Precise</value>
+  </data>
+  <data name="Clips_SizeLimit" xml:space="preserve">
+    <value>Size limit</value>
+  </data>
+  <data name="Clips_SizeNone" xml:space="preserve">
+    <value>No limit</value>
+  </data>
+  <data name="Clips_SizePreset" xml:space="preserve">
+    <value>{0} MB</value>
+  </data>
+  <data name="Clips_SizeCustom" xml:space="preserve">
+    <value>Custom…</value>
+  </data>
+  <data name="Clips_Megabytes" xml:space="preserve">
+    <value>MB</value>
+  </data>
+  <data name="Clips_HintFast" xml:space="preserve">
+    <value>Fast cuts are instant and lossless, but start on the keyframe before In. Choose Precise to cut on the exact frame, fit a size limit or include the Look.</value>
+  </data>
+  <data name="Clips_HintFastOffset" xml:space="preserve">
+    <value> This one starts {0} early.</value>
+  </data>
+  <data name="Seek_CutStartHelp" xml:space="preserve">
+    <value>Fast cut starts {0} before In</value>
+  </data>
+  <data name="Clips_HintPrecise" xml:space="preserve">
+    <value>Cuts on the exact frame. Takes longer, and uses the graphics card when it can.</value>
+  </data>
+  <data name="Clips_HintTooSmall" xml:space="preserve">
+    <value>Too small for a clip this long. The smallest is {0} MB.</value>
+  </data>
+  <data name="Clips_ExportTipPrecise" xml:space="preserve">
+    <value>Precise · {0}</value>
+  </data>
+  <data name="Clips_ExportTipNoLimit" xml:space="preserve">
+    <value>no size limit</value>
+  </data>
+  <data name="Clips_ExportTipLimit" xml:space="preserve">
+    <value>up to {0} MB</value>
+  </data>
+  <data name="Clips_SavingProgress" xml:space="preserve">
+    <value>Saving · {0}% · {1} left</value>
+  </data>
+  <data name="Clips_SavingPercent" xml:space="preserve">
+    <value>Saving · {0}%</value>
+  </data>
+  <data name="Clips_CancelExport" xml:space="preserve">
+    <value>Cancel export</value>
+  </data>
+  <data name="Clips_ProgressName" xml:space="preserve">
+    <value>Export progress</value>
+  </data>
+  <data name="Clips_EncNvenc" xml:space="preserve">
+    <value>NVIDIA</value>
+  </data>
+  <data name="Clips_EncQsv" xml:space="preserve">
+    <value>Intel</value>
+  </data>
+  <data name="Clips_EncAmf" xml:space="preserve">
+    <value>AMD</value>
+  </data>
+  <data name="Clips_EncX264" xml:space="preserve">
+    <value>CPU</value>
+  </data>
+  <data name="Clips_EncTip" xml:space="preserve">
+    <value>Encoded by {0}</value>
+  </data>
+  <data name="Clips_EncNvencLong" xml:space="preserve">
+    <value>NVIDIA NVENC</value>
+  </data>
+  <data name="Clips_EncQsvLong" xml:space="preserve">
+    <value>Intel Quick Sync</value>
+  </data>
+  <data name="Clips_EncAmfLong" xml:space="preserve">
+    <value>AMD AMF</value>
+  </data>
+  <data name="Clips_EncX264Long" xml:space="preserve">
+    <value>the processor (x264)</value>
+  </data>
+  <data name="Video_Look" xml:space="preserve">
+    <value>Look</value>
+  </data>
+  <data name="Video_LookGrade" xml:space="preserve">
+    <value>Grade</value>
+  </data>
+  <data name="Video_GradeNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Video_GradeWarm" xml:space="preserve">
+    <value>Warm</value>
+  </data>
+  <data name="Video_GradeCool" xml:space="preserve">
+    <value>Cool</value>
+  </data>
+  <data name="Video_GradeVivid" xml:space="preserve">
+    <value>Vivid</value>
+  </data>
+  <data name="Video_GradeTealOrange" xml:space="preserve">
+    <value>Teal and orange</value>
+  </data>
+  <data name="Video_GradeFadedFilm" xml:space="preserve">
+    <value>Faded film</value>
+  </data>
+  <data name="Video_GradeBlackWhite" xml:space="preserve">
+    <value>Black and white</value>
+  </data>
+  <data name="Video_AddLook" xml:space="preserve">
+    <value>Add a look…</value>
+  </data>
+  <data name="Video_OpenLooksFolder" xml:space="preserve">
+    <value>Open looks folder</value>
+  </data>
+  <data name="Video_Sharpen" xml:space="preserve">
+    <value>Sharpen</value>
+  </data>
+  <data name="Video_Grain" xml:space="preserve">
+    <value>Grain</value>
+  </data>
+  <data name="Video_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Video_ResetLook" xml:space="preserve">
+    <value>Reset look</value>
+  </data>
+  <data name="Toast_LookInvalid" xml:space="preserve">
+    <value>That file isn't a 3D LUT (.cube)</value>
+  </data>
+  <data name="Video_Denoise" xml:space="preserve">
+    <value>Denoise</value>
+  </data>
+  <data name="Video_DenoiseOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Video_DenoiseLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Video_DenoiseMedium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="Video_DenoiseStrong" xml:space="preserve">
+    <value>Strong</value>
+  </data>
+  <data name="Video_DenoiseHint" xml:space="preserve">
+    <value>Uses more power. Best with a dedicated graphics card.</value>
   </data>
 </root>
