@@ -11,8 +11,8 @@ namespace Aether_App;
 
 /// <summary>
 /// The right-click menu (screen 9.1). Audio and Subtitles open the tracks flyout (MainPage.Tracks.cs), Video the video
-/// flyout (MainPage.Video.cs); the frame entries are in MainPage.Frames.cs. Picture in picture (Pass 8) and Stream
-/// (LAN streaming, Pass 11) stay disabled until the work behind them lands. UI thread only.
+/// flyout (MainPage.Video.cs); the frame entries are in MainPage.Frames.cs, and Stream opens the phone pairing card
+/// (MainPage.LanStream.cs). UI thread only.
 /// </summary>
 public sealed partial class MainPage
 {
@@ -73,6 +73,11 @@ public sealed partial class MainPage
         // Settings and the Open URL box keep their own right-click (copy and paste).
         if (_settingsShown || IsOpenUrlShown || args.OriginalSource is TextBox)
         {
+            return;
+        }
+        if (_lanShown)
+        {
+            args.Handled = true; // the phone card is modal: no player menu over it
             return;
         }
         args.Handled = true;
@@ -158,6 +163,10 @@ public sealed partial class MainPage
         if (_tour.IsActive)
         {
             TourNextButton.Focus(FocusState.Programmatic);
+        }
+        else if (_lanShown)
+        {
+            LanStreamSwitch.Focus(FocusState.Programmatic);
         }
         else if (!IsOpenUrlShown)
         {

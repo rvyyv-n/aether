@@ -39,6 +39,7 @@ public static class Program
         // Closing the window disposed the engine, whose teardown runs in the background; give it a moment to finish
         // so the process does not end with mpv's threads half stopped, but never hold up exit for long.
         MpvContext.WaitForDestroyedCores(2000);
+        MainPage.WaitForLanServerStop(1000);
         return 0;
     }
 }

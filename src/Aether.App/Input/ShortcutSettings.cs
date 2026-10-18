@@ -146,6 +146,7 @@ public sealed class ShortcutSettings
         ShortcutAction.NextChapter => "Settings_Shortcuts_NextChapter",
         ShortcutAction.PreviousChapter => "Settings_Shortcuts_PreviousChapter",
         ShortcutAction.Sidebar => "Settings_Shortcuts_Sidebar",
+        ShortcutAction.ToggleLanStream => "Settings_Shortcuts_LanStream",
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 }

@@ -213,6 +213,7 @@
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
                         x:Name="CtxStream"
+                        Click="OnStreamMenuClick"
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE774;" />
@@ -781,11 +782,10 @@
                     Click="OnRailClipsClick"
                     Content="&#xE8F1;"
                     Style="{StaticResource AetherSidebarItemStyle}" />
-                <!--  The LAN streamer lands in Pass 11.  -->
                 <Button
                     x:Name="RailStream"
+                    Click="OnRailStreamClick"
                     Content="&#xE774;"
-                    IsEnabled="False"
                     Style="{StaticResource AetherSidebarItemStyle}" />
                 <Button
                     x:Name="RailSettings"
@@ -1242,6 +1242,145 @@
                             Content="Cancel"
                             Style="{StaticResource AetherOutlinePillButtonStyle}" />
                     </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!--
+            Phone pairing (11.3): the Open URL card over the same light scrim, so the video stays visible. Esc, the
+            shortcut or a click outside the card closes it. The code sits on white in every theme.
+        -->
+        <Grid
+            x:Name="LanStreamOverlay"
+            Background="{StaticResource AetherSurfaceScrimBrush}"
+            PointerPressed="OnLanStreamOverlayPointerPressed"
+            Visibility="Collapsed">
+            <Border
+                x:Name="LanStreamCard"
+                MaxWidth="{StaticResource AetherSizeDialogWidth}"
+                Margin="16"
+                Padding="24"
+                VerticalAlignment="Center"
+                Background="{StaticResource AetherSurfaceDialogFallbackBrush}"
+                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AetherOverlayCornerRadius}">
+                <StackPanel TabFocusNavigation="Cycle">
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="LanStreamTitle" Style="{StaticResource AetherSubtitleTextStyle}" />
+                            <StackPanel
+                                Margin="0,4,0,0"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <Ellipse
+                                    x:Name="LanStreamStatusDot"
+                                    Margin="0,5,0,0"
+                                    Style="{StaticResource AetherStatusDotStyle}" />
+                                <TextBlock x:Name="LanStreamStatusText" Style="{StaticResource AetherCaptionTextStyle}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <ToggleSwitch
+                            x:Name="LanStreamSwitch"
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource AetherSettingsToggleStyle}"
+                            Toggled="OnLanStreamToggled" />
+                    </Grid>
+                    <Grid
+                        Width="{StaticResource AetherSizeLanCode}"
+                        Height="{StaticResource AetherSizeLanCode}"
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center">
+                        <Border
+                            x:Name="LanStreamCodeOff"
+                            Padding="16"
+                            Background="{StaticResource AetherFillInputBrush}"
+                            BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource AetherOverlayCornerRadius}">
+                            <StackPanel VerticalAlignment="Center" Spacing="12">
+                                <FontIcon
+                                    FontSize="{StaticResource AetherSizeHeroGlyph}"
+                                    Foreground="{StaticResource AetherTextTertiaryBrush}"
+                                    Glyph="&#xE8EA;" />
+                                <TextBlock
+                                    x:Name="LanStreamCodeOffText"
+                                    HorizontalAlignment="Center"
+                                    Style="{StaticResource AetherCaptionTextStyle}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            x:Name="LanStreamCodeTile"
+                            Background="{StaticResource AetherSurfaceCodeBrush}"
+                            CornerRadius="{StaticResource AetherOverlayCornerRadius}"
+                            Visibility="Collapsed">
+                            <!--  Sized in code to the bitmap's own pixels: one image pixel per screen pixel keeps every module sharp.  -->
+                            <Image
+                                x:Name="LanStreamCode"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Stretch="Uniform" />
+                        </Border>
+                    </Grid>
+                    <Grid
+                        x:Name="LanStreamAddressRow"
+                        Margin="0,16,0,0"
+                        ColumnSpacing="8"
+                        Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            x:Name="LanStreamAddress"
+                            VerticalAlignment="Center"
+                            IsTextSelectionEnabled="True"
+                            Style="{StaticResource AetherSecondaryTextStyle}" />
+                        <Button
+                            x:Name="LanStreamCopyButton"
+                            Grid.Column="1"
+                            Click="OnLanStreamCopyClick"
+                            Style="{StaticResource AetherOutlinePillButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8C8;" />
+                                <TextBlock x:Name="LanStreamCopyLabel" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <!--  A reason or a problem; the dot only for a problem (Caption; the dot sits on the caption line).  -->
+                    <Grid
+                        x:Name="LanStreamNote"
+                        Margin="0,16,0,0"
+                        ColumnSpacing="8"
+                        Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Ellipse
+                            x:Name="LanStreamNoteDot"
+                            Margin="0,5,0,0"
+                            Fill="{StaticResource AetherStatusWarningBrush}"
+                            Style="{StaticResource AetherStatusDotStyle}" />
+                        <TextBlock
+                            x:Name="LanStreamNoteText"
+                            Grid.Column="1"
+                            Foreground="{StaticResource AetherTextPrimaryBrush}"
+                            Style="{StaticResource AetherCaptionTextStyle}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                    <TextBlock
+                        x:Name="LanStreamHint"
+                        Margin="0,16,0,0"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
         </Grid>

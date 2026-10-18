@@ -84,6 +84,7 @@ public sealed partial class MainPage
         MoreSettingsItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Settings);
         ApplyContextMenuShortcuts();
         ApplyRailShortcutLabels();
+        ApplyLanStreamShortcutLabels();
     }
 
     private static string Tip(string key, ShortcutAction action) => App.Shortcuts.Tip(AppStrings.Get(key), action);
@@ -154,6 +155,7 @@ public sealed partial class MainPage
         ShortcutAction.NextChapter => OnNextChapterAccelerator,
         ShortcutAction.PreviousChapter => OnPreviousChapterAccelerator,
         ShortcutAction.Sidebar => OnSidebarAccelerator,
+        ShortcutAction.ToggleLanStream => OnLanStreamAccelerator,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 

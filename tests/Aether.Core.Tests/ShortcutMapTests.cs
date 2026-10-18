@@ -47,6 +47,7 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.NextChapter, "PageDown")]
     [InlineData(ShortcutAction.PreviousChapter, "PageUp")]
     [InlineData(ShortcutAction.Sidebar, "B")]
+    [InlineData(ShortcutAction.ToggleLanStream, "S")]
     public void Defaults_Are_Todays_Keys(ShortcutAction action, string expected)
     {
         Assert.Equal([expected], Defaults(action));

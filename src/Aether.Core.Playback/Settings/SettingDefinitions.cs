@@ -96,6 +96,7 @@ public static class SettingKeys
     public const string ShortcutNextChapter = "shortcuts.nextChapter";
     public const string ShortcutPreviousChapter = "shortcuts.previousChapter";
     public const string ShortcutSidebar = "shortcuts.sidebar";
+    public const string ShortcutLanStream = "shortcuts.lanStream";
 }
 
 /// <summary>One setting: key, restart flag, validation and (de)serialisation. No reflection, so it is AOT-safe.</summary>
@@ -280,6 +281,7 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutNextChapter, s => s.ShortcutNextChapter, (s, v) => s with { ShortcutNextChapter = v }),
         Shortcut(SettingKeys.ShortcutPreviousChapter, s => s.ShortcutPreviousChapter, (s, v) => s with { ShortcutPreviousChapter = v }),
         Shortcut(SettingKeys.ShortcutSidebar, s => s.ShortcutSidebar, (s, v) => s with { ShortcutSidebar = v }),
+        Shortcut(SettingKeys.ShortcutLanStream, s => s.ShortcutLanStream, (s, v) => s with { ShortcutLanStream = v }),
     ];
 
     private static readonly Dictionary<string, SettingDefinition> ByKey = All.ToDictionary(d => d.Key, StringComparer.Ordinal);

@@ -30,4 +30,5 @@ public enum ShortcutAction
     NextChapter,
     PreviousChapter,
     Sidebar,
+    ToggleLanStream,
 }

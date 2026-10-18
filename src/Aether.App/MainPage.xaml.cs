@@ -117,6 +117,7 @@ public sealed partial class MainPage : Page
         InitializeContextMenu();
         InitializeTracks();
         InitializeVideo();
+        InitializeLanStream();
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -284,6 +285,7 @@ public sealed partial class MainPage : Page
         App.Shortcuts.Changed -= OnShortcutsChanged;
         AppToasts.Requested -= OnToastRequested;
         SaveResumePosition(background: false);
+        ShutDownLanStream();
         CursorVisibility.Show();
         if (_session is { } session)
         {
@@ -479,6 +481,7 @@ public sealed partial class MainPage : Page
         _currentPath = path;
         _currentWebLink = link?.WebLink;
         _streamTitle = link?.Title;
+        SyncLanStreamSource(path);
         RefreshNeighbours(path, isLink: link is not null);
         ResetChapters(link?.Chapters);
         ResetLinkSubtitles(link?.Subtitles, carry);
@@ -965,7 +968,7 @@ public sealed partial class MainPage : Page
 
     private void OnEscapeAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (EndTour() || CloseRail())
+        if (EndTour() || CloseRail() || CloseLanStream())
         {
             args.Handled = true;
         }
@@ -997,8 +1000,8 @@ public sealed partial class MainPage : Page
 
     private void OnAnyKeyDown(object sender, KeyRoutedEventArgs e) => NotifyActivity();
 
-    /// <summary>Player keys stand down while the Open URL field, settings or the tour has the keyboard.</summary>
-    private bool ArePlayerKeysPaused => IsOpenUrlShown || _settingsShown || _tour.IsActive;
+    /// <summary>Player keys stand down while the Open URL field, the phone card, settings or the tour has the keyboard.</summary>
+    private bool ArePlayerKeysPaused => IsOpenUrlShown || _lanShown || _settingsShown || _tour.IsActive;
 
     // ---- Settings (6.1) ----
 
@@ -1016,6 +1019,7 @@ public sealed partial class MainPage : Page
         if (shown)
         {
             EndTour(); // the gear stays clickable during the tour
+            CloseLanStream();
         }
         _settingsShown = shown;
         if (shown)
@@ -1084,6 +1088,7 @@ public sealed partial class MainPage : Page
         }
 
         EndTour();
+        CloseLanStream();
         LeavePictureInPicture();
         _openUrl.Open(clipboard);
         OpenUrlBox.Text = _openUrl.Text;
@@ -1804,6 +1809,7 @@ public sealed partial class MainPage : Page
 
         UpdateTaskbar(fileName);
         RenderHome(vm);
+        RenderLanStream();
 
         _chrome.SetHold(ChromeHolds.NotPlaying, vm?.Status != PlaybackStatus.Playing);
         ApplyChrome();

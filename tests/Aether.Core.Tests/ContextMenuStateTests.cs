@@ -27,9 +27,10 @@ public class ContextMenuStateTests
     }
 
     [Fact]
-    public void Entries_Whose_Work_Is_Not_Built_Stay_Disabled()
+    public void Stream_Opens_Even_With_Nothing_Playing()
     {
-        Assert.False(Playing.Stream);
+        Assert.True(Playing.Stream);
+        Assert.True(new ContextMenuState(EngineReady: false, HasVideo: false, RecentCount: 0, ClipCount: 0, HasWindow: false).Stream);
     }
 
     [Fact]

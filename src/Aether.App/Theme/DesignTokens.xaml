@@ -70,6 +70,7 @@
     <Color x:Key="AetherSurfaceDialogFallbackColor">#F20E1014</Color>  <!-- [decided] Solid fallback for surface.dialog -->
     <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>  <!-- [screen 3] Over video only: black 50% under the 32 px title bar, linear fade to 0 by 72 px. Keeps 'Aether' and -->
     <Color x:Key="AetherSurfaceOverlayStrongColor">#F20E1014</Color>  <!-- [screens 6-10] Same value as surface.dialogFallback. Diagnostics overlay: solid enough that TextSecondary hold -->
+    <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>  <!-- [11.3] Behind the phone pairing QR code: white in every theme, the background phone cameras read best -->
     <Color x:Key="AetherFillEmphasisRestColor">#24FFFFFF</Color>  <!-- 14%. Primary pill, play button, selected rail item. Was Active -->
     <Color x:Key="AetherFillEmphasisHoverColor">#2EFFFFFF</Color>  <!-- 18% -->
     <Color x:Key="AetherFillEmphasisPressedColor">#1AFFFFFF</Color>  <!-- 10% -->
@@ -107,6 +108,7 @@
     <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="{StaticResource AetherSurfaceDialogFallbackColor}" />
     <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
     <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
+    <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />
     <SolidColorBrush x:Key="AetherFillEmphasisRestBrush" Color="{StaticResource AetherFillEmphasisRestColor}" />
     <SolidColorBrush x:Key="AetherFillEmphasisHoverBrush" Color="{StaticResource AetherFillEmphasisHoverColor}" />
     <SolidColorBrush x:Key="AetherFillEmphasisPressedBrush" Color="{StaticResource AetherFillEmphasisPressedColor}" />
@@ -238,6 +240,7 @@
     <x:Double x:Key="AetherSizePipSeekLine">3</x:Double>  <!-- Thin progress line on the bottom edge, no times; 16 tall hit area for a click to seek -->
     <x:Double x:Key="AetherSizeToastMaxWidth">360</x:Double>  <!-- Toast: min(360, window − 32), SurfaceOsd, radius 8, padding 8,8,8,16; 8 above the pill or 24 from th -->
     <x:Double x:Key="AetherSizeTourCard">320</x:Double>  <!-- First-run tour card (7.26): SurfaceDialogFallback, radius 8, padding 16, 16 from the lit target -->
+    <x:Double x:Key="AetherSizeLanCode">200</x:Double>  <!-- Phone pairing card (11.3): the QR tile; the code inside is drawn at whole screen pixels per module, so it can be a little smaller -->
     <x:Double x:Key="AetherSizeMenuMaxHeightInset">16</x:Double>  <!-- Menus and flyouts cap at window height − 16 (8 each side) and scroll -->
 
     <!--  Motion (milliseconds). When UISettings.AnimationsEnabled is false, everything is instant in both

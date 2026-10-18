@@ -158,4 +158,5 @@ public sealed record AetherSettings
     public string ShortcutNextChapter { get; init; } = "";
     public string ShortcutPreviousChapter { get; init; } = "";
     public string ShortcutSidebar { get; init; } = "";
+    public string ShortcutLanStream { get; init; } = "";
 }

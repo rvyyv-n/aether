@@ -130,6 +130,7 @@ public sealed class ShortcutMap
         ShortcutAction.NextChapter => settings.ShortcutNextChapter,
         ShortcutAction.PreviousChapter => settings.ShortcutPreviousChapter,
         ShortcutAction.Sidebar => settings.ShortcutSidebar,
+        ShortcutAction.ToggleLanStream => settings.ShortcutLanStream,
         _ => "",
     };
 }

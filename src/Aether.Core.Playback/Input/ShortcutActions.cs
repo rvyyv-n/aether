@@ -37,6 +37,7 @@ public static class ShortcutActions
         ShortcutAction.NextChapter => SettingKeys.ShortcutNextChapter,
         ShortcutAction.PreviousChapter => SettingKeys.ShortcutPreviousChapter,
         ShortcutAction.Sidebar => SettingKeys.ShortcutSidebar,
+        ShortcutAction.ToggleLanStream => SettingKeys.ShortcutLanStream,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 
@@ -80,6 +81,7 @@ public static class ShortcutActions
         ShortcutAction.NextChapter => [new KeyCombination(KeyCombination.PageDown)],
         ShortcutAction.PreviousChapter => [new KeyCombination(KeyCombination.PageUp)],
         ShortcutAction.Sidebar => [KeyCombination.Letter('B')],
+        ShortcutAction.ToggleLanStream => [KeyCombination.Letter('S')],
         _ => [],
     };
 

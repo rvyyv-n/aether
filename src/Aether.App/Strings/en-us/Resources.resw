@@ -952,6 +952,9 @@
   <data name="Settings_Shortcuts_Sidebar" xml:space="preserve">
     <value>Sidebar</value>
   </data>
+  <data name="Settings_Shortcuts_LanStream" xml:space="preserve">
+    <value>Stream to a phone</value>
+  </data>
 
   
   <data name="Settings_CustomOptions_Title" xml:space="preserve">
@@ -1760,5 +1763,64 @@
   </data>
   <data name="Video_DenoiseHint" xml:space="preserve">
     <value>Uses more power. Best with a dedicated graphics card.</value>
+  </data>
+  <data name="LanStream_Title" xml:space="preserve">
+    <value>Stream to your phone</value>
+  </data>
+  <data name="LanStream_StatusOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="LanStream_StatusStarting" xml:space="preserve">
+    <value>Starting…</value>
+  </data>
+  <data name="LanStream_StatusWaiting" xml:space="preserve">
+    <value>Waiting for phone</value>
+    <comment>The server is on and no phone has connected yet</comment>
+  </data>
+  <data name="LanStream_StatusWatchingOne" xml:space="preserve">
+    <value>1 phone watching</value>
+  </data>
+  <data name="LanStream_StatusWatchingMany" xml:space="preserve">
+    <value>{0} phones watching</value>
+    <comment>{0} is the number of phones, 2 or more</comment>
+  </data>
+  <data name="LanStream_CodeOff" xml:space="preserve">
+    <value>Switch on to show the code</value>
+  </data>
+  <data name="LanStream_CodeName" xml:space="preserve">
+    <value>QR code for the address. Scan it with your phone's camera.</value>
+    <comment>Screen reader name of the QR code image</comment>
+  </data>
+  <data name="LanStream_AddressName" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="LanStream_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="LanStream_Copied" xml:space="preserve">
+    <value>Copied</value>
+    <comment>Copy button label for 2 seconds after the address is copied</comment>
+  </data>
+  <data name="LanStream_Hint" xml:space="preserve">
+    <value>Your phone needs to be on the same Wi-Fi as this PC.</value>
+  </data>
+  <data name="LanStream_NoteNoFile" xml:space="preserve">
+    <value>Open a video file to stream it.</value>
+  </data>
+  <data name="LanStream_NoteLink" xml:space="preserve">
+    <value>Links can't be streamed to a phone. Open a file from this PC instead.</value>
+  </data>
+  <data name="LanStream_NoteNoNetwork" xml:space="preserve">
+    <value>This PC isn't on a home network. Connect to Wi-Fi or a network cable, then try again.</value>
+  </data>
+  <data name="LanStream_NotePortBusy" xml:space="preserve">
+    <value>Another app is using port {0}, which Aether streams on. Close that app, then switch on again.</value>
+    <comment>{0} is the port number</comment>
+  </data>
+  <data name="LanStream_NoteFailed" xml:space="preserve">
+    <value>Streaming couldn't start. Switch it on to try again.</value>
+  </data>
+  <data name="LanStream_NoteAddressChanged" xml:space="preserve">
+    <value>This PC's address changed. Scan the new code on your phone.</value>
   </data>
 </root>
