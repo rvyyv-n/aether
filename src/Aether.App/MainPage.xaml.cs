@@ -12,6 +12,7 @@ using Aether.Core.Playback.Tracks;
 using Aether_App.Controls;
 using Aether_App.Playback;
 using Aether_App.Settings;
+using Aether_App.Updates;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -227,6 +228,7 @@ public sealed partial class MainPage : Page
     {
         _isLoaded = true;
         YtDlpManager.StartScheduledUpdates();
+        UpdateService.StartScheduledChecks();
         if (_fader is null)
         {
             var resources = Application.Current.Resources;

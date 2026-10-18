@@ -1,5 +1,8 @@
 using System.Runtime.InteropServices;
 using Aether.Core.Playback.Settings;
+using Aether.Core.Playback.Updates;
+using Aether_App.Updates;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
@@ -9,9 +12,9 @@ namespace Aether_App.Settings.Pages;
 
 public sealed partial class AboutPage : Page
 {
-    private static readonly Uri Repository = new("https://github.com/rvyyv-n/aether");
-    private static readonly Uri Licence = new("https://github.com/rvyyv-n/aether/blob/master/LICENSE");
-    private static readonly Uri Issues = new("https://github.com/rvyyv-n/aether/issues");
+    private static readonly Uri Repository = new(UpdateFeed.RepositoryUrl);
+    private static readonly Uri Licence = new($"{UpdateFeed.RepositoryUrl}/blob/master/LICENSE");
+    private static readonly Uri Issues = new($"{UpdateFeed.RepositoryUrl}/issues");
 
     private readonly string _appVersion;
     private readonly string _decoder;
@@ -52,6 +55,29 @@ public sealed partial class AboutPage : Page
         AutomationProperties.SetName(CopyDiagnosticsButton, AppStrings.Get("Settings_About_CopyDiagnostics"));
         CopyDiagnosticsButton.Click += async (_, _) => await CopyDiagnosticsAsync();
 
+        var binder = new SettingsPageBinder(this);
+        binder.Toggle(UpdatesAutoRow, UpdatesAutoToggle, SettingKeys.UpdatesAutoCheck,
+            "Settings_Updates_Auto_Title", "Settings_Updates_Auto_Description");
+        UpdatesRow.Header = AppStrings.Get("Settings_Updates_Title");
+        UpdatesActionButton.Click += (_, _) =>
+        {
+            if (UpdateService.Controller.Status.State == UpdateState.Ready)
+            {
+                UpdateService.RestartToUpdate();
+            }
+            else
+            {
+                _ = UpdateService.CheckNowAsync();
+            }
+        };
+        ShowUpdate(UpdateService.Controller.Status);
+        Loaded += (_, _) =>
+        {
+            UpdateService.Controller.StatusChanged += OnUpdateStatusChanged;
+            ShowUpdate(UpdateService.Controller.Status);
+        };
+        Unloaded += (_, _) => UpdateService.Controller.StatusChanged -= OnUpdateStatusChanged;
+
         TourTitle.Text = AppStrings.Get("Settings_About_Tour");
         TourDescription.Text = AppStrings.Get("Settings_About_TourDescription");
         AutomationProperties.SetName(TourButton, TourTitle.Text);
@@ -71,6 +97,26 @@ public sealed partial class AboutPage : Page
         ReportIssueButton.Click += async (_, _) => await Launcher.LaunchUriAsync(Issues);
 
         _ = LoadVersionsAsync();
+    }
+
+    private void OnUpdateStatusChanged(UpdateStatus status) => App.RunOnUi(() => ShowUpdate(status));
+
+    private void ShowUpdate(UpdateStatus status)
+    {
+        UpdatesRow.Description = status.State switch
+        {
+            UpdateState.Checking => AppStrings.Get("Settings_Updates_Checking"),
+            UpdateState.UpToDate => AppStrings.Format("Settings_Updates_UpToDate", _appVersion),
+            UpdateState.Downloading => AppStrings.Format("Settings_Updates_Downloading", status.Version ?? "", (int)(status.Progress * 100)),
+            UpdateState.Ready => AppStrings.Format("Settings_Updates_Ready", status.Version ?? ""),
+            UpdateState.NotInstalled => AppStrings.Format("Settings_Updates_NotInstalled", _appVersion),
+            UpdateState.Failed => AppStrings.Format("Settings_Updates_Failed", _appVersion),
+            _ => AppStrings.Format("Settings_Updates_Version", _appVersion),
+        };
+        UpdatesActionButton.Content = AppStrings.Get(status.State == UpdateState.Ready ? "Settings_Updates_Restart" : "Settings_Updates_CheckNow");
+        UpdatesActionButton.IsEnabled = status.CanCheck;
+        UpdatesActionButton.Visibility = status.State == UpdateState.NotInstalled ? Visibility.Collapsed : Visibility.Visible;
+        UpdatesAutoRow.IsEnabled = status.State != UpdateState.NotInstalled;
     }
 
     private static void ShowValue(TextBlock label, TextBlock value, string labelKey, string text)

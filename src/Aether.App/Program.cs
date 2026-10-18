@@ -1,5 +1,7 @@
+using Aether_App.Updates;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Velopack;
 
 namespace Aether_App;
 
@@ -12,6 +14,13 @@ public static class Program
     [STAThread]
     private static int Main()
     {
+        // Velopack's install, update and uninstall hooks run Aether with special arguments and exit, so this comes before anything else.
+        VelopackApp.Build()
+            .OnAfterInstallFastCallback(_ => ShellIntegration.RegisterForInstall())
+            .OnAfterUpdateFastCallback(_ => ShellIntegration.Register(AppContext.BaseDirectory))
+            .OnBeforeUninstallFastCallback(_ => ShellIntegration.RemoveForUninstall())
+            .Run();
+
         // Unpackaged WinUI 3 MRT Core and native dependency resolution require the base directory
         // to be the working directory when launched via shell verbs, shortcuts, or external paths.
         Directory.SetCurrentDirectory(AppContext.BaseDirectory);

@@ -554,6 +554,51 @@
   <data name="Toast_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="Settings_Updates_Title" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="Settings_Updates_Version" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="Settings_Updates_Checking" xml:space="preserve">
+    <value>Checking…</value>
+  </data>
+  <data name="Settings_Updates_UpToDate" xml:space="preserve">
+    <value>Version {0} · Up to date</value>
+  </data>
+  <data name="Settings_Updates_Downloading" xml:space="preserve">
+    <value>Downloading {0} · {1}%</value>
+  </data>
+  <data name="Settings_Updates_Ready" xml:space="preserve">
+    <value>Version {0} is ready. It installs when you close Aether.</value>
+  </data>
+  <data name="Settings_Updates_NotInstalled" xml:space="preserve">
+    <value>Version {0} · This copy does not update itself. Download a newer zip or installer to update.</value>
+  </data>
+  <data name="Settings_Updates_Failed" xml:space="preserve">
+    <value>Version {0} · Couldn't reach GitHub</value>
+  </data>
+  <data name="Settings_Updates_CheckNow" xml:space="preserve">
+    <value>Check now</value>
+  </data>
+  <data name="Settings_Updates_Restart" xml:space="preserve">
+    <value>Restart to update</value>
+  </data>
+  <data name="Settings_Updates_Auto_Title" xml:space="preserve">
+    <value>Check for updates automatically</value>
+  </data>
+  <data name="Settings_Updates_Auto_Description" xml:space="preserve">
+    <value>Checks once a day</value>
+  </data>
+  <data name="Toast_UpdateReady" xml:space="preserve">
+    <value>Aether {0} is ready</value>
+  </data>
+  <data name="Toast_UpdateRestart" xml:space="preserve">
+    <value>Restart</value>
+  </data>
+  <data name="Toast_UpdateRestartFailed" xml:space="preserve">
+    <value>Couldn't restart to update. It installs when you close Aether.</value>
+  </data>
   <data name="Toast_YtDlpUpdated" xml:space="preserve">
     <value>yt-dlp updated to {0}</value>
   </data>

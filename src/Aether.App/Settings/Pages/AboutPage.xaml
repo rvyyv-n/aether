@@ -44,6 +44,13 @@
                 </StackPanel>
             </Button>
         </settings:SettingsRow>
+        <settings:SettingsRow x:Name="UpdatesRow" Glyph="&#xE895;">
+            <Button x:Name="UpdatesActionButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
+        </settings:SettingsRow>
+        <!--  A blank glyph keeps the title in line with Updates, the setting it belongs to  -->
+        <settings:SettingsRow x:Name="UpdatesAutoRow" Glyph=" ">
+            <ToggleSwitch x:Name="UpdatesAutoToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+        </settings:SettingsRow>
         <Button
             x:Name="TourButton"
             MinHeight="{StaticResource AetherSizeSettingsRow}"
