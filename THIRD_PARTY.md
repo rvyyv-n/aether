@@ -2,30 +2,62 @@
 
 Aether incorporates or interfaces with several open-source and third-party software components. This document provides attribution and notices in compliance with their respective licences.
 
+> [!CAUTION]
+> **CRITICAL LICENSING NOTE — CURRENT libmpv STAGED BINARY**
+> The native `libmpv-2.dll` binary currently staged in development (`v0.41.0-1122-gaccb7b282`) was compiled with GPL features enabled (`gpl` feature flag active in meson configuration from `mpv-winbuild-cmake`) and carries the embedded notice: *"mpv is distributed under the terms of the GNU General Public License Version 2 or later."*
+> In accordance with [ADR-0016](docs/DECISIONS.md), Aether's application shell, presentation layer, and playback logic are proprietary/source-available and dynamically link to `libmpv`. Distributing Aether bundled with a GPL `libmpv-2.dll` would trigger copyleft obligations on Aether's own source code.
+> **Therefore, the current `libmpv-2.dll` binary must NOT be shipped in public release bundles.** It MUST be replaced with an LGPL-compiled build (`-Dgpl=false` / `--enable-lgpl`) prior to public release.
+
 ---
 
 ## Component Overview
 
 | Component | Version | Licence | Project URL | Usage Mode |
 |:---|:---|:---|:---|:---|
-| **libmpv** (`libmpv-2.dll`) | v0.41.0 *(to confirm)* | LGPL-2.1-or-later *(to confirm build flavour)* | https://mpv.io | Dynamic linking (unmanaged C-ABI P/Invoke); bundled in installer and portable archive |
-| **ANGLE** (`libEGL.dll`, `libGLESv2.dll`) | Chromium branch *(to confirm)* | BSD-3-Clause | https://chromium.googlesource.com/angle/angle | Dynamic loading; bundled in installer and portable archive |
-| **FFmpeg** (`ffmpeg.exe`) | 6.x / 7.x *(to confirm)* | LGPL-2.1-or-later / GPL-2.0-or-later *(to confirm build flavour)* | https://ffmpeg.org | External process execution (stream-copy clipping); loaded from `PATH` or bundled |
-| **yt-dlp** (`yt-dlp.exe`) | Latest release *(to confirm)* | The Unlicense | https://github.com/yt-dlp/yt-dlp | External process execution (web stream resolution); loaded from `PATH` or adjacent |
-| **Windows App SDK** | 2.5.1 | MIT | https://github.com/microsoft/WindowsAppSDK | Managed framework runtime (WinUI 3 desktop shell and composition) |
-| **Microsoft.Web.WebView2** | 1.0.3719.77 | Microsoft Software License | https://developer.microsoft.com/microsoft-edge/webview2/ | Transitive runtime dependency of Windows App SDK |
-| **Microsoft.Windows.SDK.BuildTools** | 10.0.28000.2705 | Microsoft Software License | https://aka.ms/WinSDK | Build-time MSBuild targets and PRI resource tooling |
-| **QRCoder** | 1.6.0 | MIT | https://github.com/codebude/QRCoder | Managed library dependency (LAN streaming QR code generation) |
-| **ASP.NET Core (Kestrel)** | 9.0 (.NET 9 BCL) | MIT | https://github.com/dotnet/aspnetcore | Managed framework reference (LAN HTTP 206 streaming server) |
+| **libmpv** (`libmpv-2.dll`) | `v0.41.0-1122-gaccb7b282` | LGPL-2.1-or-later *(target build)*<br>GPL-2.0-or-later *(current staged binary; release blocker)* | https://mpv.io | Dynamic linking (unmanaged C-ABI P/Invoke); bundled in installer and portable archive |
+| **ANGLE** (`libEGL.dll`, `libGLESv2.dll`) | `2.1.0.0` (Chromium ANGLE 2.1) | BSD-3-Clause | https://chromium.googlesource.com/angle/angle | Dynamic loading; bundled in installer and portable archive |
+| **FFmpeg** (`ffmpeg.exe`) | `9.0.2-full_build-www.gyan.dev` | GPL-3.0-or-later (`--enable-gpl --enable-version3`) | https://ffmpeg.org | External process execution (`Process.Start` for stream-copy clipping); loaded from `PATH` or bundled with written source offer |
+| **yt-dlp** (`yt-dlp.exe`) | `2026.07.04` *(bundling target in 11.9)* | The Unlicense (Public Domain) | https://github.com/yt-dlp/yt-dlp | External process execution (web stream resolution); loaded from `PATH`, adjacent, or downloaded on demand |
+| **Windows App SDK** | `2.5.1` | MIT | https://github.com/microsoft/WindowsAppSDK | Managed framework runtime (WinUI 3 desktop shell and composition) |
+| **Microsoft.Web.WebView2** | `1.0.3719.77` | Microsoft Software License | https://developer.microsoft.com/microsoft-edge/webview2/ | Transitive runtime dependency of Windows App SDK |
+| **Microsoft.Windows.SDK.BuildTools** | `10.0.28000.2705` | Microsoft Software License | https://aka.ms/WinSDK | Build-time MSBuild targets and PRI resource tooling |
+| **QRCoder** | `1.6.0` | MIT | https://github.com/codebude/QRCoder | Managed library dependency in `Aether.Server.LanHost` (LAN streaming QR code generation) |
+| **ASP.NET Core (Kestrel)** | `9.0` (.NET 9 BCL) | MIT | https://github.com/dotnet/aspnetcore | Managed framework reference in `Aether.Server.LanHost` (LAN HTTP 206 streaming server) |
 | **Cascadia Mono** | System / Windows 11 | SIL Open Font License 1.1 | https://github.com/microsoft/cascadia-code | Referenced typography (timecodes and configuration editor) |
 | **Segoe UI Variable & Fluent Icons** | System / Windows 11 | Microsoft Software License | https://learn.microsoft.com/windows/apps/design/style/segoe-ui-symbol-font | System-provided typography and iconography (`SymbolThemeFontFamily`) |
+
+### Development, Test, and Build-Time Components (Not Redistributed in Release Packages)
+
+| Component | Version | Licence | Project URL | Usage Mode |
+|:---|:---|:---|:---|:---|
+| **xUnit** (`xunit`) | `2.9.3` | Apache-2.0 | https://xunit.net | Unit and integration test framework |
+| **xunit.runner.visualstudio** | `3.1.4` | Apache-2.0 | https://xunit.net | Test execution adapter for Visual Studio and `dotnet test` |
+| **Microsoft.NET.Test.Sdk** | `17.14.1` | Microsoft Software License | https://aka.ms/mstest | MSBuild targets and discovery engine for unit tests |
+| **coverlet.collector** | `6.0.4` | MIT | https://github.com/coverlet-coverage/coverlet | Cross-platform test code coverage collector |
+
+---
+
+## Written Offer for Source Code (GPL & LGPL Components)
+
+For components distributed in binary form under the GNU General Public License (GPL) or GNU Lesser General Public License (LGPL)—specifically `ffmpeg.exe` and `libmpv-2.dll`:
+
+> **Written Offer for Source Code:**  
+> The Aether Project hereby offers to provide, upon request by any third party, a complete machine-readable copy of the corresponding source code for any GPL or LGPL-licensed binary component distributed in or with Aether (including any modifications and build configuration scripts), on a medium customarily used for software interchange, for a charge no more than the cost of physically performing source distribution.  
+> This offer is valid for a period of at least three (3) years from the date of distribution of the software, or for as long as customer support or updates are offered for that software release.
+>
+> **Upstream Source Repositories & Build Configurations:**
+> - **FFmpeg Source Code:** https://ffmpeg.org/download.html  
+> - **FFmpeg Gyan.dev Build Scripts & Patches:** https://www.gyan.dev/ffmpeg/builds/  
+> - **mpv Source Code:** https://github.com/mpv-player/mpv  
+> - **mpv-winbuild-cmake Toolchain:** https://github.com/shinchiro/mpv-winbuild-cmake  
+> - **Aether Project Source Inquiries:** https://github.com/rvyyv-n/aether/issues
 
 ---
 
 ## Licences and Attribution Notices
 
 ### 1. GNU Lesser General Public License, Version 2.1 (LGPL-2.1)
-*Applies to: **libmpv** (`libmpv-2.dll`) and **FFmpeg** (`ffmpeg.exe`, when built with LGPL configuration)*
+*Applies to: **libmpv** (`libmpv-2.dll`, target release build) and **FFmpeg** (`ffmpeg.exe`, when compiled with LGPL configuration)*
 
 ```text
                   GNU LESSER GENERAL PUBLIC LICENSE
@@ -321,12 +353,94 @@ SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGES.
 ```
 
-**LGPL Replacement Notice (per Section 6(b)):**
+**LGPL Replacement Notice (per Section 6(b)):**  
 Aether dynamically links to `libmpv` using unmanaged shared library interop (`libmpv-2.dll`). End-users may replace `libmpv-2.dll` with an interface-compatible alternative build by replacing the file in the application directory (`%LOCALAPPDATA%\Programs\Aether` or the extracted portable directory). Source code for mpv is available at https://github.com/mpv-player/mpv.
 
 ---
 
-### 2. BSD 3-Clause License
+### 2. GNU General Public License, Version 3.0 (GPL-3.0)
+*Applies to: **FFmpeg** (`ffmpeg.exe`, compiled with `--enable-gpl --enable-version3`)*
+
+```text
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+                            Preamble
+
+  The GNU General Public License is a free, copyleft license for
+software and other kinds of works.
+
+  The licenses for most software and other practical works are designed
+to take away your freedom to share and change the works.  By contrast,
+the GNU General Public License is intended to guarantee your freedom to
+share and change all versions of a program--to make sure it remains free
+software for all its users.  We, the Free Software Foundation, use the
+GNU General Public License for most of our software; it applies also to
+any other work released this way by its authors.  You can apply it to
+your programs, too.
+
+  When we speak of free software, we are referring to freedom of use,
+not price.  Our General Public Licenses are designed to make sure that
+you have the freedom to distribute copies of free software (and charge
+for them if you wish), that you receive source code or can get it if you
+want it, that you can change the software or use pieces of it in new
+free programs, and that you know you can do these things.
+
+  To protect your rights, we need to prevent others from denying you
+these rights or asking you to surrender the rights.  Therefore, you have
+certain responsibilities if you distribute copies of the software, or if
+you modify it: responsibilities to respect the freedom of others.
+
+  For example, if you distribute copies of such a program, whether
+gratis or for a fee, you must pass on to the recipients the same
+freedoms that you received.  You must make sure that they, too, receive
+or can get the source code.  And you must show them these terms so they
+know their rights.
+
+  Developers that use the GNU GPL protect your rights with two steps:
+(1) assert copyright on the software, and (2) offer you this License
+giving you legal permission to copy, distribute and/or modify it.
+
+  For the developers' and authors' protection, the GPL clearly explains
+that there is no warranty for this free software.  For both users' and
+authors' sake, the GPL requires that modified versions be marked as
+changed, so that their problems will not be attributed erroneously to
+authors of previous versions.
+
+  Some devices are designed to deny users access to install or run
+modified versions of the software inside them, although the manufacturer
+can do so.  This is fundamentally incompatible with the aim of
+protecting users' freedom to change the software.  The systematic
+pattern of such abuse occurs in the area of products for individuals to
+use, which is precisely where it is most unacceptable.  Therefore, we
+have designed this version of the GPL to prohibit the practice for those
+products.  If such problems arise substantially in other domains, we
+stand ready to extend the provision to those domains in future versions
+of the GPL, as needed to protect the freedom of users.
+
+  Finally, every program is threatened constantly by software patents.
+States should not allow patents to restrict development and use of
+software on general-purpose computers, but in those that do, we wish to
+avoid the special danger that patents applied to a free program could
+make it effectively proprietary.  To prevent this, the GPL assures that
+patents cannot be used to render the program non-free.
+
+  The precise terms and conditions for copying, distribution and
+modification follow.
+
+                       TERMS AND CONDITIONS
+
+  [For the full terms and conditions of GNU General Public License Version 3,
+   please refer to https://www.gnu.org/licenses/gpl-3.0.txt]
+```
+
+---
+
+### 3. BSD 3-Clause License
 *Applies to: **ANGLE** (`libEGL.dll`, `libGLESv2.dll`)*
 
 ```text
@@ -363,8 +477,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ---
 
-### 3. MIT License
-*Applies to: **Windows App SDK**, **QRCoder**, and **ASP.NET Core (Kestrel)***
+### 4. MIT License
+*Applies to: **Windows App SDK**, **QRCoder**, **ASP.NET Core (Kestrel)**, and **coverlet.collector***
 
 #### Windows App SDK
 ```text
@@ -414,9 +528,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
 
+#### ASP.NET Core (.NET Foundation)
+```text
+The MIT License (MIT)
+
+Copyright (c) .NET Foundation and Contributors
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ---
 
-### 4. The Unlicense / Public Domain Dedication
+### 5. The Unlicense / Public Domain Dedication
 *Applies to: **yt-dlp***
 
 ```text
@@ -448,7 +588,60 @@ For more information, please refer to <http://unlicense.org/>
 
 ---
 
-### 5. SIL Open Font License 1.1 (OFL-1.1)
+### 6. Apache License, Version 2.0
+*Applies to: **xUnit** and **xunit.runner.visualstudio***
+
+```text
+                              Apache License
+                        Version 2.0, January 2004
+                     http://www.apache.org/licenses/
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+1. Definitions.
+   "License" shall mean the terms and conditions for use, reproduction,
+   and distribution as defined by Sections 1 through 9 of this document.
+
+   "Licensor" shall mean the copyright owner or entity authorized by
+   the copyright owner that is granting the License.
+
+2. Grant of Copyright License. Subject to the terms and conditions of
+   this License, each Contributor hereby grants to You a perpetual,
+   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+   copyright license to reproduce, prepare Derivative Works of,
+   publicly display, publicly perform, sublicense, and distribute the
+   Work and such Derivative Works in Source or Object form.
+
+3. Grant of Patent License. Subject to the terms and conditions of
+   this License, each Contributor hereby grants to You a perpetual,
+   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+   (except as stated in this section) patent license to make, have made,
+   use, offer to sell, sell, import, and otherwise transfer the Work.
+
+4. Redistribution. You may reproduce and distribute copies of the
+   Work or Derivative Works thereof in any medium, with or without
+   modifications, and in Source or Object form, provided that You
+   meet the following conditions:
+
+   (a) You must give any other recipients of the Work or
+       Derivative Works a copy of this License; and
+   (b) You must cause any modified files to carry prominent notices
+       stating that You changed the files; and
+   (c) You must retain, in the Source form of any Derivative Works
+       that You distribute, all copyright, patent, trademark, and
+       attribution notices from the Source form of the Work; and
+   (d) If the Work includes a "NOTICE" text file as part of its
+       distribution, then any Derivative Works that You distribute must
+       include a readable copy of the attribution notices contained
+       within such NOTICE file.
+
+[For the full terms and conditions of the Apache 2.0 License,
+ please refer to http://www.apache.org/licenses/LICENSE-2.0]
+```
+
+---
+
+### 7. SIL Open Font License 1.1 (OFL-1.1)
 *Applies to: **Cascadia Mono / Cascadia Code***
 
 ```text
@@ -547,7 +740,7 @@ FROM OTHER DEALINGS IN THE FONT SOFTWARE.
 
 ---
 
-### 6. Microsoft Software License Notices
-*Applies to: **Microsoft.Windows.SDK.BuildTools**, **Microsoft.Web.WebView2**, **Segoe UI Variable**, and **Segoe Fluent Icons***
+### 8. Microsoft Software License Notices
+*Applies to: **Microsoft.Windows.SDK.BuildTools**, **Microsoft.Web.WebView2**, **Microsoft.NET.Test.Sdk**, **Segoe UI Variable**, and **Segoe Fluent Icons***
 
-Microsoft software components, build tools, runtimes, and system fonts are licensed under Microsoft Software License Terms. Use of Windows SDK tools and WebView2 is governed by their respective Microsoft Developer and Redistribution licenses. System fonts (Segoe UI Variable, Segoe Fluent Icons) are referenced through Windows system typography ramps and are licensed as part of the Windows operating system.
+Microsoft software components, build tools, runtimes, test adapters, and system fonts are licensed under Microsoft Software License Terms. Use of Windows SDK tools and WebView2 is governed by their respective Microsoft Developer and Redistribution licenses. System fonts (Segoe UI Variable, Segoe Fluent Icons) are referenced through Windows system typography ramps and are licensed as part of the Windows operating system.
