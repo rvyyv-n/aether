@@ -22,6 +22,7 @@ public sealed partial class MainPage
     {
         SeekBar.SeekRequested += OnSeekRequested;
         ClipDrawer.ClearRequested += (_, _) => SetClipRange(default);
+        ClipDrawer.CutStartChanged += SeekBar.SetCutStart;
         ClipDrawer.HoldChanged += OnClipDrawerHoldChanged;
         foreach (double option in PlaybackSpeed.Options)
         {

@@ -1536,6 +1536,12 @@
   <data name="Clips_HintFast" xml:space="preserve">
     <value>Fast cuts are instant and lossless, but start on the keyframe before In. Choose Precise to cut on the exact frame, fit a size limit or include the Look.</value>
   </data>
+  <data name="Clips_HintFastOffset" xml:space="preserve">
+    <value> This one starts {0} early.</value>
+  </data>
+  <data name="Seek_CutStartHelp" xml:space="preserve">
+    <value>Fast cut starts {0} before In</value>
+  </data>
   <data name="Clips_HintPrecise" xml:space="preserve">
     <value>Cuts on the exact frame. Takes longer, and uses the graphics card when it can.</value>
   </data>

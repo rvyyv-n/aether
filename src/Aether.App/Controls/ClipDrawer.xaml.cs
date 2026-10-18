@@ -45,10 +45,13 @@ public sealed partial class ClipDrawer : UserControl
     private bool _custom;
     private bool _settingUpOptions;
     private long? _tooSmallBytes;
+    private readonly CutStartTracker _cutStartTracker = new(new KeyframeProbe(new SystemProcessRunner()));
+    private double? _cutStart;
 
     public ClipDrawer()
     {
         InitializeComponent();
+        _cutStartTracker.Changed += OnCutStartFound;
         SetUpOptions();
         ExportButton.Content = AppStrings.Get("Transport_ExportClip");
         ShowAllButton.Content = AppStrings.Get("Clips_ShowAllInFolder");
@@ -79,8 +82,15 @@ public sealed partial class ClipDrawer : UserControl
         _range = range;
         _sourcePath = sourcePath;
         _duration = duration;
+        TrackCutStart();
         RenderOptions(); // the range decides whether the size limit fits; this redraws the chip too
     }
+
+    /// <summary>
+    /// Where a Fast cut will really start, or null when unknown or not applicable (Precise, a link,
+    /// no In point, no keyframe found).
+    /// </summary>
+    public event Action<double?>? CutStartChanged;
 
     /// <summary>Opens the drawer, as the Clips entry of the right-click menu does.</summary>
     public void Open() => SetOpen(true);
@@ -109,7 +119,27 @@ public sealed partial class ClipDrawer : UserControl
     {
         App.Clips.Changed -= OnShelfChanged;
         _lifetime.Cancel();
+        _cutStartTracker.Dispose();
     }
+
+    // The probe only runs for a local file in Fast mode with an In point.
+    private void TrackCutStart()
+    {
+        bool wanted = _mode == ExportMode.Fast && _range.In is not null && _sourcePath is { } path && !WebLink.IsValid(path)
+            && (!_ffmpegChecked || App.ClipExport.IsFfmpegAvailable);
+        _cutStartTracker.Track(wanted ? _sourcePath : null, wanted ? _range.In : null);
+    }
+
+    private void OnCutStartFound(double? keyframe) => DispatcherQueue.TryEnqueue(() =>
+    {
+        _cutStart = keyframe;
+        RenderOptionsBlock();
+        CutStartChanged?.Invoke(CutStartToShow());
+    });
+
+    // Only a Fast cut with a known, worthwhile lead-in is shown.
+    private double? CutStartToShow() =>
+        _mode == ExportMode.Fast && _range.In is { } at && CutStart.Lead(at, _cutStart) is not null ? _cutStart : null;
 
     private async Task PreWarmAsync()
     {
@@ -239,6 +269,10 @@ public sealed partial class ClipDrawer : UserControl
         string hint = _tooSmallBytes is { } tooSmall
             ? TooSmallText(tooSmall)
             : AppStrings.Get(precise ? "Clips_HintPrecise" : "Clips_HintFast");
+        if (CutStartToShow() is { } start)
+        {
+            hint += string.Format(CultureInfo.CurrentCulture, AppStrings.Get("Clips_HintFastOffset"), CutStart.Format(_range.In!.Value - start));
+        }
         HintText.Text = hint;
         HintText.Foreground = (Brush)Application.Current.Resources[_tooSmallBytes is null ? "AetherTextSecondaryBrush" : "AetherStatusWarningBrush"];
         AutomationProperties.SetHelpText(ModeList, hint);
@@ -256,6 +290,8 @@ public sealed partial class ClipDrawer : UserControl
         }
         _mode = mode;
         App.Settings.Set(SettingKeys.ClipExportMode, mode == ExportMode.Precise ? "precise" : "fast");
+        TrackCutStart();
+        CutStartChanged?.Invoke(CutStartToShow());
         RenderOptions();
     }
 

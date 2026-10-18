@@ -1,6 +1,9 @@
 using Aether.Core.Playback;
 using Aether.Core.Playback.Chapters;
+using Aether.PvP.Review.Clipping;
+using System.Globalization;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
@@ -26,6 +29,7 @@ public sealed partial class PrecisionSeekBar : UserControl
     private double _position;
     private double _bufferedUntil = double.NaN;
     private ClipRange _range;
+    private double? _cutStart;
     private bool _hovering;
     private double _pointerX = double.NaN;
     private double _dragTime;
@@ -207,9 +211,35 @@ public sealed partial class PrecisionSeekBar : UserControl
         Background = (Brush)Application.Current.Resources[brushKey],
     };
 
+    /// <summary>
+    /// Where a Fast cut really starts (the keyframe at or before In). Null, or a keyframe within about
+    /// one frame of In, hides the lead-in.
+    /// </summary>
+    public void SetCutStart(double? seconds)
+    {
+        if (seconds != _cutStart)
+        {
+            _cutStart = seconds;
+            ArrangeRange();
+            double? lead = _range.In is { } at ? CutStart.Lead(at, seconds) : null;
+            AutomationProperties.SetHelpText(this, lead is { } early
+                ? string.Format(CultureInfo.CurrentCulture, AppStrings.Get("Seek_CutStartHelp"), CutStart.Format(early))
+                : string.Empty);
+        }
+    }
+
     private void ArrangeRange()
     {
         bool live = _duration > 0;
+        bool lead = live && _range.In is { } at && CutStart.Lead(at, _cutStart) is not null;
+        LeadIn.Visibility = lead ? Visibility.Visible : Visibility.Collapsed;
+        PlaceTick(KeyTick, lead ? _cutStart : null);
+        if (lead)
+        {
+            double from = X(_cutStart!.Value);
+            Canvas.SetLeft(LeadIn, from);
+            LeadIn.Width = Math.Max(0, X(_range.In!.Value) - from);
+        }
         PlaceTick(InTick, live ? _range.In : null);
         PlaceTick(OutTick, live ? _range.Out : null);
         bool band = live && _range.IsComplete;

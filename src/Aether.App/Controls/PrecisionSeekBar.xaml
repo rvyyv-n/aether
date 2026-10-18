@@ -32,8 +32,24 @@
                 Background="{StaticResource AetherFillRangeBrush}"
                 CornerRadius="{StaticResource AetherControlCornerRadius}"
                 Visibility="Collapsed" />
+            <!--  Fast cut lead-in: from the keyframe a lossless cut starts on up to In  -->
+            <Border
+                x:Name="LeadIn"
+                Canvas.Top="6"
+                Height="{StaticResource AetherSizeClipRange}"
+                Background="{StaticResource AetherFillRangeBrush}"
+                CornerRadius="4,0,0,4"
+                Opacity="0.5"
+                Visibility="Collapsed" />
             <!--  Track, buffered and played, one set per chapter piece (9.6); built in code  -->
             <Canvas x:Name="Pieces" Canvas.Top="14" />
+            <Rectangle
+                x:Name="KeyTick"
+                Canvas.Top="4"
+                Width="1"
+                Height="24"
+                Fill="{StaticResource AetherTextTertiaryBrush}"
+                Visibility="Collapsed" />
             <Rectangle
                 x:Name="InTick"
                 Canvas.Top="4"
