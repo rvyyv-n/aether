@@ -930,7 +930,13 @@
     <value>Everything stays on this device.</value>
   </data>
   <data name="Settings_About_CardLink" xml:space="preserve">
-    <value>Source on GitHub · @rvyyv-n</value>
+    <value>GitHub · @rvyyv-n</value>
+  </data>
+  <data name="Settings_About_CreditVersion" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Settings_About_CreditSource" xml:space="preserve">
+    <value>Source code</value>
   </data>
   <data name="Settings_About_Licences" xml:space="preserve">
     <value>Licences</value>

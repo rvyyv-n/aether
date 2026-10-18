@@ -62,6 +62,9 @@ public sealed unsafe class DxgiPresenter : IDisposable
     public const uint MaxDimension = 16384;
 
     private readonly Lock _pendingLock = new();
+    // Guards the swap chain's matrix transform and its lifetime against the UI thread's StretchToTarget.
+    private readonly Lock _matrixLock = new();
+    private bool _stretched;
     private volatile bool _resizePending;
     private SwapChainTargetSize _pendingSize;
     private float _pendingScaleX = 1f;
@@ -319,6 +322,68 @@ public sealed unsafe class DxgiPresenter : IDisposable
     }
 
     /// <summary>
+    /// Any thread: stretches the picture already on screen to the new panel size through the swap
+    /// chain's matrix transform, so a resize shows a slightly soft picture instead of a void while the
+    /// render thread catches up. Skipped if the render thread is busy resizing. Undone by
+    /// <see cref="EndStretch"/> once the resized buffers have been presented.
+    /// </summary>
+    public void StretchToTarget(double logicalWidth, double logicalHeight, float compositionScaleX, float compositionScaleY)
+    {
+        SwapChainTargetSize size = ComputeTargetSize(logicalWidth, logicalHeight, compositionScaleX, compositionScaleY);
+        float scaleX = SanitizeScale(compositionScaleX);
+        float scaleY = SanitizeScale(compositionScaleY);
+        if (!_matrixLock.TryEnter())
+        {
+            return;
+        }
+        try
+        {
+            nint sc = _swapChain;
+            uint width = PixelWidth, height = PixelHeight;
+            if (sc == 0 || width == 0 || height == 0 || IsDeviceLost)
+            {
+                return;
+            }
+            if (size.Width == width && size.Height == height)
+            {
+                if (_stretched)
+                {
+                    SetMatrix(sc, 1f / scaleX, 1f / scaleY);
+                    _stretched = false;
+                }
+                return;
+            }
+            SetMatrix(sc, size.Width / (float)width / scaleX, size.Height / (float)height / scaleY);
+            _stretched = true;
+        }
+        finally
+        {
+            _matrixLock.Exit();
+        }
+    }
+
+    /// <summary>Owner thread, after presenting at the final size: back to the 1:1 mapping.</summary>
+    public void EndStretch()
+    {
+        lock (_matrixLock)
+        {
+            if (!_stretched || _swapChain == 0)
+            {
+                return;
+            }
+            SetMatrix(_swapChain, 1f / CompositionScaleX, 1f / CompositionScaleY);
+            _stretched = false;
+        }
+    }
+
+    private static void SetMatrix(nint swapChain, float scaleX, float scaleY)
+    {
+        var matrix = new Matrix3x2(scaleX, 0f, 0f, scaleY, 0f, 0f);
+        // IDXGISwapChain2::SetMatrixTransform
+        Com.ThrowIfFailed(((delegate* unmanaged[Stdcall]<nint, Matrix3x2*, int>)Com.Vtbl(swapChain)[34])(swapChain, &matrix));
+    }
+
+    /// <summary>
     /// Owner thread, between frames: applies the latest <see cref="SetTargetSize"/>.
     /// Resizes the buffers (<c>ResizeBuffers</c>) when the pixel size changed and sets the
     /// inverse composition-scale matrix (<c>SetMatrixTransform</c>) when the scale changed,
@@ -355,9 +420,13 @@ public sealed unsafe class DxgiPresenter : IDisposable
             }
             ((delegate* unmanaged[Stdcall]<nint, void>)Com.Vtbl(_context)[111])(_context); // Flush: run deferred releases now
 
-            // IDXGISwapChain::ResizeBuffers: keep count and format; flags must match creation.
-            int hr = ((delegate* unmanaged[Stdcall]<nint, uint, uint, uint, DxgiFormat, uint, int>)Com.Vtbl(sc)[13])(
-                sc, 0, size.Width, size.Height, DxgiFormat.Unknown, (uint)SwapChainFlags);
+            int hr;
+            lock (_matrixLock)
+            {
+                // IDXGISwapChain::ResizeBuffers: keep count and format; flags must match creation.
+                hr = ((delegate* unmanaged[Stdcall]<nint, uint, uint, uint, DxgiFormat, uint, int>)Com.Vtbl(sc)[13])(
+                    sc, 0, size.Width, size.Height, DxgiFormat.Unknown, (uint)SwapChainFlags);
+            }
             if (IsDeviceLostResult(hr))
             {
                 ReportDeviceLost(hr);
@@ -371,11 +440,16 @@ public sealed unsafe class DxgiPresenter : IDisposable
 
         if (scaleX != CompositionScaleX || scaleY != CompositionScaleY)
         {
-            var inverse = new Matrix3x2(1f / scaleX, 0f, 0f, 1f / scaleY, 0f, 0f);
-            // IDXGISwapChain2::SetMatrixTransform
-            Com.ThrowIfFailed(((delegate* unmanaged[Stdcall]<nint, Matrix3x2*, int>)Com.Vtbl(sc)[34])(sc, &inverse));
-            CompositionScaleX = scaleX;
-            CompositionScaleY = scaleY;
+            lock (_matrixLock)
+            {
+                // While stretched, EndStretch writes the 1:1 matrix with the new scale.
+                if (!_stretched)
+                {
+                    SetMatrix(sc, 1f / scaleX, 1f / scaleY);
+                }
+                CompositionScaleX = scaleX;
+                CompositionScaleY = scaleY;
+            }
             changed = true;
         }
 
@@ -434,7 +508,10 @@ public sealed unsafe class DxgiPresenter : IDisposable
     {
         Com.Release(ref _rtv);
         _frameLatencyHandle?.Dispose();
-        Com.Release(ref _swapChain);
+        lock (_matrixLock)
+        {
+            Com.Release(ref _swapChain);
+        }
         Com.Release(ref _context);
         Com.Release(ref _device);
     }
