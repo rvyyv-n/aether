@@ -427,6 +427,103 @@ public class MpvRenderLoopTests
         Assert.True(loop.Stop(3000));
     }
 
+    [Fact]
+    public void Stop_FreesTheBackendBeforeItsDevice_AndEachOnlyOnce()
+    {
+        var factory = new TestBackendFactory();
+        using var host = new TestRenderLoopHost();
+        var devices = new ConcurrentQueue<D3D11DeviceManager>();
+        bool? deviceAliveAtBackendDispose = null;
+        var options = new MpvRenderLoopOptions
+        {
+            VSync = false,
+            DeviceFactory = opt =>
+            {
+                D3D11DeviceManager device = D3D11DeviceManager.Create(opt);
+                devices.Enqueue(device);
+                return device;
+            },
+        };
+        // The backend frees the mpv render context, which needs the device it was created on.
+        factory.OnDisposeCallback = _ => deviceAliveAtBackendDispose = devices.TryPeek(out D3D11DeviceManager? d) && !d.IsDisposed;
+        using var loop = new MpvRenderLoop(factory, host, options);
+
+        loop.Start();
+        Assert.True(TestWait.ForCondition(() => loop.State == RenderLoopState.Running));
+        Assert.True(loop.Stop(3000));
+
+        Assert.True(deviceAliveAtBackendDispose);
+        Assert.True(Assert.Single(devices).IsDisposed);
+        Assert.Equal(1, Assert.Single(factory.Backends).DisposeCount);
+    }
+
+    [Fact]
+    public void DeviceLoss_WhenFreeingTheBackendThrows_StillRecovers_WithoutFreeingAnythingTwice()
+    {
+        var factory = new TestBackendFactory();
+        using var host = new TestRenderLoopHost();
+        var devices = new ConcurrentQueue<D3D11DeviceManager>();
+        var options = new MpvRenderLoopOptions
+        {
+            VSync = false,
+            RetryDelayMilliseconds = 20,
+            DeviceFactory = opt =>
+            {
+                D3D11DeviceManager device = D3D11DeviceManager.Create(opt);
+                devices.Enqueue(device);
+                return device;
+            },
+        };
+        int failRenderOnce = 0;
+        factory.RenderCallback = backend =>
+        {
+            if (Interlocked.CompareExchange(ref failRenderOnce, 0, 1) == 1)
+            {
+                return false;
+            }
+            backend.Presenter.Clear(0f, 0f, 0f, 1f);
+            return true;
+        };
+        // A lost GPU can make teardown fail; the first backend's Dispose throws.
+        factory.OnDisposeCallback = backend =>
+        {
+            if (ReferenceEquals(backend, factory.Backends[0]))
+            {
+                throw new InvalidOperationException("Simulated teardown failure on a lost device");
+            }
+        };
+        using var loop = new MpvRenderLoop(factory, host, options);
+
+        loop.Start();
+        Assert.True(TestWait.ForCondition(() => loop.State == RenderLoopState.Running && loop.FramesPresented >= 1));
+        Volatile.Write(ref failRenderOnce, 1);
+        loop.RequestRedraw();
+
+        Assert.True(TestWait.ForCondition(() => loop.Generation == 2 && loop.State == RenderLoopState.Running));
+        Assert.Contains(host.FaultEvents, e => e.Message.Contains("Simulated teardown failure"));
+        D3D11DeviceManager[] created = devices.ToArray();
+        Assert.True(created[0].IsDisposed);
+
+        Assert.True(loop.Stop(3000));
+        Assert.All(factory.Backends, b => Assert.Equal(1, b.DisposeCount));
+        Assert.All(devices, d => Assert.True(d.IsDisposed));
+    }
+
+    [Fact]
+    public void Dispose_ReturnsAtOnce_AndTheRenderThreadStillTearsItsStackDown()
+    {
+        var factory = new TestBackendFactory();
+        using var host = new TestRenderLoopHost();
+        var loop = new MpvRenderLoop(factory, host, new MpvRenderLoopOptions { VSync = false });
+
+        loop.Start();
+        Assert.True(TestWait.ForCondition(() => loop.State == RenderLoopState.Running));
+        loop.Dispose();
+
+        Assert.True(TestWait.ForCondition(() => loop.State == RenderLoopState.Stopped));
+        Assert.Equal(1, Assert.Single(factory.Backends).DisposeCount);
+    }
+
     private sealed class TestBackendFactory : IVideoRenderBackendFactory
     {
         private readonly List<TestBackend> _backends = new();
@@ -435,6 +532,7 @@ public class MpvRenderLoopTests
         public bool CachesDeviceState { get; set; } = false;
         public Func<TestBackend, bool>? RenderCallback { get; set; }
         public Action<TestBackend>? OnCreateCallback { get; set; }
+        public Action<TestBackend>? OnDisposeCallback { get; set; }
 
         public int CreateCount
         {
@@ -523,6 +621,7 @@ public class MpvRenderLoopTests
         {
             Interlocked.Increment(ref _disposeCount);
             _events.Enqueue("Dispose");
+            _factory.OnDisposeCallback?.Invoke(this);
         }
     }
 }
