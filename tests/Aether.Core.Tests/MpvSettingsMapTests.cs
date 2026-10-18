@@ -142,7 +142,7 @@ public class MpvSettingsMapTests
         Assert.Equal(expected, MpvSettingsMap.VideoLatencyHacks(new AetherSettings { HardwareDecoding = hwdec }));
 
     [Theory]
-    [InlineData("small", "40")]
+    [InlineData("small", "30")]
     [InlineData("medium", "55")]
     [InlineData("large", "75")]
     public void Subtitle_Size_Maps_To_Font_Size(string size, string expected) =>

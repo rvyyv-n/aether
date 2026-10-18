@@ -198,7 +198,7 @@ public static class MpvSettingsMap
     /// <summary>Text size in mpv's scaled pixels (it is 55 at a 720-pixel-high window).</summary>
     public static string SubtitleFontSize(string size) => size switch
     {
-        "small" => "40",
+        "small" => "30",
         "large" => "75",
         "xlarge" => "95",
         _ => "55",
