@@ -1,131 +1,144 @@
-"""Renders the Aether app icon set into src/Aether.App/Assets.
+"""Renders the Aether icon: a cut-chrome four-point star, with a soft glow behind it at large sizes.
 
-Usage: python tools/make_app_icon.py [assets_dir]
+Two themes: "dark" is the pale star for dark backgrounds (the default, and what the exe and shortcuts
+use), "light" is the graphite star for light backgrounds. The glow is dark-theme only; on light
+backgrounds it reads as grey haze. Sizes below 48 px drop the glow and enlarge the star so it stays
+crisp in the taskbar and title bar.
+
+Writes:
+  src/Aether.App/Assets/AppIcon.ico, AppIcon.light.ico
+  tools/installer/Aether.Installer/AppIcon.ico
+  docs/assets/aether-icon.png, aether-icon-light.png, aether-icon.svg (follows the viewer's theme)
+  src/Aether.Server.LanHost/favicon.svg (the same SVG, the phone watch page's tab icon)
+
+Usage: python tools/make_app_icon.py
 """
-import math
-import sys
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw
 
-SS = 4  # supersampling factor
+ROOT = Path(__file__).resolve().parents[1]
+SS = 8  # supersampling factor
+ICO_SIZES = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]
+SMALL = 48  # below this, no glow and a larger star
+
+# Facet shades, lightest first; FACET_ORDER maps the eight facets (clockwise from the top arm's
+# left half) to a shade, so faces toward the top left catch the light.
+SHADES = {
+    "dark": ["#ffffff", "#c9d3ec", "#eef2ff", "#8e9bbd", "#dfe6fa", "#a7b3d4", "#b9c4e3", "#6f7c9f"],
+    "light": ["#6b7389", "#2b3142", "#545c72", "#1a1f2c", "#4a5268", "#232838", "#3c4458", "#141822"],
+}
+FACET_ORDER = [0, 1, 2, 3, 7, 5, 6, 4]
+GLOW = ("#9fb4ff", 0.5)
+THICKNESS = 0.09  # arm width as a fraction of the radius
 
 
-def star_points(cx, cy, r, k=2.7, n=160):
+def geometry(size):
+    """Star radius and glow radius on a 256 grid for an icon drawn at `size` px."""
+    return (120, None) if size < SMALL else (104, 124)
+
+
+def star_segments(cx, cy, r, k=THICKNESS):
+    """The star as four cubic curves, tip to tip, clockwise from the top."""
+    a, b = r * k, r * 0.42
+    return [
+        ((cx, cy - r), (cx + a, cy - b), (cx + b, cy - a), (cx + r, cy)),
+        ((cx + r, cy), (cx + b, cy + a), (cx + a, cy + b), (cx, cy + r)),
+        ((cx, cy + r), (cx - a, cy + b), (cx - b, cy + a), (cx - r, cy)),
+        ((cx - r, cy), (cx - b, cy - a), (cx - a, cy - b), (cx, cy - r)),
+    ]
+
+
+def star_polygon(cx, cy, r, steps=64):
     pts = []
-    for i in range(n):
-        t = 2 * math.pi * i / n
-        c, s = math.cos(t), math.sin(t)
-        pts.append((cx + r * math.copysign(abs(c) ** k, c), cy + r * math.copysign(abs(s) ** k, s)))
+    for p0, p1, p2, p3 in star_segments(cx, cy, r):
+        for i in range(steps):
+            t = i / steps
+            u = 1 - t
+            pts.append(tuple(u**3 * p0[j] + 3 * u * u * t * p1[j] + 3 * u * t * t * p2[j] + t**3 * p3[j] for j in (0, 1)))
     return pts
 
 
-def lerp(a, b, t):
-    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+def facets(cx, cy, r):
+    R = r * 1.2
+    return [
+        [(cx, cy), (cx, cy - R), (cx - R, cy - R)], [(cx, cy), (cx, cy - R), (cx + R, cy - R)],
+        [(cx, cy), (cx + R, cy - R), (cx + R, cy)], [(cx, cy), (cx + R, cy), (cx + R, cy + R)],
+        [(cx, cy), (cx + R, cy + R), (cx, cy + R)], [(cx, cy), (cx, cy + R), (cx - R, cy + R)],
+        [(cx, cy), (cx - R, cy + R), (cx - R, cy)], [(cx, cy), (cx - R, cy), (cx - R, cy - R)],
+    ]
 
 
-def diagonal_gradient(w, h, stops):
-    """stops: list of (pos, rgb); gradient runs top-left to bottom-right."""
-    small = Image.new("RGB", (256, 256))
-    px = small.load()
-    for y in range(256):
-        for x in range(256):
-            t = (x + y) / 510
-            for (p0, c0), (p1, c1) in zip(stops, stops[1:]):
-                if p0 <= t <= p1:
-                    px[x, y] = lerp(c0, c1, (t - p0) / (p1 - p0))
-                    break
-    return small.resize((w, h), Image.BILINEAR)
+def rgb(hex_colour):
+    return tuple(int(hex_colour[i:i + 2], 16) for i in (1, 3, 5))
 
 
-def glyph_layer(w, h, cx, cy, s, mode):
-    """Star + satellites in a w*h RGBA layer. s = main star radius in px."""
-    small = s < 20 * SS
-    k = 2.2 if small else 2.7
-    shapes = [(cx, cy, s), (cx + 0.98 * s, cy - 0.92 * s, 0.40 * s), (cx + 1.02 * s, cy + 0.80 * s, 0.22 * s)]
-    if small:
-        shapes = shapes[:2]
-    mask = Image.new("L", (w, h), 0)
-    d = ImageDraw.Draw(mask)
-    for x, y, r in shapes:
-        d.polygon(star_points(x, y, r, k), fill=255)
+def render(size, theme):
+    W = size * SS
+    s = W / 256
+    r, glow_r = geometry(size)
+    out = Image.new("RGBA", (W, W), (0, 0, 0, 0))
 
-    if mode == "dark":
-        stops = [(0, (30, 36, 70)), (0.5, (52, 62, 140)), (1, (92, 70, 170))]
-    else:
-        stops = [(0, (255, 255, 255)), (0.45, (190, 225, 255)), (1, (185, 160, 255))]
-    fill = diagonal_gradient(w, h, stops).convert("RGBA")
+    if theme == "dark" and glow_r:
+        # Linear falloff from the centre, like an SVG radial gradient.
+        colour, peak = GLOW
+        glow = Image.new("L", (256, 256))
+        glow.putdata([max(0, int(255 * peak * (1 - ((x - 127.5) ** 2 + (y - 127.5) ** 2) ** 0.5 / glow_r)))
+                      for y in range(256) for x in range(256)])
+        glow = glow.resize((W, W), Image.BICUBIC)
+        layer = Image.new("RGBA", (W, W), rgb(colour) + (0,))
+        layer.putalpha(glow)
+        out = Image.alpha_composite(out, layer)
+
+    c = 128 * s
+    fill = Image.new("RGBA", (W, W), (0, 0, 0, 0))
+    d = ImageDraw.Draw(fill)
+    for poly, shade in zip(facets(c, c, r * s), FACET_ORDER):
+        d.polygon(poly, fill=rgb(SHADES[theme][shade]) + (255,))
+    mask = Image.new("L", (W, W), 0)
+    ImageDraw.Draw(mask).polygon(star_polygon(c, c, r * s), fill=255)
     fill.putalpha(mask)
-
-    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    if mode == "glow":
-        glow = Image.new("RGBA", (w, h), (120, 170, 255, 0))
-        glow.putalpha(mask.filter(ImageFilter.GaussianBlur(s * 0.16)).point(lambda v: int(v * 0.9)))
-        out = Image.alpha_composite(out, glow)
-        tight = Image.new("RGBA", (w, h), (170, 205, 255, 0))
-        tight.putalpha(mask.filter(ImageFilter.GaussianBlur(s * 0.05)).point(lambda v: int(v * 0.6)))
-        out = Image.alpha_composite(out, tight)
-    return Image.alpha_composite(out, fill)
+    out = Image.alpha_composite(out, fill)
+    return out.resize((size, size), Image.LANCZOS)
 
 
-def background(w, h, radius):
-    bg = diagonal_gradient(w, h, [(0, (34, 40, 74)), (0.55, (18, 20, 40)), (1, (30, 18, 52))]).convert("RGBA")
-    mask = Image.new("L", (w, h), 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, w - 1, h - 1), radius=radius, fill=255) if radius else mask.paste(255, (0, 0, w, h))
-    # soft top-left sheen for the glass feel
-    sheen = Image.new("L", (w, h), 0)
-    ImageDraw.Draw(sheen).ellipse((-w * 0.3, -h * 0.9, w * 0.9, h * 0.35), fill=16)
-    sheen = sheen.filter(ImageFilter.GaussianBlur(min(w, h) * 0.18))
-    white = Image.new("RGBA", (w, h), (255, 255, 255, 0))
-    white.putalpha(sheen)
-    bg = Image.alpha_composite(bg, white)
-    if radius:
-        edge = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-        ImageDraw.Draw(edge).rounded_rectangle((0, 0, w - 1, h - 1), radius=radius, outline=(255, 255, 255, 38), width=max(1, SS))
-        bg = Image.alpha_composite(bg, edge)
-    bg.putalpha(mask)
-    return bg
+def save_ico(path, theme):
+    frames = [render(n, theme) for n in ICO_SIZES]
+    frames[-1].save(path, format="ICO", sizes=[(n, n) for n in ICO_SIZES], append_images=frames[:-1])
 
 
-def render(w, h, kind):
-    """kind: tile (rounded plate), full (full-bleed), glyph (bare, light), glyph_dark (bare, for light themes)."""
-    W, H = w * SS, h * SS
-    m = min(W, H)
-    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    if kind == "tile":
-        img = background(W, H, int(m * 0.22))
-        frac = 0.74
-    elif kind == "full":
-        img = background(W, H, 0)
-        frac = 0.70 if W == H else 0.66
-    else:
-        frac = 0.80
-    cx, cy = W * 0.5 - m * frac * 0.12, H * 0.5 + m * frac * 0.06
-    s = m * frac * 0.42
-    mode = {"glyph_dark": "dark", "glyph": "plain"}.get(kind, "glow")
-    layer = glyph_layer(W, H, cx, cy, s, mode)
-    img = Image.alpha_composite(img, layer)
-    return img.resize((w, h), Image.LANCZOS)
+def svg():
+    """A single SVG that switches between the two themes with the viewer's colour scheme (large-size geometry)."""
+    r, glow_r = geometry(256)
+    seg = star_segments(128, 128, r)
+    path = f"M{seg[0][0][0]:g} {seg[0][0][1]:g}" + "".join(
+        f"C{p1[0]:g} {p1[1]:g} {p2[0]:g} {p2[1]:g} {p3[0]:g} {p3[1]:g}" for _, p1, p2, p3 in seg) + "Z"
+    dark = "".join(f".f{i}{{fill:{SHADES['dark'][o]}}}" for i, o in enumerate(FACET_ORDER))
+    light = "".join(f".f{i}{{fill:{SHADES['light'][o]}}}" for i, o in enumerate(FACET_ORDER))
+    polys = "".join(
+        f'<polygon class="f{i}" points="{" ".join(f"{x:g},{y:g}" for x, y in poly)}"/>'
+        for i, poly in enumerate(facets(128, 128, r)))
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">'
+        f"<style>{dark}@media (prefers-color-scheme:light){{{light}.g{{display:none}}}}</style>"
+        f'<defs><radialGradient id="g"><stop offset="0" stop-color="{GLOW[0]}" stop-opacity="{GLOW[1]}"/>'
+        f'<stop offset="1" stop-color="{GLOW[0]}" stop-opacity="0"/></radialGradient>'
+        f'<clipPath id="s"><path d="{path}"/></clipPath></defs>'
+        f'<circle class="g" cx="128" cy="128" r="{glow_r}" fill="url(#g)"/>'
+        f'<g clip-path="url(#s)">{polys}</g></svg>\n'
+    )
 
 
 def main():
-    out = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parents[1] / "src/Aether.App/Assets"
-    out.mkdir(parents=True, exist_ok=True)
-    files = {
-        "Square150x150Logo.scale-200.png": (300, 300, "full"),
-        "Square44x44Logo.scale-200.png": (88, 88, "tile"),
-        "Square44x44Logo.targetsize-24_altform-unplated.png": (24, 24, "glyph"),
-        "Square44x44Logo.targetsize-48_altform-lightunplated.png": (48, 48, "glyph_dark"),
-        "StoreLogo.png": (50, 50, "tile"),
-        "Wide310x150Logo.scale-200.png": (620, 300, "full"),
-        "SplashScreen.scale-200.png": (1240, 600, "full"),
-        "LockScreenLogo.scale-200.png": (48, 48, "glyph"),
-    }
-    for name, (w, h, kind) in files.items():
-        render(w, h, kind).save(out / name)
-    sizes = [16, 24, 32, 48, 64, 128, 256]
-    frames = [render(s, s, "tile") for s in sizes]
-    frames[-1].save(out / "AppIcon.ico", format="ICO", sizes=[(s, s) for s in sizes], append_images=frames[:-1])
+    assets = ROOT / "src/Aether.App/Assets"
+    save_ico(assets / "AppIcon.ico", "dark")
+    save_ico(assets / "AppIcon.light.ico", "light")
+    save_ico(ROOT / "tools/installer/Aether.Installer/AppIcon.ico", "dark")
+    docs = ROOT / "docs/assets"
+    render(256, "dark").save(docs / "aether-icon.png")
+    render(256, "light").save(docs / "aether-icon-light.png")
+    for path in (docs / "aether-icon.svg", ROOT / "src/Aether.Server.LanHost/favicon.svg"):
+        path.write_text(svg(), encoding="utf-8")
 
 
 if __name__ == "__main__":

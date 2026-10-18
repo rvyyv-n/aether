@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/assets/aether-icon.png" width="128" alt="Aether logo" />
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/aether-icon-light.png" />
+    <img src="docs/assets/aether-icon.png" width="128" alt="Aether logo" />
+  </picture>
 </p>
 
 <h1 align="center">Aether</h1>

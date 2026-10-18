@@ -9,8 +9,10 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.Win32;
 using Windows.Graphics;
 using Windows.UI;
+using Windows.UI.ViewManagement;
 
 namespace Aether_App;
 
@@ -90,6 +92,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     private bool _maximized;
     private bool _keepRestoredSize; // the first video does not resize a window the user's last size was restored to
     private readonly PictureInPicture _pip = new();
+    private readonly UISettings _uiSettings = new(); // held so ColorValuesChanged keeps firing
     private WindowRect? _pipBounds; // where the overlay was last, for the next time it opens
     private double _videoAspect;
 
@@ -106,7 +109,7 @@ public sealed partial class MainWindow : Window, IShellWindow
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(Shell.TitleBarDragRegion);
-        AppWindow.SetIcon("Assets/AppIcon.ico");
+        ApplyTaskbarIcon();
         AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Standard;
 
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
@@ -141,6 +144,7 @@ public sealed partial class MainWindow : Window, IShellWindow
 
         App.Settings.Changed += OnSettingChanged;
         ApplyAlwaysOnTop();
+        _uiSettings.ColorValuesChanged += OnSystemColoursChanged;
 
         Shell.Host = this;
         Activated += OnActivated;
@@ -150,6 +154,7 @@ public sealed partial class MainWindow : Window, IShellWindow
             DisplaySync.Dispose(); // before the aspect lock: it sits on top of that subclass
             _aspectLock?.Dispose();
             App.Settings.Changed -= OnSettingChanged;
+            _uiSettings.ColorValuesChanged -= OnSystemColoursChanged;
         };
         AppWindow.Changed += OnAppWindowChanged;
         AppWindow.Closing += OnAppWindowClosing;
@@ -439,6 +444,21 @@ public sealed partial class MainWindow : Window, IShellWindow
             sender.Stop();
         }
     }
+
+    /// <summary>
+    /// The pale star on a dark taskbar, the graphite one on a light taskbar. The exe's own icon (Start, shortcuts)
+    /// is always the pale one, since Windows gives unpackaged apps no per-theme icon there.
+    /// </summary>
+    private void ApplyTaskbarIcon()
+    {
+        bool lightTaskbar = Registry.GetValue(
+            @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+            "SystemUsesLightTheme", 0) is int value && value != 0;
+        AppWindow.SetIcon(lightTaskbar ? "Assets/AppIcon.light.ico" : "Assets/AppIcon.ico");
+    }
+
+    // Raised off the UI thread when the Windows light/dark setting changes.
+    private void OnSystemColoursChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(ApplyTaskbarIcon);
 
     private void ApplyCaptionGlyphs(double opacity)
     {

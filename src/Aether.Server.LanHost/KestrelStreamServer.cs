@@ -44,6 +44,10 @@ public sealed class KestrelStreamServer : IAsyncDisposable
                                 enableRangeProcessing: true);
         });
 
+        // The browser tab icon; made by tools/make_app_icon.py, follows the phone's light or dark setting.
+        _app.MapGet("/favicon.svg", () =>
+            Results.Stream(typeof(KestrelStreamServer).Assembly.GetManifestResourceStream("favicon.svg")!, "image/svg+xml"));
+
         // Mobile Video Viewer Shell
         _app.MapGet("/watch", (string t) =>
         {
@@ -55,6 +59,7 @@ public sealed class KestrelStreamServer : IAsyncDisposable
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1">
                     <title>Aether LAN Player</title>
+                    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
                     <style>
                         html, body { margin: 0; height: 100%; background: #000; }
                         video { width: 100%; height: 100%; object-fit: contain; }
