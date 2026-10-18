@@ -165,6 +165,103 @@ public class VideoLookTests
         Assert.True(store.Set(SettingKeys.LookDenoise, "light"));
     }
 
+    [Fact]
+    public void Colours_At_Rest_Have_No_Eq_Filter() =>
+        Assert.Null(new VideoAdjustments().FfmpegColourFilter());
+
+    [Theory]
+    [InlineData(10, 0, 0, 0, "eq=brightness=0.1")]
+    [InlineData(0, 50, 0, 0, "eq=contrast=1.5")]
+    [InlineData(0, -100, 0, 0, "eq=contrast=0")]
+    [InlineData(0, 0, 100, 0, "eq=gamma=8")]
+    [InlineData(0, 0, -100, 0, "eq=gamma=0.125")]
+    [InlineData(0, 0, 50, 0, "eq=gamma=2.828")]
+    [InlineData(0, 0, 0, -100, "eq=saturation=0")]
+    [InlineData(0, 0, 0, 25, "eq=saturation=1.25")]
+    [InlineData(-30, 20, 10, 40, "eq=brightness=-0.3:contrast=1.2:gamma=1.231:saturation=1.4")]
+    public void The_Colour_Sliders_Map_To_Eq_Like_Mpv_Maps_Them(int brightness, int contrast, int gamma, int saturation, string expected) =>
+        Assert.Equal(expected, new VideoAdjustments(Brightness: brightness, Contrast: contrast, Gamma: gamma, Saturation: saturation).FfmpegColourFilter());
+
+    [Fact]
+    public void Colours_Outside_The_Sliders_Are_Pulled_Inside_Before_Mapping() =>
+        Assert.Equal("eq=brightness=1:saturation=0", new VideoAdjustments(Brightness: 900, Saturation: -900).FfmpegColourFilter());
+
+    [Fact]
+    public void Zoom_Rotation_And_Aspect_Are_Not_Part_Of_The_Eq_Filter() =>
+        Assert.Null(new VideoAdjustments(ZoomPercent: 200, Rotation: 90, Aspect: "4:3").FfmpegColourFilter());
+
+    [Fact]
+    public void The_Export_Chain_Is_Null_When_Look_And_Colours_Are_At_Rest() =>
+        Assert.Null(VideoLook.Off.ExportFilter(Lut, new VideoAdjustments()));
+
+    [Fact]
+    public void The_Export_Chain_Is_The_Look_Alone_Or_The_Colours_Alone()
+    {
+        Assert.Equal("cas=strength=0.5", new VideoLook(Sharpen: 50).ExportFilter(null, new VideoAdjustments()));
+        Assert.Equal("eq=contrast=1.1", VideoLook.Off.ExportFilter(Lut, new VideoAdjustments(Contrast: 10)));
+    }
+
+    [Fact]
+    public void The_Export_Chain_Runs_The_Look_In_Its_Order_Then_The_Colours()
+    {
+        var look = new VideoLook("warm", Sharpen: 30, Grain: 20, Denoise: DenoiseLevel.Light);
+
+        Assert.Equal(
+            $"hqdn3d=2:1.5:3:2.25,lut3d=file={QuotedLut},cas=strength=0.3,noise=alls=6:allf=t,eq=brightness=0.1:saturation=0.8",
+            look.ExportFilter(Lut, new VideoAdjustments(Brightness: 10, Saturation: -20)));
+    }
+
+    [Fact]
+    public void A_Grade_Whose_File_Is_Gone_Leaves_Only_The_Rest_Of_The_Export_Chain() =>
+        Assert.Equal("eq=gamma=8", new VideoLook("warm").ExportFilter(null, new VideoAdjustments(Gamma: 100)));
+
+    [Fact]
+    public void Eq_Numbers_Use_A_Dot_Whatever_The_Language()
+    {
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+        try
+        {
+            Assert.Equal("eq=brightness=0.15", new VideoAdjustments(Brightness: 15).FfmpegColourFilter());
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = previous;
+        }
+    }
+
+    [Theory]
+    [InlineData(@"C:\Looks\Warm.cube", @"'C\:/Looks/Warm.cube'")]
+    [InlineData(@"C:\My Looks\Teal look.cube", @"'C\:/My Looks/Teal look.cube'")]
+    [InlineData(@"D:\a,b\c;d[e].cube", @"'D\:/a,b/c;d[e].cube'")]
+    [InlineData(@"\\server\share\x.cube", @"'//server/share/x.cube'")]
+    public void Lut_Paths_Are_Slashed_Colon_Escaped_And_Quoted(string path, string expected) =>
+        Assert.Equal(expected, VideoLook.QuoteFilterPath(path));
+
+    [Fact]
+    public void The_Export_Filter_Is_Plain_Text_For_Ffmpeg_With_No_Mpv_Wrapper()
+    {
+        string? chain = new VideoLook("warm").ExportFilter(Lut, new VideoAdjustments(Brightness: 5));
+
+        Assert.DoesNotContain("lavfi", chain);
+    }
+
+    [Fact]
+    public void Including_The_Look_In_Clips_Is_On_By_Default_And_Survives_Save_And_Load()
+    {
+        var storage = new FakeStorage();
+        var first = new SettingsStore(storage);
+        first.Load();
+        Assert.True(first.Current.ClipIncludeLook);
+
+        Assert.True(first.Set(SettingKeys.ClipIncludeLook, false));
+        first.Save();
+
+        var second = new SettingsStore(storage);
+        second.Load();
+        Assert.False(second.Current.ClipIncludeLook);
+    }
+
     private sealed class FakeStorage : ISettingsStorage
     {
         public string? Content { get; set; }

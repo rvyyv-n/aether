@@ -877,4 +877,57 @@ public sealed class PreciseClipExportTests : IDisposable
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => new SystemProcessRunner().RunAsync(Path.Combine(_dir, "does-not-exist.exe"), [], null, cts.Token));
     }
+    // ---- filters ----
+
+    private const string LookChain = "hqdn3d=2:1.5:3:2.25,eq=brightness=0.1";
+
+    [Theory]
+    [InlineData(VideoEncoder.Nvenc)]
+    [InlineData(VideoEncoder.Qsv)]
+    [InlineData(VideoEncoder.Amf)]
+    [InlineData(VideoEncoder.X264)]
+    public void Args_WithAFilterChain_PassItToEveryEncoderBeforeTheEncoderSettings(VideoEncoder encoder)
+    {
+        var req = Request("in.mp4") with { VideoFilterChain = LookChain };
+
+        var args = ReEncodeArgumentsBuilder.Build(req, "o.mp4.part", encoder, null).ToList();
+
+        Assert.Equal(LookChain, args[args.IndexOf("-vf") + 1]);
+        Assert.True(args.IndexOf("-vf") < args.IndexOf("-pix_fmt"));
+        Assert.Single(args, "-vf");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void Args_WithoutAFilterChain_HaveNoVideoFilter(string? chain)
+    {
+        var req = Request("in.mp4") with { VideoFilterChain = chain };
+
+        Assert.DoesNotContain("-vf", ReEncodeArgumentsBuilder.Build(req, "o.mp4.part", VideoEncoder.X264, null));
+    }
+
+    [Fact]
+    public void Args_FastStreamCopy_NeverGetsAFilterEvenIfTheRequestCarriesOne()
+    {
+        var req = Request("in.mp4") with { Mode = ExportMode.Fast, VideoFilterChain = LookChain };
+
+        Assert.DoesNotContain("-vf", FfmpegArguments.Build(req, "o.mp4.part"));
+    }
+
+    [Fact]
+    public async Task Export_SendsTheFilterChainToFfmpeg()
+    {
+        var runner = new FakeRunner((args, _, _) =>
+        {
+            File.WriteAllText(OutputOf(args), "encoded");
+            return Task.FromResult(Ok);
+        });
+        using var service = new ClipExportService("ffmpeg", runner, new FakeDetector(VideoEncoder.X264));
+
+        await service.ExportAsync(Request(MakeSource()) with { VideoFilterChain = LookChain });
+
+        var args = runner.Calls.Single().ToList();
+        Assert.Equal(LookChain, args[args.IndexOf("-vf") + 1]);
+    }
 }

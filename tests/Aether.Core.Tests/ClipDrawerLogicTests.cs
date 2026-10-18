@@ -220,4 +220,16 @@ public class ClipDrawerLogicTests
 
         Assert.Equal(plain + " · NVIDIA", ClipDisplay.Details(clip, Now, Invariant, "Yesterday", "NVIDIA"));
     }
+    [Theory]
+    [InlineData(false, false, true, true, ClipHint.Fast)]
+    [InlineData(false, true, true, true, ClipHint.Fast)]
+    [InlineData(true, true, true, true, ClipHint.TooSmall)]
+    [InlineData(true, true, false, false, ClipHint.TooSmall)]
+    [InlineData(true, false, true, true, ClipHint.LookEmpty)]
+    [InlineData(true, false, true, false, ClipHint.Precise)]
+    [InlineData(true, false, false, true, ClipHint.Precise)]
+    [InlineData(true, false, false, false, ClipHint.Precise)]
+    public void Hint_FirstMatchWins_FastThenTooSmallThenEmptyLookThenPrecise(
+        bool precise, bool tooSmall, bool includeLook, bool lookIsEmpty, ClipHint expected) =>
+        Assert.Equal(expected, ClipDisplay.Hint(precise, tooSmall, includeLook, lookIsEmpty));
 }
