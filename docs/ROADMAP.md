@@ -275,6 +275,8 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 | 10.7 | Denoise (mpv `hqdn3d`): Off, Light, Medium, Strong. Off by default and meant for machines with a dedicated GPU; check dropped frames with it on before shipping | S |
 | 10.8 | Option in the clip drawer to bake the chosen filters and denoise into the exported clip (Precise mode only, since a fast cut can't change the picture) | M |
 | 10.9 | Tests for filter settings, the export filter chain and the Fast-mode fallback message | S |
+| 10.10 | Modern fonts: revisit the typefaces through the tokens and check nothing clips or reflows (timecodes, badge, menus) | S |
+| 10.11 | Settings reachable in full screen without the right-click menu (the title bar and gear are hidden there) | S |
 
 **Pass 10 means:** Clips can start and end on any frame, not just keyframes, and can be sized to fit a limit. Playback can be colour graded and denoised, and the clip export can include the same look.
 
@@ -292,6 +294,11 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 | 11.6 | `EngineResilience`: attach/detach context cleanup, attached core disposal device-loss safety, queue overflow resync, background core destruction | M |
 | 11.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S |
 | 11.8 | `THIRD_PARTY.md` licence and attribution file for libmpv, FFmpeg, yt-dlp, ANGLE and the other bundled parts, included in the installer and portable zip — **Draft written** (versions and the libmpv and FFmpeg licence flavour still to confirm, see `docs/reviews/third-party-notes.md`) | S |
+| 11.9 | Self-sufficient yt-dlp: build P8.8 (bundled copy, one-click install, hash check, scheduled updates) | M |
+| 11.10 | Auto updater: build from `docs/reviews/pass-7-auto-updater-plan.md` (ADR-0021). Owner first decides signing, default on or off, and repo visibility | M |
+| 11.11 | Caption buttons ignore transparency: decide between drawing our own caption buttons or accepting them always visible and matching the gear | S |
+| 11.12 | Settings sections get accessible names for screen readers | S |
+| 11.13 | Set the app's version and publisher before the first release | S |
 
 **Pass 11 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
 
@@ -302,5 +309,6 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 - **SponsorBlock auto-skip:** needs a lookup to sponsor.ajay.app, which conflicts with "everything stays on this device". If built later: opt-in, off by default, credited on the About card and in `THIRD_PARTY.md`.
 - **Hover rail (screen 6):** now task 7.21 in Pass 7. Clips and Stream also stay in the right-click menu and shortcuts.
 - **GPU timing row in Diagnostics:** libmpv doesn't expose it. Would need our own D3D11 timestamp queries.
+- **Customisable bar:** choosing and ordering the bar's buttons. After v1, not before the design is matched.
 - **10-bit HDR swap chain output** (`R10G10B10A2_UNORM`): after v1. Playback tone-maps to 8-bit today.
 - **Automated UI tests (FlaUI):** after v1. Screens are checked by hand for now.
