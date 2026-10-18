@@ -22,18 +22,24 @@ public sealed class MpvException : Exception
 
     private static unsafe string Describe(int errorCode)
     {
+        string fallback = ((MpvError)errorCode).ToString();
         try
         {
             byte* s = MpvApi.ErrorString(errorCode);
-            return s != null ? Marshal.PtrToStringUTF8((nint)s) ?? ((MpvError)errorCode).ToString() : ((MpvError)errorCode).ToString();
+            if (s != null)
+            {
+                string? str = Marshal.PtrToStringUTF8((nint)s);
+                return string.IsNullOrWhiteSpace(str) ? fallback : $"{str} [{fallback}]";
+            }
+            return fallback;
         }
         catch (DllNotFoundException)
         {
-            return ((MpvError)errorCode).ToString();
+            return fallback;
         }
         catch (EntryPointNotFoundException)
         {
-            return ((MpvError)errorCode).ToString();
+            return fallback;
         }
     }
 }

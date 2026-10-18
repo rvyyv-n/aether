@@ -43,7 +43,13 @@ public sealed class UpdateController
             }
 
             Set(new UpdateStatus(UpdateState.Downloading, found));
-            var progress = new Progress<double>(fraction => Set(new UpdateStatus(UpdateState.Downloading, found, Math.Clamp(fraction, 0, 1))));
+            var progress = new Progress<double>(fraction =>
+            {
+                if (Status.State == UpdateState.Downloading)
+                {
+                    Set(new UpdateStatus(UpdateState.Downloading, found, Math.Clamp(fraction, 0, 1)));
+                }
+            });
             await _engine.DownloadAsync(progress, cancellationToken).ConfigureAwait(false);
             _engine.ApplyOnExit();
             return Set(new UpdateStatus(UpdateState.Ready, found));

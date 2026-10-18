@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Aether.Core.Interop.Mpv;
 
@@ -32,6 +33,7 @@ public sealed class MpvContextOptions
 public sealed class MpvContext : IDisposable
 {
     private readonly MpvHandle _handle;
+    private int _disposed;
 
     private MpvContext(MpvHandle handle, IReadOnlyList<KeyValuePair<string, string>> appliedOptions)
     {
@@ -40,12 +42,12 @@ public sealed class MpvContext : IDisposable
     }
 
     /// <summary>The owned core. Use <see cref="SafeHandle.DangerousAddRef"/> to borrow the raw pointer.</summary>
-    public MpvHandle Handle => _handle.IsClosed ? throw new ObjectDisposedException(nameof(MpvContext)) : _handle;
+    public MpvHandle Handle => IsDisposed ? throw new ObjectDisposedException(nameof(MpvContext)) : _handle;
 
     /// <summary>Options passed to <c>mpv_set_option_string</c>, in order.</summary>
     public IReadOnlyList<KeyValuePair<string, string>> AppliedOptions { get; }
 
-    public bool IsDisposed => _handle.IsClosed;
+    public bool IsDisposed => Volatile.Read(ref _disposed) != 0 || _handle.IsClosed;
 
     /// <summary>
     /// The pre-initialization option list for <paramref name="options"/>. Pure; usable without libmpv.
@@ -294,6 +296,10 @@ public sealed class MpvContext : IDisposable
     /// </summary>
     public void Dispose()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
         bool added = false;
         try
         {

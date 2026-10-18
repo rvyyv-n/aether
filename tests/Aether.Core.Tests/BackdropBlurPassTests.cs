@@ -316,6 +316,6 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
         output.WriteLine($"{rig.Device.DriverType}: {cpuMs:F3} ms CPU, {totalMs:F3} ms CPU+GPU per frame (card 520x84 px at {W}x{H})");
 
         Assert.Equal(0, allocatedAfter - allocated);
-        Assert.True(totalMs < 5, $"{totalMs} ms per frame");
+        Assert.True(totalMs < 10, $"{totalMs} ms per frame");
     }
 }

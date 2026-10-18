@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -6,6 +6,18 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+
+  <!-- Stage native binaries for test runs when present in the app's native staging folder. -->
+  <PropertyGroup>
+    <_NativeArch Condition="'$(Platform)' == 'x64' or '$(RuntimeIdentifier)' == 'win-x64' or ('$(Platform)' == 'AnyCPU' and '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())' == 'x64')">x64</_NativeArch>
+    <_NativeArch Condition="'$(Platform)' == 'arm64' or '$(RuntimeIdentifier)' == 'win-arm64'">arm64</_NativeArch>
+    <_NativeArch Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'">x86</_NativeArch>
+    <_NativeArch Condition="'$(_NativeArch)' == ''">x64</_NativeArch>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('..\..\src\Aether.App\Native\$(_NativeArch)')">
+    <None Include="..\..\src\Aether.App\Native\$(_NativeArch)\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
