@@ -49,3 +49,5 @@ Thumbs.db
 
 # Build specs stay local
 docs/specs/
+
+__pycache__/
