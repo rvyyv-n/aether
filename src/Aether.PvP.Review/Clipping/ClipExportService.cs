@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace Aether.PvP.Review.Clipping;
 
-public sealed record ClipResult(string OutputPath, long SizeBytes, TimeSpan Elapsed);
+public sealed record ClipResult(string OutputPath, long SizeBytes, TimeSpan Elapsed, VideoEncoder? EncoderUsed = null);
 
 public sealed class ClipExportService : IDisposable
 {
@@ -13,10 +13,18 @@ public sealed class ClipExportService : IDisposable
     private readonly CancellationTokenSource _lifetime = new();
     private volatile string _ffmpegPath;
     private volatile bool _isFfmpegAvailable;
+    private readonly IProcessRunner _runner;
+    private IHardwareEncoderDetector? _detector;
+    private string? _detectorPath;
 
-    public ClipExportService(string ffmpegPath = "ffmpeg.exe")
+    public ClipExportService(
+        string ffmpegPath = "ffmpeg.exe",
+        IProcessRunner? runner = null,
+        IHardwareEncoderDetector? detector = null)
     {
         _ffmpegPath = ffmpegPath;
+        _runner = runner ?? new SystemProcessRunner();
+        _detector = detector;
     }
 
     public bool IsFfmpegAvailable => _isFfmpegAvailable;
@@ -73,7 +81,9 @@ public sealed class ClipExportService : IDisposable
         }
     }
 
-    public async Task<ClipResult> ExportAsync(ClipRequest request, CancellationToken ct = default)
+    // progress is only reported in Precise mode; a stream copy has nothing worth showing.
+    public async Task<ClipResult> ExportAsync(
+        ClipRequest request, CancellationToken ct = default, IProgress<ClipProgress>? progress = null)
     {
         Validate(request);
         Directory.CreateDirectory(request.DestinationDirectory);
@@ -82,6 +92,9 @@ public sealed class ClipExportService : IDisposable
         var token = linked.Token;
 
         var stopwatch = Stopwatch.StartNew();
+        if (request.Mode == ExportMode.Precise)
+            return await ExportPreciseAsync(request, progress, stopwatch, token).ConfigureAwait(false);
+
         string outputPath = ReserveOutputPath(request);
         string tempPath = outputPath + ".part";
 
@@ -149,6 +162,84 @@ public sealed class ClipExportService : IDisposable
         }
     }
 
+    private async Task<ClipResult> ExportPreciseAsync(
+        ClipRequest request, IProgress<ClipProgress>? progress, Stopwatch stopwatch, CancellationToken token)
+    {
+        double duration = request.EndTimeSeconds - request.StartTimeSeconds;
+
+        long? videoBitrate = null;
+        if (request.TargetSizeBytes is { } target)
+        {
+            var plan = BitrateCalculator.Plan(target, duration);
+            if (!plan.IsFeasible) throw new ClipTargetTooSmallException(plan.MinimumSizeBytes);
+            videoBitrate = plan.VideoBitsPerSecond;
+        }
+
+        var detector = GetDetector();
+        var ladder = Order(await detector.GetAvailableEncodersAsync(token).ConfigureAwait(false), request.PreferredEncoder);
+        if (ladder.Count == 0)
+            throw new InvalidOperationException("No H.264 encoder is available in this copy of FFmpeg.");
+
+        string outputPath = ReserveOutputPath(request, PreciseExtension(request.SourceFilePath));
+        string tempPath = outputPath + ".part";
+
+        bool committed = false;
+        try
+        {
+            string lastError = "";
+            foreach (var encoder in ladder)
+            {
+                var parser = new FfmpegProgressParser(duration);
+                var outcome = await _runner.RunAsync(
+                    _ffmpegPath,
+                    ReEncodeArgumentsBuilder.Build(request, tempPath, encoder, videoBitrate),
+                    reader => parser.ReadAsync(reader, progress, token),
+                    token).ConfigureAwait(false);
+
+                if (outcome.ExitCode == 0 && File.Exists(tempPath))
+                {
+                    // The final name was chosen before ffmpeg ran, so the rename never overwrites an earlier export.
+                    File.Move(tempPath, outputPath, overwrite: false);
+                    committed = true;
+                    stopwatch.Stop();
+                    return new ClipResult(outputPath, new FileInfo(outputPath).Length, stopwatch.Elapsed, encoder);
+                }
+
+                // Drivers can pass the test encode and still fail on a real clip: skip to the next encoder.
+                lastError = $"{encoder.FfmpegName()} exited with code {outcome.ExitCode}: {outcome.StandardError}";
+                detector.ReportFailure(encoder);
+                TryDelete(tempPath);
+            }
+
+            throw new InvalidOperationException($"FFmpeg re-encode failed with every available encoder. Last error: {lastError}");
+        }
+        finally
+        {
+            if (!committed) TryDelete(tempPath);
+        }
+    }
+
+    private IHardwareEncoderDetector GetDetector()
+    {
+        // The path can change in PreWarmAsync, and a detector caches results for one binary.
+        if (_detector is null || (_detectorPath is not null && _detectorPath != _ffmpegPath))
+        {
+            _detector = new FfmpegEncoderDetector(_runner, _ffmpegPath);
+            _detectorPath = _ffmpegPath;
+        }
+        return _detector;
+    }
+
+    // The preferred encoder goes first when it is usable; the rest keep the ladder order as fallbacks.
+    public static List<VideoEncoder> Order(IReadOnlyList<VideoEncoder> available, VideoEncoder? preferred) =>
+        preferred is { } p && available.Contains(p)
+            ? [p, .. available.Where(e => e != p)]
+            : [.. available];
+
+    // H.264 and AAC go in MP4 or MKV; a WebM or MOV source can't carry them as it is.
+    internal static string PreciseExtension(string sourcePath) =>
+        Path.GetExtension(sourcePath).Equals(".mkv", StringComparison.OrdinalIgnoreCase) ? ".mkv" : ".mp4";
+
     public void Dispose()
     {
         _lifetime.Cancel();
@@ -167,10 +258,10 @@ public sealed class ClipExportService : IDisposable
             throw new ArgumentException("End timestamp must be strictly greater than start timestamp.");
     }
 
-    internal static string ReserveOutputPath(ClipRequest request)
+    internal static string ReserveOutputPath(ClipRequest request, string? extension = null)
     {
         string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
-        string extension = Path.GetExtension(request.SourceFilePath);
+        extension ??= Path.GetExtension(request.SourceFilePath);
         string baseName = $"{request.ClipNamePrefix}_{timestamp}";
 
         string candidate = Path.Combine(request.DestinationDirectory, baseName + extension);

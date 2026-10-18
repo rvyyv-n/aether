@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings › General now holds the window settings (remember window size, always on top) next to battery saver and history, instead of leaving them on the Playback page.
 
 ### Added
+- Precise clip export (engine only, drawer controls come next): re-encodes the marked clip so it starts and ends on the exact frame. Uses the graphics card encoder when one works (NVIDIA, Intel, then AMD) and falls back to software x264, including mid-export if a card encoder fails. An optional size limit picks the video quality to fit, with a clear message if the limit is too small. Reports progress, speed and time left; cancelling or failing deletes the partial file. Fast (stream copy) export is unchanged.
 - Picture in picture: `P` or the right-click menu floats the video in a small always-on-top window (400×225 and up) with Back to full window on hover; the video engine keeps playing without a restart, and the window remembers where it was.
 - First-run tour: on the first launch Aether lights up its real controls one at a time (opening a video, the bar, the side rail, the right-click menu, the keys and the gear) with a short note beside each; skip it at any time, or see it again from Settings › About.
 - Settings › About ends on a closing card: app name and version, a note that everything stays on this device, and a "Source on GitHub · @rvyyv-n" link.

@@ -267,9 +267,9 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 | # | Task | Effort |
 |:---|:---|:---:|
 | 10.1 | Export mode choice in the clip drawer: Fast (stream copy, keyframe cuts, as today) or Precise (re-encode) | S |
-| 10.2 | Re-encode pipeline with hardware encoders (NVENC / QSV / AMF) and an x264 fallback; frame-accurate in and out points | L |
-| 10.3 | Optional size limit for a clip, progress, cancel and cleanup of partial files | M |
-| 10.4 | Tests for encoder selection, fallback and cancel | S |
+| 10.2 | Re-encode pipeline with hardware encoders (NVENC / QSV / AMF) and an x264 fallback; frame-accurate in and out points — **Done** (Precise export re-encodes to H.264 and AAC so the clip starts and ends on the exact frame; it tries NVENC, then Quick Sync, then AMF, then x264, only counting an encoder after a small test encode succeeds, and falls down the list if one fails mid-export; Fast stays the stream copy) | L |
+| 10.3 | Optional size limit for a clip, progress, cancel and cleanup of partial files — **Done** (a size limit sets the video rate from the length, leaving room for 128k sound and a safety margin, and refuses limits that are too small with the smallest possible size; progress reports fraction, speed and time left; cancel stops ffmpeg and its children and deletes the partial file, which is renamed into place only on success) | M |
+| 10.4 | Tests for encoder selection, fallback and cancel — **Done** (fake ffmpeg runner: encoder choice and fallback, size maths, argument lists, progress reading, cancel and partial-file cleanup) | S |
 | 10.5 | Keyframe markers on the In and Out points in Fast mode, showing where a lossless cut will really land | S |
 | 10.6 | Video filters in the Video panel: colour-grading presets and LUT looks, sharpen and grain, all applied live to playback. Opus designs the panel and presets, Sonnet builds on `VideoAdjustments` | M |
 | 10.7 | Denoise (mpv `hqdn3d`): Off, Light, Medium, Strong. Off by default and meant for machines with a dedicated GPU; check dropped frames with it on before shipping | S |
