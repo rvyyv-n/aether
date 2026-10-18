@@ -286,10 +286,10 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 
 | # | Task | Effort |
 |:---|:---|:---:|
-| 11.1 | `KestrelStreamServer`: lightweight HTTP 206 partial content server with session token auth | M |
-| 11.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding, plus a notice when the phone browser can’t play the file (HEVC or MKV) | S |
+| 11.1 | `KestrelStreamServer`: lightweight HTTP 206 partial content server with session token auth — **Done** (hardened: Wi-Fi address picked over virtual adapters, bad tokens rejected) | M |
+| 11.2 | Minimal HTML5 mobile player shell at `/watch?t={token}` with zero transcoding, plus a notice when the phone browser can’t play the file (HEVC or MKV) — **Done** (includes the notice when the phone browser cannot play the file) | S |
 | 11.3 | `QrPairingService`: in-memory SVG/PNG QR code generator with local LAN IP flyout (`S` key) | S |
-| 11.4 | Release hardening: Native AOT build (`dotnet publish -c Release -r win-x64`); fix the Release build's IL2104 trim warnings from `WinRT.Runtime` / `Microsoft.Windows.SDK.NET`, then move CI from Debug to Release | M |
+| 11.4 | Release hardening: Native AOT build (`dotnet publish -c Release -r win-x64`); fix the Release build's IL2104 trim warnings from `WinRT.Runtime` / `Microsoft.Windows.SDK.NET`, then move CI from Debug to Release — **Done** (Release builds are Native AOT; checks run in Release) | M |
 | 11.5 | End-to-end performance audit: cold start < 300ms, zero hot-path GC allocations; confirm the low-pause GC settings (workstation, non-concurrent, SustainedLowLatency) are really configured | M |
 | 11.6 | `EngineResilience`: attach/detach context cleanup, attached core disposal device-loss safety, queue overflow resync, background core destruction | M |
 | 11.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S |
@@ -298,7 +298,7 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 | 11.10 | Auto updater: build from `docs/reviews/pass-7-auto-updater-plan.md` (ADR-0021). **Decided:** ships unsigned, off by default until the first signed release, public repo | M |
 | 11.11 | Caption buttons ignore transparency: decide between drawing our own caption buttons or accepting them always visible and matching the gear — **Decided:** keep the system buttons always visible and match the gear to them | S |
 | 11.12 | Settings sections get accessible names for screen readers | S |
-| 11.13 | Set the app's version and publisher before the first release | S |
+| 11.13 | Set the app's version and publisher before the first release — **Done** (version 1.0.0 with publisher and copyright) | S |
 | 11.14 | Taskbar preview: hovering the taskbar icon shows the file name as the title and previous, Play/Pause and next buttons under the live preview, like Spotify's; the buttons follow the player state | M |
 | 11.15 | ~~**Release blocker:** replace the bundled GPL libmpv with an LGPL build~~ — **Cancelled** (licence switched to GPLv3, ADR-0025, so no LGPL libmpv swap is needed) | — |
 | 11.16 | Paste the full GPL-3.0 text into `THIRD_PARTY.md` (it is only a link now) — **Done** (full GPL text is in `LICENSE`) | S |
