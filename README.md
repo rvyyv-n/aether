@@ -34,7 +34,7 @@ It is made for people who review footage, cut clips, and want a player that stay
 
 - **Look closely:** step one frame at a time in either direction and scrub smoothly.
 - **Cut fast:** mark In and Out, and export a clip in a fraction of a second without re-encoding.
-- **Keep watching anywhere:** one-scan streaming to your phone over your home network is planned for Pass 11 and is not in the app yet.
+- **Keep watching anywhere:** press `S` (or pick Stream in the right-click menu), switch streaming on and scan the code to watch the open file on your phone over your home network.
 
 ---
 
@@ -47,7 +47,7 @@ It is made for people who review footage, cut clips, and want a player that stay
 - 🪟 **Minimalist Windows 11 Shell:** Borderless window chrome, native Windows 11 Mica Alt backdrop blending behind letterboxing, aspect-ratio snapping, and auto-hiding OSD and cursor on idle.
 - 📁 **Folder Playlists & Resume:** Opening a video queues the rest of its folder and plays the next one automatically. Aether remembers where you left the window, and opening a file while Aether is running reuses the open window.
 - ⚙️ **Comprehensive Settings & Keybinds:** Nine dedicated preference pages (Video, Audio, Subtitles, Playback, Shortcuts, Streaming, Advanced, General, About) with live shortcut conflict detection.
-- 📡 **Instant LAN Mobile Streaming (arrives in Pass 11, not working yet):** Embedded in-memory Kestrel HTTP 206 partial-content server with instant QR-code mobile pairing—scan to continue playback on any phone or tablet on your network.
+- 📡 **Instant LAN Mobile Streaming:** Embedded in-memory Kestrel HTTP 206 partial-content server with instant QR-code mobile pairing—scan to continue playback on any phone or tablet on your network.
 - 🏎️ **Native AOT & Zero-Allocation Hot Path:** Built on C# 13 and .NET 10/9 with source-generated `[LibraryImport]` P/Invoke bindings and zero managed allocations on the render loop.
 - 📦 **Zero-Admin Standalone Runner & Per-User Installer:** Fully unpackaged WinUI 3 deployment running directly from user space (`%LOCALAPPDATA%`), without UAC prompts, developer mode, or test certificates.
 
