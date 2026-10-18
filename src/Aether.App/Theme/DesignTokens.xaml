@@ -64,7 +64,7 @@
     <Color x:Key="AetherTextDisabledColor">#5CFFFFFF</Color>  <!-- 36%. Replaces whole-control 0.4 opacity -->
     <Color x:Key="AetherSurfaceGlassColor">#730E1014</Color>  <!-- 45% ink. Panels, cards, status strip, hero tile. Was Panel -->
     <Color x:Key="AetherSurfaceOsdColor">#9E0E1014</Color>  <!-- 62% ink. Controls pill, badge, anything over video. Only text.primary on it (5.35:1 over pure white video) -->
-    <Color x:Key="AetherSurfaceLetterboxColor">#FF000000</Color>  <!-- Full-screen bars -->
+    <Color x:Key="AetherSurfaceLetterboxColor">#FF000000</Color>  <!-- Letterbox bars while a video shows -->
     <Color x:Key="AetherSurfaceScrimColor">#4D000000</Color>  <!-- [screen 2] Behind dialogs. = Fluent SmokeFillDefault -->
     <Color x:Key="AetherSurfaceDialogColor">#9E0E1014</Color>  <!-- [decided] In-app Acrylic, tint ink at 62%, blur behind. Fallback when Acrylic is off (battery saver, transpare -->
     <Color x:Key="AetherSurfaceDialogFallbackColor">#F20E1014</Color>  <!-- [decided] Solid fallback for surface.dialog -->

@@ -76,7 +76,7 @@
     <Grid>
         <!--
             Video. The surface is sized to the video's own aspect ratio, so the letterbox bars are
-            the window backdrop (windowed) or black (full screen, VideoHost background), never mpv's clear colour.
+            the VideoHost background (black while a video shows, set in Render), never mpv's clear colour.
         -->
         <Grid
             x:Name="VideoHost"
