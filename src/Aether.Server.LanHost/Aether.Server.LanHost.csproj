@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+    <!-- The app publishes as Native AOT, so the endpoint handlers are generated at build time instead of by reflection. -->
+    <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
   </PropertyGroup>
 
   <ItemGroup>

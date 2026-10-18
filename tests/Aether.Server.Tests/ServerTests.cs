@@ -67,6 +67,7 @@ public class ServerTests
     private sealed class RunningServer : IAsyncDisposable
     {
         private readonly KestrelStreamServer _server = new(0, IPAddress.Loopback);
+        public KestrelStreamServer Server => _server;
         private readonly string _file = Path.Combine(Path.GetTempPath(), $"aether-{Guid.NewGuid():N}.mp4");
         public HttpClient Http { get; } = new();
         public byte[] Bytes { get; } = Enumerable.Range(0, 1000).Select(i => (byte)(i % 251)).ToArray();
@@ -162,5 +163,69 @@ public class ServerTests
     {
         await using var s = await RunningServer.StartAsync(withFile: false);
         Assert.Equal(HttpStatusCode.NotFound, (await s.Http.GetAsync(s.Url($"/stream/video?t={s.Token}"))).StatusCode);
+    }
+
+    [Fact]
+    public async Task Watchers_CountWhileAPhoneStreams()
+    {
+        await using var s = await RunningServer.StartAsync();
+        Assert.Equal(0, s.Server.WatcherCount);
+        await s.Http.GetByteArrayAsync(s.Url($"/stream/video?t={s.Token}"));
+        Assert.Equal(1, s.Server.WatcherCount); // still counted for a while after the request ends
+
+        await s.Http.GetAsync(s.Url("/stream/video?t=nope"));
+        await s.Http.GetAsync(s.Url($"/watch?t={s.Token}"));
+        Assert.Equal(1, s.Server.WatcherCount); // only real video requests count, from one address
+    }
+
+    [Fact]
+    public void WatcherTracker_KeepsAnOpenRequestAndForgetsAQuietOne()
+    {
+        var tracker = new WatcherTracker();
+        var phone = IPAddress.Parse("192.168.1.30");
+        var tablet = IPAddress.Parse("::ffff:192.168.1.31");
+        long linger = (long)WatcherTracker.Linger.TotalMilliseconds;
+
+        tracker.Begin(phone, 0);
+        tracker.Begin(tablet, 0);
+        tracker.End(tablet, 10);
+        Assert.Equal(2, tracker.Count(10));
+
+        Assert.Equal(1, tracker.Count(10 + linger + 1)); // the tablet went quiet; the phone's request is still open
+        tracker.End(phone, 20 + linger);
+        Assert.Equal(1, tracker.Count(20 + linger + 5));
+        Assert.Equal(0, tracker.Count(20 + (2 * linger) + 1));
+
+        tracker.Begin(IPAddress.Parse("192.168.1.31"), 0);
+        tracker.Begin(tablet, 0); // the mapped form is the same device
+        Assert.Equal(1, tracker.Count(0));
+    }
+
+    [Fact]
+    public async Task SecondServerOnTheSamePort_ReportsThePortAsUnavailable()
+    {
+        await using var first = new KestrelStreamServer(0, IPAddress.Loopback);
+        await first.StartAsync();
+        await using var second = new KestrelStreamServer(first.ActivePort, IPAddress.Loopback);
+
+        Exception error = await Assert.ThrowsAnyAsync<Exception>(() => second.StartAsync());
+        Assert.True(KestrelStreamServer.IsPortUnavailable(error));
+        Assert.False(KestrelStreamServer.IsPortUnavailable(new InvalidOperationException()));
+    }
+
+    [Theory]
+    [InlineData(200)]
+    [InlineData(37)]
+    [InlineData(5)]
+    public void QrPng_UsesWholePixelsPerModuleWithinTheSize(int maxPixels)
+    {
+        (byte[] png, int pixels) = QrPairingService.CreatePngToFit("http://192.168.1.20:8443/watch?t=0123456789ABCDEF", maxPixels);
+
+        int width = (png[16] << 24) | (png[17] << 16) | (png[18] << 8) | png[19]; // the PNG header's width
+        Assert.Equal(pixels, width);
+        int modules = QrPairingService.CreatePngToFit("http://192.168.1.20:8443/watch?t=0123456789ABCDEF", 1).Pixels;
+        Assert.Equal(0, pixels % modules);
+        Assert.True(pixels <= Math.Max(maxPixels, modules));
+        Assert.True(pixels + modules > maxPixels || pixels == modules);
     }
 }

@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
@@ -18,6 +19,7 @@ public sealed class KestrelStreamServer : IAsyncDisposable
     private WebApplication? _app;
     private string? _currentlyHostedFilePath;
     private readonly IPAddress _bindAddress;
+    private readonly WatcherTracker _watchers = new();
     public int ActivePort { get; private set; }
 
     public KestrelStreamServer(int port = 8443, IPAddress? bindAddress = null)
@@ -42,6 +44,25 @@ public sealed class KestrelStreamServer : IAsyncDisposable
         builder.WebHost.UseKestrel(options => options.Listen(_bindAddress, ActivePort));
         _app = builder.Build();
 
+        _app.Use(async (HttpContext context, RequestDelegate next) =>
+        {
+            IPAddress? remote = context.Connection.RemoteIpAddress;
+            if (remote is null || context.Request.Path != "/stream/video" || !IsValidToken(context.Request.Query["t"]))
+            {
+                await next(context);
+                return;
+            }
+            _watchers.Begin(remote, Environment.TickCount64);
+            try
+            {
+                await next(context);
+            }
+            finally
+            {
+                _watchers.End(remote, Environment.TickCount64);
+            }
+        });
+
         // HTTP 206 Partial Content Stream
         _app.MapGet("/stream/video", (string? t) =>
         {
@@ -64,7 +85,16 @@ public sealed class KestrelStreamServer : IAsyncDisposable
             return Results.Content(WatchPage.Build(t!, mime), "text/html");
         });
 
-        await _app.StartAsync(cancellationToken);
+        try
+        {
+            await _app.StartAsync(cancellationToken);
+        }
+        catch
+        {
+            await _app.DisposeAsync(); // let go of anything bound before the failure
+            _app = null;
+            throw;
+        }
         if (ActivePort == 0 && _app.Urls.Any())
         {
             ActivePort = new Uri(_app.Urls.First()).Port;
@@ -89,7 +119,29 @@ public sealed class KestrelStreamServer : IAsyncDisposable
         }
     }
 
-    public string GetMobileWatchUrl() => $"http://{GetLocalIpAddress()}:{ActivePort}/watch?t={SessionToken}";
+    public string GetMobileWatchUrl() => GetMobileWatchUrl(GetLocalIpAddress());
+
+    public string GetMobileWatchUrl(string host) => $"http://{host}:{ActivePort}/watch?t={SessionToken}";
+
+    /// <summary>How many devices are watching now; cheap enough to ask every second or two.</summary>
+    public int WatcherCount => _watchers.Count(Environment.TickCount64);
+
+    /// <summary>
+    /// True when starting failed because the port is taken, by another app or by a range Windows keeps for itself
+    /// (Hyper-V and WSL reserve some, which reports as access denied).
+    /// </summary>
+    public static bool IsPortUnavailable(Exception error)
+    {
+        for (Exception? e = error; e is not null; e = e.InnerException)
+        {
+            if (e is AddressInUseException
+                || e is SocketException { SocketErrorCode: SocketError.AddressAlreadyInUse or SocketError.AccessDenied })
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private static readonly System.Text.Encoding Utf8 = System.Text.Encoding.UTF8;
 
