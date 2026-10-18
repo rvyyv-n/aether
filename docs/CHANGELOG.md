@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Aether can update itself. Settings › About has Check now, which looks at the project's GitHub releases, downloads a newer version in the background and installs it when you close Aether (or at once with Restart to update). Check for updates automatically is off by default and, when on, looks once a day, a short while after launch. Copies run from a zip do not update themselves. A tag push builds the installer, the zip and the update packages into a draft release.
 - yt-dlp now comes with Aether, so the first web link plays with no setup. If it is ever missing, Install on the link-failure screen or the Streaming page downloads it with a progress count, checks the download against the release's published checksum, and starts using it at once. Aether runs the newest of its downloaded copy, the bundled copy and one on PATH, checks once a day for a newer one (switch off with Update automatically), and uninstalling removes the downloaded copy.
 ### Changed
 - Subtitles no longer sit behind the transport bar: while the bar shows they are lifted just above it (following the bar as it grows and shrinks) and ease back down when it hides, in windowed and full screen. The Position setting still applies on top, and Top is never lifted. Only the part of the bar over the picture counts, so a letterboxed video keeps its subtitles where they were. A `sub-margin-y` in the custom mpv options turns the lift off.
