@@ -8,5 +8,10 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
     <InvariantGlobalization>false</InvariantGlobalization>
+    <Version>1.0.0</Version>
+    <Company>rvyyv-n</Company>
+    <Authors>rvyyv-n</Authors>
+    <Product>Aether</Product>
+    <Copyright>Copyright © 2026 rvyyv-n</Copyright>
   </PropertyGroup>
 </Project>
