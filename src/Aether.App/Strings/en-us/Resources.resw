@@ -1644,4 +1644,22 @@
   <data name="Toast_LookInvalid" xml:space="preserve">
     <value>That file isn't a 3D LUT (.cube)</value>
   </data>
+  <data name="Video_Denoise" xml:space="preserve">
+    <value>Denoise</value>
+  </data>
+  <data name="Video_DenoiseOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Video_DenoiseLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Video_DenoiseMedium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="Video_DenoiseStrong" xml:space="preserve">
+    <value>Strong</value>
+  </data>
+  <data name="Video_DenoiseHint" xml:space="preserve">
+    <value>Uses more power. Best with a dedicated graphics card.</value>
+  </data>
 </root>

@@ -69,6 +69,7 @@ public static class SettingKeys
     public const string LookGrade = "look.grade";
     public const string LookSharpen = "look.sharpen";
     public const string LookGrain = "look.grain";
+    public const string LookDenoise = "look.denoise";
     public const string ShortcutOpenFile = "shortcuts.openFile";
     public const string ShortcutOpenUrl = "shortcuts.openUrl";
     public const string ShortcutSkipBack = "shortcuts.skipBack";
@@ -249,6 +250,7 @@ public static class SettingDefinitions
         Text(SettingKeys.LookGrade, s => s.LookGrade, (s, v) => s with { LookGrade = v }),
         Range(SettingKeys.LookSharpen, s => s.LookSharpen, (s, v) => s with { LookSharpen = v }, 0, 100),
         Range(SettingKeys.LookGrain, s => s.LookGrain, (s, v) => s with { LookGrain = v }, 0, 100),
+        Choice(SettingKeys.LookDenoise, s => s.LookDenoise, (s, v) => s with { LookDenoise = v }, false, "off", "light", "medium", "strong"),
 
         Shortcut(SettingKeys.ShortcutOpenFile, s => s.ShortcutOpenFile, (s, v) => s with { ShortcutOpenFile = v }),
         Shortcut(SettingKeys.ShortcutOpenUrl, s => s.ShortcutOpenUrl, (s, v) => s with { ShortcutOpenUrl = v }),

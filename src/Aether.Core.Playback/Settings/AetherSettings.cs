@@ -126,6 +126,8 @@ public sealed record AetherSettings
     public int LookSharpen { get; init; }
     /// <summary>Film grain amount, 0 (off) to 100.</summary>
     public int LookGrain { get; init; }
+    /// <summary>Denoise strength: <c>off</c>, <c>light</c>, <c>medium</c> or <c>strong</c>.</summary>
+    public string LookDenoise { get; init; } = "off";
 
     // Shortcuts: empty means the default keys, "None" unbound, otherwise e.g. "Ctrl+O" or "F, F11" (see ShortcutMap).
     public string ShortcutOpenFile { get; init; } = "";

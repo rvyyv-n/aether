@@ -167,6 +167,7 @@ public sealed partial class MainPage
         App.Settings.Set(SettingKeys.LookGrade, look.Grade);
         App.Settings.Set(SettingKeys.LookSharpen, look.Sharpen);
         App.Settings.Set(SettingKeys.LookGrain, look.Grain);
+        App.Settings.Set(SettingKeys.LookDenoise, VideoLook.DenoiseName(look.Denoise));
         _ = Task.Run(() =>
         {
             try

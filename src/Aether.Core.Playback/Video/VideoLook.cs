@@ -3,8 +3,16 @@ using Aether.Core.Playback.Settings;
 
 namespace Aether.Core.Playback.Video;
 
+public enum DenoiseLevel
+{
+    Off,
+    Light,
+    Medium,
+    Strong,
+}
+
 /// <summary>
-/// The Look under the video flyout's colour sliders (screen 9.3): a colour grade, sharpen and film grain. One
+/// The Look under the video flyout's colour sliders (screen 9.3): a colour grade, sharpen, film grain and denoise. One
 /// recipe serves playback (mpv's <c>lavfi</c> filter) and, later, the Precise clip export (ffmpeg's <c>-vf</c>), so what
 /// is seen is what is saved. Unlike <see cref="VideoAdjustments"/> it is kept across files and saved as last used.
 /// </summary>
@@ -14,7 +22,8 @@ namespace Aether.Core.Playback.Video;
 public sealed record VideoLook(
     string Grade = VideoLook.NoGrade,
     int Sharpen = 0,
-    int Grain = 0)
+    int Grain = 0,
+    DenoiseLevel Denoise = DenoiseLevel.Off)
 {
     public const string NoGrade = "none";
     public const int MaxAmount = 100;
@@ -26,28 +35,50 @@ public sealed record VideoLook(
     public static VideoLook FromSettings(AetherSettings settings) => new VideoLook(
         settings.LookGrade,
         settings.LookSharpen,
-        settings.LookGrain).Clamped();
+        settings.LookGrain,
+        DenoiseFromName(settings.LookDenoise)).Clamped();
 
     public static int ClampAmount(double value) => (int)Math.Clamp(Math.Round(value), 0, MaxAmount);
+
+    public static string DenoiseName(DenoiseLevel level) => level switch
+    {
+        DenoiseLevel.Light => "light",
+        DenoiseLevel.Medium => "medium",
+        DenoiseLevel.Strong => "strong",
+        _ => "off",
+    };
+
+    public static DenoiseLevel DenoiseFromName(string? name) => name switch
+    {
+        "light" => DenoiseLevel.Light,
+        "medium" => DenoiseLevel.Medium,
+        "strong" => DenoiseLevel.Strong,
+        _ => DenoiseLevel.Off,
+    };
 
     public VideoLook Clamped() => this with
     {
         Grade = string.IsNullOrWhiteSpace(Grade) ? NoGrade : Grade,
         Sharpen = ClampAmount(Sharpen),
         Grain = ClampAmount(Grain),
+        Denoise = Enum.IsDefined(Denoise) ? Denoise : DenoiseLevel.Off,
     };
 
     /// <summary>True when nothing is set, so playback and export are left exactly as they were.</summary>
-    public bool IsOff => Clamped() is { Grade: NoGrade, Sharpen: 0, Grain: 0 };
+    public bool IsOff => Clamped() is { Grade: NoGrade, Sharpen: 0, Grain: 0, Denoise: DenoiseLevel.Off };
 
     /// <summary>
-    /// The lavfi chain in a fixed order: grade, sharpen, grain. Off parts are left out, so an all-off look gives
+    /// The lavfi chain in a fixed order: denoise, grade, sharpen, grain. Off parts are left out, so an all-off look gives
     /// an empty string. A grade whose <paramref name="lutPath"/> is null (file gone) is left out too.
     /// </summary>
     public string FilterChain(string? lutPath)
     {
         VideoLook look = Clamped();
         List<string> parts = [];
+        if (DenoiseParameters(look.Denoise) is { } denoise)
+        {
+            parts.Add($"hqdn3d={denoise}");
+        }
         if (look.Grade != NoGrade && !string.IsNullOrEmpty(lutPath))
         {
             parts.Add($"lut3d=file={QuoteFilterPath(lutPath)}");
@@ -88,6 +119,14 @@ public sealed record VideoLook(
         }
         return "'" + slashed.Replace("'", "'\\''") + "'";
     }
+
+    private static string? DenoiseParameters(DenoiseLevel level) => level switch
+    {
+        DenoiseLevel.Light => "2:1.5:3:2.25",
+        DenoiseLevel.Medium => "4:3:6:4.5",
+        DenoiseLevel.Strong => "8:6:12:9",
+        _ => null,
+    };
 
     private static string Number(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
 }

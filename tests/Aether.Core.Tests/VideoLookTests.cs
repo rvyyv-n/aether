@@ -57,6 +57,41 @@ public class VideoLookTests
     public void Grain_Is_Temporal_Noise_At_Three_Tenths_Of_The_Amount(int amount, string strength) =>
         Assert.Equal($"noise=alls={strength}:allf=t", new VideoLook(Grain: amount).FilterChain(null));
 
+    [Theory]
+    [InlineData(DenoiseLevel.Off, "")]
+    [InlineData(DenoiseLevel.Light, "hqdn3d=2:1.5:3:2.25")]
+    [InlineData(DenoiseLevel.Medium, "hqdn3d=4:3:6:4.5")]
+    [InlineData(DenoiseLevel.Strong, "hqdn3d=8:6:12:9")]
+    public void Each_Denoise_Level_Is_Its_Own_Hqdn3d_Setting(DenoiseLevel level, string expected)
+    {
+        var look = new VideoLook(Denoise: level);
+
+        Assert.Equal(expected, look.FilterChain(null));
+        Assert.Equal(level == DenoiseLevel.Off, look.IsOff);
+        Assert.Equal(expected.Length == 0 ? "" : $"lavfi=[{expected}]", look.MpvFilter(null));
+    }
+
+    [Fact]
+    public void Denoise_Runs_Before_The_Grade_And_Everything_Else_Follows_In_Order()
+    {
+        var look = new VideoLook("warm", Sharpen: 30, Grain: 20, Denoise: DenoiseLevel.Medium);
+
+        Assert.Equal($"hqdn3d=4:3:6:4.5,lut3d=file={QuotedLut},cas=strength=0.3,noise=alls=6:allf=t", look.FilterChain(Lut));
+    }
+
+    [Theory]
+    [InlineData("off", DenoiseLevel.Off)]
+    [InlineData("light", DenoiseLevel.Light)]
+    [InlineData("medium", DenoiseLevel.Medium)]
+    [InlineData("strong", DenoiseLevel.Strong)]
+    [InlineData("nonsense", DenoiseLevel.Off)]
+    [InlineData(null, DenoiseLevel.Off)]
+    public void Denoise_Names_Round_Trip_And_Unknown_Ones_Mean_Off(string? name, DenoiseLevel expected)
+    {
+        Assert.Equal(expected, VideoLook.DenoiseFromName(name));
+        Assert.Equal(expected, VideoLook.DenoiseFromName(VideoLook.DenoiseName(expected)));
+    }
+
     [Fact]
     public void The_Parts_Come_In_A_Fixed_Order_Whatever_Was_Set_First()
     {
@@ -109,11 +144,12 @@ public class VideoLookTests
         first.Set(SettingKeys.LookGrade, "user:My look.cube");
         first.Set(SettingKeys.LookSharpen, 25);
         first.Set(SettingKeys.LookGrain, 10);
+        first.Set(SettingKeys.LookDenoise, "strong");
         first.Save();
 
         var second = new SettingsStore(storage);
         second.Load();
-        Assert.Equal(new VideoLook("user:My look.cube", 25, 10), VideoLook.FromSettings(second.Current));
+        Assert.Equal(new VideoLook("user:My look.cube", 25, 10, DenoiseLevel.Strong), VideoLook.FromSettings(second.Current));
     }
 
     [Fact]
@@ -125,6 +161,8 @@ public class VideoLookTests
         Assert.False(store.Set(SettingKeys.LookSharpen, 101));
         Assert.False(store.Set(SettingKeys.LookGrain, -1));
         Assert.True(store.Set(SettingKeys.LookSharpen, 100));
+        Assert.False(store.Set(SettingKeys.LookDenoise, "extreme"));
+        Assert.True(store.Set(SettingKeys.LookDenoise, "light"));
     }
 
     private sealed class FakeStorage : ISettingsStorage

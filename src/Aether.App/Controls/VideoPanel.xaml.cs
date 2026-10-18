@@ -42,7 +42,10 @@ public sealed partial class VideoPanel : UserControl
         GradeLabel.Text = AppStrings.Get("Video_LookGrade");
         SharpenLabel.Text = AppStrings.Get("Video_Sharpen");
         GrainLabel.Text = AppStrings.Get("Video_Grain");
+        DenoiseLabel.Text = AppStrings.Get("Video_Denoise");
+        DenoiseHint.Text = AppStrings.Get("Video_DenoiseHint");
         ResetLookButton.Content = AppStrings.Get("Video_ResetLook");
+        AutomationProperties.SetName(DenoiseList, DenoiseLabel.Text);
         AutomationProperties.SetName(GradeCombo, GradeLabel.Text);
         AutomationProperties.SetName(SharpenSlider, SharpenLabel.Text);
         AutomationProperties.SetName(GrainSlider, GrainLabel.Text);
@@ -56,6 +59,10 @@ public sealed partial class VideoPanel : UserControl
         foreach (int degrees in VideoAdjustments.Rotations)
         {
             RotateList.Items.Add(new ListBoxItem { Content = $"{degrees}°", Tag = degrees });
+        }
+        foreach (DenoiseLevel level in Enum.GetValues<DenoiseLevel>())
+        {
+            DenoiseList.Items.Add(new ListBoxItem { Content = AppStrings.Get($"Video_Denoise{level}"), Tag = level });
         }
         foreach (string aspect in VideoAdjustments.AspectOptions)
         {
@@ -135,6 +142,7 @@ public sealed partial class VideoPanel : UserControl
             SharpenValue.Text = FormatAmount(_look.Sharpen);
             GrainSlider.Value = _look.Grain;
             GrainValue.Text = FormatAmount(_look.Grain);
+            DenoiseList.SelectedIndex = (int)_look.Denoise;
             ResetLookButton.IsEnabled = !_look.IsOff;
         }
         finally
@@ -218,6 +226,14 @@ public sealed partial class VideoPanel : UserControl
             return;
         }
         ChangeLook(_look with { Grade = tag }, immediate: true);
+    }
+
+    private void OnDenoiseChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_showing && DenoiseList.SelectedItem is ListBoxItem { Tag: DenoiseLevel level })
+        {
+            ChangeLook(_look with { Denoise = level }, immediate: true);
+        }
     }
 
     private void OnAmountChanged(object sender, RangeBaseValueChangedEventArgs e)

@@ -7,7 +7,7 @@
     <!--
         Video flyout (screen 9.3): 340 wide, padding 12,16. Zoom with its readout and Reset, Rotate as a segmented control,
         Aspect ratio as a combo, then the four colour sliders with Reset colours and, under a divider, the Look (grade,
-        sharpen, grain, Reset look). The flyout supplies the solid surface
+        sharpen, grain, denoise, Reset look). The flyout supplies the solid surface
         (ADR-0013); the scroll area keeps it inside a short window (9.5).
     -->
     <ScrollViewer
@@ -141,6 +141,19 @@
                     StepFrequency="5"
                     Style="{StaticResource AetherSettingsSliderStyle}"
                     ValueChanged="OnAmountChanged" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="DenoiseLabel" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                <ListBox
+                    x:Name="DenoiseList"
+                    HorizontalAlignment="Stretch"
+                    SelectionChanged="OnDenoiseChanged"
+                    Style="{StaticResource AetherSegmentedStyle}" />
+                <TextBlock
+                    x:Name="DenoiseHint"
+                    Style="{StaticResource AetherCaptionTextStyle}"
+                    TextWrapping="Wrap" />
             </StackPanel>
 
             <Button
