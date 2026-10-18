@@ -61,12 +61,28 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
+# Step 1b: Bundle yt-dlp so the first web link plays with no setup. The pinned release is checked against its published SHA-256.
+$ytDlpVersion = "2026.07.04"
+$ytDlpBase = "https://github.com/yt-dlp/yt-dlp/releases/download/$ytDlpVersion"
+$ytDlpExe = Join-Path $PortableDir "yt-dlp.exe"
+Write-Host "       Bundling yt-dlp $ytDlpVersion..." -ForegroundColor Cyan
+Invoke-WebRequest -Uri "$ytDlpBase/yt-dlp.exe" -OutFile $ytDlpExe -UseBasicParsing
+$ytDlpSums = [Text.Encoding]::UTF8.GetString((Invoke-WebRequest -Uri "$ytDlpBase/SHA2-256SUMS" -UseBasicParsing).Content)
+$ytDlpExpected = ($ytDlpSums -split "`n" | Where-Object { $_ -match "\s\*?yt-dlp\.exe\s*$" } | Select-Object -First 1) -split "\s+" | Select-Object -First 1
+$ytDlpActual = (Get-FileHash $ytDlpExe -Algorithm SHA256).Hash
+if (-not $ytDlpExpected -or $ytDlpActual -ne $ytDlpExpected.ToUpperInvariant()) {
+    Remove-Item $ytDlpExe -Force
+    Write-Error "[Error] yt-dlp.exe did not match its published SHA-256."
+    exit 1
+}
+
 # Step 2: Verify essential unpackaged assets
 Write-Host "[2/5] Verifying unpackaged runtime assets in portable directory..." -ForegroundColor Cyan
 $requiredFiles = @(
     "Aether.App.exe",
     "resources.pri",
     "libmpv-2.dll",
+    "yt-dlp.exe",
     "libEGL.dll",
     "libGLESv2.dll",
     "Microsoft.UI.Xaml.dll"

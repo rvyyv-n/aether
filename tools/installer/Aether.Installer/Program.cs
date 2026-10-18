@@ -373,6 +373,14 @@ internal static partial class Program
                 File.Delete(desktopShortcut);
             }
 
+            // The yt-dlp Aether downloaded for itself lives outside the install folder.
+            string downloadedTools = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppName, "tools");
+            if (Directory.Exists(downloadedTools))
+            {
+                Directory.Delete(downloadedTools, true);
+            }
+
             // Remove HKCU Registry keys
             UnregisterUninstall();
             UnregisterAppPaths();
