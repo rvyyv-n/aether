@@ -82,6 +82,11 @@ public sealed class PlayerSession : IDisposable
             }
             _keys?.Dispose();
             _events?.Dispose();
+            // Otherwise the surface keeps drawing the core being disposed here, and cannot recreate its picture after a device loss.
+            if (ReferenceEquals(surface.Player, context))
+            {
+                surface.DetachPlayer();
+            }
             _context.Dispose();
             throw;
         }
