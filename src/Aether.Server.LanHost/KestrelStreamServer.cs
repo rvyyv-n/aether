@@ -17,7 +17,15 @@ public sealed class KestrelStreamServer : IAsyncDisposable
 {
     private WebApplication? _app;
     private string? _currentlyHostedFilePath;
-    public int ActivePort { get; private set; } = 8443;
+    private readonly IPAddress _bindAddress;
+    public int ActivePort { get; private set; }
+
+    public KestrelStreamServer(int port = 8443, IPAddress? bindAddress = null)
+    {
+        ActivePort = port;
+        _bindAddress = bindAddress ?? IPAddress.Any;
+    }
+
     public string SessionToken { get; } = Convert.ToHexString(RandomNumberGenerator.GetBytes(8));
 
     public void SetActiveFile(string filePath)
@@ -31,13 +39,13 @@ public sealed class KestrelStreamServer : IAsyncDisposable
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         var builder = WebApplication.CreateSlimBuilder();
-        builder.WebHost.UseKestrel(options => options.Listen(IPAddress.Any, ActivePort));
+        builder.WebHost.UseKestrel(options => options.Listen(_bindAddress, ActivePort));
         _app = builder.Build();
 
         // HTTP 206 Partial Content Stream
-        _app.MapGet("/stream/video", (string t) =>
+        _app.MapGet("/stream/video", (string? t) =>
         {
-            if (t != SessionToken) return Results.Unauthorized();
+            if (!IsValidToken(t)) return Results.Unauthorized();
             if (string.IsNullOrEmpty(_currentlyHostedFilePath) || !File.Exists(_currentlyHostedFilePath))
                 return Results.NotFound();
             return Results.File(_currentlyHostedFilePath, ContentTypeFor(_currentlyHostedFilePath),
@@ -49,28 +57,11 @@ public sealed class KestrelStreamServer : IAsyncDisposable
             Results.Stream(typeof(KestrelStreamServer).Assembly.GetManifestResourceStream("favicon.svg")!, "image/svg+xml"));
 
         // Mobile Video Viewer Shell
-        _app.MapGet("/watch", (string t) =>
+        _app.MapGet("/watch", (string? t) =>
         {
-            if (t != SessionToken) return Results.Unauthorized();
-            string html = $$"""
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <title>Aether LAN Player</title>
-                    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-                    <style>
-                        html, body { margin: 0; height: 100%; background: #000; }
-                        video { width: 100%; height: 100%; object-fit: contain; }
-                    </style>
-                </head>
-                <body>
-                    <video src="/stream/video?t={{t}}" controls autoplay playsinline></video>
-                </body>
-                </html>
-                """;
-            return Results.Content(html, "text/html");
+            if (!IsValidToken(t)) return Results.Unauthorized();
+            string mime = _currentlyHostedFilePath is null ? "video/mp4" : ContentTypeFor(_currentlyHostedFilePath);
+            return Results.Content(WatchPage.Build(t!, mime), "text/html");
         });
 
         await _app.StartAsync(cancellationToken);
@@ -84,6 +75,9 @@ public sealed class KestrelStreamServer : IAsyncDisposable
     {
         try
         {
+            var preferred = LanAddressPicker.PickFromSystem();
+            if (preferred is not null) return preferred.ToString();
+
             using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0);
             socket.Connect("10.255.255.255", 1);
             var endPoint = socket.LocalEndPoint as IPEndPoint;
@@ -96,6 +90,11 @@ public sealed class KestrelStreamServer : IAsyncDisposable
     }
 
     public string GetMobileWatchUrl() => $"http://{GetLocalIpAddress()}:{ActivePort}/watch?t={SessionToken}";
+
+    private static readonly System.Text.Encoding Utf8 = System.Text.Encoding.UTF8;
+
+    private bool IsValidToken(string? t) =>
+        t is not null && CryptographicOperations.FixedTimeEquals(Utf8.GetBytes(t), Utf8.GetBytes(SessionToken));
 
     private static string ContentTypeFor(string path) => Path.GetExtension(path).ToLowerInvariant() switch
     {
