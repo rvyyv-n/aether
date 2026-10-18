@@ -34,6 +34,9 @@ public sealed class PlayerSession : IDisposable
     private readonly MpvSettingsSync _settingsSync;
     private readonly DisplayRefreshSync? _display;
     private readonly DisplayWakeLock _wake = new();
+    private double _subtitleClearance;
+    private double _videoHeight;
+    private string _subtitleMargin = "";
     private bool _disposed;
 
     private PlayerSession(MpvContext context, MpvVideoSurface surface, UIElement keyTarget, DispatcherQueue queue)
@@ -205,9 +208,52 @@ public sealed class PlayerSession : IDisposable
     /// <summary>Releases a held step key, e.g. when the window is deactivated.</summary>
     public void ReleaseKeys() => _keys.ReleaseAll();
 
+    /// <summary>
+    /// UI thread: lifts the subtitles <paramref name="clearance"/> above the picture's bottom edge (the transport bar's
+    /// top, as far as it covers the picture), both in dips, <paramref name="videoHeight"/> being the picture's height.
+    /// </summary>
+    public void SetSubtitleClearance(double clearance, double videoHeight)
+    {
+        _subtitleClearance = clearance;
+        _videoHeight = videoHeight;
+        SendSubtitleMargin();
+    }
+
+    /// <summary>Follows the Position setting; a <c>sub-margin-y</c> in the custom options wins.</summary>
+    private void SendSubtitleMargin()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        AetherSettings settings = App.Settings.Current;
+        string margin = SubtitleLift.MarginY(settings.SubtitlePosition, _subtitleClearance, _videoHeight);
+        if (margin == _subtitleMargin)
+        {
+            return;
+        }
+        foreach (KeyValuePair<string, string> option in MpvSettingsMap.CustomOptions(settings.CustomMpvOptions))
+        {
+            if (option.Key.Equals("sub-margin-y", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+        }
+        try
+        {
+            _context.CommandAsync(new MpvCommand("set", "sub-margin-y", margin));
+            _subtitleMargin = margin;
+        }
+        catch (Exception exception) when (exception is MpvException or ObjectDisposedException)
+        {
+            // The core is shutting down.
+        }
+    }
+
     private void OnSettingChanged(object? sender, SettingChangedEventArgs e)
     {
         ApplySettings();
+        SendSubtitleMargin();
         UpdateWake();
     }
 

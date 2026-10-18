@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Subtitles no longer sit behind the transport bar: while the bar shows they are lifted just above it (following the bar as it grows and shrinks) and ease back down when it hides, in windowed and full screen. The Position setting still applies on top, and Top is never lifted. Only the part of the bar over the picture counts, so a letterboxed video keeps its subtitles where they were. A `sub-margin-y` in the custom mpv options turns the lift off.
 - The Small subtitle size is about a quarter smaller (30 instead of 40 on mpv's 720-high scale), so it no longer looks nearly as big as Medium on the video. Medium, Large and Extra large are unchanged, and the Settings preview follows the same sizes.
 - Subtitles now use a font mpv can really draw: the default Segoe UI Variable was silently replaced by Arial on the video, so it is now sent as Segoe UI. Fonts that are only installed as variable fonts (for example Bricolage Grotesque) still cannot be drawn on the video by the bundled mpv and fall back to Arial.
 - The subtitle font list in Settings now shows the installed fonts. It used to read every name as "en-us" because of a mistake in how font names were read from Windows, so the list was effectively empty.

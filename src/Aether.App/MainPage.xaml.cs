@@ -1600,6 +1600,7 @@ public sealed partial class MainPage : Page
             _host?.SetCaptionButtonsVisible(visible);
         }
         SyncBar();
+        SyncSubtitleLift();
         SyncRail(applyChrome: false);
         UpdateCursor();
         UpdateToastPlacement();

@@ -21,6 +21,7 @@ public sealed partial class MainPage
     private const double ButtonGap = 4;
 
     private MotionTween? _bar;
+    private MotionTween? _subtitleLift; // 0 with the bar hidden, 1 with it showing
     private bool _barExpanded = true;
     private double _playSlide; // how far Play and Mute move from their full-card spots to the slim pill's
     private double _volumeSlide;
@@ -36,6 +37,9 @@ public sealed partial class MainPage
     {
         _bar = new MotionTween(1);
         _bar.Changed += (_, _) => ApplyBarProgress();
+        _subtitleLift = new MotionTween(0);
+        _subtitleLift.Changed += (_, _) => UpdateSubtitleLift();
+        VideoSurface.SizeChanged += (_, _) => UpdateSubtitleLift();
         foreach (FrameworkElement element in new FrameworkElement[] { ButtonRow, LeftGroup, CentreGroup, RightGroup })
         {
             element.SizeChanged += (_, _) => MeasureBarSlides();
@@ -75,6 +79,41 @@ public sealed partial class MainPage
         {
             _bar.AnimateTo(0, Motion.Token("AetherMotionQuickShrinkMilliseconds"), Motion.EaseIn);
         }
+    }
+
+    /// <summary>
+    /// Keeps the subtitles above the bar while it shows, and eases them back down as it hides. Only the part of the bar
+    /// that is over the picture counts, so a letterboxed video leaves the subtitles where they are.
+    /// </summary>
+    private void SyncSubtitleLift()
+    {
+        if (_subtitleLift is null)
+        {
+            return;
+        }
+        bool shown = _chromeShown && Osd.Visibility == Visibility.Visible;
+        if (shown == (_subtitleLift.Target > 0))
+        {
+            return;
+        }
+        if (Osd.Visibility != Visibility.Visible)
+        {
+            _subtitleLift.JumpTo(0);
+            return;
+        }
+        string duration = shown ? "AetherMotionChromeShowMilliseconds" : "AetherMotionChromeHideMilliseconds";
+        _subtitleLift.AnimateTo(shown ? 1 : 0, Motion.Token(duration), Motion.EaseOut);
+    }
+
+    private void UpdateSubtitleLift()
+    {
+        if (_subtitleLift is null || _session is not { } session)
+        {
+            return;
+        }
+        double bar = (Osd.Margin.Bottom + Osd.Height + Motion.Token("AetherSizeOsdGap")) * Math.Clamp(_subtitleLift.Value, 0, 1);
+        double letterbox = Math.Max(0, (VideoHost.ActualHeight - VideoSurface.ActualHeight) / 2);
+        session.SetSubtitleClearance(Math.Max(0, bar - letterbox), VideoSurface.ActualHeight);
     }
 
     /// <summary>Where Play, Mute and the seek row sit in the slim pill, from the full card's layout.</summary>
@@ -124,6 +163,7 @@ public sealed partial class MainPage
             Osd.Margin.Bottom + height + Motion.Token("AetherSizeOsdGap"));
         UpdateToastPlacement();
         PlaceRail();
+        UpdateSubtitleLift();
     }
 
     // Tabbing onto any transport control grows the card; the buttons only take focus from the keyboard.
