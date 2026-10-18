@@ -1,4 +1,6 @@
 using Aether_App.Controls;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
@@ -31,6 +33,8 @@ public sealed partial class SettingsView : UserControl
         if (ContentFrame.CurrentSourcePageType != section.PageType)
         {
             ContentFrame.Navigate(section.PageType, null, new SuppressNavigationTransitionInfo());
+            // Screen readers announce the page root by this name; the visible title above is a separate element.
+            AutomationProperties.SetName((DependencyObject)ContentFrame.Content, section.Title);
             ContentScroller.ChangeView(null, 0, null, disableAnimation: true);
             if (IsLoaded)
             {
