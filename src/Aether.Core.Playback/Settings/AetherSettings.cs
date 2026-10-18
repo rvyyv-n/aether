@@ -119,6 +119,14 @@ public sealed record AetherSettings
     /// <summary>Largest clip a Precise export may produce, in megabytes (1 MB = 1,000,000 bytes); 0 means no limit.</summary>
     public int ClipSizeLimitMb { get; init; }
 
+    // Look (video flyout), kept as last used
+    /// <summary>The colour grade: <c>none</c>, a built-in id such as <c>warm</c>, or <c>user:</c> and a file name from the looks folder.</summary>
+    public string LookGrade { get; init; } = "none";
+    /// <summary>Sharpen amount, 0 (off) to 100.</summary>
+    public int LookSharpen { get; init; }
+    /// <summary>Film grain amount, 0 (off) to 100.</summary>
+    public int LookGrain { get; init; }
+
     // Shortcuts: empty means the default keys, "None" unbound, otherwise e.g. "Ctrl+O" or "F, F11" (see ShortcutMap).
     public string ShortcutOpenFile { get; init; } = "";
     public string ShortcutOpenUrl { get; init; } = "";

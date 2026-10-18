@@ -1596,4 +1596,52 @@
   <data name="Clips_EncX264Long" xml:space="preserve">
     <value>the processor (x264)</value>
   </data>
+  <data name="Video_Look" xml:space="preserve">
+    <value>Look</value>
+  </data>
+  <data name="Video_LookGrade" xml:space="preserve">
+    <value>Grade</value>
+  </data>
+  <data name="Video_GradeNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Video_GradeWarm" xml:space="preserve">
+    <value>Warm</value>
+  </data>
+  <data name="Video_GradeCool" xml:space="preserve">
+    <value>Cool</value>
+  </data>
+  <data name="Video_GradeVivid" xml:space="preserve">
+    <value>Vivid</value>
+  </data>
+  <data name="Video_GradeTealOrange" xml:space="preserve">
+    <value>Teal and orange</value>
+  </data>
+  <data name="Video_GradeFadedFilm" xml:space="preserve">
+    <value>Faded film</value>
+  </data>
+  <data name="Video_GradeBlackWhite" xml:space="preserve">
+    <value>Black and white</value>
+  </data>
+  <data name="Video_AddLook" xml:space="preserve">
+    <value>Add a look…</value>
+  </data>
+  <data name="Video_OpenLooksFolder" xml:space="preserve">
+    <value>Open looks folder</value>
+  </data>
+  <data name="Video_Sharpen" xml:space="preserve">
+    <value>Sharpen</value>
+  </data>
+  <data name="Video_Grain" xml:space="preserve">
+    <value>Grain</value>
+  </data>
+  <data name="Video_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Video_ResetLook" xml:space="preserve">
+    <value>Reset look</value>
+  </data>
+  <data name="Toast_LookInvalid" xml:space="preserve">
+    <value>That file isn't a 3D LUT (.cube)</value>
+  </data>
 </root>
