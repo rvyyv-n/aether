@@ -20,6 +20,81 @@
         CornerRadius="12">
         <StackPanel>
             <StackPanel x:Name="DrawerArea" Visibility="Collapsed">
+                <Grid
+                    x:Name="OptionsBlock"
+                    Padding="9,8,6,8"
+                    ColumnSpacing="12"
+                    RowSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="160" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        x:Name="ModeLabel"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                    <ListBox
+                        x:Name="ModeList"
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        SelectionChanged="OnModeChanged"
+                        Style="{StaticResource AetherSegmentedStyle}" />
+
+                    <TextBlock
+                        x:Name="SizeLabel"
+                        Grid.Row="1"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                    <ComboBox
+                        x:Name="SizeCombo"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        MinWidth="0"
+                        HorizontalAlignment="Stretch"
+                        SelectionChanged="OnSizeChanged"
+                        Style="{StaticResource AetherSettingsComboStyle}" />
+
+                    <StackPanel
+                        x:Name="CustomRow"
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Visibility="Collapsed">
+                        <TextBox
+                            x:Name="CustomBox"
+                            Width="72"
+                            BeforeTextChanging="OnCustomBeforeTextChanging"
+                            InputScope="Number"
+                            LostFocus="OnCustomLostFocus"
+                            MaxLength="4"
+                            Style="{StaticResource AetherSettingsTextBoxStyle}"
+                            TextChanged="OnCustomTextChanged" />
+                        <TextBlock
+                            x:Name="CustomUnit"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource AetherCaptionTextStyle}" />
+                    </StackPanel>
+
+                    <TextBlock
+                        x:Name="HintText"
+                        Grid.Row="3"
+                        Grid.ColumnSpan="2"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        TextWrapping="Wrap" />
+                </Grid>
+                <Border
+                    Height="1"
+                    Margin="-3,0,-3,0"
+                    Background="{StaticResource AetherStrokeDividerBrush}" />
                 <ScrollViewer
                     x:Name="RowsScroller"
                     HorizontalScrollMode="Disabled"

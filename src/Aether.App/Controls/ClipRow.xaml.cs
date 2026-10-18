@@ -1,5 +1,7 @@
 using System.Globalization;
+using Aether.Core.Playback;
 using Aether.Core.Playback.Clips;
+using Aether.PvP.Review.Clipping;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -24,6 +26,7 @@ public sealed partial class ClipRow : UserControl
 
     private bool _hovered;
     private bool _focused;
+    private bool _exporting;
 
     private ClipRow()
     {
@@ -49,15 +52,19 @@ public sealed partial class ClipRow : UserControl
         }
         else
         {
-            DetailsText.Text = ClipDisplay.Details(clip, now, CultureInfo.CurrentCulture, AppStrings.Get("Clips_Yesterday"));
+            DetailsText.Text = ClipDisplay.Details(clip, now, CultureInfo.CurrentCulture, AppStrings.Get("Clips_Yesterday"), ClipEncoderNames.Short(clip.Encoder));
+            ToolTipService.SetToolTip(DetailsText, ClipEncoderNames.Long(clip.Encoder));
             Thumbnail.Source = thumbnail;
             Root.CanDrag = true;
         }
         AutomationProperties.SetName(this, $"{NameText.Text}, {DetailsText.Text}");
     }
 
-    /// <summary>An export still running (<paramref name="failed"/> false) or one that failed.</summary>
-    public ClipRow(string name, bool failed)
+    /// <summary>
+    /// An export still running (<paramref name="failed"/> false) or one that failed; <paramref name="failedText"/>
+    /// replaces the usual failure line.
+    /// </summary>
+    public ClipRow(string name, bool failed, string? failedText = null)
         : this()
     {
         NameText.Text = name;
@@ -65,17 +72,38 @@ public sealed partial class ClipRow : UserControl
         if (failed)
         {
             Glyph.Glyph = MissingGlyph;
-            DetailsText.Text = AppStrings.Get("Clips_Failed");
+            DetailsText.Text = failedText ?? AppStrings.Get("Clips_Failed");
         }
         else
         {
+            _exporting = true;
             DetailsText.Visibility = Visibility.Collapsed;
             Progress.Visibility = Visibility.Visible;
-            DismissButton.Visibility = Visibility.Collapsed;
+            AutomationProperties.SetName(Progress, AppStrings.Get("Clips_ProgressName"));
+            Label(DismissButton, "Clips_CancelExport");
+            Actions.Opacity = 1;
             AutomationProperties.SetName(this, $"{name}, {AppStrings.Get("Clips_Saving")}");
             return;
         }
         AutomationProperties.SetName(this, $"{NameText.Text}, {DetailsText.Text}");
+    }
+
+    /// <summary>Shows how far a running Precise export has got; the bar is indeterminate until the first real fraction.</summary>
+    public void SetProgress(ClipProgress progress)
+    {
+        if (progress.Fraction <= 0)
+        {
+            return;
+        }
+        double fraction = Math.Min(progress.Fraction, 1);
+        Progress.IsIndeterminate = false;
+        Progress.Maximum = 1;
+        Progress.Value = fraction;
+        int percent = (int)(fraction * 100);
+        DetailsText.Text = progress.Remaining is { } left
+            ? string.Format(CultureInfo.CurrentCulture, AppStrings.Get("Clips_SavingProgress"), percent, Timecode.FormatClock(left.TotalSeconds, left.TotalSeconds))
+            : string.Format(CultureInfo.CurrentCulture, AppStrings.Get("Clips_SavingPercent"), percent);
+        DetailsText.Visibility = Visibility.Visible;
     }
 
     /// <summary>Fills the thumbnail once it has loaded.</summary>
@@ -85,6 +113,9 @@ public sealed partial class ClipRow : UserControl
     public SavedClip? Saved { get; }
 
     public event EventHandler? DismissRequested;
+
+    /// <summary>Cancel was clicked on a running export.</summary>
+    public event EventHandler? CancelRequested;
 
     public event EventHandler? ShowInFolderRequested;
 
@@ -142,7 +173,8 @@ public sealed partial class ClipRow : UserControl
 
     private void OnFolderClick(object sender, RoutedEventArgs e) => ShowInFolderRequested?.Invoke(this, EventArgs.Empty);
 
-    private void OnDismissClick(object sender, RoutedEventArgs e) => DismissRequested?.Invoke(this, EventArgs.Empty);
+    private void OnDismissClick(object sender, RoutedEventArgs e) =>
+        (_exporting ? CancelRequested : DismissRequested)?.Invoke(this, EventArgs.Empty);
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
@@ -164,7 +196,7 @@ public sealed partial class ClipRow : UserControl
 
     private void ShowActions()
     {
-        bool shown = _hovered || _focused;
+        bool shown = _exporting || _hovered || _focused;
         Actions.Opacity = shown ? 1 : 0;
         Root.Background = _hovered ? Brush("AetherFillSubtleHoverBrush") : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
     }

@@ -64,6 +64,8 @@ public static class SettingKeys
     public const string SkipDeblocking = "advanced.skipDeblocking";
     public const string CustomMpvOptions = "advanced.customMpvOptions";
     public const string MotionStyle = "advanced.motionStyle";
+    public const string ClipExportMode = "clips.exportMode";
+    public const string ClipSizeLimitMb = "clips.sizeLimitMb";
     public const string ShortcutOpenFile = "shortcuts.openFile";
     public const string ShortcutOpenUrl = "shortcuts.openUrl";
     public const string ShortcutSkipBack = "shortcuts.skipBack";
@@ -237,6 +239,9 @@ public static class SettingDefinitions
         Choice(SettingKeys.SkipDeblocking, s => s.SkipDeblocking, (s, v) => s with { SkipDeblocking = v }, true, "default", "nonref", "nonkey", "all"),
         Text(SettingKeys.CustomMpvOptions, s => s.CustomMpvOptions, (s, v) => s with { CustomMpvOptions = v }, restart: true),
         Choice(SettingKeys.MotionStyle, s => s.MotionStyle, (s, v) => s with { MotionStyle = v }, false, "quick", "springy"),
+
+        Choice(SettingKeys.ClipExportMode, s => s.ClipExportMode, (s, v) => s with { ClipExportMode = v }, false, "fast", "precise"),
+        Range(SettingKeys.ClipSizeLimitMb, s => s.ClipSizeLimitMb, (s, v) => s with { ClipSizeLimitMb = v }, 0, 4000),
 
         Shortcut(SettingKeys.ShortcutOpenFile, s => s.ShortcutOpenFile, (s, v) => s with { ShortcutOpenFile = v }),
         Shortcut(SettingKeys.ShortcutOpenUrl, s => s.ShortcutOpenUrl, (s, v) => s with { ShortcutOpenUrl = v }),

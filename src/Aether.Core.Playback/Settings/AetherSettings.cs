@@ -113,6 +113,12 @@ public sealed record AetherSettings
     /// <summary>Motion style preview (7.15): <c>quick</c> or <c>springy</c>. Temporary, until the owner picks one.</summary>
     public string MotionStyle { get; init; } = "quick";
 
+    // Clips
+    /// <summary>Clip export mode: <c>fast</c> (stream copy) or <c>precise</c> (re-encode).</summary>
+    public string ClipExportMode { get; init; } = "fast";
+    /// <summary>Largest clip a Precise export may produce, in megabytes (1 MB = 1,000,000 bytes); 0 means no limit.</summary>
+    public int ClipSizeLimitMb { get; init; }
+
     // Shortcuts: empty means the default keys, "None" unbound, otherwise e.g. "Ctrl+O" or "F, F11" (see ShortcutMap).
     public string ShortcutOpenFile { get; init; } = "";
     public string ShortcutOpenUrl { get; init; } = "";

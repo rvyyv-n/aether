@@ -4,8 +4,11 @@ using Aether.Core.Playback.Settings;
 
 namespace Aether.Core.Playback.Clips;
 
-/// <summary>An exported clip in the drawer. <see cref="Length"/> is in seconds.</summary>
-public sealed record SavedClip(string Path, long SizeBytes, double Length, DateTimeOffset SavedAt)
+/// <summary>
+/// An exported clip in the drawer. <see cref="Length"/> is in seconds. <see cref="Encoder"/> names the encoder
+/// of a Precise clip (<c>Nvenc</c>, <c>Qsv</c>, <c>Amf</c> or <c>X264</c>); null for Fast clips and older entries.
+/// </summary>
+public sealed record SavedClip(string Path, long SizeBytes, double Length, DateTimeOffset SavedAt, string? Encoder = null)
 {
     public string Name => System.IO.Path.GetFileName(Path);
 }
@@ -95,6 +98,10 @@ public sealed class ClipShelf(ISettingsStorage storage)
                 writer.WriteNumber("size", clip.SizeBytes);
                 writer.WriteNumber("length", clip.Length);
                 writer.WriteString("saved", clip.SavedAt);
+                if (clip.Encoder is not null)
+                {
+                    writer.WriteString("encoder", clip.Encoder);
+                }
                 writer.WriteEndObject();
             }
             writer.WriteEndArray();
@@ -140,7 +147,11 @@ public sealed class ClipShelf(ISettingsStorage storage)
                         && l.TryGetDouble(out double seconds) && double.IsFinite(seconds) && seconds > 0
                         ? seconds
                         : 0;
-                    result.Add(new SavedClip(path, size, length, savedAt));
+                    string? encoder = entry.TryGetProperty("encoder", out JsonElement e) && e.ValueKind == JsonValueKind.String
+                        && e.GetString() is { Length: > 0 } name
+                        ? name
+                        : null;
+                    result.Add(new SavedClip(path, size, length, savedAt, encoder));
                 }
             }
             return [.. result];

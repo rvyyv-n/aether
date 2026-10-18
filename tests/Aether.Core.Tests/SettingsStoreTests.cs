@@ -640,4 +640,34 @@ public class SettingsStoreTests
             Assert.StartsWith("Settings_HardwareDecoding_", option.ResourceKey);
         }
     }
+
+    [Fact]
+    public void ClipExportChoices_DefaultToFastWithNoLimit_AndSurviveSaveAndLoad()
+    {
+        var storage = new FakeStorage();
+        var first = new SettingsStore(storage);
+        first.Load();
+        Assert.Equal("fast", first.Current.ClipExportMode);
+        Assert.Equal(0, first.Current.ClipSizeLimitMb);
+
+        first.Set(SettingKeys.ClipExportMode, "precise");
+        first.Set(SettingKeys.ClipSizeLimitMb, 25);
+        first.Save();
+
+        var second = new SettingsStore(storage);
+        second.Load();
+        Assert.Equal("precise", second.Current.ClipExportMode);
+        Assert.Equal(25, second.Current.ClipSizeLimitMb);
+    }
+
+    [Fact]
+    public void ClipExportChoices_RefuseValuesOutsideTheirRange()
+    {
+        SettingsStore store = NewStore();
+
+        Assert.False(store.Set(SettingKeys.ClipExportMode, "lossy"));
+        Assert.False(store.Set(SettingKeys.ClipSizeLimitMb, -1));
+        Assert.False(store.Set(SettingKeys.ClipSizeLimitMb, 4001));
+        Assert.True(store.Set(SettingKeys.ClipSizeLimitMb, 4000));
+    }
 }

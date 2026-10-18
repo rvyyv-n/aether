@@ -1509,4 +1509,85 @@
   <data name="Settings_About_TourDescription" xml:space="preserve">
     <value>A quick look at the controls, the side rail, the right-click menu and the keys</value>
   </data>
+  <data name="Clips_Mode" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="Clips_ModeFast" xml:space="preserve">
+    <value>Fast</value>
+  </data>
+  <data name="Clips_ModePrecise" xml:space="preserve">
+    <value>Precise</value>
+  </data>
+  <data name="Clips_SizeLimit" xml:space="preserve">
+    <value>Size limit</value>
+  </data>
+  <data name="Clips_SizeNone" xml:space="preserve">
+    <value>No limit</value>
+  </data>
+  <data name="Clips_SizePreset" xml:space="preserve">
+    <value>{0} MB</value>
+  </data>
+  <data name="Clips_SizeCustom" xml:space="preserve">
+    <value>Custom…</value>
+  </data>
+  <data name="Clips_Megabytes" xml:space="preserve">
+    <value>MB</value>
+  </data>
+  <data name="Clips_HintFast" xml:space="preserve">
+    <value>Fast cuts are instant and lossless, but start on the keyframe before In. Choose Precise to cut on the exact frame, fit a size limit or include the Look.</value>
+  </data>
+  <data name="Clips_HintPrecise" xml:space="preserve">
+    <value>Cuts on the exact frame. Takes longer, and uses the graphics card when it can.</value>
+  </data>
+  <data name="Clips_HintTooSmall" xml:space="preserve">
+    <value>Too small for a clip this long. The smallest is {0} MB.</value>
+  </data>
+  <data name="Clips_ExportTipPrecise" xml:space="preserve">
+    <value>Precise · {0}</value>
+  </data>
+  <data name="Clips_ExportTipNoLimit" xml:space="preserve">
+    <value>no size limit</value>
+  </data>
+  <data name="Clips_ExportTipLimit" xml:space="preserve">
+    <value>up to {0} MB</value>
+  </data>
+  <data name="Clips_SavingProgress" xml:space="preserve">
+    <value>Saving · {0}% · {1} left</value>
+  </data>
+  <data name="Clips_SavingPercent" xml:space="preserve">
+    <value>Saving · {0}%</value>
+  </data>
+  <data name="Clips_CancelExport" xml:space="preserve">
+    <value>Cancel export</value>
+  </data>
+  <data name="Clips_ProgressName" xml:space="preserve">
+    <value>Export progress</value>
+  </data>
+  <data name="Clips_EncNvenc" xml:space="preserve">
+    <value>NVIDIA</value>
+  </data>
+  <data name="Clips_EncQsv" xml:space="preserve">
+    <value>Intel</value>
+  </data>
+  <data name="Clips_EncAmf" xml:space="preserve">
+    <value>AMD</value>
+  </data>
+  <data name="Clips_EncX264" xml:space="preserve">
+    <value>CPU</value>
+  </data>
+  <data name="Clips_EncTip" xml:space="preserve">
+    <value>Encoded by {0}</value>
+  </data>
+  <data name="Clips_EncNvencLong" xml:space="preserve">
+    <value>NVIDIA NVENC</value>
+  </data>
+  <data name="Clips_EncQsvLong" xml:space="preserve">
+    <value>Intel Quick Sync</value>
+  </data>
+  <data name="Clips_EncAmfLong" xml:space="preserve">
+    <value>AMD AMF</value>
+  </data>
+  <data name="Clips_EncX264Long" xml:space="preserve">
+    <value>the processor (x264)</value>
+  </data>
 </root>
