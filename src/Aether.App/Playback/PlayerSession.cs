@@ -50,6 +50,7 @@ public sealed class PlayerSession : IDisposable
             _stepper = new FrameStepper(new MpvFrameStepCommandSender(_context));
             _seekCoalescer = new SeekCoalescer(new MpvSeekCommandSender(_context));
             _dispatcher.CommandReplies = new CompositeCommandReplyHandler(_stepper, _seekCoalescer);
+            _dispatcher.PropertyRequests = new MpvPropertyRequester(_context);
             scheduler.FlushTarget = Flush;
 
             _dispatcher.ObserveAll(_context);

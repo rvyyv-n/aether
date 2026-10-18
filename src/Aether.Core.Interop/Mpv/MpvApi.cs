@@ -43,6 +43,9 @@ public static unsafe partial class MpvApi
     [LibraryImport(LibMpv, EntryPoint = "mpv_get_property_string", StringMarshalling = StringMarshalling.Utf8)]
     public static partial IntPtr GetPropertyString(IntPtr handle, string name);
 
+    [LibraryImport(LibMpv, EntryPoint = "mpv_get_property_async", StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int GetPropertyAsync(IntPtr handle, ulong replyUserdata, string name, MpvFormat format);
+
     [LibraryImport(LibMpv, EntryPoint = "mpv_observe_property", StringMarshalling = StringMarshalling.Utf8)]
     public static partial int ObserveProperty(IntPtr handle, ulong replyUserdata, string name, MpvFormat format);
 

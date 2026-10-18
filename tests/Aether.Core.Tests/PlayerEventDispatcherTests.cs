@@ -608,4 +608,100 @@ public unsafe class PlayerEventDispatcherTests
 
         Assert.Equal(iterations, vm.Position);
     }
+
+    private sealed class FakePropertyRequester : IMpvPropertyRequester
+    {
+        public readonly List<(ulong Id, string Name, MpvFormat Format)> Requests = new();
+        public bool Reject { get; set; }
+
+        public void Request(ulong replyUserdata, string name, MpvFormat format)
+        {
+            if (Reject)
+            {
+                throw new MpvException((int)MpvError.Generic, "mpv_get_property_async");
+            }
+            Requests.Add((replyUserdata, name, format));
+        }
+    }
+
+    private static MpvEvent* AsGetPropertyReply(MpvEvent* evt)
+    {
+        evt->EventId = (int)MpvEventId.GetPropertyReply;
+        return evt;
+    }
+
+    [Fact]
+    public void QueueOverflow_RequestsTheKeyPropertiesAgain()
+    {
+        var requester = new FakePropertyRequester();
+        var dispatcher = new PlayerEventDispatcher(new PlayerViewModel(), new FakeUiFlushScheduler()) { PropertyRequests = requester };
+        using var events = new NativeMpvEvents();
+
+        dispatcher.OnEvent(new MpvEventView(events.CreateQueueOverflow()));
+
+        Assert.Contains(((ulong)PlayerProperty.Pause, "pause", MpvFormat.Flag), requester.Requests);
+        Assert.Contains(((ulong)PlayerProperty.Position, "time-pos", MpvFormat.Double), requester.Requests);
+        Assert.Contains(((ulong)PlayerProperty.Duration, "duration", MpvFormat.Double), requester.Requests);
+        Assert.Contains(((ulong)PlayerProperty.EofReached, "eof-reached", MpvFormat.Flag), requester.Requests);
+        Assert.Contains(((ulong)PlayerProperty.Volume, "volume", MpvFormat.Double), requester.Requests);
+        Assert.Contains(((ulong)PlayerProperty.IdleActive, "idle-active", MpvFormat.Flag), requester.Requests);
+        Assert.Equal(Enum.GetValues<PlayerProperty>().Length, requester.Requests.Count);
+    }
+
+    [Fact]
+    public void QueueOverflow_ReplyValuesReplaceStaleState()
+    {
+        var vm = new PlayerViewModel();
+        var requester = new FakePropertyRequester();
+        var dispatcher = new PlayerEventDispatcher(vm, new FakeUiFlushScheduler()) { PropertyRequests = requester };
+        using var events = new NativeMpvEvents();
+
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyFlag((ulong)PlayerProperty.IdleActive, false)));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyDouble((ulong)PlayerProperty.Position, 10)));
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyDouble((ulong)PlayerProperty.Volume, 100)));
+        dispatcher.Flush();
+
+        dispatcher.OnEvent(new MpvEventView(events.CreateQueueOverflow()));
+        dispatcher.OnEvent(new MpvEventView(AsGetPropertyReply(events.CreatePropertyDouble((ulong)PlayerProperty.Position, 42))));
+        dispatcher.OnEvent(new MpvEventView(AsGetPropertyReply(events.CreatePropertyFlag((ulong)PlayerProperty.Pause, true))));
+        dispatcher.OnEvent(new MpvEventView(AsGetPropertyReply(events.CreatePropertyDouble((ulong)PlayerProperty.Volume, 35))));
+        dispatcher.OnEvent(new MpvEventView(AsGetPropertyReply(events.CreatePropertyDouble((ulong)PlayerProperty.Duration, 90))));
+        dispatcher.Flush();
+
+        Assert.Equal(42, vm.Position);
+        Assert.Equal(90, vm.Duration);
+        Assert.Equal(35, vm.Volume);
+        Assert.True(vm.IsPaused);
+        Assert.Equal(PlaybackStatus.Paused, vm.Status);
+    }
+
+    [Fact]
+    public void QueueOverflow_ClearsALoadingStateWhoseFileLoadedWasDropped()
+    {
+        var vm = new PlayerViewModel();
+        var dispatcher = new PlayerEventDispatcher(vm, new FakeUiFlushScheduler()) { PropertyRequests = new FakePropertyRequester() };
+        using var events = new NativeMpvEvents();
+
+        dispatcher.OnEvent(new MpvEventView(events.CreatePropertyFlag((ulong)PlayerProperty.IdleActive, false)));
+        dispatcher.OnEvent(new MpvEventView(events.CreateStartFile()));
+        dispatcher.Flush();
+        Assert.Equal(PlaybackStatus.Loading, vm.Status);
+
+        dispatcher.OnEvent(new MpvEventView(events.CreateQueueOverflow()));
+        dispatcher.Flush();
+
+        Assert.Equal(PlaybackStatus.Playing, vm.Status);
+    }
+
+    [Fact]
+    public void QueueOverflow_WhileTheCoreShutsDown_DoesNotThrow()
+    {
+        var scheduler = new FakeUiFlushScheduler();
+        var dispatcher = new PlayerEventDispatcher(new PlayerViewModel(), scheduler) { PropertyRequests = new FakePropertyRequester { Reject = true } };
+        using var events = new NativeMpvEvents();
+
+        dispatcher.OnEvent(new MpvEventView(events.CreateQueueOverflow()));
+
+        Assert.Equal(1, scheduler.RequestFlushCount);
+    }
 }

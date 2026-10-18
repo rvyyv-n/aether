@@ -218,6 +218,30 @@ public sealed class MpvContext : IDisposable
         }
     }
 
+    /// <summary>
+    /// <c>mpv_get_property_async</c>: the value arrives on the event loop as <see cref="MpvEventId.GetPropertyReply"/>
+    /// with <see cref="MpvEventView.ReplyUserdata"/> = <paramref name="replyUserdata"/>, read like a property change.
+    /// Never blocks on the core.
+    /// </summary>
+    /// <exception cref="MpvException">mpv rejected the request outright (e.g. the core is shutting down).</exception>
+    public void GetPropertyAsync(ulong replyUserdata, string name, MpvFormat format)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        bool added = false;
+        _handle.DangerousAddRef(ref added);
+        try
+        {
+            MpvException.ThrowIfError(MpvApi.GetPropertyAsync(_handle.DangerousGetHandle(), replyUserdata, name, format), $"mpv_get_property_async({name})");
+        }
+        finally
+        {
+            if (added)
+            {
+                _handle.DangerousRelease();
+            }
+        }
+    }
+
     /// <summary><c>mpv_unobserve_property</c>. Returns how many observers were removed.</summary>
     public int UnobserveProperty(ulong id)
     {

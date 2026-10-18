@@ -55,6 +55,7 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
     private int _dirty;              // 1 while a flush is requested and has not started yet
     private Exception? _fault;
     private volatile IMpvCommandReplyHandler? _commandReplies;
+    private volatile IMpvPropertyRequester? _propertyRequests;
 
     public PlayerEventDispatcher(PlayerViewModel viewModel, IUiFlushScheduler scheduler)
     {
@@ -77,29 +78,48 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
     /// </summary>
     public event EventHandler<Exception>? Faulted;
 
+    /// <summary>What <see cref="ObserveAll"/> observes and a queue overflow re-reads, under the <see cref="PlayerProperty"/> ids.</summary>
+    private static readonly (PlayerProperty Id, string Name, MpvFormat Format)[] Observed =
+    [
+        (PlayerProperty.Position, "time-pos", MpvFormat.Double),
+        (PlayerProperty.Duration, "duration", MpvFormat.Double),
+        (PlayerProperty.Speed, "speed", MpvFormat.Double),
+        (PlayerProperty.Volume, "volume", MpvFormat.Double),
+        (PlayerProperty.ContainerFps, "container-fps", MpvFormat.Double),
+        (PlayerProperty.Pause, "pause", MpvFormat.Flag),
+        (PlayerProperty.EofReached, "eof-reached", MpvFormat.Flag),
+        (PlayerProperty.IdleActive, "idle-active", MpvFormat.Flag),
+        (PlayerProperty.DisplayWidth, "dwidth", MpvFormat.Int64),
+        (PlayerProperty.DisplayHeight, "dheight", MpvFormat.Int64),
+        (PlayerProperty.HwdecCurrent, "hwdec-current", MpvFormat.String),
+        (PlayerProperty.VideoFormat, "video-format", MpvFormat.String),
+        (PlayerProperty.VideoParamsWidth, "video-params/w", MpvFormat.Int64),
+        (PlayerProperty.VideoParamsHeight, "video-params/h", MpvFormat.Int64),
+        (PlayerProperty.EstimatedVfFps, "estimated-vf-fps", MpvFormat.Double),
+        (PlayerProperty.DisplayFps, "display-fps", MpvFormat.Double),
+        (PlayerProperty.DecoderFrameDropCount, "decoder-frame-drop-count", MpvFormat.Int64),
+        (PlayerProperty.FrameDropCount, "frame-drop-count", MpvFormat.Int64),
+        (PlayerProperty.DemuxerCacheDuration, "demuxer-cache-duration", MpvFormat.Double),
+    ];
+
+    /// <summary>
+    /// Re-reads every observed property after <see cref="MpvEventId.QueueOverflow"/>; without it the state stays as
+    /// it was until each property happens to change again.
+    /// </summary>
+    public IMpvPropertyRequester? PropertyRequests
+    {
+        get => _propertyRequests;
+        set => _propertyRequests = value;
+    }
+
     /// <summary>Observes the player properties under their <see cref="PlayerProperty"/> ids. Call before starting the event loop.</summary>
     public void ObserveAll(MpvContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        context.ObserveProperty((ulong)PlayerProperty.Position, "time-pos", MpvFormat.Double);
-        context.ObserveProperty((ulong)PlayerProperty.Duration, "duration", MpvFormat.Double);
-        context.ObserveProperty((ulong)PlayerProperty.Speed, "speed", MpvFormat.Double);
-        context.ObserveProperty((ulong)PlayerProperty.Volume, "volume", MpvFormat.Double);
-        context.ObserveProperty((ulong)PlayerProperty.ContainerFps, "container-fps", MpvFormat.Double);
-        context.ObserveProperty((ulong)PlayerProperty.Pause, "pause", MpvFormat.Flag);
-        context.ObserveProperty((ulong)PlayerProperty.EofReached, "eof-reached", MpvFormat.Flag);
-        context.ObserveProperty((ulong)PlayerProperty.IdleActive, "idle-active", MpvFormat.Flag);
-        context.ObserveProperty((ulong)PlayerProperty.DisplayWidth, "dwidth", MpvFormat.Int64);
-        context.ObserveProperty((ulong)PlayerProperty.DisplayHeight, "dheight", MpvFormat.Int64);
-        context.ObserveProperty((ulong)PlayerProperty.HwdecCurrent, "hwdec-current", MpvFormat.String);
-        context.ObserveProperty((ulong)PlayerProperty.VideoFormat, "video-format", MpvFormat.String);
-        context.ObserveProperty((ulong)PlayerProperty.VideoParamsWidth, "video-params/w", MpvFormat.Int64);
-        context.ObserveProperty((ulong)PlayerProperty.VideoParamsHeight, "video-params/h", MpvFormat.Int64);
-        context.ObserveProperty((ulong)PlayerProperty.EstimatedVfFps, "estimated-vf-fps", MpvFormat.Double);
-        context.ObserveProperty((ulong)PlayerProperty.DisplayFps, "display-fps", MpvFormat.Double);
-        context.ObserveProperty((ulong)PlayerProperty.DecoderFrameDropCount, "decoder-frame-drop-count", MpvFormat.Int64);
-        context.ObserveProperty((ulong)PlayerProperty.FrameDropCount, "frame-drop-count", MpvFormat.Int64);
-        context.ObserveProperty((ulong)PlayerProperty.DemuxerCacheDuration, "demuxer-cache-duration", MpvFormat.Double);
+        foreach ((PlayerProperty id, string name, MpvFormat format) in Observed)
+        {
+            context.ObserveProperty((ulong)id, name, format);
+        }
     }
 
     /// <summary>Event thread.</summary>
@@ -108,6 +128,7 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
         switch (mpvEvent.Id)
         {
             case MpvEventId.PropertyChange:
+            case MpvEventId.GetPropertyReply:
                 if (mpvEvent.TryGetProperty(out MpvPropertyChange change))
                 {
                     OnProperty(change);
@@ -132,10 +153,7 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
                 break;
 
             case MpvEventId.QueueOverflow:
-                // mpv dropped events, so the pending state may be stale. Re-reading the observed
-                // properties needs a command channel (out of scope here); for now just make sure the
-                // UI refreshes. Values correct themselves at the next property change.
-                MarkDirty();
+                OnQueueOverflow();
                 break;
         }
     }
@@ -167,6 +185,37 @@ public sealed class PlayerEventDispatcher : IMpvEventSink
         {
             Faulted?.Invoke(this, fault);
         }
+    }
+
+    /// <summary>
+    /// mpv dropped events, so file-state events may be among them: a lost FileLoaded would leave the player loading
+    /// for good. Forget the file state (idle-active, re-read with the rest, says whether a file is open) and ask for
+    /// every observed value again; the replies arrive as ordinary events. Rare, so the requests' marshalling is fine.
+    /// </summary>
+    private void OnQueueOverflow()
+    {
+        lock (_gate)
+        {
+            _loading = false;
+            _fileEnded = false;
+            _pending = _pending with { Status = DeriveStatus(_pending) };
+        }
+
+        if (_propertyRequests is { } requests)
+        {
+            try
+            {
+                foreach ((PlayerProperty id, string name, MpvFormat format) in Observed)
+                {
+                    requests.Request((ulong)id, name, format);
+                }
+            }
+            catch (Exception exception) when (exception is MpvException or ObjectDisposedException)
+            {
+                // The core is shutting down; there is nothing left to resync.
+            }
+        }
+        MarkDirty();
     }
 
     private void OnProperty(in MpvPropertyChange change)
