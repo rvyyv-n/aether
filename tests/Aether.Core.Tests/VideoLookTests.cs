@@ -38,9 +38,9 @@ public class VideoLookTests
     }
 
     [Fact]
-    public void A_Quote_In_The_Path_Is_Closed_Escaped_And_Reopened()
+    public void A_Quote_In_The_Path_Is_Closed_Escaped_Twice_And_Reopened()
     {
-        Assert.Equal(@"'C\:/it'\''s/a.cube'", VideoLook.QuoteFilterPath(@"C:\it's\a.cube"));
+        Assert.Equal(@"'C\:/it'\\\''s/a.cube'",VideoLook.QuoteFilterPath(@"C:\it's\a.cube"));
     }
 
     [Theory]

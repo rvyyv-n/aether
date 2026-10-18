@@ -118,6 +118,8 @@ public sealed record AetherSettings
     public string ClipExportMode { get; init; } = "fast";
     /// <summary>Largest clip a Precise export may produce, in megabytes (1 MB = 1,000,000 bytes); 0 means no limit.</summary>
     public int ClipSizeLimitMb { get; init; }
+    /// <summary>Whether a Precise clip includes the Video panel Look and colour sliders; Fast cuts never do.</summary>
+    public bool ClipIncludeLook { get; init; } = true;
 
     // Look (video flyout), kept as last used
     /// <summary>The colour grade: <c>none</c>, a built-in id such as <c>warm</c>, or <c>user:</c> and a file name from the looks folder.</summary>

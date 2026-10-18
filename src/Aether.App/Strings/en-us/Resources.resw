@@ -1551,6 +1551,12 @@
   <data name="Clips_HintPrecise" xml:space="preserve">
     <value>Cuts on the exact frame. Takes longer, and uses the graphics card when it can.</value>
   </data>
+  <data name="Clips_BakeLook" xml:space="preserve">
+    <value>Include Look</value>
+  </data>
+  <data name="Clips_HintLookEmpty" xml:space="preserve">
+    <value>The Look is off, so the clip will look like the original.</value>
+  </data>
   <data name="Clips_HintTooSmall" xml:space="preserve">
     <value>Too small for a clip this long. The smallest is {0} MB.</value>
   </data>

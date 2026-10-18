@@ -44,6 +44,7 @@ public sealed partial class ClipDrawer : UserControl
     private int _customMb = DefaultCustomMb;
     private bool _custom;
     private bool _settingUpOptions;
+    private bool _includeLook;
     private long? _tooSmallBytes;
     private readonly CutStartTracker _cutStartTracker = new(new KeyframeProbe(new SystemProcessRunner()));
     private double? _cutStart;
@@ -72,6 +73,12 @@ public sealed partial class ClipDrawer : UserControl
 
     /// <summary>Raised when <see cref="IsOpen"/> or <see cref="IsDraggingOut"/> changes.</summary>
     public event EventHandler? HoldChanged;
+
+    /// <summary>
+    /// The ffmpeg filter chain for the Look and colour sliders the player has set right now, or null when all are at rest.
+    /// Asked for when the options redraw and when a Precise export starts.
+    /// </summary>
+    public Func<string?>? ExportFilterSource { get; set; }
 
     /// <summary>Clear in and out was clicked.</summary>
     public event EventHandler? ClearRequested;
@@ -219,10 +226,12 @@ public sealed partial class ClipDrawer : UserControl
     {
         ModeLabel.Text = AppStrings.Get("Clips_Mode");
         SizeLabel.Text = AppStrings.Get("Clips_SizeLimit");
+        LookLabel.Text = AppStrings.Get("Clips_BakeLook");
         CustomUnit.Text = AppStrings.Get("Clips_Megabytes");
         AutomationProperties.SetName(ModeList, ModeLabel.Text);
         AutomationProperties.SetName(SizeCombo, SizeLabel.Text);
         AutomationProperties.SetName(CustomBox, SizeLabel.Text);
+        AutomationProperties.SetName(LookToggle, LookLabel.Text);
 
         ModeList.Items.Add(new ListBoxItem { Content = AppStrings.Get("Clips_ModeFast"), Tag = ExportMode.Fast });
         ModeList.Items.Add(new ListBoxItem { Content = AppStrings.Get("Clips_ModePrecise"), Tag = ExportMode.Precise });
@@ -238,6 +247,7 @@ public sealed partial class ClipDrawer : UserControl
         AetherSettings settings = App.Settings.Current;
         _mode = settings.ClipExportMode == "precise" ? ExportMode.Precise : ExportMode.Fast;
         _limitMb = settings.ClipSizeLimitMb;
+        _includeLook = settings.ClipIncludeLook;
         _custom = _limitMb > 0 && Array.IndexOf(PresetMb, _limitMb) < 0;
         if (_custom)
         {
@@ -247,6 +257,7 @@ public sealed partial class ClipDrawer : UserControl
         _settingUpOptions = true;
         ModeList.SelectedIndex = _mode == ExportMode.Precise ? 1 : 0;
         SizeCombo.SelectedIndex = _custom ? PresetMb.Length : Array.IndexOf(PresetMb, _limitMb);
+        LookToggle.IsOn = _includeLook;
         CustomBox.Text = _customMb.ToString(CultureInfo.CurrentCulture);
         _settingUpOptions = false;
         RenderOptionsBlock();
@@ -263,12 +274,18 @@ public sealed partial class ClipDrawer : UserControl
         bool precise = _mode == ExportMode.Precise;
         SizeCombo.IsEnabled = precise;
         CustomBox.IsEnabled = precise;
+        LookToggle.IsEnabled = precise;
         CustomRow.Visibility = Show(_custom);
         _tooSmallBytes = precise && _range.IsComplete ? ClipSizeLimit.MinimumIfTooSmall(_limitMb, _range.Length) : null;
 
-        string hint = _tooSmallBytes is { } tooSmall
-            ? TooSmallText(tooSmall)
-            : AppStrings.Get(precise ? "Clips_HintPrecise" : "Clips_HintFast");
+        bool lookEmpty = precise && _includeLook && ExportFilterSource?.Invoke() is null;
+        string hint = ClipDisplay.Hint(precise, _tooSmallBytes is not null, _includeLook, lookEmpty) switch
+        {
+            ClipHint.TooSmall => TooSmallText(_tooSmallBytes!.Value),
+            ClipHint.LookEmpty => AppStrings.Get("Clips_HintLookEmpty"),
+            ClipHint.Precise => AppStrings.Get("Clips_HintPrecise"),
+            _ => AppStrings.Get("Clips_HintFast"),
+        };
         if (CutStartToShow() is { } start)
         {
             hint += string.Format(CultureInfo.CurrentCulture, AppStrings.Get("Clips_HintFastOffset"), CutStart.Format(_range.In!.Value - start));
@@ -308,6 +325,17 @@ public sealed partial class ClipDrawer : UserControl
             CustomBox.Text = _customMb.ToString(CultureInfo.CurrentCulture);
         }
         App.Settings.Set(SettingKeys.ClipSizeLimitMb, _limitMb);
+        RenderOptions();
+    }
+
+    private void OnLookToggled(object sender, RoutedEventArgs e)
+    {
+        if (_settingUpOptions)
+        {
+            return;
+        }
+        _includeLook = LookToggle.IsOn;
+        App.Settings.Set(SettingKeys.ClipIncludeLook, _includeLook);
         RenderOptions();
     }
 
@@ -363,6 +391,7 @@ public sealed partial class ClipDrawer : UserControl
         }
 
         RowsScroller.ChangeView(null, 0, null, disableAnimation: true);
+        RenderOptionsBlock(); // the Look may have changed since the drawer was last open
         RenderChip();
         HoldChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -413,7 +442,8 @@ public sealed partial class ClipDrawer : UserControl
         RenderRows();
 
         var request = new ClipRequest(source, _range.In!.Value, _range.Out!.Value, ClipDisplay.DefaultFolder(), pending.Name,
-            _mode, precise ? ClipSizeLimit.ToBytes(_limitMb) : null);
+            _mode, precise ? ClipSizeLimit.ToBytes(_limitMb) : null,
+            VideoFilterChain: precise && _includeLook ? ExportFilterSource?.Invoke() : null);
         double length = _range.Length;
         // Created here, so its updates arrive on the UI thread.
         IProgress<ClipProgress>? progress = precise ? new Progress<ClipProgress>(p => OnExportProgress(pending, p)) : null;

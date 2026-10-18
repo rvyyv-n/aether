@@ -86,6 +86,37 @@ public sealed record VideoAdjustments(
         ];
     }
 
+    /// <summary>
+    /// The four colour sliders as ffmpeg's <c>eq</c> filter, for the Precise clip export; null when all are 0. Brightness is
+    /// an offset of value/100 as in mpv, contrast and saturation scale by 1 + value/100, and gamma is 8^(value/100) as in
+    /// mpv, so +100 gives 8 and -100 gives 1/8, inside eq's 0.1 to 10. Contrast pivots on mid-grey here and on black in
+    /// mpv, so the match is close rather than exact. Only the values that differ are written.
+    /// </summary>
+    public string? FfmpegColourFilter()
+    {
+        VideoAdjustments v = Clamped();
+        List<string> options = [];
+        if (v.Brightness != 0)
+        {
+            options.Add($"brightness={Number(v.Brightness / 100.0)}");
+        }
+        if (v.Contrast != 0)
+        {
+            options.Add($"contrast={Number(1 + v.Contrast / 100.0)}");
+        }
+        if (v.Gamma != 0)
+        {
+            options.Add($"gamma={Number(Math.Pow(8, v.Gamma / 100.0))}");
+        }
+        if (v.Saturation != 0)
+        {
+            options.Add($"saturation={Number(1 + v.Saturation / 100.0)}");
+        }
+        return options.Count == 0 ? null : "eq=" + string.Join(":", options);
+    }
+
+    private static string Number(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
+
     /// <summary>The size the picture takes on screen: mpv's <c>dwidth</c> and <c>dheight</c> ignore the flyout's rotation, so a quarter turn swaps them.</summary>
     public static (int Width, int Height) DisplaySize(int width, int height, int rotation) =>
         NormalizeRotation(rotation) % 180 == 90 ? (height, width) : (width, height);

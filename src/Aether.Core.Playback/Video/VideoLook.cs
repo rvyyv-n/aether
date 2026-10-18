@@ -109,7 +109,10 @@ public sealed record VideoLook(
     public static string HardwareDecoder(string configured, bool filtersActive) =>
         filtersActive && configured is not ("no" or CopyBackDecoder) ? CopyBackDecoder : configured;
 
-    /// <summary>lavfi wants backslashes as slashes, the drive colon escaped and the path in single quotes (a quote inside is closed, escaped and reopened).</summary>
+    /// <summary>
+    /// lavfi wants backslashes as slashes, the drive colon escaped and the path in single quotes. A quote inside is closed,
+    /// escaped twice and reopened: the filter graph and then the option are each unquoted, and a single escape loses the quote.
+    /// </summary>
     internal static string QuoteFilterPath(string path)
     {
         string slashed = path.Replace('\\', '/');
@@ -117,7 +120,18 @@ public sealed record VideoLook(
         {
             slashed = string.Concat(slashed.AsSpan(0, 1), "\\:", slashed.AsSpan(2));
         }
-        return "'" + slashed.Replace("'", "'\\''") + "'";
+        return "'" + slashed.Replace("'", "'\\\\\\''") + "'";
+    }
+
+    /// <summary>
+    /// The chain for a Precise clip: this look, then the colour sliders as an <c>eq</c> filter. Null when both are at rest,
+    /// so the export is left as it was. The look runs first, as in playback, where mpv adds the sliders after its filters.
+    /// </summary>
+    public string? ExportFilter(string? lutPath, VideoAdjustments colours)
+    {
+        string look = FilterChain(lutPath);
+        string? eq = colours.FfmpegColourFilter();
+        return look.Length == 0 ? eq : eq is null ? look : $"{look},{eq}";
     }
 
     private static string? DenoiseParameters(DenoiseLevel level) => level switch

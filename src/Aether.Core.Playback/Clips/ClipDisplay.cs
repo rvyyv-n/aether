@@ -19,6 +19,21 @@ public enum ClipChipMode
     ExportUnavailable,
 }
 
+/// <summary>The line under the drawer's export options (screen 10.1); the first match wins.</summary>
+public enum ClipHint
+{
+    /// <summary>Fast: explains the keyframe start and that Precise is needed for filters.</summary>
+    Fast,
+
+    /// <summary>Precise, but the size limit is too small for the clip.</summary>
+    TooSmall,
+
+    /// <summary>Precise with Include Look on, but the Look and sliders are all at rest.</summary>
+    LookEmpty,
+
+    Precise,
+}
+
 /// <summary>The parts of the clip chip and drawer rows (5.3, 5.4) that do not depend on the strings file.</summary>
 public static class ClipDisplay
 {
@@ -26,6 +41,12 @@ public static class ClipDisplay
     public const int VisibleRows = 3;
 
     private static readonly string[] Units = ["KB", "MB", "GB", "TB"];
+
+    public static ClipHint Hint(bool precise, bool tooSmall, bool includeLook, bool lookIsEmpty) =>
+        !precise ? ClipHint.Fast
+        : tooSmall ? ClipHint.TooSmall
+        : includeLook && lookIsEmpty ? ClipHint.LookEmpty
+        : ClipHint.Precise;
 
     public static ClipChipMode Chip(ClipRange range, int savedClips, bool ffmpegAvailable) =>
         range.IsComplete && range.Length > 0

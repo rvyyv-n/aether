@@ -16,5 +16,7 @@ public record ClipRequest(
     string ClipNamePrefix = "Aether_PvP_Clip",
     ExportMode Mode = ExportMode.Fast,
     long? TargetSizeBytes = null,
-    VideoEncoder? PreferredEncoder = null
+    VideoEncoder? PreferredEncoder = null,
+    // Raw ffmpeg filter chain for -vf (the Look and colour sliders); Precise only, since a stream copy cannot filter.
+    string? VideoFilterChain = null
 );

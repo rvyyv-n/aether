@@ -66,6 +66,7 @@ public static class SettingKeys
     public const string MotionStyle = "advanced.motionStyle";
     public const string ClipExportMode = "clips.exportMode";
     public const string ClipSizeLimitMb = "clips.sizeLimitMb";
+    public const string ClipIncludeLook = "clips.includeLook";
     public const string LookGrade = "look.grade";
     public const string LookSharpen = "look.sharpen";
     public const string LookGrain = "look.grain";
@@ -246,6 +247,7 @@ public static class SettingDefinitions
 
         Choice(SettingKeys.ClipExportMode, s => s.ClipExportMode, (s, v) => s with { ClipExportMode = v }, false, "fast", "precise"),
         Range(SettingKeys.ClipSizeLimitMb, s => s.ClipSizeLimitMb, (s, v) => s with { ClipSizeLimitMb = v }, 0, 4000),
+        Flag(SettingKeys.ClipIncludeLook, s => s.ClipIncludeLook, (s, v) => s with { ClipIncludeLook = v }),
 
         Text(SettingKeys.LookGrade, s => s.LookGrade, (s, v) => s with { LookGrade = v }),
         Range(SettingKeys.LookSharpen, s => s.LookSharpen, (s, v) => s with { LookSharpen = v }, 0, 100),

@@ -24,6 +24,10 @@ public static class ReEncodeArgumentsBuilder
             "-c:v", encoder.FfmpegName()
         };
 
+        // Filters run on CPU frames before any encoder, so hardware ones need no special case; -pix_fmt converts afterwards.
+        if (request.VideoFilterChain is { Length: > 0 } filters)
+            args.AddRange(["-vf", filters]);
+
         if (videoBitsPerSecond is { } bitrate)
         {
             string rate = bitrate.ToString(CultureInfo.InvariantCulture);

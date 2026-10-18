@@ -40,6 +40,14 @@ public sealed partial class MainPage
         VideoPanel.LookChanged += (_, look) => ApplyLook(look);
         VideoPanel.AddLookRequested += (_, _) => _ = AddLookAsync();
         VideoPanel.OpenLooksFolderRequested += (_, _) => _ = OpenLooksFolderAsync();
+        ClipDrawer.ExportFilterSource = ExportFilterChain;
+    }
+
+    /// <summary>What a Precise clip bakes in: the saved Look and the colour sliders as playback has them, or null when all are at rest.</summary>
+    private string? ExportFilterChain()
+    {
+        VideoLook look = CurrentLook;
+        return look.ExportFilter(_looks.ResolvePath(look.Grade), _video ?? VideoAdjustments.FromSettings(App.Settings.Current));
     }
 
     /// <summary>The menu closes after this click, and its Closed handler opens the flyout, so the two holds do not cross.</summary>

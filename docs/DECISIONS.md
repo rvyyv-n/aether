@@ -212,3 +212,12 @@
   - **Quality:** the list comes from the formats yt-dlp already reports; the choice is remembered globally (`streaming.qualityChoice`, empty = Auto) and falls back to the nearest lower size. A switch re-resolves the link with a format override and reopens at the same position while the old stream keeps playing.
   - **Subtitles:** a link's own subtitle tracks are added after load. Automatic captions are kept only for the video's own language (or the preferred language), because YouTube lists one per translation language.
 - **Status:** Accepted. Needs an on-screen check: link sound, resume, chapter marks and keys, quality switch, Skip button and toasts.
+
+## ADR-0024: Baking the Look Into Precise Clips (10.8)
+- **Context:** A Precise clip is re-encoded, so it can carry the Video panel's picture settings. Playback does them in mpv (the Look through `lavfi`, the four colour sliders in its renderer); the clip needs the same result from ffmpeg.
+- **Decision:**
+  - One recipe in the core: `VideoLook.ExportFilter` gives the Look's chain followed by an `eq` filter for the colour sliders, or null when everything is at rest. The request carries it as `ClipRequest.VideoFilterChain`, and the Precise builder adds `-vf` for every encoder. Filters run on CPU frames before the encoder, so hardware encoders need no special case. Fast never passes it.
+  - `eq` mapping, measured against ffmpeg: brightness is value/100 (the design note's halving made the clip too dull against mpv), contrast and saturation are 1 + value/100, and gamma is 8^(value/100) as in mpv, which stays inside eq's 0.1 to 10. Contrast pivots on mid-grey in ffmpeg and on black in mpv, so very high contrast differs slightly; accepted.
+  - A quote in a LUT path needs two levels of escaping (`'\\''`), because ffmpeg unquotes the filter graph and then the option. The old single escape silently dropped the apostrophe, so playback and export now share the corrected form.
+  - Include Look is the `clips.includeLook` setting, on by default, and uses the Look and sliders as playback has them when the export starts.
+- **Status:** Accepted. Needs an on-screen check of a graded clip against playback.

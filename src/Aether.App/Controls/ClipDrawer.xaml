@@ -34,6 +34,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock
@@ -85,8 +86,20 @@
                     </StackPanel>
 
                     <TextBlock
-                        x:Name="HintText"
+                        x:Name="LookLabel"
                         Grid.Row="3"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                    <ToggleSwitch
+                        x:Name="LookToggle"
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        Style="{StaticResource AetherSettingsToggleStyle}"
+                        Toggled="OnLookToggled" />
+
+                    <TextBlock
+                        x:Name="HintText"
+                        Grid.Row="4"
                         Grid.ColumnSpan="2"
                         Style="{StaticResource AetherCaptionTextStyle}"
                         TextWrapping="Wrap" />
