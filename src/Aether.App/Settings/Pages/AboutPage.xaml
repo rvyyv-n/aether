@@ -13,7 +13,6 @@
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
     </Page.Resources>
-    <StackPanel Spacing="24">
     <settings:SettingsGroup>
         <settings:SettingsRow x:Name="EngineRow" Glyph="&#xE950;" VerticalContentAlignment="Top">
             <settings:SettingsRow.Note>
@@ -102,12 +101,14 @@
                 <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{StaticResource AetherTextSecondaryBrush}" Glyph="&#xE8A7;" />
             </Grid>
         </Button>
+        <settings:SettingsExpander x:Name="CreditExpander" Glyph="&#xE946;">
+            <settings:SettingsRow x:Name="CreditVersionRow">
+                <TextBlock x:Name="CreditVersion" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherBodyTextStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="CreditPrivacyRow" />
+            <settings:SettingsRow x:Name="CreditLinkRow">
+                <HyperlinkButton x:Name="CreditLink" />
+            </settings:SettingsRow>
+        </settings:SettingsExpander>
     </settings:SettingsGroup>
-    <StackPanel HorizontalAlignment="Center" Padding="0,8,0,16" Spacing="4">
-        <TextBlock x:Name="CardName" HorizontalAlignment="Center" Style="{StaticResource AetherBodyTextStyle}" />
-        <TextBlock x:Name="CardVersion" HorizontalAlignment="Center" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" />
-        <TextBlock x:Name="CardTagline" HorizontalAlignment="Center" Margin="0,8,0,0" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" />
-        <HyperlinkButton x:Name="CardLink" HorizontalAlignment="Center" />
-    </StackPanel>
-    </StackPanel>
 </Page>
