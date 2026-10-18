@@ -50,6 +50,28 @@ public class FolderPlaylistTests
     }
 
     [Fact]
+    public void Previous_Goes_Back_In_The_Same_Order()
+    {
+        string[] files = Files("ep10.mkv", "ep1.mkv", "ep2.mkv");
+
+        Assert.Equal(Dir + "ep2.mkv", FolderPlaylist.PreviousBefore(Dir + "ep10.mkv", files));
+        Assert.Equal(Dir + "ep1.mkv", FolderPlaylist.PreviousBefore(Dir + "ep2.mkv", files));
+        Assert.Null(FolderPlaylist.PreviousBefore(Dir + "ep1.mkv", files));
+    }
+
+    [Fact]
+    public void Neighbours_Are_Missing_At_The_Ends_And_For_Unlisted_Files()
+    {
+        string[] files = Files("a.mp4", "b.mp4", "c.mp4");
+
+        Assert.Equal(new FolderNeighbours(null, Dir + "b.mp4"), FolderPlaylist.NeighboursOf(Dir + "a.mp4", files));
+        Assert.Equal(new FolderNeighbours(Dir + "a.mp4", Dir + "c.mp4"), FolderPlaylist.NeighboursOf(Dir + "b.mp4", files));
+        Assert.Equal(new FolderNeighbours(Dir + "b.mp4", null), FolderPlaylist.NeighboursOf(Dir + "c.mp4", files));
+        Assert.Equal(default, FolderPlaylist.NeighboursOf(Dir + "gone.mp4", files));
+        Assert.Equal(default, FolderPlaylist.NeighboursOf(Dir + "a.mp4", Files("a.mp4")));
+    }
+
+    [Fact]
     public void Sorting_Uses_The_File_Name_Not_The_Folder()
     {
         string[] files = [@"C:\z\a.mp4", @"C:\z\b.mp4"];
