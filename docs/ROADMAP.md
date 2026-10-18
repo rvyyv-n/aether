@@ -300,6 +300,8 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 | 11.12 | Settings sections get accessible names for screen readers | S |
 | 11.13 | Set the app's version and publisher before the first release | S |
 | 11.14 | Taskbar preview: hovering the taskbar icon shows the file name as the title and previous, Play/Pause and next buttons under the live preview, like Spotify's; the buttons follow the player state | M |
+| 11.15 | **Release blocker:** replace the bundled GPL libmpv with an LGPL build (see ADR-0016 and `docs/reviews/third-party-notes.md`), wire it into the packaging scripts and CI, and re-run the playback smoke test (11.7) on it | M |
+| 11.16 | Paste the full GPL-3.0 text into `THIRD_PARTY.md` (it is only a link now) | S |
 
 **Pass 11 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
 
@@ -315,6 +317,7 @@ Design work: Opus asks questions and plans first, Sonnet builds. Check blur over
 | 12.2 | "Native" look beside the current one: Windows 11 Fluent Acrylic panels, the system accent colour and system corner radii for menus, flyouts, sidebar and settings | L |
 | 12.3 | More customisation: accent colour choice, player bar size and opacity, and which controls the bar shows | M |
 | 12.4 | Check both looks in light and dark on a real screen, with video blur against frame drops | S |
+| 12.5 | Phone streaming, fuller version: more features and a more polished pairing flyout and phone page, building on what Pass 11 ships and tests | M |
 
 **v1.1 means:** Aether can follow Windows or be set to light, dark or the native Fluent look, with a few personal touches, without costing smoothness.
 
