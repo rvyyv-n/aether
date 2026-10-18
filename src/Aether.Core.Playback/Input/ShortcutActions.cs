@@ -28,11 +28,15 @@ public static class ShortcutActions
         ShortcutAction.Mute => SettingKeys.ShortcutMute,
         ShortcutAction.Loop => SettingKeys.ShortcutLoop,
         ShortcutAction.AlwaysOnTop => SettingKeys.ShortcutAlwaysOnTop,
+        ShortcutAction.PictureInPicture => SettingKeys.ShortcutPictureInPicture,
         ShortcutAction.Diagnostics => SettingKeys.ShortcutDiagnostics,
         ShortcutAction.Settings => SettingKeys.ShortcutSettings,
         ShortcutAction.CopyFrame => SettingKeys.ShortcutCopyFrame,
         ShortcutAction.SaveFrame => SettingKeys.ShortcutSaveFrame,
         ShortcutAction.ExportClip => SettingKeys.ShortcutExportClip,
+        ShortcutAction.NextChapter => SettingKeys.ShortcutNextChapter,
+        ShortcutAction.PreviousChapter => SettingKeys.ShortcutPreviousChapter,
+        ShortcutAction.Sidebar => SettingKeys.ShortcutSidebar,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 
@@ -67,11 +71,15 @@ public static class ShortcutActions
         ShortcutAction.Mute => [KeyCombination.Letter('M')],
         ShortcutAction.Loop => [KeyCombination.Letter('L')],
         ShortcutAction.AlwaysOnTop => [KeyCombination.Letter('T')],
+        ShortcutAction.PictureInPicture => [KeyCombination.Letter('P')],
         ShortcutAction.Diagnostics => [KeyCombination.Letter('I', KeyModifiers.Ctrl)],
         ShortcutAction.Settings => [new KeyCombination(KeyCombination.OemComma, KeyModifiers.Ctrl)],
         ShortcutAction.CopyFrame => [KeyCombination.Letter('C', KeyModifiers.Ctrl)],
         ShortcutAction.SaveFrame => [KeyCombination.Letter('S', KeyModifiers.Ctrl | KeyModifiers.Shift)],
         ShortcutAction.ExportClip => [KeyCombination.Letter('E', KeyModifiers.Ctrl)],
+        ShortcutAction.NextChapter => [new KeyCombination(KeyCombination.PageDown)],
+        ShortcutAction.PreviousChapter => [new KeyCombination(KeyCombination.PageUp)],
+        ShortcutAction.Sidebar => [KeyCombination.Letter('B')],
         _ => [],
     };
 

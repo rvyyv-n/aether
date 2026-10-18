@@ -13,7 +13,9 @@ public static class YtDlpArgumentsBuilder
         var sb = new StringBuilder();
         sb.Append("--dump-json --no-playlist ");
 
-        string format = MpvSettingsMap.YtdlFormat(options.StreamingQuality, options.PreferGpuDecodableFormats);
+        string format = !string.IsNullOrWhiteSpace(options.FormatSelectorOverride)
+            ? options.FormatSelectorOverride
+            : MpvSettingsMap.YtdlFormat(options.StreamingQuality, options.PreferGpuDecodableFormats);
         if (!string.IsNullOrWhiteSpace(format))
         {
             sb.Append("-f ").Append((char)34).Append(format).Append((char)34).Append(' ');

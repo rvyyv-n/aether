@@ -329,6 +329,104 @@ public class MpvRenderLoopTests
         Assert.True(loop.Stop(3000));
     }
 
+    private static bool HasD3D11Device()
+    {
+        try
+        {
+            using var manager = D3D11DeviceManager.Create();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    [Fact]
+    public void PresenterSwitch_BurstOfResizes_KeepsGenerationOneAndBalancedReleaseAcquire()
+    {
+        if (!HasD3D11Device())
+        {
+            return;
+        }
+
+        var factory = new TestBackendFactory();
+        using var host = new TestRenderLoopHost();
+        using var loop = new MpvRenderLoop(factory, host, new MpvRenderLoopOptions { VSync = false });
+
+        loop.SetTargetSize(1518, 854, 1.0f, 1.0f);
+        loop.Start();
+
+        Assert.True(TestWait.ForCondition(() => loop.State == RenderLoopState.Running && loop.FramesPresented >= 1));
+        var backend = Assert.Single(factory.Backends);
+
+        // Burst of SetTargetSize calls like a presenter switch into PiP
+        loop.SetTargetSize(1518, 854, 1.0f, 1.0f);
+        loop.SetTargetSize(400, 225, 1.0f, 1.0f);
+        loop.SetTargetSize(384, 217, 1.0f, 1.0f);
+        loop.SetTargetSize(400, 225, 1.0f, 1.0f);
+
+        Assert.True(TestWait.ForCondition(() => backend.Presenter.PixelWidth == 400 && backend.Presenter.PixelHeight == 225));
+
+        // Switch back to 1518x854
+        loop.SetTargetSize(1518, 854, 1.0f, 1.0f);
+        Assert.True(TestWait.ForCondition(() => backend.Presenter.PixelWidth == 1518 && backend.Presenter.PixelHeight == 854));
+        Assert.True(TestWait.ForCondition(() => backend.ReleaseCount > 0 && backend.ReleaseCount == backend.AcquireCount));
+
+        Assert.Equal(1, loop.Generation);
+        Assert.Equal(0, loop.DeviceLossCount);
+        Assert.Equal(RenderLoopState.Running, loop.State);
+
+        var events = backend.Events.Where(e => e is "Release" or "Acquire").ToList();
+        Assert.NotEmpty(events);
+        Assert.Equal(0, events.Count % 2);
+        for (int i = 0; i < events.Count; i += 2)
+        {
+            Assert.Equal("Release", events[i]);
+            Assert.Equal("Acquire", events[i + 1]);
+        }
+
+        Assert.True(loop.Stop(3000));
+    }
+
+    [Fact]
+    public void PresenterSwitch_PausedRedrawAfterResize_PresentsFrameWithoutNewVideoFrames()
+    {
+        if (!HasD3D11Device())
+        {
+            return;
+        }
+
+        var factory = new TestBackendFactory();
+        using var host = new TestRenderLoopHost();
+        using var loop = new MpvRenderLoop(factory, host, new MpvRenderLoopOptions { VSync = false });
+
+        loop.SetTargetSize(1518, 854, 1.0f, 1.0f);
+        loop.Start();
+
+        Assert.True(TestWait.ForCondition(() => loop.State == RenderLoopState.Running && loop.FramesPresented >= 1));
+        var backend = Assert.Single(factory.Backends);
+
+        // Switch to PiP size
+        loop.SetTargetSize(400, 225, 1.0f, 1.0f);
+        Assert.True(TestWait.ForCondition(() => backend.Presenter.PixelWidth == 400 && backend.Presenter.PixelHeight == 225));
+        Assert.True(TestWait.ForCondition(() => backend.ReleaseCount > 0 && backend.ReleaseCount == backend.AcquireCount));
+
+        // Request a redraw while "paused" (backend PollFrame returns false, so no new video frames)
+        long framesBefore = loop.FramesPresented;
+        loop.RequestRedraw();
+
+        Assert.True(TestWait.ForCondition(() => loop.FramesPresented > framesBefore));
+        Assert.Equal(1, loop.Generation);
+        Assert.Equal(0, loop.DeviceLossCount);
+        Assert.Equal(RenderLoopState.Running, loop.State);
+        Assert.Equal(backend.ReleaseCount, backend.AcquireCount);
+        Assert.Equal(400u, backend.Presenter.PixelWidth);
+        Assert.Equal(225u, backend.Presenter.PixelHeight);
+
+        Assert.True(loop.Stop(3000));
+    }
+
     private sealed class TestBackendFactory : IVideoRenderBackendFactory
     {
         private readonly List<TestBackend> _backends = new();

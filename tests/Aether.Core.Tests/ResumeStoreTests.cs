@@ -129,4 +129,17 @@ public class ResumeStoreTests
 
         Assert.Null(store.TryGet("a.mp4"));
     }
+
+    [Fact]
+    public void Clear_Forgets_Every_File()
+    {
+        var store = new ResumeStore(new FakeStorage());
+        store.Save("a.mp4", 100, 600, Now);
+        store.Save("b.mp4", 200, 600, Now);
+
+        store.Clear();
+
+        Assert.Empty(store.Entries);
+        Assert.Null(store.TryGet("b.mp4"));
+    }
 }

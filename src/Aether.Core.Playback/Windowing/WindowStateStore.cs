@@ -13,6 +13,9 @@ public sealed class WindowStateStore(ISettingsStorage storage)
 {
     /// <summary>Smaller than this is a corrupt file or a collapsed window, not something to restore.</summary>
     public const int MinSize = 200;
+
+    /// <summary>The picture-in-picture window is smaller; below this it is not restored.</summary>
+    public const int MinPipSize = 100;
     private const int MaxSize = 32768;
     private const int FileVersion = 1;
 
@@ -74,6 +77,15 @@ public sealed class WindowStateStore(ISettingsStorage storage)
             writer.WriteNumber("width", window.Bounds.Width);
             writer.WriteNumber("height", window.Bounds.Height);
             writer.WriteBoolean("maximized", window.IsMaximized);
+            if (window.PictureInPicture is { } pip)
+            {
+                writer.WriteStartObject("pip");
+                writer.WriteNumber("x", pip.X);
+                writer.WriteNumber("y", pip.Y);
+                writer.WriteNumber("width", pip.Width);
+                writer.WriteNumber("height", pip.Height);
+                writer.WriteEndObject();
+            }
             writer.WriteEndObject();
         }
         return Encoding.UTF8.GetString(stream.ToArray());
@@ -90,21 +102,33 @@ public sealed class WindowStateStore(ISettingsStorage storage)
         {
             using JsonDocument document = JsonDocument.Parse(json);
             JsonElement root = document.RootElement;
-            if (root.ValueKind != JsonValueKind.Object
-                || !TryInt(root, "x", out int x) || !TryInt(root, "y", out int y)
-                || !TryInt(root, "width", out int width) || !TryInt(root, "height", out int height)
-                || width < MinSize || height < MinSize || width > MaxSize || height > MaxSize
-                || Math.Abs(x) > MaxSize * 4 || Math.Abs(y) > MaxSize * 4)
+            if (root.ValueKind != JsonValueKind.Object || ParseRect(root, MinSize) is not { } bounds)
             {
                 return null;
             }
             bool maximized = root.TryGetProperty("maximized", out JsonElement m) && m.ValueKind == JsonValueKind.True;
-            return new SavedWindow(new WindowRect(x, y, width, height), maximized);
+            // A bad pip entry only loses the picture-in-picture place, not the window.
+            WindowRect? pip = root.TryGetProperty("pip", out JsonElement p) && p.ValueKind == JsonValueKind.Object
+                ? ParseRect(p, MinPipSize)
+                : null;
+            return new SavedWindow(bounds, maximized, pip);
         }
         catch (JsonException)
         {
             return null;
         }
+    }
+
+    private static WindowRect? ParseRect(JsonElement element, int minSize)
+    {
+        if (!TryInt(element, "x", out int x) || !TryInt(element, "y", out int y)
+            || !TryInt(element, "width", out int width) || !TryInt(element, "height", out int height)
+            || width < minSize || height < minSize || width > MaxSize || height > MaxSize
+            || Math.Abs(x) > MaxSize * 4 || Math.Abs(y) > MaxSize * 4)
+        {
+            return null;
+        }
+        return new WindowRect(x, y, width, height);
     }
 
     private static bool TryInt(JsonElement root, string name, out int value)

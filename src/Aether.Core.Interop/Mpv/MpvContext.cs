@@ -69,6 +69,10 @@ public sealed class MpvContext : IDisposable
             new("idle", "yes"),
             // Stay on the last frame at end of file, so stepping and seeking near the end keep working.
             new("keep-open", "yes"),
+            // The app sizes the video surface to the picture's shape and rounds it to whole pixels, sometimes
+            // stretching it a pixel or two to meet the window edge. Fitting the picture again here would turn
+            // that rounding into a thin black bar along one edge, so fill the surface instead.
+            new("keepaspect", "no"),
         };
         foreach (KeyValuePair<string, string> extra in options.AdditionalOptions)
         {

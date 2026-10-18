@@ -55,6 +55,7 @@ public sealed partial class MainPage
     {
         CtxOpenFile.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenFile);
         CtxOpenUrl.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenUrl);
+        CtxPictureInPicture.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.PictureInPicture);
         CtxAlwaysOnTop.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
         CtxDiagnostics.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Diagnostics);
         CtxSettings.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Settings);
@@ -102,6 +103,7 @@ public sealed partial class MainPage
         CtxCopyFrame.IsEnabled = state.CopyFrame;
         CtxSaveFrame.IsEnabled = state.SaveFrame;
         CtxPictureInPicture.IsEnabled = state.PictureInPicture;
+        CtxPictureInPicture.Text = AppStrings.Get(IsPictureInPicture ? "Pip_BackToFullWindow" : "Menu_PictureInPicture");
         CtxAlwaysOnTop.IsEnabled = state.AlwaysOnTop;
         CtxDiagnostics.IsEnabled = state.Diagnostics;
         CtxSettings.IsEnabled = state.Settings;
@@ -169,7 +171,11 @@ public sealed partial class MainPage
 
     private void OnSettingsMenuClick(object sender, RoutedEventArgs e) => SetSettingsShown(true);
 
-    private void OnClipsMenuClick(object sender, RoutedEventArgs e) => ClipDrawer.Open();
+    private void OnClipsMenuClick(object sender, RoutedEventArgs e)
+    {
+        LeavePictureInPicture();
+        ClipDrawer.Open();
+    }
 
     private void OnSettingsAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {

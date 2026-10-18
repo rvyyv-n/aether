@@ -13,6 +13,8 @@ public readonly record struct KeyCombination(int Key, KeyModifiers Modifiers = K
     private static readonly Dictionary<string, int> ByName = Names.ToDictionary(n => n.Name, n => n.Key, StringComparer.OrdinalIgnoreCase);
 
     public const int Space = 0x20;
+    public const int PageUp = 0x21;
+    public const int PageDown = 0x22;
     public const int Left = 0x25;
     public const int Right = 0x27;
     public const int Escape = 0x1B;
@@ -139,8 +141,8 @@ public readonly record struct KeyCombination(int Key, KeyModifiers Modifiers = K
             (0x0D, "Enter", "Enter"),
             (Escape, "Escape", "Esc"),
             (Space, "Space", "Space"),
-            (0x21, "PageUp", "Page Up"),
-            (0x22, "PageDown", "Page Down"),
+            (PageUp, "PageUp", "Page Up"),
+            (PageDown, "PageDown", "Page Down"),
             (0x23, "End", "End"),
             (0x24, "Home", "Home"),
             (Left, "Left", "←"),

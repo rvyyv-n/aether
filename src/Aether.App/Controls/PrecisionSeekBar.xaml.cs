@@ -1,7 +1,9 @@
 using Aether.Core.Playback;
+using Aether.Core.Playback.Chapters;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
 
 namespace Aether_App.Controls;
@@ -9,13 +11,16 @@ namespace Aether_App.Controls;
 /// <summary>
 /// The transport's seek bar (screen 5, frames 5.1–5.3): hover shows the thumb, a pointer line and a time
 /// bubble; dragging grows the thumb and reports keyframe seeks, and the release reports one exact seek.
-/// The bar also draws the buffered range and the In/Out band. UI thread only.
+/// The bar also draws the buffered range, the In/Out band and a gap at each chapter start, and names the chapter
+/// in the bubble. UI thread only.
 /// </summary>
 public sealed partial class PrecisionSeekBar : UserControl
 {
     private const double ThumbSize = 12;
     private const double DragThumbSize = 16;
     private const double WindowInset = 8; // the bubble keeps clear of the window edges
+    private const double ChapterGap = 2;
+    private const double MinChapterPiece = 6; // closer chapter starts share a piece, so the bar never turns to slivers
 
     private double _duration;
     private double _position;
@@ -24,6 +29,8 @@ public sealed partial class PrecisionSeekBar : UserControl
     private bool _hovering;
     private double _pointerX = double.NaN;
     private double _dragTime;
+    private ChapterList _chapters = ChapterList.Empty;
+    private readonly List<Piece> _pieces = [];
 
     public PrecisionSeekBar()
     {
@@ -102,18 +109,32 @@ public sealed partial class PrecisionSeekBar : UserControl
         }
     }
 
+    /// <summary>The open file's chapters; <see cref="ChapterList.Empty"/> clears the marks.</summary>
+    public ChapterList Chapters
+    {
+        get => _chapters;
+        set
+        {
+            if (value != _chapters)
+            {
+                _chapters = value;
+                Arrange();
+            }
+        }
+    }
+
     private double BarWidth => Root.ActualWidth;
 
     private double X(double seconds) => SeekBarMath.OffsetOf(seconds, BarWidth, _duration);
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        Track.Width = e.NewSize.Width;
         Arrange();
     }
 
     private void Arrange()
     {
+        ArrangePieces();
         ArrangeProgress();
         ArrangeBuffered();
         ArrangeRange();
@@ -123,7 +144,10 @@ public sealed partial class PrecisionSeekBar : UserControl
     private void ArrangeProgress()
     {
         double x = X(IsDragging ? _dragTime : _position);
-        Played.Width = x;
+        foreach (Piece piece in _pieces)
+        {
+            piece.Played.Width = piece.Fill(x);
+        }
         double size = IsDragging ? DragThumbSize : ThumbSize;
         Thumb.Width = size;
         Thumb.Height = size;
@@ -135,12 +159,53 @@ public sealed partial class PrecisionSeekBar : UserControl
     private void ArrangeBuffered()
     {
         bool show = _duration > 0 && double.IsFinite(_bufferedUntil) && _bufferedUntil > 0;
-        Buffered.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
-        if (show)
+        double x = show ? X(_bufferedUntil) : 0;
+        foreach (Piece piece in _pieces)
         {
-            Buffered.Width = X(_bufferedUntil);
+            piece.Buffered.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            piece.Buffered.Width = piece.Fill(x);
         }
     }
+
+    /// <summary>Splits the track into one piece per chapter, reusing the pieces already drawn.</summary>
+    private void ArrangePieces()
+    {
+        double width = BarWidth;
+        var segments = SeekBarMath.ChapterSegments(_chapters.Fractions(_duration), width, ChapterGap, MinChapterPiece);
+        while (_pieces.Count < segments.Count)
+        {
+            var piece = new Piece(
+                Bar("AetherFillProgressTrackBrush"), Bar("AetherFillRangeBrush"), Bar("AetherTextPrimaryBrush"));
+            Pieces.Children.Add(piece.Track);
+            Pieces.Children.Add(piece.Buffered);
+            Pieces.Children.Add(piece.Played);
+            _pieces.Add(piece);
+        }
+        while (_pieces.Count > segments.Count)
+        {
+            Piece piece = _pieces[^1];
+            Pieces.Children.Remove(piece.Track);
+            Pieces.Children.Remove(piece.Buffered);
+            Pieces.Children.Remove(piece.Played);
+            _pieces.RemoveAt(_pieces.Count - 1);
+        }
+        for (int i = 0; i < segments.Count; i++)
+        {
+            Piece piece = _pieces[i];
+            (piece.Start, piece.End) = segments[i];
+            piece.Track.Width = piece.End - piece.Start;
+            Canvas.SetLeft(piece.Track, piece.Start);
+            Canvas.SetLeft(piece.Buffered, piece.Start);
+            Canvas.SetLeft(piece.Played, piece.Start);
+        }
+    }
+
+    private static Border Bar(string brushKey) => new()
+    {
+        Height = 4,
+        CornerRadius = new CornerRadius(2),
+        Background = (Brush)Application.Current.Resources[brushKey],
+    };
 
     private void ArrangeRange()
     {
@@ -187,6 +252,10 @@ public sealed partial class PrecisionSeekBar : UserControl
         }
         double seconds = IsDragging ? _dragTime : SeekBarMath.TimeAt(_pointerX, BarWidth, _duration);
         BubbleText.Text = Timecode.FormatClock(seconds, _duration);
+        int chapter = _chapters.IndexAt(seconds);
+        string title = chapter >= 0 ? _chapters[chapter].Title.Trim() : "";
+        ChapterText.Text = title;
+        ChapterText.Visibility = title.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
         BubblePopup.IsOpen = true;
         Bubble.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         Size size = Bubble.DesiredSize;
@@ -280,5 +349,18 @@ public sealed partial class PrecisionSeekBar : UserControl
     {
         Point p = e.GetCurrentPoint(Root).Position;
         return p.X >= 0 && p.Y >= 0 && p.X <= Root.ActualWidth && p.Y <= Root.ActualHeight;
+    }
+
+    /// <summary>One chapter's stretch of the track, with its own buffered and played fill.</summary>
+    private sealed class Piece(Border track, Border buffered, Border played)
+    {
+        public Border Track { get; } = track;
+        public Border Buffered { get; } = buffered;
+        public Border Played { get; } = played;
+        public double Start { get; set; }
+        public double End { get; set; }
+
+        /// <summary>How much of this piece a fill reaching <paramref name="x"/> covers.</summary>
+        public double Fill(double x) => Math.Clamp(x - Start, 0, End - Start);
     }
 }

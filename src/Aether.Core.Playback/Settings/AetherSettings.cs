@@ -17,6 +17,10 @@ public sealed record AetherSettings
     public bool ResumePlayback { get; init; } = true;
     public bool LoopByDefault { get; init; }
     public bool PlayNextInFolder { get; init; } = true;
+    /// <summary>Skips chapters whose title matches <see cref="ChapterSkipNames"/> (9.7).</summary>
+    public bool ChapterAutoSkip { get; init; }
+    /// <summary>Comma or line separated chapter names to skip, matched as whole words.</summary>
+    public string ChapterSkipNames { get; init; } = "Sponsor, Intro, Outro";
     public bool RememberWindowSize { get; init; } = true;
     public bool AlwaysOnTop { get; init; }
     /// <summary>Keep the display awake while a file plays.</summary>
@@ -75,6 +79,15 @@ public sealed record AetherSettings
     public string SubtitleColor { get; init; } = "white";
     /// <summary><c>bottom</c>, <c>raised</c> or <c>top</c>.</summary>
     public string SubtitlePosition { get; init; } = "bottom";
+    public bool SubtitleBold { get; init; }
+    /// <summary><c>none</c>, <c>thin</c>, <c>normal</c> or <c>thick</c>; normal is mpv's own width.</summary>
+    public string SubtitleOutline { get; init; } = "normal";
+    /// <summary><c>black</c>, <c>gray</c> or <c>white</c>.</summary>
+    public string SubtitleOutlineColor { get; init; } = "black";
+    /// <summary><c>none</c>, <c>soft</c> (see-through box) or <c>solid</c> (opaque box) behind the text.</summary>
+    public string SubtitleBackground { get; init; } = "none";
+    /// <summary>Applies the style above to subtitles that bring their own (styled ASS/SSA), not only to plain ones.</summary>
+    public bool SubtitleOverrideStyled { get; init; }
 
     // Streaming
     /// <summary>Maximum stream height: <c>480p</c>, <c>720p</c>, <c>1080p</c>, <c>1440p</c>, <c>2160p</c> or <c>best</c>.</summary>
@@ -82,6 +95,8 @@ public sealed record AetherSettings
     public bool PreferGpuDecodableFormats { get; init; } = true;
     public bool YtDlpAutoUpdate { get; init; } = true;
     /// <summary>Most data mpv buffers ahead (<c>demuxer-max-bytes</c>), in MiB.</summary>
+    /// <summary>The link quality picker's remembered choice (a <c>QualityOption</c> key); empty means Auto.</summary>
+    public string StreamQualityChoice { get; init; } = "";
     public int NetworkCacheMegabytes { get; init; } = 150;
     /// <summary>mpv <c>http-proxy</c>, e.g. <c>http://host:3128</c>; empty means none.</summary>
     public string HttpProxy { get; init; } = "";
@@ -114,9 +129,13 @@ public sealed record AetherSettings
     public string ShortcutMute { get; init; } = "";
     public string ShortcutLoop { get; init; } = "";
     public string ShortcutAlwaysOnTop { get; init; } = "";
+    public string ShortcutPictureInPicture { get; init; } = "";
     public string ShortcutDiagnostics { get; init; } = "";
     public string ShortcutSettings { get; init; } = "";
     public string ShortcutCopyFrame { get; init; } = "";
     public string ShortcutSaveFrame { get; init; } = "";
     public string ShortcutExportClip { get; init; } = "";
+    public string ShortcutNextChapter { get; init; } = "";
+    public string ShortcutPreviousChapter { get; init; } = "";
+    public string ShortcutSidebar { get; init; } = "";
 }

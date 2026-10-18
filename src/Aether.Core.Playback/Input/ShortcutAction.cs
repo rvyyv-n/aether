@@ -21,9 +21,13 @@ public enum ShortcutAction
     Mute,
     Loop,
     AlwaysOnTop,
+    PictureInPicture,
     Diagnostics,
     Settings,
     CopyFrame,
     SaveFrame,
     ExportClip,
+    NextChapter,
+    PreviousChapter,
+    Sidebar,
 }

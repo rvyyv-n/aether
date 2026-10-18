@@ -22,7 +22,20 @@ public interface IShellWindow
     /// <summary>Raised after the window enters or leaves full screen.</summary>
     event EventHandler? FullScreenChanged;
 
+    /// <summary>Full screen from picture in picture leaves it straight for full screen.</summary>
     void SetFullScreen(bool fullScreen);
+
+    /// <summary>The window is the small always-on-top picture-in-picture overlay (8.1).</summary>
+    bool IsPictureInPicture { get; }
+
+    /// <summary>Raised after the window enters or leaves picture in picture.</summary>
+    event EventHandler? PictureInPictureChanged;
+
+    /// <summary>
+    /// Shrinks the window to the overlay, or returns it to the size, place and full-screen state it had. The
+    /// video keeps playing: nothing in the engine stops or restarts (docs/reviews/pass-8-pip-handover-spec.md).
+    /// </summary>
+    void SetPictureInPicture(bool on);
 
     /// <summary>Keep the window above others. Saved with the settings; applies again after full screen.</summary>
     bool IsAlwaysOnTop { get; }
@@ -76,6 +89,9 @@ public sealed partial class MainWindow : Window, IShellWindow
     private RectInt32? _normalBounds; // where the window sits when neither maximised nor full screen
     private bool _maximized;
     private bool _keepRestoredSize; // the first video does not resize a window the user's last size was restored to
+    private readonly PictureInPicture _pip = new();
+    private WindowRect? _pipBounds; // where the overlay was last, for the next time it opens
+    private double _videoAspect;
 
     public MainWindow()
     {
@@ -170,6 +186,7 @@ public sealed partial class MainWindow : Window, IShellWindow
             presenter.Maximize();
         }
         _keepRestoredSize = true;
+        _pipBounds = saved.PictureInPicture;
         TrackNormalBounds();
     }
 
@@ -191,6 +208,15 @@ public sealed partial class MainWindow : Window, IShellWindow
     // states keep the last normal bounds.
     private void TrackNormalBounds()
     {
+        if (AppWindow.Presenter.Kind == AppWindowPresenterKind.CompactOverlay)
+        {
+            // Mid-switch the overlay still has the presenter's default size, not the place it is about to take.
+            if (!_pip.IsSwitching)
+            {
+                TrackPipBounds();
+            }
+            return;
+        }
         if (AppWindow.Presenter is not OverlappedPresenter presenter)
         {
             return;
@@ -207,14 +233,32 @@ public sealed partial class MainWindow : Window, IShellWindow
         }
     }
 
+    private void TrackPipBounds()
+    {
+        PointInt32 position = AppWindow.Position;
+        SizeInt32 size = AppWindow.Size;
+        // A minimised overlay sits far off-screen at -32000; that is not a place to come back to.
+        if (position.X > -30000 && position.Y > -30000 && size.Width > 0 && size.Height > 0)
+        {
+            _pipBounds = new WindowRect(position.X, position.Y, size.Width, size.Height);
+        }
+    }
+
     private void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
     {
+        // Closing the overlay returns to the full window; playback carries on.
+        if (_pip.CancelsClose)
+        {
+            args.Cancel = true;
+            LeavePictureInPicture(toFullScreen: false);
+            return;
+        }
         if (!App.Settings.Current.RememberWindowSize || _normalBounds is not { } bounds)
         {
             return;
         }
         // The process is about to exit, so write now; the file is a few bytes and Save does not throw.
-        App.WindowState.Save(new SavedWindow(ToWindowRect(bounds), _maximized));
+        App.WindowState.Save(new SavedWindow(ToWindowRect(bounds), _maximized, _pipBounds));
     }
 
     public bool IsFullScreen => AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen;
@@ -223,10 +267,102 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     public void SetFullScreen(bool fullScreen)
     {
+        if (_pip.IsOn)
+        {
+            if (fullScreen)
+            {
+                LeavePictureInPicture(toFullScreen: true);
+            }
+            return;
+        }
         if (fullScreen != IsFullScreen)
         {
             AppWindow.SetPresenter(fullScreen ? AppWindowPresenterKind.FullScreen : AppWindowPresenterKind.Overlapped);
         }
+    }
+
+    public bool IsPictureInPicture => _pip.IsOn;
+
+    public event EventHandler? PictureInPictureChanged;
+
+    public void SetPictureInPicture(bool on)
+    {
+        if (on)
+        {
+            EnterPictureInPicture();
+        }
+        else
+        {
+            LeavePictureInPicture(toFullScreen: false);
+        }
+    }
+
+    // Order matters (pass-8-pip-handover-spec.md): the work areas are read before the switch, because the overlay
+    // presenter reported a different one in the 8.1 spike, and the aspect lock's minimum drops first, because it
+    // answers WM_GETMINMAXINFO for every presenter and would hold the overlay at the full window's minimum.
+    private void EnterPictureInPicture()
+    {
+        if (!_pip.TryBeginEnter(hasVideo: true, IsFullScreen))
+        {
+            return;
+        }
+        try
+        {
+            var areas = DisplayArea.FindAll();
+            var workAreas = new WindowRect[areas.Count];
+            for (int i = 0; i < workAreas.Length; i++)
+            {
+                workAreas[i] = ToWindowRect(areas[i].WorkArea);
+            }
+            WindowRect work = ToWindowRect(DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest).WorkArea);
+            WindowRect primary = ToWindowRect(DisplayArea.Primary.WorkArea);
+            double scale = Shell.XamlRoot?.RasterizationScale ?? 1;
+
+            if (_aspectLock is not null)
+            {
+                _aspectLock.MinimumClientSize = (PipPlacement.MinWidth, PipPlacement.MinHeight);
+            }
+            AppWindow.SetPresenter(AppWindowPresenterKind.CompactOverlay);
+
+            // Measured on the overlay itself: full screen has no frame, the overlay has the usual resize border.
+            int frameWidth = AppWindow.Size.Width - AppWindow.ClientSize.Width;
+            int frameHeight = AppWindow.Size.Height - AppWindow.ClientSize.Height;
+            WindowRect placed = _pipBounds is { } saved
+                ? PipPlacement.Remembered(saved, _videoAspect, scale, frameWidth, frameHeight, workAreas, primary)
+                : PipPlacement.Initial(work, _videoAspect, scale, frameWidth, frameHeight);
+            AppWindow.MoveAndResize(new RectInt32(placed.X, placed.Y, placed.Width, placed.Height));
+        }
+        finally
+        {
+            _pip.EndSwitch();
+        }
+        PictureInPictureChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void LeavePictureInPicture(bool toFullScreen)
+    {
+        if (!_pip.TryBeginLeave(toFullScreen, out PictureInPictureReturn target))
+        {
+            return;
+        }
+        try
+        {
+            TrackPipBounds();
+            // Windows restores the overlapped window's own size, place and maximised state.
+            AppWindow.SetPresenter(target == PictureInPictureReturn.FullScreen
+                ? AppWindowPresenterKind.FullScreen
+                : AppWindowPresenterKind.Overlapped);
+            // Only after the switch, so the overlay is never stretched to the full window's minimum on its way out.
+            if (_aspectLock is not null)
+            {
+                _aspectLock.MinimumClientSize = (MinClientWidth, MinClientHeight);
+            }
+        }
+        finally
+        {
+            _pip.EndSwitch();
+        }
+        PictureInPictureChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public bool IsAlwaysOnTop => App.Settings.Current.AlwaysOnTop;
@@ -355,10 +491,12 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     public void SetVideoAspect(double aspect)
     {
+        _videoAspect = aspect;
         if (_aspectLock is not null)
         {
             _aspectLock.AspectRatio = aspect;
         }
+        WindowBorder.SetShown(WinRT.Interop.WindowNative.GetWindowHandle(this), shown: aspect <= 0);
     }
 
     private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)

@@ -13,6 +13,8 @@ public static class SettingKeys
     public const string ResumePlayback = "playback.resume";
     public const string LoopByDefault = "playback.loop";
     public const string PlayNextInFolder = "playback.playNext";
+    public const string ChapterAutoSkip = "playback.chapterAutoSkip";
+    public const string ChapterSkipNames = "playback.chapterSkipNames";
     public const string RememberWindowSize = "playback.rememberWindowSize";
     public const string AlwaysOnTop = "playback.alwaysOnTop";
     public const string PreventSleep = "playback.preventSleep";
@@ -46,7 +48,13 @@ public static class SettingKeys
     public const string SubtitleSize = "subtitles.size";
     public const string SubtitleColor = "subtitles.color";
     public const string SubtitlePosition = "subtitles.position";
+    public const string SubtitleBold = "subtitles.bold";
+    public const string SubtitleOutline = "subtitles.outline";
+    public const string SubtitleOutlineColor = "subtitles.outlineColor";
+    public const string SubtitleBackground = "subtitles.background";
+    public const string SubtitleOverrideStyled = "subtitles.overrideStyled";
     public const string StreamingQuality = "streaming.quality";
+    public const string StreamQualityChoice = "streaming.qualityChoice";
     public const string PreferGpuDecodableFormats = "streaming.preferGpuDecodable";
     public const string YtDlpAutoUpdate = "streaming.ytdlpAutoUpdate";
     public const string NetworkCacheMegabytes = "streaming.cacheMegabytes";
@@ -71,11 +79,15 @@ public static class SettingKeys
     public const string ShortcutMute = "shortcuts.mute";
     public const string ShortcutLoop = "shortcuts.loop";
     public const string ShortcutAlwaysOnTop = "shortcuts.alwaysOnTop";
+    public const string ShortcutPictureInPicture = "shortcuts.pictureInPicture";
     public const string ShortcutDiagnostics = "shortcuts.diagnostics";
     public const string ShortcutSettings = "shortcuts.settings";
     public const string ShortcutCopyFrame = "shortcuts.copyFrame";
     public const string ShortcutSaveFrame = "shortcuts.saveFrame";
     public const string ShortcutExportClip = "shortcuts.exportClip";
+    public const string ShortcutNextChapter = "shortcuts.nextChapter";
+    public const string ShortcutPreviousChapter = "shortcuts.previousChapter";
+    public const string ShortcutSidebar = "shortcuts.sidebar";
 }
 
 /// <summary>One setting: key, restart flag, validation and (de)serialisation. No reflection, so it is AOT-safe.</summary>
@@ -169,6 +181,8 @@ public static class SettingDefinitions
         Flag(SettingKeys.ResumePlayback, s => s.ResumePlayback, (s, v) => s with { ResumePlayback = v }),
         Flag(SettingKeys.LoopByDefault, s => s.LoopByDefault, (s, v) => s with { LoopByDefault = v }),
         Flag(SettingKeys.PlayNextInFolder, s => s.PlayNextInFolder, (s, v) => s with { PlayNextInFolder = v }),
+        Flag(SettingKeys.ChapterAutoSkip, s => s.ChapterAutoSkip, (s, v) => s with { ChapterAutoSkip = v }),
+        Text(SettingKeys.ChapterSkipNames, s => s.ChapterSkipNames, (s, v) => s with { ChapterSkipNames = v }),
         Flag(SettingKeys.RememberWindowSize, s => s.RememberWindowSize, (s, v) => s with { RememberWindowSize = v }),
         Flag(SettingKeys.AlwaysOnTop, s => s.AlwaysOnTop, (s, v) => s with { AlwaysOnTop = v }),
         Flag(SettingKeys.PreventSleep, s => s.PreventSleep, (s, v) => s with { PreventSleep = v }),
@@ -202,12 +216,18 @@ public static class SettingDefinitions
         Text(SettingKeys.PreferredAudioLanguage, s => s.PreferredAudioLanguage, (s, v) => s with { PreferredAudioLanguage = v }),
         Text(SettingKeys.PreferredSubtitleLanguage, s => s.PreferredSubtitleLanguage, (s, v) => s with { PreferredSubtitleLanguage = v }),
         Text(SettingKeys.SubtitleFont, s => s.SubtitleFont, (s, v) => s with { SubtitleFont = v }),
-        Choice(SettingKeys.SubtitleSize, s => s.SubtitleSize, (s, v) => s with { SubtitleSize = v }, false, "small", "medium", "large"),
+        Choice(SettingKeys.SubtitleSize, s => s.SubtitleSize, (s, v) => s with { SubtitleSize = v }, false, "small", "medium", "large", "xlarge"),
         Choice(SettingKeys.SubtitleColor, s => s.SubtitleColor, (s, v) => s with { SubtitleColor = v }, false, "white", "yellow", "green", "cyan"),
         Choice(SettingKeys.SubtitlePosition, s => s.SubtitlePosition, (s, v) => s with { SubtitlePosition = v }, false, "bottom", "raised", "top"),
+        Flag(SettingKeys.SubtitleBold, s => s.SubtitleBold, (s, v) => s with { SubtitleBold = v }),
+        Choice(SettingKeys.SubtitleOutline, s => s.SubtitleOutline, (s, v) => s with { SubtitleOutline = v }, false, "none", "thin", "normal", "thick"),
+        Choice(SettingKeys.SubtitleOutlineColor, s => s.SubtitleOutlineColor, (s, v) => s with { SubtitleOutlineColor = v }, false, "black", "gray", "white"),
+        Choice(SettingKeys.SubtitleBackground, s => s.SubtitleBackground, (s, v) => s with { SubtitleBackground = v }, false, "none", "soft", "solid"),
+        Flag(SettingKeys.SubtitleOverrideStyled, s => s.SubtitleOverrideStyled, (s, v) => s with { SubtitleOverrideStyled = v }),
 
         Choice(SettingKeys.StreamingQuality, s => s.StreamingQuality, (s, v) => s with { StreamingQuality = v }, false, "480p", "720p", "1080p", "1440p", "2160p", "best"),
         Flag(SettingKeys.PreferGpuDecodableFormats, s => s.PreferGpuDecodableFormats, (s, v) => s with { PreferGpuDecodableFormats = v }),
+        Text(SettingKeys.StreamQualityChoice, s => s.StreamQualityChoice, (s, v) => s with { StreamQualityChoice = v }),
         Flag(SettingKeys.YtDlpAutoUpdate, s => s.YtDlpAutoUpdate, (s, v) => s with { YtDlpAutoUpdate = v }),
         Range(SettingKeys.NetworkCacheMegabytes, s => s.NetworkCacheMegabytes, (s, v) => s with { NetworkCacheMegabytes = v }, 16, 2048, restart: true),
         Text(SettingKeys.HttpProxy, s => s.HttpProxy, (s, v) => s with { HttpProxy = v }),
@@ -233,11 +253,15 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutMute, s => s.ShortcutMute, (s, v) => s with { ShortcutMute = v }),
         Shortcut(SettingKeys.ShortcutLoop, s => s.ShortcutLoop, (s, v) => s with { ShortcutLoop = v }),
         Shortcut(SettingKeys.ShortcutAlwaysOnTop, s => s.ShortcutAlwaysOnTop, (s, v) => s with { ShortcutAlwaysOnTop = v }),
+        Shortcut(SettingKeys.ShortcutPictureInPicture, s => s.ShortcutPictureInPicture, (s, v) => s with { ShortcutPictureInPicture = v }),
         Shortcut(SettingKeys.ShortcutDiagnostics, s => s.ShortcutDiagnostics, (s, v) => s with { ShortcutDiagnostics = v }),
         Shortcut(SettingKeys.ShortcutSettings, s => s.ShortcutSettings, (s, v) => s with { ShortcutSettings = v }),
         Shortcut(SettingKeys.ShortcutCopyFrame, s => s.ShortcutCopyFrame, (s, v) => s with { ShortcutCopyFrame = v }),
         Shortcut(SettingKeys.ShortcutSaveFrame, s => s.ShortcutSaveFrame, (s, v) => s with { ShortcutSaveFrame = v }),
         Shortcut(SettingKeys.ShortcutExportClip, s => s.ShortcutExportClip, (s, v) => s with { ShortcutExportClip = v }),
+        Shortcut(SettingKeys.ShortcutNextChapter, s => s.ShortcutNextChapter, (s, v) => s with { ShortcutNextChapter = v }),
+        Shortcut(SettingKeys.ShortcutPreviousChapter, s => s.ShortcutPreviousChapter, (s, v) => s with { ShortcutPreviousChapter = v }),
+        Shortcut(SettingKeys.ShortcutSidebar, s => s.ShortcutSidebar, (s, v) => s with { ShortcutSidebar = v }),
     ];
 
     private static readonly Dictionary<string, SettingDefinition> ByKey = All.ToDictionary(d => d.Key, StringComparer.Ordinal);

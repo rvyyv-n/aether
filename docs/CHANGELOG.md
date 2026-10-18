@@ -5,10 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- First-run tour: the cards now stay fully inside the window (the second one no longer hides Next), Skip tour is no longer clipped, the side rail is left out of the tour and stays shut while it runs, the keys card sits beside the home content instead of over the file list, the first card mentions web links, and the lit ring pulses gently while a progress bar fills as you go (both off when Windows animations are off).
+- Settings › General now holds the window settings (remember window size, always on top) next to battery saver and history, instead of leaving them on the Playback page.
+
 ### Added
+- Picture in picture: `P` or the right-click menu floats the video in a small always-on-top window (400×225 and up) with Back to full window on hover; the video engine keeps playing without a restart, and the window remembers where it was.
 - First-run tour: on the first launch Aether lights up its real controls one at a time (opening a video, the bar, the side rail, the right-click menu, the keys and the gear) with a short note beside each; skip it at any time, or see it again from Settings › About.
-- Settings › About now has a GitHub row that opens the author's page (github.com/rvyyv-n) in the browser.
-- Saved links in the right-click Recent menu can now be played, the same as from the home screen; Picture in picture and Stream stay greyed out until Pass 8 and Pass 11.
+- Settings › About ends on a closing card: app name and version, a note that everything stays on this device, and a "Source on GitHub · @rvyyv-n" link.
+- Saved links in the right-click Recent menu can now be played, the same as from the home screen; Stream stays greyed out until Pass 11.
 - Seek modifiers: `Shift+←/→` skips 1 second and `Ctrl+←/→` skips 30 seconds (plain arrows stay 5 seconds); all four keys are changeable on the Shortcuts page.
 - Clip export shortcut: `Ctrl+E` exports the marked clip (changeable on the Shortcuts page), and shows a toast when no In and Out are set.
 - Link Playback (yt-dlp, Pass 9):
@@ -20,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Recents integration: remote streams saved in recent history with extracted video titles, durations, and original URLs.
   - Remote stream clipping guard: lossless clip export displays neutral toast "Save the file first to export clips" while frame copy (`Ctrl+C`) and frame save (`Ctrl+Shift+S`) continue working via mpv screenshot.
   - Engine restart carry-over: preserves `OriginalWebLink` across engine re-initialization and settings changes.
+  - Quality picker: a button on the pill (links only) lists Auto, each size the video offers and Audio only; your pick is remembered for future links and switches the video in place at the same moment.
+  - Skip button: with chapter auto-skip off, a discreet "Skip Sponsor" button shows for the first seconds of a matching chapter.
+  - Resume: a "Resumed at 12:34" toast with Start over when a file or link picks up where you left it; links are remembered by page address, so the saved place survives expiring stream addresses.
+  - YouTube subtitles: a link's own subtitle tracks (and automatic captions in your preferred language, labelled "(auto)") appear in the tracks flyout and use your caption font and size.
+  - YouTube links now play with their sound (the separate audio stream is passed to the player).
+  - Chapter marks: the seek bar shows small gaps where chapters start and the hover bubble names the chapter; `Page Down` / `Page Up` jump to the next / previous chapter (changeable on the Shortcuts page), for links and files with chapters.
+  - Chapter auto-skip (off by default): Settings › Playback skips chapters whose names match a list (Sponsor, Intro, Outro to start), whole words only, once per video and never after you seek into one yourself, with a "Skipped … · Back" toast.
 - Playback & high-refresh display pacing: bypassed forced display-fps-override on high-refresh displays (>60 Hz), restoring native presentation timing ("0") to prevent GPU 3D engine starvation under display-resample and spline36 on high-refresh displays (120/144/180 Hz).
 - Playback performance: software decoding fallback under auto-safe now retains full frame readahead queue (fix R2); XAML layout updates and string allocations for clock and seek bar gated while controls are hidden (fix R3).
 - UI finish: More (…) menu items now feature Segoe Fluent Icons (Back 1 frame, Forward 1 frame, Loop, Always on top); Springy and Quick motion profiles tuned for smooth, refined transitions.

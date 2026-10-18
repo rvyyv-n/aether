@@ -158,9 +158,15 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
     private int _blurQuad, _blurParams;
     private int _compositeQuad, _compositeCard, _compositeCopy, _compositeShape, _compositeShadow;
 
-    // Half-size and quarter-size targets for the card's rectangle; _a and _b ping-pong while blurring.
-    private uint _half, _a, _b, _halfFbo, _aFbo, _bFbo;
-    private int _halfWidth, _halfHeight, _quarterWidth, _quarterHeight;
+    // Half-size and quarter-size targets for a card's rectangle; A and B ping-pong while blurring. One set per slot, so
+    // two cards of different sizes don't reallocate each other's targets every frame.
+    private struct Targets
+    {
+        public uint Half, A, B, HalfFbo, AFbo, BFbo;
+        public int HalfWidth, HalfHeight, QuarterWidth, QuarterHeight;
+    }
+
+    private readonly Targets[] _targets = new Targets[BackdropSource.SlotCount];
     private bool _failed;
 
     private BackdropBlurPass(AngleBridge bridge)
@@ -241,12 +247,12 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
     }
 
     /// <summary>
-    /// Blurs the card's surroundings and draws the blurred card and its shadow over the back buffer.
-    /// No allocation; restores every GL binding and state it changes.
+    /// Blurs the surroundings of each card and draws the blurred cards and their shadows over the back buffer.
+    /// GL state is saved and restored once for all of them. No allocation.
     /// </summary>
-    public void Draw(in BackdropFrame frame, uint bufferWidth, uint bufferHeight)
+    public void Draw(ReadOnlySpan<BackdropFrame> frames, uint bufferWidth, uint bufferHeight)
     {
-        if (_failed || !BackdropGeometry.TryLayout(frame.Region, bufferWidth, bufferHeight, out BackdropLayout layout))
+        if (_failed || frames.IsEmpty)
         {
             return;
         }
@@ -254,13 +260,6 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
         SavedState saved = Save();
         try
         {
-            if (!EnsureTargets((layout.CopyWidth + 1) / 2, (layout.CopyHeight + 1) / 2,
-                    (layout.CopyWidth + 3) / 4, (layout.CopyHeight + 3) / 4))
-            {
-                _failed = true;
-                return;
-            }
-
             _glDisable(GL_SCISSOR_TEST);
             _glDisable(GL_BLEND);
             _glDisable(GL_CULL_FACE);
@@ -270,50 +269,77 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
             _glActiveTexture(GL_TEXTURE0);
             _glBindSampler(0, 0);
 
-            // Two linear blits make a 4×4 box average, enough to keep the quarter-size copy from shimmering.
-            _glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-            _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _halfFbo);
-            _glBlitFramebuffer(layout.CopyX, layout.CopyY, layout.CopyX + layout.CopyWidth, layout.CopyY + layout.CopyHeight,
-                0, 0, _halfWidth, _halfHeight, GL_COLOR_BUFFER_BIT, (uint)GL_LINEAR);
-            _glBindFramebuffer(GL_READ_FRAMEBUFFER, _halfFbo);
-            _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _aFbo);
-            _glBlitFramebuffer(0, 0, _halfWidth, _halfHeight, 0, 0, _quarterWidth, _quarterHeight, GL_COLOR_BUFFER_BIT, (uint)GL_LINEAR);
-
-            _glViewport(0, 0, _quarterWidth, _quarterHeight);
-            _glUseProgram(_blurProgram);
-            _glUniform4f(_blurQuad, -1f, -1f, 1f, 1f);
-            float invW = 1f / _quarterWidth, invH = 1f / _quarterHeight;
-            for (int i = 0; i < BlurRounds; i++)
+            foreach (ref readonly BackdropFrame frame in frames)
             {
-                BlurPass(_bFbo, _a, invW, invH, invW, 0f);
-                BlurPass(_aFbo, _b, invW, invH, 0f, invH);
+                if (!BackdropGeometry.TryLayout(frame.Region, bufferWidth, bufferHeight, out BackdropLayout layout))
+                {
+                    continue;
+                }
+                if (!DrawOne(ref _targets[frame.Slot], frame.Opacity, layout, bufferWidth, bufferHeight))
+                {
+                    _failed = true;
+                    return;
+                }
             }
-
-            _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-            _glViewport(0, 0, (int)bufferWidth, (int)bufferHeight);
-            _glEnable(GL_BLEND);
-            _glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            _glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-            _glUseProgram(_compositeProgram);
-            _glBindTexture(GL_TEXTURE_2D, _a);
-
-            float sigma = BackdropGeometry.ShadowBlurDips * 0.5f * layout.Scale;
-            float offset = BackdropGeometry.ShadowOffsetDips * layout.Scale;
-            float reach = (3f * sigma) + offset;
-            float w = bufferWidth, h = bufferHeight;
-            _glUniform4f(_compositeQuad,
-                (((layout.CardX0 - reach) / w) * 2f) - 1f, (((layout.CardY0 - reach) / h) * 2f) - 1f,
-                (((layout.CardX1 + reach) / w) * 2f) - 1f, (((layout.CardY1 + reach) / h) * 2f) - 1f);
-            _glUniform4f(_compositeCard, layout.CardX0, layout.CardY0, layout.CardX1, layout.CardY1);
-            _glUniform4f(_compositeCopy, layout.CopyX, layout.CopyY, layout.CopyWidth, layout.CopyHeight);
-            _glUniform4f(_compositeShape, layout.Radius, sigma, offset, frame.Opacity);
-            _glUniform1f(_compositeShadow, BackdropGeometry.ShadowOpacity);
-            _glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
         finally
         {
             Restore(saved);
         }
+    }
+
+    /// <summary>One card: copy, downsample, blur, composite. Assumes the state <see cref="Draw"/> set up.</summary>
+    private bool DrawOne(ref Targets t, float opacity, in BackdropLayout layout, uint bufferWidth, uint bufferHeight)
+    {
+        if (!EnsureTargets(ref t, (layout.CopyWidth + 1) / 2, (layout.CopyHeight + 1) / 2,
+                (layout.CopyWidth + 3) / 4, (layout.CopyHeight + 3) / 4))
+        {
+            return false;
+        }
+
+        // The composite pass below leaves blending on; the next card's copy and blur start from none.
+        _glDisable(GL_BLEND);
+
+        // Two linear blits make a 4×4 box average, enough to keep the quarter-size copy from shimmering.
+        _glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, t.HalfFbo);
+        _glBlitFramebuffer(layout.CopyX, layout.CopyY, layout.CopyX + layout.CopyWidth, layout.CopyY + layout.CopyHeight,
+            0, 0, t.HalfWidth, t.HalfHeight, GL_COLOR_BUFFER_BIT, (uint)GL_LINEAR);
+        _glBindFramebuffer(GL_READ_FRAMEBUFFER, t.HalfFbo);
+        _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, t.AFbo);
+        _glBlitFramebuffer(0, 0, t.HalfWidth, t.HalfHeight, 0, 0, t.QuarterWidth, t.QuarterHeight, GL_COLOR_BUFFER_BIT, (uint)GL_LINEAR);
+
+        _glViewport(0, 0, t.QuarterWidth, t.QuarterHeight);
+        _glUseProgram(_blurProgram);
+        _glUniform4f(_blurQuad, -1f, -1f, 1f, 1f);
+        float invW = 1f / t.QuarterWidth, invH = 1f / t.QuarterHeight;
+        for (int i = 0; i < BlurRounds; i++)
+        {
+            BlurPass(t.BFbo, t.A, invW, invH, invW, 0f);
+            BlurPass(t.AFbo, t.B, invW, invH, 0f, invH);
+        }
+
+        _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        _glViewport(0, 0, (int)bufferWidth, (int)bufferHeight);
+        _glEnable(GL_BLEND);
+        _glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        _glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+        _glUseProgram(_compositeProgram);
+        _glBindTexture(GL_TEXTURE_2D, t.A);
+
+        float sigma = BackdropGeometry.ShadowBlurDips * 0.5f * layout.Scale;
+        float offset = BackdropGeometry.ShadowOffsetDips * layout.Scale;
+        float reach = (3f * sigma) + offset;
+        float w = bufferWidth, h = bufferHeight;
+        _glUniform4f(_compositeQuad,
+            (((layout.CardX0 - reach) / w) * 2f) - 1f, (((layout.CardY0 - reach) / h) * 2f) - 1f,
+            (((layout.CardX1 + reach) / w) * 2f) - 1f, (((layout.CardY1 + reach) / h) * 2f) - 1f);
+        _glUniform4f(_compositeCard, layout.CardX0, layout.CardY0, layout.CardX1, layout.CardY1);
+        _glUniform4f(_compositeCopy, layout.CopyX, layout.CopyY, layout.CopyWidth, layout.CopyHeight);
+        _glUniform4f(_compositeShape, layout.Radius, sigma, offset, opacity);
+        _glUniform1f(_compositeShadow, BackdropGeometry.ShadowOpacity);
+        _glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        return true;
     }
 
     private void BlurPass(uint targetFbo, uint sourceTexture, float invW, float invH, float stepX, float stepY)
@@ -358,10 +384,13 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
         _compositeShadow = Uniform(_compositeProgram, "uShadow"u8);
 
         uint* names = stackalloc uint[3];
-        _glGenTextures(3, names);
-        (_half, _a, _b) = (names[0], names[1], names[2]);
-        _glGenFramebuffers(3, names);
-        (_halfFbo, _aFbo, _bFbo) = (names[0], names[1], names[2]);
+        for (int i = 0; i < _targets.Length; i++)
+        {
+            _glGenTextures(3, names);
+            (_targets[i].Half, _targets[i].A, _targets[i].B) = (names[0], names[1], names[2]);
+            _glGenFramebuffers(3, names);
+            (_targets[i].HalfFbo, _targets[i].AFbo, _targets[i].BFbo) = (names[0], names[1], names[2]);
+        }
         return true;
     }
 
@@ -413,19 +442,19 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
     }
 
     /// <summary>(Re)allocates the targets when the card's rectangle changed size. Binds textures; the caller restores them.</summary>
-    private bool EnsureTargets(int halfWidth, int halfHeight, int quarterWidth, int quarterHeight)
+    private bool EnsureTargets(ref Targets t, int halfWidth, int halfHeight, int quarterWidth, int quarterHeight)
     {
-        if (halfWidth == _halfWidth && halfHeight == _halfHeight && quarterWidth == _quarterWidth && quarterHeight == _quarterHeight)
+        if (halfWidth == t.HalfWidth && halfHeight == t.HalfHeight && quarterWidth == t.QuarterWidth && quarterHeight == t.QuarterHeight)
         {
             return true;
         }
 
-        Allocate(_half, _halfFbo, halfWidth, halfHeight);
-        Allocate(_a, _aFbo, quarterWidth, quarterHeight);
-        Allocate(_b, _bFbo, quarterWidth, quarterHeight);
-        (_halfWidth, _halfHeight, _quarterWidth, _quarterHeight) = (halfWidth, halfHeight, quarterWidth, quarterHeight);
+        Allocate(t.Half, t.HalfFbo, halfWidth, halfHeight);
+        Allocate(t.A, t.AFbo, quarterWidth, quarterHeight);
+        Allocate(t.B, t.BFbo, quarterWidth, quarterHeight);
+        (t.HalfWidth, t.HalfHeight, t.QuarterWidth, t.QuarterHeight) = (halfWidth, halfHeight, quarterWidth, quarterHeight);
 
-        foreach (uint fbo in (ReadOnlySpan<uint>)[_halfFbo, _aFbo, _bFbo])
+        foreach (uint fbo in (ReadOnlySpan<uint>)[t.HalfFbo, t.AFbo, t.BFbo])
         {
             _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
             if (_glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -543,15 +572,22 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
     /// <summary>Render thread, context current.</summary>
     public void Dispose()
     {
-        uint* names = stackalloc uint[3] { _half, _a, _b };
-        _glDeleteTextures(3, names);
-        names[0] = _halfFbo;
-        names[1] = _aFbo;
-        names[2] = _bFbo;
-        _glDeleteFramebuffers(3, names);
+        uint* names = stackalloc uint[3];
+        for (int i = 0; i < _targets.Length; i++)
+        {
+            ref Targets t = ref _targets[i];
+            names[0] = t.Half;
+            names[1] = t.A;
+            names[2] = t.B;
+            _glDeleteTextures(3, names);
+            names[0] = t.HalfFbo;
+            names[1] = t.AFbo;
+            names[2] = t.BFbo;
+            _glDeleteFramebuffers(3, names);
+            t = default;
+        }
         _glDeleteProgram(_blurProgram);
         _glDeleteProgram(_compositeProgram);
-        (_half, _a, _b, _halfFbo, _aFbo, _bFbo) = (0, 0, 0, 0, 0, 0);
         _blurProgram = _compositeProgram = 0;
     }
 }

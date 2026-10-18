@@ -3,7 +3,7 @@ using System;
 namespace Aether.Core.Interop.Rendering;
 
 /// <summary>
-/// The player card's rectangle in swap-chain pixels (top-left origin, relative to the video
+/// A card's rectangle in swap-chain pixels (top-left origin, relative to the video
 /// surface), with the surface size it was measured against, so the render thread can rescale it
 /// when the swap chain has already moved on to a newer size.
 /// </summary>
@@ -17,8 +17,8 @@ public readonly record struct BackdropRegion(
           && float.IsFinite(Width) && float.IsFinite(Height) && Width >= 1 && Height >= 1 && Scale > 0);
 }
 
-/// <summary>What to draw this frame: where, and how strongly (0..1).</summary>
-public readonly record struct BackdropFrame(BackdropRegion Region, float Opacity);
+/// <summary>What to draw this frame: where, how strongly (0..1), and which <see cref="BackdropSlot"/> (as its number) it is.</summary>
+public readonly record struct BackdropFrame(BackdropRegion Region, float Opacity, int Slot = 0);
 
 /// <summary>
 /// <see cref="BackdropRegion"/> mapped onto the current back buffer, in GL's bottom-left pixel

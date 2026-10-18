@@ -1,4 +1,5 @@
 using Aether.Core.Playback.Settings;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Aether_App.Settings.Pages;
@@ -33,7 +34,7 @@ public sealed partial class VideoPage : Page
                 new("bwdif", AppStrings.Get("Settings_DeinterlaceMode_Bwdif")),
             ],
             "Settings_DeinterlaceMode_Title");
-        binder.Track(() => DeinterlaceModeRow.IsEnabled = App.Settings.Get(SettingKeys.Deinterlace) is true);
+        binder.Track(() => DeinterlaceModeRow.Visibility = App.Settings.Get(SettingKeys.Deinterlace) is true ? Visibility.Visible : Visibility.Collapsed);
 
         binder.Choose(AspectRatioRow, AspectRatioCombo, SettingKeys.AspectRatio,
             [

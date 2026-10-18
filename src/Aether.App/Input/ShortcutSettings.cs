@@ -137,11 +137,15 @@ public sealed class ShortcutSettings
         ShortcutAction.Mute => "Settings_Shortcuts_Mute",
         ShortcutAction.Loop => "Settings_Shortcuts_Loop",
         ShortcutAction.AlwaysOnTop => "Settings_Shortcuts_AlwaysOnTop",
+        ShortcutAction.PictureInPicture => "Settings_Shortcuts_PictureInPicture",
         ShortcutAction.Diagnostics => "Settings_Shortcuts_Diagnostics",
         ShortcutAction.Settings => "Settings_Shortcuts_Settings",
         ShortcutAction.CopyFrame => "Settings_Shortcuts_CopyFrame",
         ShortcutAction.SaveFrame => "Settings_Shortcuts_SaveFrame",
         ShortcutAction.ExportClip => "Settings_Shortcuts_ExportClip",
+        ShortcutAction.NextChapter => "Settings_Shortcuts_NextChapter",
+        ShortcutAction.PreviousChapter => "Settings_Shortcuts_PreviousChapter",
+        ShortcutAction.Sidebar => "Settings_Shortcuts_Sidebar",
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
     };
 }

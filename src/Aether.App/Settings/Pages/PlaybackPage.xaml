@@ -18,14 +18,14 @@
             <settings:SettingsRow x:Name="PlayNextInFolderRow" Glyph="&#xE893;">
                 <ToggleSwitch x:Name="PlayNextInFolderToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
-            <settings:SettingsRow x:Name="RememberWindowSizeRow" Glyph="&#xE740;">
-                <ToggleSwitch x:Name="RememberWindowSizeToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            <settings:SettingsRow x:Name="ChapterAutoSkipRow" Glyph="&#xE893;">
+                <ToggleSwitch x:Name="ChapterAutoSkipToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="ChapterSkipNamesRow" Glyph="&#xE70F;">
+                <TextBox x:Name="ChapterSkipNamesBox" Style="{StaticResource AetherSettingsTextBoxStyle}" />
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="PreventSleepRow" Glyph="&#xE706;">
                 <ToggleSwitch x:Name="PreventSleepToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
-            </settings:SettingsRow>
-            <settings:SettingsRow x:Name="AlwaysOnTopRow" Glyph="&#xE718;">
-                <ToggleSwitch x:Name="AlwaysOnTopToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
         </settings:SettingsGroup>
     </StackPanel>

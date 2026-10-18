@@ -29,7 +29,7 @@ public sealed partial class MainPage
 
     private UIElement[] BarExtras =>
     [
-        SpeedButton, BackButton, ForwardButton, MoreButton,
+        SpeedButton, QualityButton, BackButton, ForwardButton, MoreButton,
     ];
 
     private void InitializeBar()
@@ -42,7 +42,7 @@ public sealed partial class MainPage
         }
         foreach (UIElement button in new UIElement[]
         {
-            OpenButton, SpeedButton, BackButton, PlayPauseButton, ForwardButton, VolumeButton, MoreButton, FullScreenButton,
+            OpenButton, SpeedButton, QualityButton, BackButton, PlayPauseButton, ForwardButton, VolumeButton, MoreButton, FullScreenButton,
         })
         {
             PressFeedback.Attach(button);

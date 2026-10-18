@@ -2,6 +2,7 @@ using Aether.Core.Playback.Streams;
 ﻿using System.ComponentModel;
 using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
+using Aether.Core.Interop.Rendering;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Input;
 using Aether.Core.Playback.Recents;
@@ -119,6 +120,11 @@ public sealed partial class MainPage : Page
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         LayoutUpdated += (_, _) => PostBackdropRegion();
+        SizeChanged += (_, _) =>
+        {
+            PlaceRail();
+            UpdateToastPlacement();
+        };
         VideoSurface.CompositionScaleChanged += (_, _) => PostBackdropRegion();
         VideoSurface.PlayerReady += (_, _) => OpenPending();
     }
@@ -152,6 +158,9 @@ public sealed partial class MainPage : Page
         AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
         ApplyTransportStrings();
         ApplyShortcutLabels();
+        string backToFull = AppStrings.Get("Pip_BackToFullWindow");
+        ToolTipService.SetToolTip(PipBackButton, backToFull);
+        AutomationProperties.SetName(PipBackButton, backToFull);
         RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
         CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
     }
@@ -170,6 +179,7 @@ public sealed partial class MainPage : Page
             if (_host is not null)
             {
                 _host.FullScreenChanged -= OnFullScreenChanged;
+                _host.PictureInPictureChanged -= OnPictureInPictureChanged;
                 _host.TitleBarPointerMoved -= OnTitleBarPointerMoved;
                 _host.AlwaysOnTopChanged -= OnAlwaysOnTopChanged;
             }
@@ -177,6 +187,7 @@ public sealed partial class MainPage : Page
             if (_host is not null)
             {
                 _host.FullScreenChanged += OnFullScreenChanged;
+                _host.PictureInPictureChanged += OnPictureInPictureChanged;
                 _host.TitleBarPointerMoved += OnTitleBarPointerMoved;
                 _host.AlwaysOnTopChanged += OnAlwaysOnTopChanged;
             }
@@ -234,6 +245,10 @@ public sealed partial class MainPage : Page
             _copiedTimer.Tick += OnCopiedTimerTick;
             _toasts = new ToastService(ToastCard, ToastLayer, _fader, DispatcherQueue, () => Focus(FocusState.Programmatic));
             ClipLayer.SizeChanged += (_, _) => UpdateToastPlacement();
+            // The Skip button steps over a toast it would touch, so it follows the toast coming and going.
+            ToastLayer.RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => UpdateToastPlacement());
+            ToastLayer.SizeChanged += (_, _) => UpdateToastPlacement();
+            SkipChapterLayer.SizeChanged += (_, _) => UpdateToastPlacement();
         }
         AppToasts.Requested += OnToastRequested;
         if (_session is null)
@@ -272,6 +287,12 @@ public sealed partial class MainPage : Page
             _session = null;
         }
     }
+
+    /// <summary>What a resolved link brings to <see cref="Open"/> beyond the stream address.</summary>
+    /// <param name="Qualities">The sizes the quality picker lists; <paramref name="Quality"/> is the one playing.</param>
+    private sealed record OpenedLink(
+        string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl, IReadOnlyList<StreamChapter>? Chapters,
+        IReadOnlyList<StreamSubtitle>? Subtitles, IReadOnlyList<QualityOption> Qualities, QualityOption Quality);
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
     private sealed record PlaybackCarryOver(
@@ -436,7 +457,8 @@ public sealed partial class MainPage : Page
 
     // ---- Playback ----
 
-    private void Open(string path, PlaybackCarryOver? carry = null)
+    /// <param name="link">The link this stream was resolved from, or null for a file.</param>
+    private void Open(string path, PlaybackCarryOver? carry = null, OpenedLink? link = null)
     {
         if (_session is not { } session)
         {
@@ -444,8 +466,21 @@ public sealed partial class MainPage : Page
         }
         EndTour(); // the user has gone on to watch something
         SaveResumePosition(background: true);
-        double? startAt = carry?.Position ?? (App.Settings.Current.ResumePlayback ? App.Resume.TryGet(path) : null);
+        // A link is remembered by its page address: the stream address expires within hours.
+        string resumeKey = link?.WebLink ?? path;
+        double? startAt = carry?.Position ?? (App.Settings.Current.ResumePlayback ? App.Resume.TryGet(resumeKey) : null);
         _currentPath = path;
+        _currentWebLink = link?.WebLink;
+        _streamTitle = link?.Title;
+        ResetChapters(link?.Chapters);
+        ResetLinkSubtitles(link?.Subtitles, carry);
+        ResetQuality(link);
+        // A restart carries the position over by itself; only a saved position is worth announcing.
+        ResetResumeOffer(carry is null ? startAt : null, resumeKey);
+        string headerFields = link?.HttpHeaders is { Count: > 0 } headers
+            ? string.Join(",", headers.Select(kv => string.Concat(kv.Key, ": ", kv.Value)))
+            : string.Empty;
+        string fileOptions = MpvLoadOptions.ForStream(link?.AudioUrl);
         _fitWindowPending = carry is null; // after a restart the window keeps the size it has
         _durationRecorded = false;
         _trackChoices = carry?.Tracks; // another file starts on mpv's own picks
@@ -457,11 +492,11 @@ public sealed partial class MainPage : Page
             {
                 session.Pause(); // a new core starts unpaused
             }
-            session.Open(path, startAt);
+            session.Context.SetProperty("http-header-fields", headerFields); // a file or another site must not inherit them
+            session.Open(path, startAt, fileOptions);
         });
-        if (_currentWebLink is null)
+        if (link is null)
         {
-            _streamTitle = null;
             string name = Path.GetFileName(path);
             _ = Task.Run(() => App.Recents.Add(path, name, DateTimeOffset.Now));
         }
@@ -471,7 +506,7 @@ public sealed partial class MainPage : Page
     /// <summary>Remembers where the current file is, for the next time it is opened (5.10).</summary>
     private void SaveResumePosition(bool background)
     {
-        if (_currentPath is not { } path || _session?.ViewModel is not { } vm || !HasVideo || !App.Settings.Current.ResumePlayback)
+        if ((_currentWebLink ?? _currentPath) is not { } path || _session?.ViewModel is not { } vm || !HasVideo || !App.Settings.Current.ResumePlayback)
         {
             return;
         }
@@ -521,6 +556,7 @@ public sealed partial class MainPage : Page
         switch (e.PropertyName)
         {
             case nameof(PlayerViewModel.Position):
+                OnChapterSkipPosition(vm);
                 UpdateClock(vm);
                 break;
             case nameof(PlayerViewModel.Duration):
@@ -545,6 +581,10 @@ public sealed partial class MainPage : Page
                 UpdateClock(vm); // an ended file reads its full duration
                 RecordDuration(vm);
                 RestoreTracksOnceLoaded();
+                LoadChaptersOnceLoaded();
+                AddLinkSubtitlesOnceLoaded();
+                ShowResumeOfferOnceLoaded();
+                EndQualitySwitchOnceLoaded();
                 Render();
                 break;
             case nameof(PlayerViewModel.IsPaused):
@@ -585,6 +625,7 @@ public sealed partial class MainPage : Page
         }
         DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
         SyncClipRange();
+        UpdatePipSeek(vm);
         SeekBar.Duration = vm.Duration;
         double position = TransportState.DisplayPosition(vm.State);
         SeekBar.Position = position;
@@ -671,6 +712,10 @@ public sealed partial class MainPage : Page
     private void SetDiagnosticsShown(bool show)
     {
         _diagnosticsShown = show;
+        if (show)
+        {
+            LeavePictureInPicture();
+        }
         if (show && _session is { } session)
         {
             Diagnostics.Update(session.ViewModel.State);
@@ -820,7 +865,17 @@ public sealed partial class MainPage : Page
 
     private void OnFullScreenClick(object sender, RoutedEventArgs e) => ToggleFullScreen();
 
-    private void OnVideoDoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => ToggleFullScreen();
+    private void OnVideoDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (IsPictureInPicture)
+        {
+            LeavePictureInPicture();
+        }
+        else
+        {
+            ToggleFullScreen();
+        }
+    }
 
     private void ToggleFullScreen()
     {
@@ -958,6 +1013,7 @@ public sealed partial class MainPage : Page
         if (shown)
         {
             SettingsHost.Child ??= new SettingsView();
+            LeavePictureInPicture();
             _host?.SetFullScreen(false);
         }
         if (_fader is null)
@@ -1020,6 +1076,7 @@ public sealed partial class MainPage : Page
         }
 
         EndTour();
+        LeavePictureInPicture();
         _openUrl.Open(clipboard);
         OpenUrlBox.Text = _openUrl.Text;
         if (_fader is null)
@@ -1127,6 +1184,7 @@ public sealed partial class MainPage : Page
         }
 
         EndTour();
+        CancelQualitySwitch();
         _streamResolutionCts?.Cancel();
         var cts = new CancellationTokenSource();
         _streamResolutionCts = cts;
@@ -1139,13 +1197,9 @@ public sealed partial class MainPage : Page
         ArmOpenUrlTimer();
         Render();
 
-        string? ytDlpPath = ExternalTools.FindYtDlp();
-        var options = new StreamResolutionOptions(
-            YtDlpPath: ytDlpPath,
-            StreamingQuality: App.Settings.Current.StreamingQuality,
-            PreferGpuDecodableFormats: App.Settings.Current.PreferGpuDecodableFormats,
-            HttpProxy: string.IsNullOrWhiteSpace(App.Settings.Current.HttpProxy) ? null : App.Settings.Current.HttpProxy,
-            Timeout: TimeSpan.FromSeconds(30));
+        // A remembered size is asked for from the start; yt-dlp lists every size whatever was asked for.
+        string savedQuality = App.Settings.Current.StreamQualityChoice;
+        StreamResolutionOptions options = StreamOptions(RememberedQualitySelector());
 
         try
         {
@@ -1158,18 +1212,12 @@ public sealed partial class MainPage : Page
             _openUrl.Close();
             ArmOpenUrlTimer();
 
-            _currentWebLink = link;
-            _streamTitle = string.IsNullOrWhiteSpace(resolved.Title) ? WebLink.Host(link) : resolved.Title;
+            string displayName = string.IsNullOrWhiteSpace(resolved.Title) ? WebLink.Host(link) ?? link : resolved.Title;
+            IReadOnlyList<QualityOption> qualities = QualityOptions.From(resolved.Formats);
+            Open(resolved.StreamUrl, carry, new OpenedLink(
+                link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters, resolved.Subtitles,
+                qualities, QualityOptions.Resolve(savedQuality, qualities)));
 
-            if (resolved.HttpHeaders is { Count: > 0 } headers)
-            {
-                string headerFields = string.Join(",", headers.Select(kv => string.Concat(kv.Key, ": ", kv.Value)));
-                TrySend(() => _session.Context.SetProperty("http-header-fields", headerFields));
-            }
-
-            Open(resolved.StreamUrl, carry);
-
-            string displayName = _streamTitle ?? WebLink.Host(link) ?? link;
             _ = Task.Run(() =>
             {
                 App.Recents.Add(link, displayName, DateTimeOffset.Now);
@@ -1541,8 +1589,10 @@ public sealed partial class MainPage : Page
             }
             _fader.Fade(TopScrim, visible);
             _fader.Fade(TitleBar, visible);
+            _fader.Fade(PipChrome, visible);
+            PipChrome.IsHitTestVisible = visible;
             _fader.Fade(Osd, visible);
-            VideoSurface.FadeBackdrop(visible, _fader.DurationMilliseconds(visible));
+            VideoSurface.FadeBackdrop(BackdropSlot.Bar, visible, _fader.DurationMilliseconds(visible));
             Osd.IsHitTestVisible = visible;
             _fader.Fade(ClipLayer, visible);
             ClipLayer.IsHitTestVisible = visible;
@@ -1552,7 +1602,9 @@ public sealed partial class MainPage : Page
         SyncRail(applyChrome: false);
         UpdateCursor();
         UpdateToastPlacement();
-        _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog | ChromeHolds.Tour)) != 0);
+        // Toasts wait for the full window: in the overlay they would cover most of the picture.
+        _toasts?.SetBlocked((_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog | ChromeHolds.Tour)) != 0 || IsPictureInPicture);
+        SyncSkipChapter();
 
         if (_chromeTimer is null)
         {
@@ -1576,6 +1628,7 @@ public sealed partial class MainPage : Page
         bool controls = _chrome.IsVisible && Osd.Visibility == Visibility.Visible;
         double chip = ClipLayer.Visibility == Visibility.Visible ? ClipLayer.ActualHeight : 0;
         _toasts?.SetControlsShown(controls, Osd.Height, chip);
+        PlaceSkipChapter(controls, chip);
     }
 
     private void UpdateCursor()
@@ -1607,8 +1660,18 @@ public sealed partial class MainPage : Page
             return;
         }
         double scale = Math.Min(hostWidth / width, hostHeight / height);
-        VideoSurface.Width = Math.Round(width * scale);
-        VideoSurface.Height = Math.Round(height * scale);
+        VideoSurface.Width = SnapToHost(Math.Round(width * scale), hostWidth);
+        VideoSurface.Height = SnapToHost(Math.Round(height * scale), hostHeight);
+    }
+
+    /// <summary>
+    /// The window keeps the video's shape only to the whole pixel, so a fitted side can come out a pixel short and
+    /// leave a hairline of backdrop at the edge. Within that, it takes the host's full size; the stretch can't be seen.
+    /// </summary>
+    private static double SnapToHost(double fitted, double host)
+    {
+        const double SnapDips = 2;
+        return host - fitted <= SnapDips ? host : fitted;
     }
 
     /// <summary>
@@ -1643,27 +1706,41 @@ public sealed partial class MainPage : Page
     /// <summary>Brings every view element in line with the startup, playback, drag and window state.</summary>
     private void Render()
     {
-        bool hasVideo = HasVideo && !_settingsShown;
-        bool fullScreen = _host?.IsFullScreen == true;
         PlayerViewModel? vm = _session?.ViewModel;
+        bool pip = IsPictureInPicture;
+        if (pip && PictureInPicture.EndsOn(vm?.Status ?? PlaybackStatus.Idle))
+        {
+            LeavePictureInPicture(); // raises PictureInPictureChanged, which renders again
+            return;
+        }
+        // Between two files of a folder the overlay keeps its look rather than flashing the home screen; so does a
+        // link switching quality while its new stream loads.
+        bool hasVideo = (HasVideo || pip || _qualitySwitching) && !_settingsShown;
+        bool fullScreen = _host?.IsFullScreen == true;
 
         // Video, scrims and controls.
         VideoSurface.Opacity = hasVideo ? 1 : 0;
-        VideoHost.Background = fullScreen && hasVideo
+        VideoHost.Background = (fullScreen || pip) && hasVideo
             ? (Brush)Application.Current.Resources["AetherSurfaceLetterboxBrush"]
             : null;
         HomeView.Visibility = !_settingsShown && (!hasVideo || _dragging) ? Visibility.Visible : Visibility.Collapsed;
         DropScrim.Visibility = hasVideo && _dragging ? Visibility.Visible : Visibility.Collapsed;
         DropOutline.Visibility = _dragging ? Visibility.Visible : Visibility.Collapsed;
-        Osd.Visibility = hasVideo ? Visibility.Visible : Visibility.Collapsed;
+        Osd.Visibility = hasVideo && !pip ? Visibility.Visible : Visibility.Collapsed;
         ClipLayer.Visibility = Osd.Visibility;
-        VideoSurface.SetBackdropActive(hasVideo);
+        PipChrome.Visibility = hasVideo && pip ? Visibility.Visible : Visibility.Collapsed;
+        // ADR-0013: no blur in picture in picture; there is no card to blur behind.
+        VideoSurface.SetBackdropActive(BackdropSlot.Bar, hasVideo && !pip);
+        VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, hasVideo && !pip);
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         PlaceRail();
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         string? fileName = _streamTitle ?? (HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null);
         TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");
+        TitleText.Visibility = pip ? Visibility.Collapsed : Visibility.Visible;
+        SettingsButton.Visibility = pip || _settingsShown ? Visibility.Collapsed : Visibility.Visible;
+        PipBackButton.Visibility = pip ? Visibility.Visible : Visibility.Collapsed;
         // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
         TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
         TitleBadgeText.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
@@ -1678,6 +1755,9 @@ public sealed partial class MainPage : Page
         PlayPauseButton.Content = glyph;
         ToolTipService.SetToolTip(PlayPauseButton, label);
         AutomationProperties.SetName(PlayPauseButton, label);
+        PipPlayPauseButton.Content = glyph;
+        ToolTipService.SetToolTip(PipPlayPauseButton, label);
+        AutomationProperties.SetName(PipPlayPauseButton, label);
         FullScreenButton.Content = fullScreen ? ExitFullScreenGlyph : FullScreenGlyph;
         ToolTipService.SetToolTip(FullScreenButton, fullScreen ? AppStrings.Get("Transport_ExitFullScreen") : Tip("Transport_FullScreen", ShortcutAction.FullScreen));
 

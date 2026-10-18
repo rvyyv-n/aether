@@ -30,6 +30,62 @@ public class MpvSettingsMapTests
         Assert.Equal("55", p["sub-font-size"]);
         Assert.Equal("#FFFFFF", p["sub-color"]);
         Assert.Equal("100", p["sub-pos"]);
+        Assert.Equal("no", p["sub-bold"]);
+        Assert.Equal("3", p["sub-border-size"]);
+        Assert.Equal("#000000", p["sub-border-color"]);
+        Assert.Equal("outline-and-shadow", p["sub-border-style"]);
+        Assert.Equal("#00000000", p["sub-back-color"]);
+        Assert.Equal("scale", p["sub-ass-override"]);
+    }
+
+    [Theory]
+    [InlineData("xlarge", "95")]
+    public void Extra_Large_Subtitles_Map_To_Font_Size(string size, string expected) =>
+        Assert.Equal(expected, Runtime(new AetherSettings { SubtitleSize = size })["sub-font-size"]);
+
+    [Theory]
+    [InlineData("none", "0")]
+    [InlineData("thin", "1.5")]
+    [InlineData("normal", "3")]
+    [InlineData("thick", "5")]
+    public void Subtitle_Outline_Maps_To_Border_Size(string outline, string expected) =>
+        Assert.Equal(expected, Runtime(new AetherSettings { SubtitleOutline = outline })["sub-border-size"]);
+
+    [Theory]
+    [InlineData("black", "#000000")]
+    [InlineData("gray", "#404040")]
+    [InlineData("white", "#FFFFFF")]
+    public void Subtitle_Outline_Colour_Maps_To_Hex(string color, string expected) =>
+        Assert.Equal(expected, Runtime(new AetherSettings { SubtitleOutlineColor = color })["sub-border-color"]);
+
+    [Theory]
+    [InlineData("none", "outline-and-shadow", "#00000000")]
+    [InlineData("soft", "background-box", "#99000000")]
+    [InlineData("solid", "background-box", "#FF000000")]
+    public void Subtitle_Background_Maps_To_Border_Style_And_Back_Colour(string background, string style, string back)
+    {
+        Dictionary<string, string> p = Runtime(new AetherSettings { SubtitleBackground = background });
+
+        Assert.Equal(style, p["sub-border-style"]);
+        Assert.Equal(back, p["sub-back-color"]);
+    }
+
+    [Fact]
+    public void Subtitle_Bold_And_Style_Override_Reach_Their_Properties()
+    {
+        Dictionary<string, string> p = Runtime(new AetherSettings { SubtitleBold = true, SubtitleOverrideStyled = true });
+
+        Assert.Equal("yes", p["sub-bold"]);
+        Assert.Equal("force", p["sub-ass-override"]);
+    }
+
+    [Fact]
+    public void Custom_Options_Win_Over_The_Subtitle_Style()
+    {
+        Dictionary<string, string> p = Runtime(new AetherSettings { CustomMpvOptions = "sub-border-size=8" });
+
+        Assert.False(p.ContainsKey("sub-border-size"));
+        Assert.True(p.ContainsKey("sub-bold"));
     }
 
     [Fact]
