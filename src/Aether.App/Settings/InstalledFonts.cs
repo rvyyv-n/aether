@@ -38,6 +38,9 @@ internal static class InstalledFonts
     {
         [PreserveSig] uint GetCount();
         [PreserveSig] int FindLocaleName([MarshalAs(UnmanagedType.LPWStr)] string localeName, out uint index, [MarshalAs(UnmanagedType.Bool)] out bool exists);
+        // Without these two locale-name slots, GetStringLength and GetString call the wrong methods and every family reads "en-us".
+        [PreserveSig] int GetLocaleNameLength(uint index, out uint length);
+        [PreserveSig] int GetLocaleName(uint index, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder buffer, uint size);
         [PreserveSig] int GetStringLength(uint index, out uint length);
         [PreserveSig] int GetString(uint index, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder buffer, uint size);
     }
