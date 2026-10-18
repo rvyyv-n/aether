@@ -183,6 +183,7 @@ public sealed partial class MainPage : Page
                 _host.PictureInPictureChanged -= OnPictureInPictureChanged;
                 _host.TitleBarPointerMoved -= OnTitleBarPointerMoved;
                 _host.AlwaysOnTopChanged -= OnAlwaysOnTopChanged;
+                _host.TaskbarCommandRequested -= OnTaskbarCommand;
             }
             _host = value;
             if (_host is not null)
@@ -191,6 +192,7 @@ public sealed partial class MainPage : Page
                 _host.PictureInPictureChanged += OnPictureInPictureChanged;
                 _host.TitleBarPointerMoved += OnTitleBarPointerMoved;
                 _host.AlwaysOnTopChanged += OnAlwaysOnTopChanged;
+                _host.TaskbarCommandRequested += OnTaskbarCommand;
             }
             SyncAlwaysOnTop();
         }
@@ -475,6 +477,7 @@ public sealed partial class MainPage : Page
         _currentPath = path;
         _currentWebLink = link?.WebLink;
         _streamTitle = link?.Title;
+        RefreshNeighbours(path, isLink: link is not null);
         ResetChapters(link?.Chapters);
         ResetLinkSubtitles(link?.Subtitles, carry);
         ResetQuality(link);
@@ -1797,6 +1800,7 @@ public sealed partial class MainPage : Page
         FullScreenButton.Content = fullScreen ? ExitFullScreenGlyph : FullScreenGlyph;
         ToolTipService.SetToolTip(FullScreenButton, fullScreen ? AppStrings.Get("Transport_ExitFullScreen") : Tip("Transport_FullScreen", ShortcutAction.FullScreen));
 
+        UpdateTaskbar(fileName);
         RenderHome(vm);
 
         _chrome.SetHold(ChromeHolds.NotPlaying, vm?.Status != PlaybackStatus.Playing);

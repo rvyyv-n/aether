@@ -8,6 +8,7 @@ internal static unsafe partial class User32
     public const int GWLP_WNDPROC = -4;
     public const uint WM_GETMINMAXINFO = 0x0024;
     public const uint WM_NCDESTROY = 0x0082;
+    public const uint WM_COMMAND = 0x0111;
     public const uint WM_SIZING = 0x0214;
     public const uint WM_DISPLAYCHANGE = 0x007E;
 
@@ -35,6 +36,24 @@ internal static unsafe partial class User32
 
     [LibraryImport("user32.dll")]
     public static partial int DisplayConfigGetDeviceInfo(DisplayConfigSourceDeviceName* request);
+
+    [LibraryImport("user32.dll", EntryPoint = "RegisterWindowMessageW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint RegisterWindowMessage(string name);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial nint CreateIconIndirect(IconInfo* info);
+
+    [LibraryImport("user32.dll")]
+    public static partial int DestroyIcon(nint icon);
+
+    /// <summary>Win32 <c>ICONINFO</c>.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct IconInfo
+    {
+        public int IsIcon;
+        public uint HotspotX, HotspotY;
+        public nint Mask, Color;
+    }
 
     /// <summary>Adjusts the calling thread's cursor display counter; returns the new count (shown while >= 0).</summary>
     [LibraryImport("user32.dll")]

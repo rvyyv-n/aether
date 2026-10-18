@@ -58,6 +58,15 @@ public interface IShellWindow
 
     /// <summary>Client width / height to keep while the user drags the edges; 0 lets the window resize freely.</summary>
     void SetVideoAspect(double aspect);
+
+    /// <summary>
+    /// Names the taskbar preview after the open file (null for the app name) and sets the buttons under it
+    /// (11.14). Cheap to call often: nothing changes when the values are the same.
+    /// </summary>
+    void SetTaskbar(string? fileName, in TaskbarControls controls);
+
+    /// <summary>Raised when a button under the taskbar preview is pressed.</summary>
+    event EventHandler<TaskbarCommand>? TaskbarCommandRequested;
 }
 
 /// <summary>
@@ -79,6 +88,10 @@ public sealed partial class MainWindow : Window, IShellWindow
     private readonly Color _captionHover;
     private readonly Color _captionPressed;
     private readonly AspectRatioLock? _aspectLock;
+    private readonly TaskbarThumbButtons? _taskbarButtons;
+    private readonly string _playTip = AppStrings.Get("Taskbar_Play");
+    private readonly string _pauseTip = AppStrings.Get("Taskbar_Pause");
+    private readonly string _replayTip = AppStrings.Get("Taskbar_Replay");
     private Windows.Foundation.Point _lastNonClientPointer = new(double.NaN, double.NaN);
     private RectInt32? _normalBounds; // where the window sits when neither maximised nor full screen
     private bool _maximized;
@@ -124,6 +137,20 @@ public sealed partial class MainWindow : Window, IShellWindow
 
         DisplaySync = new DisplayRefreshSync(WinRT.Interop.WindowNative.GetWindowHandle(this));
 
+        try
+        {
+            _taskbarButtons = new TaskbarThumbButtons(
+                WinRT.Interop.WindowNative.GetWindowHandle(this),
+                AppStrings.Get("Taskbar_Previous"),
+                AppStrings.Get("Taskbar_Next"),
+                IsLightTaskbar(),
+                OnTaskbarButton);
+        }
+        catch (InvalidOperationException)
+        {
+            _taskbarButtons = null; // the preview still shows, just without the buttons
+        }
+
         InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         nonClient.PointerEntered += OnNonClientPointerMoved;
         nonClient.PointerMoved += OnNonClientPointerMoved;
@@ -136,6 +163,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         Activated += OnActivated;
         Closed += (_, _) =>
         {
+            _taskbarButtons?.Dispose(); // before the display sync: it sits on top of that subclass
             DisplaySync.Dispose(); // before the aspect lock: it sits on top of that subclass
             _aspectLock?.Dispose();
             App.Settings.Changed -= OnSettingChanged;
@@ -413,10 +441,39 @@ public sealed partial class MainWindow : Window, IShellWindow
     /// </summary>
     private void ApplyTaskbarIcon()
     {
-        bool lightTaskbar = Registry.GetValue(
-            @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
-            "SystemUsesLightTheme", 0) is int value && value != 0;
+        bool lightTaskbar = IsLightTaskbar();
         AppWindow.SetIcon(lightTaskbar ? "Assets/AppIcon.light.ico" : "Assets/AppIcon.ico");
+        _taskbarButtons?.SetLightTheme(lightTaskbar);
+    }
+
+    private static bool IsLightTaskbar() => Registry.GetValue(
+        @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+        "SystemUsesLightTheme", 0) is int value && value != 0;
+
+    public event EventHandler<TaskbarCommand>? TaskbarCommandRequested;
+
+    private void OnTaskbarButton(TaskbarButton button) => TaskbarCommandRequested?.Invoke(this, button switch
+    {
+        TaskbarButton.Previous => TaskbarCommand.Previous,
+        TaskbarButton.Next => TaskbarCommand.Next,
+        _ => TaskbarCommand.PlayPause,
+    });
+
+    public void SetTaskbar(string? fileName, in TaskbarControls controls)
+    {
+        // The taskbar preview's title is the window title.
+        string title = fileName ?? AppStrings.Get("App_Name");
+        if (!string.Equals(Title, title, StringComparison.Ordinal))
+        {
+            Title = title;
+        }
+        (TaskbarGlyph glyph, string tip) = controls.PlayPause switch
+        {
+            PlayButtonAction.Pause => (TaskbarGlyph.Pause, _pauseTip),
+            PlayButtonAction.Replay => (TaskbarGlyph.Play, _replayTip),
+            _ => (TaskbarGlyph.Play, _playTip),
+        };
+        _taskbarButtons?.Update(controls.PreviousEnabled, glyph, tip, controls.PlayPauseEnabled, controls.NextEnabled);
     }
 
     // Raised off the UI thread when the Windows light/dark setting changes.
