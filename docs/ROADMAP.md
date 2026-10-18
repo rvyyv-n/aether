@@ -295,10 +295,11 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 | 11.7 | `BinaryVerification`: libmpv and ANGLE binary integration, real media decode smoke test | S |
 | 11.8 | `THIRD_PARTY.md` licence and attribution file for libmpv, FFmpeg, yt-dlp, ANGLE and the other bundled parts, included in the installer and portable zip — **Draft written** (versions and the libmpv and FFmpeg licence flavour still to confirm, see `docs/reviews/third-party-notes.md`) | S |
 | 11.9 | Self-sufficient yt-dlp: build P8.8 (bundled copy, one-click install, hash check, scheduled updates) | M |
-| 11.10 | Auto updater: build from `docs/reviews/pass-7-auto-updater-plan.md` (ADR-0021). Owner first decides signing, default on or off, and repo visibility | M |
-| 11.11 | Caption buttons ignore transparency: decide between drawing our own caption buttons or accepting them always visible and matching the gear | S |
+| 11.10 | Auto updater: build from `docs/reviews/pass-7-auto-updater-plan.md` (ADR-0021). **Decided:** ships unsigned, off by default until the first signed release, public repo | M |
+| 11.11 | Caption buttons ignore transparency: decide between drawing our own caption buttons or accepting them always visible and matching the gear — **Decided:** keep the system buttons always visible and match the gear to them | S |
 | 11.12 | Settings sections get accessible names for screen readers | S |
 | 11.13 | Set the app's version and publisher before the first release | S |
+| 11.14 | Taskbar preview: hovering the taskbar icon shows the file name as the title and previous, Play/Pause and next buttons under the live preview, like Spotify's; the buttons follow the player state | M |
 
 **Pass 11 means:** Instant mobile pairing via QR code for LAN video streaming, fully verified Native AOT release build with 0 dropped frames.
 
