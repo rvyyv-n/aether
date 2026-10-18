@@ -57,6 +57,7 @@ public static class SettingKeys
     public const string StreamQualityChoice = "streaming.qualityChoice";
     public const string PreferGpuDecodableFormats = "streaming.preferGpuDecodable";
     public const string YtDlpAutoUpdate = "streaming.ytdlpAutoUpdate";
+    public const string UpdatesAutoCheck = "updates.autoCheck";
     public const string NetworkCacheMegabytes = "streaming.cacheMegabytes";
     public const string HttpProxy = "streaming.httpProxy";
     public const string RtspTransport = "streaming.rtspTransport";
@@ -236,6 +237,7 @@ public static class SettingDefinitions
         Flag(SettingKeys.PreferGpuDecodableFormats, s => s.PreferGpuDecodableFormats, (s, v) => s with { PreferGpuDecodableFormats = v }),
         Text(SettingKeys.StreamQualityChoice, s => s.StreamQualityChoice, (s, v) => s with { StreamQualityChoice = v }),
         Flag(SettingKeys.YtDlpAutoUpdate, s => s.YtDlpAutoUpdate, (s, v) => s with { YtDlpAutoUpdate = v }),
+        Flag(SettingKeys.UpdatesAutoCheck, s => s.UpdatesAutoCheck, (s, v) => s with { UpdatesAutoCheck = v }),
         Range(SettingKeys.NetworkCacheMegabytes, s => s.NetworkCacheMegabytes, (s, v) => s with { NetworkCacheMegabytes = v }, 16, 2048, restart: true),
         Text(SettingKeys.HttpProxy, s => s.HttpProxy, (s, v) => s with { HttpProxy = v }),
         Choice(SettingKeys.RtspTransport, s => s.RtspTransport, (s, v) => s with { RtspTransport = v }, false, "tcp", "udp", "http", "udp_multicast"),

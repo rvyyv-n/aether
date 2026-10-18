@@ -94,6 +94,8 @@ public sealed record AetherSettings
     public string StreamingQuality { get; init; } = "1080p";
     public bool PreferGpuDecodableFormats { get; init; } = true;
     public bool YtDlpAutoUpdate { get; init; } = true;
+    /// <summary>Looks for a new Aether once a day. Off until the first signed release (ADR-0021).</summary>
+    public bool UpdatesAutoCheck { get; init; }
     /// <summary>Most data mpv buffers ahead (<c>demuxer-max-bytes</c>), in MiB.</summary>
     /// <summary>The link quality picker's remembered choice (a <c>QualityOption</c> key); empty means Auto.</summary>
     public string StreamQualityChoice { get; init; } = "";
