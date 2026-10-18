@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Aether.Core.Interop.Mpv;
 
@@ -10,6 +11,8 @@ namespace Aether.Core.Interop.Mpv;
 /// </summary>
 public sealed class MpvHandle : SafeHandle
 {
+    private int _shutdownTracked;
+
     public MpvHandle() : base(IntPtr.Zero, ownsHandle: true)
     {
     }
@@ -18,9 +21,28 @@ public sealed class MpvHandle : SafeHandle
 
     public override bool IsInvalid => handle == IntPtr.Zero;
 
+    /// <summary>Counts this core in <see cref="MpvCoreShutdown.Shared"/> until it has been destroyed. Once only.</summary>
+    internal void TrackShutdown()
+    {
+        if (Interlocked.Exchange(ref _shutdownTracked, 1) == 0)
+        {
+            MpvCoreShutdown.Shared.Begin();
+        }
+    }
+
     protected override bool ReleaseHandle()
     {
-        MpvApi.TerminateDestroy(handle);
+        try
+        {
+            MpvApi.TerminateDestroy(handle);
+        }
+        finally
+        {
+            if (Volatile.Read(ref _shutdownTracked) != 0)
+            {
+                MpvCoreShutdown.Shared.End();
+            }
+        }
         return true;
     }
 }

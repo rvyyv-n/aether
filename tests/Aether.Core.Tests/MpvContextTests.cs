@@ -156,6 +156,26 @@ public class MpvContextTests
     }
 
     [Fact]
+    public void Dispose_WhenMpvAvailable_DestroysTheCoreInTheBackground_AndExitCanWaitForIt()
+    {
+        if (!NativeLibraries.IsMpvAvailable())
+        {
+            return; // libmpv is not installed on this machine
+        }
+
+        var ctx = MpvContext.Create();
+        var loop = new MpvEventLoop(ctx, new IgnoringSink());
+        loop.Start();
+
+        ctx.Dispose();
+        loop.Dispose();
+
+        Assert.True(ctx.IsDisposed);
+        Assert.True(loop.Stop(5000));
+        Assert.True(MpvContext.WaitForDestroyedCores(10000));
+    }
+
+    [Fact]
     public void Create_WhenMpvAvailable_WithInvalidOption_ThrowsMpvException()
     {
         if (!NativeLibraries.IsMpvAvailable())
@@ -262,4 +282,15 @@ public class MpvContextTests
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     private static unsafe void* DummyGetProcAddress(void* ctx, byte* name) => null;
+
+    private sealed class IgnoringSink : IMpvEventSink
+    {
+        public void OnEvent(MpvEventView mpvEvent)
+        {
+        }
+
+        public void OnFault(Exception exception)
+        {
+        }
+    }
 }

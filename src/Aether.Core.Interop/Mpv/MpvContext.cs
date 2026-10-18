@@ -289,7 +289,8 @@ public sealed class MpvContext : IDisposable
     /// <summary>
     /// Releases this wrapper's reference and wakes any <see cref="MpvEventLoop"/> parked in
     /// <c>mpv_wait_event</c> so it drops its own. The core is destroyed by whichever reference goes
-    /// last: this one, the event loop's, or a render context's.
+    /// last: this one, the event loop's, or a render context's. Never blocks: this wrapper's reference
+    /// is dropped on a background thread, so <c>mpv_terminate_destroy</c> never runs on the caller's.
     /// </summary>
     public void Dispose()
     {
@@ -304,17 +305,23 @@ public sealed class MpvContext : IDisposable
         }
         try
         {
+            _handle.TrackShutdown();
             // Close first, then wake: the woken loop must already see IsClosed. mpv latches a
             // wake-up that arrives while no one is waiting, so the order cannot lose it.
             _handle.Dispose();
             MpvApi.Wakeup(_handle.DangerousGetHandle());
         }
-        finally
+        catch
         {
-            if (added)
-            {
-                _handle.DangerousRelease();
-            }
+            _handle.DangerousRelease();
+            throw;
         }
+        MpvCoreShutdown.Shared.ReleaseOnWorker(_handle);
     }
+
+    /// <summary>
+    /// App exit: waits up to <paramref name="timeoutMilliseconds"/> for every disposed core to finish
+    /// <c>mpv_terminate_destroy</c>. False on timeout, e.g. while a render loop that never exited still holds one.
+    /// </summary>
+    public static bool WaitForDestroyedCores(int timeoutMilliseconds) => MpvCoreShutdown.Shared.WaitForAll(timeoutMilliseconds);
 }

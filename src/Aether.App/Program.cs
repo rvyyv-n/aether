@@ -1,3 +1,4 @@
+using Aether.Core.Interop.Mpv;
 using Aether_App.Updates;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -35,6 +36,9 @@ public static class Program
             SynchronizationContext.SetSynchronizationContext(new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));
             new App();
         });
+        // Closing the window disposed the engine, whose teardown runs in the background; give it a moment to finish
+        // so the process does not end with mpv's threads half stopped, but never hold up exit for long.
+        MpvContext.WaitForDestroyedCores(2000);
         return 0;
     }
 }
