@@ -118,6 +118,23 @@ internal static class YtDlpManager
         }
     }
 
+    /// <summary>
+    /// True when a release newer than <paramref name="installedVersion"/> is out, false when it is already the latest,
+    /// null when the latest could not be looked up (offline, or GitHub did not answer).
+    /// </summary>
+    public static async Task<bool?> IsNewerAvailableAsync(string? installedVersion)
+    {
+        try
+        {
+            string? tag = await LatestTagAsync(CancellationToken.None).ConfigureAwait(false);
+            return tag is null ? null : YtDlpVersions.Compare(installedVersion, tag) < 0;
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>The plain-English reason a download did not finish.</summary>
     public static string FailureKey(YtDlpInstallOutcome outcome) => outcome switch
     {

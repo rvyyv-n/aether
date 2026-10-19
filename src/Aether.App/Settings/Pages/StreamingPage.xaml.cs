@@ -61,6 +61,13 @@ public sealed partial class StreamingPage : Page
         ShowYtDlp(missing: false, version is null
             ? AppStrings.Format("Settings_Streaming_InstalledAt", _ytDlpPath)
             : AppStrings.Format("Settings_About_Version", version));
+        // The button only shows when there is something to update to; an unanswered check leaves it as a way to retry.
+        YtDlpActionButton.Visibility = Visibility.Collapsed;
+        bool? newer = await YtDlpManager.IsNewerAvailableAsync(version);
+        if (newer != false && _ytDlpPath is not null)
+        {
+            YtDlpActionButton.Visibility = Visibility.Visible;
+        }
     }
 
     private async Task OnYtDlpActionAsync()
@@ -84,6 +91,7 @@ public sealed partial class StreamingPage : Page
             default:
                 YtDlpRow.Description = AppStrings.Get(YtDlpManager.FailureKey(outcome));
                 YtDlpActionButton.Content = AppStrings.Get("Stream_Retry");
+                YtDlpActionButton.Visibility = Visibility.Visible;
                 AppToasts.Show("ytdlp-update", AppStrings.Get(installing ? "Toast_YtDlpInstallFailed" : "Toast_YtDlpUpdateFailed"), ToastTone.Failure);
                 break;
         }
