@@ -83,10 +83,10 @@ public sealed partial class MainWindow : Window, IShellWindow
     private const double FitMaxWorkAreaFraction = 0.9;
 
     // The caption colours live in the design tokens so the title-bar gear and Back read the same values.
-    private readonly Color _captionForeground;
-    private readonly Color _captionInactiveForeground;
-    private readonly Color _captionHover;
-    private readonly Color _captionPressed;
+    private Color _captionForeground;
+    private Color _captionInactiveForeground;
+    private Color _captionHover;
+    private Color _captionPressed;
     private readonly AspectRatioLock? _aspectLock;
     private readonly TaskbarThumbButtons? _taskbarButtons;
     private readonly string _playTip = AppStrings.Get("Taskbar_Play");
@@ -120,7 +120,13 @@ public sealed partial class MainWindow : Window, IShellWindow
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonBackgroundColor = Colors.Transparent;
         titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        ApplyCaptionGlyphs();
+        UpdateCaptionColors();
+
+        Shell.ActualThemeChanged += (_, _) =>
+        {
+            UpdateCaptionColors();
+            ApplyTaskbarIcon();
+        };
 
 
         try
@@ -477,17 +483,30 @@ public sealed partial class MainWindow : Window, IShellWindow
     }
 
     // Raised off the UI thread when the Windows light/dark setting changes.
-    private void OnSystemColoursChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(ApplyTaskbarIcon);
-
-    private void ApplyCaptionGlyphs()
+    private void OnSystemColoursChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(() =>
     {
+        ApplyTaskbarIcon();
+        UpdateCaptionColors();
+    });
+
+    private void UpdateCaptionColors()
+    {
+        var resources = Application.Current.Resources;
+        _captionForeground = (Color)resources["AetherCaptionGlyphColor"];
+        _captionInactiveForeground = (Color)resources["AetherCaptionGlyphInactiveColor"];
+        _captionHover = (Color)resources["AetherCaptionHoverColor"];
+        _captionPressed = (Color)resources["AetherCaptionPressedColor"];
+
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonForegroundColor = _captionForeground;
         titleBar.ButtonInactiveForegroundColor = _captionInactiveForeground;
         titleBar.ButtonHoverBackgroundColor = _captionHover;
         titleBar.ButtonPressedBackgroundColor = _captionPressed;
-        titleBar.ButtonHoverForegroundColor = Colors.White;
-        titleBar.ButtonPressedForegroundColor = Colors.White;
+
+        bool isLight = Shell.ActualTheme == ElementTheme.Light;
+        Color activeHoverGlyph = isLight ? _captionForeground : Colors.White;
+        titleBar.ButtonHoverForegroundColor = activeHoverGlyph;
+        titleBar.ButtonPressedForegroundColor = activeHoverGlyph;
     }
 
     public void FitToVideo(int videoWidth, int videoHeight)

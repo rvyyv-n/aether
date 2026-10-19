@@ -213,14 +213,19 @@ public sealed partial class MainPage : Page
     public void OnWindowActivationChanged(bool active)
     {
         _windowActive = active;
-        Brush glyph = (Brush)Application.Current.Resources[active ? "AetherCaptionGlyphBrush" : "AetherCaptionGlyphInactiveBrush"];
-        SettingsButton.Foreground = glyph;
-        SettingsBackButton.Foreground = glyph;
+        ApplyTitleBarButtonBrushes();
         if (!active)
         {
             _session?.ReleaseKeys();
         }
         UpdateCursor();
+    }
+
+    public void ApplyTitleBarButtonBrushes()
+    {
+        Brush glyph = (Brush)Application.Current.Resources[_windowActive ? "AetherCaptionGlyphBrush" : "AetherCaptionGlyphInactiveBrush"];
+        SettingsButton.Foreground = glyph;
+        SettingsBackButton.Foreground = glyph;
     }
 
     // ---- Lifecycle and engine startup (4.6) ----
