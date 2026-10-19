@@ -224,9 +224,7 @@ public sealed partial class MainPage : Page
 
     public void ApplyTitleBarButtonBrushes()
     {
-        // The caption buttons sit over the video, which is always dark.
-        ElementTheme theme = HasVideo ? ElementTheme.Dark : ActualTheme;
-        Brush glyph = ThemeTokens.Get<Brush>(theme, _windowActive ? "AetherCaptionGlyphBrush" : "AetherCaptionGlyphInactiveBrush");
+        Brush glyph = ThemeTokens.Get<Brush>(TitleBar.ActualTheme, _windowActive ? "AetherCaptionGlyphBrush" : "AetherCaptionGlyphInactiveBrush");
         SettingsButton.Foreground = glyph;
         SettingsBackButton.Foreground = glyph;
     }
@@ -1770,10 +1768,13 @@ public sealed partial class MainPage : Page
             LeavePictureInPicture(); // raises PictureInPictureChanged, which renders again
             return;
         }
-        ApplyTitleBarButtonBrushes();
         // Between two files of a folder the overlay keeps its look rather than flashing the home screen; so does a
         // link switching quality while its new stream loads.
         bool hasVideo = (HasVideo || pip || _qualitySwitching) && !_settingsShown;
+        // The title bar sits on the picture, which is always dark; settings covers it with the backdrop again.
+        TitleBar.RequestedTheme = hasVideo ? ElementTheme.Dark : ElementTheme.Default;
+        ApplyTitleBarButtonBrushes();
+        _host?.SetOverVideo(hasVideo);
         bool fullScreen = _host?.IsFullScreen == true;
 
         // Video, scrims and controls.

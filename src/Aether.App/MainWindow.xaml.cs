@@ -59,6 +59,9 @@ public interface IShellWindow
     /// <summary>Client width / height to keep while the user drags the edges; 0 lets the window resize freely.</summary>
     void SetVideoAspect(double aspect);
 
+    /// <summary>The picture fills the window behind the title bar, so the caption buttons draw light-on-dark.</summary>
+    void SetOverVideo(bool overVideo);
+
     /// <summary>
     /// Names the taskbar preview after the open file (null for the app name) and sets the buttons under it
     /// (11.14). Cheap to call often: nothing changes when the values are the same.
@@ -100,6 +103,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     private readonly UISettings _uiSettings = new(); // held so ColorValuesChanged keeps firing
     private WindowRect? _pipBounds; // where the overlay was last, for the next time it opens
     private double _videoAspect;
+    private bool _overVideo;
 
     public MainWindow()
     {
@@ -517,12 +521,12 @@ public sealed partial class MainWindow : Window, IShellWindow
     private void ApplyDarkFrame() =>
         WindowBorder.SetDarkFrame(
             WinRT.Interop.WindowNative.GetWindowHandle(this),
-            dark: _videoAspect > 0 || Shell.ActualTheme != ElementTheme.Light);
+            dark: _overVideo || Shell.ActualTheme != ElementTheme.Light);
 
     private void UpdateCaptionColors()
     {
         // Over a video the caption buttons stay light-on-dark whatever the theme; the window is dark behind them.
-        ElementTheme theme = _videoAspect > 0 ? ElementTheme.Dark : Shell.ActualTheme;
+        ElementTheme theme = _overVideo ? ElementTheme.Dark : Shell.ActualTheme;
         _captionForeground = ThemeTokens.Get<Color>(theme, "AetherCaptionGlyphColor");
         _captionInactiveForeground = ThemeTokens.Get<Color>(theme, "AetherCaptionGlyphInactiveColor");
         _captionHover = ThemeTokens.Get<Color>(theme, "AetherCaptionHoverColor");
@@ -575,17 +579,22 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     public void SetVideoAspect(double aspect)
     {
-        bool flipped = (_videoAspect > 0) != (aspect > 0);
         _videoAspect = aspect;
-        if (flipped)
-        {
-            UpdateCaptionColors();
-        }
         if (_aspectLock is not null)
         {
             _aspectLock.AspectRatio = aspect;
         }
         WindowBorder.SetShown(WinRT.Interop.WindowNative.GetWindowHandle(this), shown: aspect <= 0);
+    }
+
+    public void SetOverVideo(bool overVideo)
+    {
+        if (overVideo == _overVideo)
+        {
+            return;
+        }
+        _overVideo = overVideo;
+        UpdateCaptionColors();
         ApplyDarkFrame();
     }
 
