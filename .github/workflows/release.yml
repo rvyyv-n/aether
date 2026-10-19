@@ -23,6 +23,20 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # libmpv and ANGLE are not in Git (too big, and built outside this repo), so they come from a pinned release of this repository.
+      # The hash is checked, so a replaced file fails the build instead of shipping.
+      - name: Fetch libmpv and ANGLE
+        shell: pwsh
+        run: |
+          $expected = '6572A522CFE8FC39E7420C4AF9FCAF6990C44D17DD03EEBC05E97021ED2DAA00'
+          gh release download native-deps-1 --repo "${{ github.repository }}" --pattern native-deps.zip --dir "$env:RUNNER_TEMP"
+          $zip = Join-Path $env:RUNNER_TEMP 'native-deps.zip'
+          if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne $expected) { throw 'native-deps.zip does not match the pinned SHA-256.' }
+          New-Item -ItemType Directory -Force src/Aether.App/Native/x64 | Out-Null
+          Expand-Archive $zip -DestinationPath src/Aether.App/Native/x64 -Force
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Read the version from the tag
         shell: pwsh
         run: |
