@@ -26,6 +26,7 @@ public sealed partial class ClipRow : UserControl
 
     private bool _hovered;
     private bool _focused;
+    private static readonly SolidColorBrush TransparentBrush = new(Microsoft.UI.Colors.Transparent);
     private bool _exporting;
 
     private ClipRow()
@@ -198,7 +199,7 @@ public sealed partial class ClipRow : UserControl
     {
         bool shown = _exporting || _hovered || _focused;
         Actions.Opacity = shown ? 1 : 0;
-        Root.Background = _hovered ? Brush("AetherFillSubtleHoverBrush") : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        Root.Background = _hovered ? Brush("AetherFillSubtleHoverBrush") : TransparentBrush;
     }
 
     private bool IsInside(DependencyObject element)
