@@ -1029,15 +1029,15 @@
                                             ValueChanged="OnVolumeChanged"
                                             Value="100">
                                             <Slider.Resources>
-                                                <SolidColorBrush x:Key="SliderTrackFill" Color="{StaticResource AetherFillRangeColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="{StaticResource AetherFillRangeColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackFillPressed" Color="{StaticResource AetherFillRangeColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackValueFill" Color="{StaticResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="{StaticResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderThumbBackground" Color="{StaticResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="{StaticResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="{StaticResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackFill" Color="{ThemeResource AetherFillRangeColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="{ThemeResource AetherFillRangeColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackFillPressed" Color="{ThemeResource AetherFillRangeColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFill" Color="{ThemeResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="{ThemeResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="{ThemeResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderThumbBackground" Color="{ThemeResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="{ThemeResource AetherTextPrimaryColor}" />
+                                                <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="{ThemeResource AetherTextPrimaryColor}" />
                                                 <SolidColorBrush x:Key="SliderOuterThumbBackground" Color="Transparent" />
                                                 <SolidColorBrush x:Key="SliderThumbBorderBrush" Color="Transparent" />
                                                 <x:Double x:Key="SliderHorizontalThumbWidth">12</x:Double>
