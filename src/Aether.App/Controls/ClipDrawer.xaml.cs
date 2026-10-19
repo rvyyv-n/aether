@@ -294,7 +294,7 @@ public sealed partial class ClipDrawer : UserControl
             hint += string.Format(CultureInfo.CurrentCulture, AppStrings.Get("Clips_HintFastOffset"), CutStart.Format(_range.In!.Value - start));
         }
         HintText.Text = hint;
-        HintText.Foreground = (Brush)Application.Current.Resources[_tooSmallBytes is null ? "AetherTextSecondaryBrush" : "AetherStatusWarningBrush"];
+        HintText.Foreground = ThemeTokens.Get<Brush>(this, _tooSmallBytes is null ? "AetherTextSecondaryBrush" : "AetherStatusWarningBrush");
         AutomationProperties.SetHelpText(ModeList, hint);
     }
 

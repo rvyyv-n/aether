@@ -219,7 +219,7 @@ public sealed partial class MainPage
         bool changed = !PlaybackSpeed.IsCurrent(PlaybackSpeed.Normal, _speed);
         if (changed || _speedMenuOpen)
         {
-            SpeedButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+            SpeedButton.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(SpeedButton, "AetherFillEmphasisRestBrush");
         }
         else
         {
@@ -227,7 +227,7 @@ public sealed partial class MainPage
         }
         if (changed)
         {
-            SpeedButton.BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherStrokeControlBrush"];
+            SpeedButton.BorderBrush = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(SpeedButton, "AetherStrokeControlBrush");
         }
         else
         {
@@ -240,7 +240,7 @@ public sealed partial class MainPage
 
     private void OnOpenMenuOpened(object sender, object e)
     {
-        OpenButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        OpenButton.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(OpenButton, "AetherFillEmphasisRestBrush");
         OpenMenuFileItem.Text = AppStrings.Get("Menu_OpenFile");
         OpenMenuUrlItem.Text = AppStrings.Get("Menu_OpenUrl");
         OpenMenuFileItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenFile);
@@ -258,7 +258,7 @@ public sealed partial class MainPage
 
     private void OnMoreMenuOpened(object sender, object e)
     {
-        MoreButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        MoreButton.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(MoreButton, "AetherFillEmphasisRestBrush");
         // The tracks flyout has nothing to list without a file, as in the right-click menu.
         MoreAudioItem.IsEnabled = MoreSubtitlesItem.IsEnabled = HasVideo;
         HoldForMenu(true);

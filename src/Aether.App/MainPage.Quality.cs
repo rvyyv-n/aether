@@ -125,7 +125,7 @@ public sealed partial class MainPage
     {
         if (_qualityMenuOpen)
         {
-            QualityButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+            QualityButton.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(QualityButton, "AetherFillEmphasisRestBrush");
         }
         else
         {

@@ -46,8 +46,9 @@ public sealed partial class ClipRow : UserControl
         if (missing)
         {
             Glyph.Glyph = MissingGlyph;
-            Glyph.Foreground = Brush("AetherTextDisabledBrush");
-            NameText.Foreground = Brush("AetherTextSecondaryBrush");
+            // The row is not in the tree yet, so its theme is only known once it loads.
+            Loaded += (_, _) => ApplyMissingBrushes();
+            ActualThemeChanged += (_, _) => ApplyMissingBrushes();
             DetailsText.Text = AppStrings.Get("Clips_FileNotFound");
             FolderButton.Visibility = Visibility.Collapsed;
         }
@@ -221,5 +222,11 @@ public sealed partial class ClipRow : UserControl
         AutomationProperties.SetName(button, text);
     }
 
-    private static Brush Brush(string key) => (Brush)Application.Current.Resources[key];
+    private void ApplyMissingBrushes()
+    {
+        Glyph.Foreground = Brush("AetherTextDisabledBrush");
+        NameText.Foreground = Brush("AetherTextSecondaryBrush");
+    }
+
+    private Brush Brush(string key) => ThemeTokens.Get<Brush>(this, key);
 }

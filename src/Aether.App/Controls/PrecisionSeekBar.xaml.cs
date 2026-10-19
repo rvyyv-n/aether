@@ -39,6 +39,7 @@ public sealed partial class PrecisionSeekBar : UserControl
     public PrecisionSeekBar()
     {
         InitializeComponent();
+        ActualThemeChanged += (_, _) => ApplyBrushes();
     }
 
     /// <summary>
@@ -204,12 +205,25 @@ public sealed partial class PrecisionSeekBar : UserControl
         }
     }
 
-    private static Border Bar(string brushKey) => new()
+    // The brush key rides in Tag so the strips can be recoloured when the theme changes.
+    private Border Bar(string brushKey) => new()
     {
         Height = 4,
         CornerRadius = new CornerRadius(2),
-        Background = (Brush)Application.Current.Resources[brushKey],
+        Tag = brushKey,
+        Background = ThemeTokens.Get<Brush>(this, brushKey),
     };
+
+    private void ApplyBrushes()
+    {
+        foreach (Piece piece in _pieces)
+        {
+            foreach (Border strip in new[] { piece.Track, piece.Buffered, piece.Played })
+            {
+                strip.Background = ThemeTokens.Get<Brush>(this, (string)strip.Tag);
+            }
+        }
+    }
 
     /// <summary>
     /// Where a Fast cut really starts (the keyframe at or before In). Null, or a keyframe within about

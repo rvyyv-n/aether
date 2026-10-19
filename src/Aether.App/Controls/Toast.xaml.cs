@@ -41,8 +41,8 @@ public sealed partial class Toast : UserControl
         MessageText.Text = request.Text;
         AutomationProperties.SetName(this, request.Text);
         Dot.Visibility = request.Tone == ToastTone.Neutral ? Visibility.Collapsed : Visibility.Visible;
-        Dot.Fill = (Brush)Application.Current.Resources[
-            request.Tone == ToastTone.Failure ? "AetherStatusWarningBrush" : "AetherStatusReadyBrush"];
+        Dot.Fill = ThemeTokens.Get<Brush>(
+            this, request.Tone == ToastTone.Failure ? "AetherStatusWarningBrush" : "AetherStatusReadyBrush");
         ActionButton.Content = request.ActionLabel;
         ActionButton.Visibility = request.HasAction ? Visibility.Visible : Visibility.Collapsed;
         if (request.ActionLabel is { } label)
