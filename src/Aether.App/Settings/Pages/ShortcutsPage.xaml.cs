@@ -94,17 +94,20 @@ public sealed partial class ShortcutsPage : Page
             Width = 8,
             Height = 8,
             VerticalAlignment = VerticalAlignment.Center,
-            Fill = (Brush)resources["AetherStatusWarningBrush"],
+            Fill = ThemeTokens.Get<Brush>(this, "AetherStatusWarningBrush"),
             Visibility = Visibility.Collapsed,
         };
+        // These are built in code, so they re-read their theme brushes when the app theme changes.
+        dot.ActualThemeChanged += (_, _) => dot.Fill = ThemeTokens.Get<Brush>(dot, "AetherStatusWarningBrush");
         var keys = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
         var prompt = new TextBlock
         {
             VerticalAlignment = VerticalAlignment.Center,
             Style = (Style)resources["AetherCaptionTextStyle"],
-            Foreground = (Brush)resources["AetherTextSecondaryBrush"],
+            Foreground = ThemeTokens.Get<Brush>(this, "AetherTextSecondaryBrush"),
             Visibility = Visibility.Collapsed,
         };
+        prompt.ActualThemeChanged += (_, _) => prompt.Foreground = ThemeTokens.Get<Brush>(prompt, "AetherTextSecondaryBrush");
         // The keycaps are the button: clicking them records new keys, clicking again (or Escape) gives up.
         var capsAndPrompt = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         capsAndPrompt.Children.Add(keys);
