@@ -101,8 +101,8 @@ public sealed partial class SettingsExpander : ItemsControl
             row.Padding = new Thickness(52, 8, 16, 8);
             row.MinHeight = (double)Application.Current.Resources["AetherSizeSettingsSubRow"];
             row.BorderThickness = new Thickness(0, 1, 0, 0);
-            row.BorderBrush = (Brush)Application.Current.Resources["AetherStrokeDividerBrush"];
-            row.ActualThemeChanged += (_, _) => row.BorderBrush = (Brush)Application.Current.Resources["AetherStrokeDividerBrush"];
+            row.BorderBrush = ThemeTokens.Get<Brush>(row, "AetherStrokeDividerBrush");
+            row.ActualThemeChanged += (_, _) => row.BorderBrush = ThemeTokens.Get<Brush>(row, "AetherStrokeDividerBrush");
         }
     }
 

@@ -237,14 +237,14 @@ internal sealed class SettingsPageBinder
         var link = new Hyperlink
         {
             UnderlineStyle = UnderlineStyle.Single,
-            Foreground = SettingsGroup.Resource<Microsoft.UI.Xaml.Media.Brush>("AetherTextPrimaryBrush"),
+            Foreground = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(note, "AetherTextPrimaryBrush"),
         };
         link.Inlines.Add(new Run { Text = AppStrings.Get("Settings_RestartEngine") });
         link.Click += (_, _) => App.RestartEngine();
         note.Inlines.Clear();
         note.Inlines.Add(new Run { Text = AppStrings.Get("Settings_AppliesOnRestart") + " · " });
         note.Inlines.Add(link);
-        note.ActualThemeChanged += (_, _) => link.Foreground = SettingsGroup.Resource<Microsoft.UI.Xaml.Media.Brush>("AetherTextPrimaryBrush");
+        note.ActualThemeChanged += (_, _) => link.Foreground = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(note, "AetherTextPrimaryBrush");
         Track(() => note.Visibility = keys.Any(App.Settings.IsRestartPending) ? Visibility.Visible : Visibility.Collapsed);
     }
 

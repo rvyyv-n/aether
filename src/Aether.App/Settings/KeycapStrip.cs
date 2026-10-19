@@ -32,11 +32,11 @@ public sealed partial class KeycapStrip : StackPanel
         {
             Children.Add(new Border
             {
-                Style = SettingsGroup.Resource<Style>("AetherKeycapStyle"),
+                Style = (Style)Application.Current.Resources["AetherKeycapStyle"],
                 Child = new TextBlock
                 {
-                    Style = SettingsGroup.Resource<Style>("AetherCaptionTextStyle"),
-                    Foreground = SettingsGroup.Resource<Microsoft.UI.Xaml.Media.Brush>("AetherTextPrimaryBrush"),
+                    Style = (Style)Application.Current.Resources["AetherCaptionTextStyle"],
+                    Foreground = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(this, "AetherTextPrimaryBrush"),
                     VerticalAlignment = VerticalAlignment.Center,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     Text = key,

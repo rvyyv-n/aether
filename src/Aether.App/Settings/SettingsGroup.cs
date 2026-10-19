@@ -27,6 +27,7 @@ public sealed partial class SettingsGroup : StackPanel
                 Background = Resource<Brush>("AetherSurfaceGlassBrush");
                 BorderBrush = Resource<Brush>("AetherStrokeSurfaceBrush");
             }
+            // Children get their brushes in MeasureOverride; their own ActualTheme has not necessarily flipped yet.
             InvalidateMeasure();
         };
     }
@@ -74,5 +75,5 @@ public sealed partial class SettingsGroup : StackPanel
         return base.MeasureOverride(availableSize);
     }
 
-    internal static T Resource<T>(string key) => (T)Application.Current.Resources[key];
+    private T Resource<T>(string key) => ThemeTokens.Get<T>(this, key);
 }
