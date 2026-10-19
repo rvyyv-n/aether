@@ -95,6 +95,7 @@
             <Border
                 x:Name="Bubble"
                 Padding="7,3"
+                RequestedTheme="Dark"
                 Background="{ThemeResource AetherSurfaceDialogFallbackBrush}"
                 BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"
