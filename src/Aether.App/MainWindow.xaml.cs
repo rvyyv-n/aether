@@ -110,12 +110,6 @@ public sealed partial class MainWindow : Window, IShellWindow
         InitializeComponent();
         Title = AppStrings.Get("App_Name");
 
-        var resources = Application.Current.Resources;
-        _captionForeground = (Color)resources["AetherCaptionGlyphColor"];
-        _captionInactiveForeground = (Color)resources["AetherCaptionGlyphInactiveColor"];
-        _captionHover = (Color)resources["AetherCaptionHoverColor"];
-        _captionPressed = (Color)resources["AetherCaptionPressedColor"];
-
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(Shell.TitleBarDragRegion);
         ApplyTaskbarIcon();
