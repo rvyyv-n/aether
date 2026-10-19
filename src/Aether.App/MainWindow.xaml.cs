@@ -507,15 +507,15 @@ public sealed partial class MainWindow : Window, IShellWindow
             _ => ElementTheme.Default,
         };
         UpdateCaptionColors();
-        ApplyDarkFrame();
         ApplyTaskbarIcon();
+        ApplyBorder();
     }
 
-    // Applied after the theme, as WinUI sets the same attribute itself when the theme changes.
-    private void ApplyDarkFrame() =>
-        WindowBorder.SetDarkFrame(
+    private void ApplyBorder() =>
+        WindowBorder.SetShown(
             WinRT.Interop.WindowNative.GetWindowHandle(this),
-            dark: _overVideo || Shell.ActualTheme != ElementTheme.Light);
+            shown: _videoAspect <= 0,
+            lightTheme: Shell.ActualTheme == ElementTheme.Light);
 
     private void UpdateCaptionColors()
     {
@@ -578,7 +578,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         {
             _aspectLock.AspectRatio = aspect;
         }
-        WindowBorder.SetShown(WinRT.Interop.WindowNative.GetWindowHandle(this), shown: aspect <= 0);
+        ApplyBorder();
     }
 
     public void SetOverVideo(bool overVideo)
@@ -589,7 +589,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         }
         _overVideo = overVideo;
         UpdateCaptionColors();
-        ApplyDarkFrame();
+        ApplyBorder();
     }
 
     private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
