@@ -127,8 +127,6 @@ public sealed partial class MainWindow : Window, IShellWindow
         Shell.ActualThemeChanged += (_, _) =>
         {
             ApplyTheme();
-        App.Settings.Changed += OnSettingsChanged;
-        Closed += (_, _) => App.Settings.Changed -= OnSettingsChanged;
             ApplyTaskbarIcon();
         };
 
@@ -491,8 +489,6 @@ public sealed partial class MainWindow : Window, IShellWindow
     {
         ApplyTaskbarIcon();
         ApplyTheme();
-        App.Settings.Changed += OnSettingsChanged;
-        Closed += (_, _) => App.Settings.Changed -= OnSettingsChanged;
     });
 
     private void OnSettingsChanged(object? sender, SettingChangedEventArgs e)
@@ -518,11 +514,12 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     private void UpdateCaptionColors()
     {
-        var resources = Application.Current.Resources;
-        _captionForeground = (Color)resources["AetherCaptionGlyphColor"];
-        _captionInactiveForeground = (Color)resources["AetherCaptionGlyphInactiveColor"];
-        _captionHover = (Color)resources["AetherCaptionHoverColor"];
-        _captionPressed = (Color)resources["AetherCaptionPressedColor"];
+        // Over a video the caption buttons stay light-on-dark whatever the theme; the window is dark behind them.
+        ElementTheme theme = _videoAspect > 0 ? ElementTheme.Dark : Shell.ActualTheme;
+        _captionForeground = ThemeTokens.Get<Color>(theme, "AetherCaptionGlyphColor");
+        _captionInactiveForeground = ThemeTokens.Get<Color>(theme, "AetherCaptionGlyphInactiveColor");
+        _captionHover = ThemeTokens.Get<Color>(theme, "AetherCaptionHoverColor");
+        _captionPressed = ThemeTokens.Get<Color>(theme, "AetherCaptionPressedColor");
 
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonForegroundColor = _captionForeground;
@@ -530,8 +527,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         titleBar.ButtonHoverBackgroundColor = _captionHover;
         titleBar.ButtonPressedBackgroundColor = _captionPressed;
 
-        bool isLight = Shell.ActualTheme == ElementTheme.Light;
-        Color activeHoverGlyph = isLight ? _captionForeground : Colors.White;
+        Color activeHoverGlyph = theme == ElementTheme.Light ? _captionForeground : Colors.White;
         titleBar.ButtonHoverForegroundColor = activeHoverGlyph;
         titleBar.ButtonPressedForegroundColor = activeHoverGlyph;
     }
@@ -572,7 +568,12 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     public void SetVideoAspect(double aspect)
     {
+        bool flipped = (_videoAspect > 0) != (aspect > 0);
         _videoAspect = aspect;
+        if (flipped)
+        {
+            UpdateCaptionColors();
+        }
         if (_aspectLock is not null)
         {
             _aspectLock.AspectRatio = aspect;
