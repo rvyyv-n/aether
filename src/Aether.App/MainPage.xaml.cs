@@ -860,6 +860,7 @@ public sealed partial class MainPage : Page
             VolumeSlider.Focus(FocusState.Keyboard);
         }
         _chrome.SetHold(ChromeHolds.Flyout, true);
+        SetPopupSurface(VolumeFlyoutContent);
         ApplyChrome();
     }
 
@@ -868,6 +869,7 @@ public sealed partial class MainPage : Page
         _volumeHover.Closed();
         ArmVolumeHover();
         _chrome.SetHold(ChromeHolds.Flyout, false);
+        SetPopupSurface(null);
         ApplyChrome();
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
     }
@@ -1778,6 +1780,7 @@ public sealed partial class MainPage : Page
         // ADR-0013: no blur in picture in picture; there is no card to blur behind.
         VideoSurface.SetBackdropActive(BackdropSlot.Bar, hasVideo && !pip);
         VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, hasVideo && !pip);
+        _backdropAllowed = hasVideo && !pip;
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         PlaceRail();

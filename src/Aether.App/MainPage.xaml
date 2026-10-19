@@ -21,8 +21,8 @@
 
     <Page.Resources>
         <!--
-            Tracks flyout (9.2): opened from Audio and Subtitles in the right-click menu, centred above the pill. A solid
-            surface because Acrylic does not sample the swap chain (ADR-0013); the panel scrolls inside it (MainPage.Tracks.cs).
+            Tracks flyout (9.2): opened from Audio and Subtitles in the right-click menu, centred above the pill. A translucent
+            surface: the render thread blurs the video behind it (ADR-0013); the panel scrolls inside it (MainPage.Tracks.cs).
         -->
         <Flyout
             x:Name="TracksFlyout"
@@ -31,7 +31,7 @@
             Placement="Top">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
-                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
+                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogBrush}" />
                     <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
                     <Setter Property="BorderThickness" Value="1" />
                     <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
@@ -45,7 +45,7 @@
             <controls:TracksPanel x:Name="TracksPanel" />
         </Flyout>
 
-        <!--  Video flyout (9.3): right-aligned to the pill, on the same solid surface as the tracks flyout (MainPage.Video.cs).  -->
+        <!--  Video flyout (9.3): right-aligned to the pill, on the same surface as the tracks flyout (MainPage.Video.cs).  -->
         <Flyout
             x:Name="VideoFlyout"
             Closed="OnVideoFlyoutClosed"
@@ -53,7 +53,7 @@
             Placement="TopEdgeAlignedRight">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
-                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
+                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogBrush}" />
                     <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
                     <Setter Property="BorderThickness" Value="1" />
                     <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
@@ -862,11 +862,37 @@
                         Spacing="4">
                         <Button
                             x:Name="OpenButton"
-                            Click="OnOpenFileClick"
+                            Click="OnOpenButtonClick"
                             Content="&#xE838;"
                             Style="{StaticResource AetherTransportIconButtonStyle}"
                             ToolTipService.Placement="Top"
-                            ToolTipService.ToolTip="Open file (Ctrl+O)" />
+                            ToolTipService.ToolTip="Open file (Ctrl+O)">
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout
+                                    x:Name="OpenMenu"
+                                    Closed="OnOpenMenuClosed"
+                                    MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    Opened="OnOpenMenuOpened"
+                                    Placement="TopEdgeAlignedLeft">
+                                    <MenuFlyoutItem
+                                        x:Name="OpenMenuFileItem"
+                                        Click="OnOpenFileClick"
+                                        Style="{StaticResource AetherMenuItemStyle}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE838;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutItem
+                                        x:Name="OpenMenuUrlItem"
+                                        Click="OnOpenUrlClick"
+                                        Style="{StaticResource AetherMenuItemStyle}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE71B;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                </MenuFlyout>
+                            </FlyoutBase.AttachedFlyout>
+                        </Button>
                         <Button
                             x:Name="SpeedButton"
                             Click="OnSpeedClick"
@@ -966,9 +992,9 @@
                                     Opened="OnVolumeFlyoutOpened"
                                     Placement="Top">
                                     <Flyout.FlyoutPresenterStyle>
-                                        <!--  Solid dialog fallback over video: in-app Acrylic does not sample the swap chain (ADR-0013).  -->
+                                        <!--  The 62% dialog tint; the blur behind it is drawn by the render thread (ADR-0013).  -->
                                         <Style TargetType="FlyoutPresenter">
-                                            <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogFallbackBrush}" />
+                                            <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogBrush}" />
                                             <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
                                             <Setter Property="BorderThickness" Value="1" />
                                             <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
@@ -1178,7 +1204,7 @@
                 Margin="16"
                 Padding="24"
                 VerticalAlignment="Center"
-                Background="{StaticResource AetherSurfaceDialogFallbackBrush}"
+                Background="{StaticResource AetherSurfaceDialogBrush}"
                 BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherOverlayCornerRadius}">
@@ -1261,7 +1287,7 @@
                 Margin="16"
                 Padding="24"
                 VerticalAlignment="Center"
-                Background="{StaticResource AetherSurfaceDialogFallbackBrush}"
+                Background="{StaticResource AetherSurfaceDialogBrush}"
                 BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherOverlayCornerRadius}">
@@ -1416,7 +1442,8 @@
                 BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherOverlayCornerRadius}"
-                KeyDown="OnTourCardKeyDown">
+                KeyDown="OnTourCardKeyDown"
+                SizeChanged="OnTourCardSizeChanged">
                 <StackPanel TabFocusNavigation="Cycle">
                     <Grid>
                         <TextBlock

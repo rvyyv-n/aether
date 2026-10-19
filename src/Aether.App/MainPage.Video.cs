@@ -77,11 +77,16 @@ public sealed partial class MainPage
         VideoFlyout.ShowAt(Osd, new FlyoutShowOptions { Placement = FlyoutPlacementMode.TopEdgeAlignedRight, ShowMode = FlyoutShowMode.Standard });
     }
 
-    private void OnVideoFlyoutOpened(object? sender, object e) => HoldForMenu(true);
+    private void OnVideoFlyoutOpened(object? sender, object e)
+    {
+        HoldForMenu(true);
+        SetPopupSurface(VideoPanel);
+    }
 
     private void OnVideoFlyoutClosed(object? sender, object e)
     {
         HoldForMenu(false);
+        SetPopupSurface(null);
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
     }
 

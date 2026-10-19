@@ -22,6 +22,9 @@ namespace Aether_App.Controls;
 /// </summary>
 public sealed partial class ClipDrawer : UserControl
 {
+    /// <summary>The chip and drawer's card, which the page blurs the video behind.</summary>
+    public FrameworkElement Surface => Panel;
+
     private const string ChevronUp = "";
     private const string ChevronDown = "";
 

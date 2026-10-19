@@ -19,6 +19,20 @@ public class TrackLabelTests
     private static string English => CultureInfo.GetCultureInfo("en").DisplayName;
 
     [Fact]
+    public void A_Track_From_A_Web_Address_Is_Named_After_The_Video()
+    {
+        MediaTrack sub = Sub(3, "en", file: "https://www.youtube.com/api/timedtext?v=abc&lang=en");
+        Assert.Equal("Make Your Prompts Dumber", TrackLabels.Format(sub, TrackText, "SDH", "Forced", "  Make Your Prompts Dumber "));
+    }
+
+    [Fact]
+    public void A_Track_From_A_Web_Address_Falls_Back_To_Its_Language_Without_A_Video_Title()
+    {
+        MediaTrack sub = Sub(3, "en", file: "https://example.com/videoplayback?expire=1");
+        Assert.Equal(English, Label(sub));
+    }
+
+    [Fact]
     public void Audio_Shows_Language_And_Channel_Layout()
     {
         Assert.Equal($"{English} · 5.1", Label(Audio(1, "eng", layout: "5.1(side)")));

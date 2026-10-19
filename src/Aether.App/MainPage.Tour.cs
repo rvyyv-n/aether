@@ -41,6 +41,7 @@ public sealed partial class MainPage
     private double _lightRadiusTo;
     private bool _tourMenuShown;
     private bool _tourBarShown;
+    private double _tourCardPlacedHeight;
 
     private readonly record struct TourTarget(TourRect Rect, double Radius, bool Dashed = false);
 
@@ -195,6 +196,15 @@ public sealed partial class MainPage
     }
 
     private void OnTourLayerSizeChanged(object sender, SizeChangedEventArgs e) => RefreshTourLayout();
+
+    // The card's text wraps once it is on screen, so its real height can differ from the one it was placed with.
+    private void OnTourCardSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (_tour.IsActive && TourLayer.ActualWidth > 0 && Math.Abs(e.NewSize.Height - _tourCardPlacedHeight) > 1)
+        {
+            PlaceTourCard();
+        }
+    }
 
     /// <summary>The window or the bar changed size: the light and card jump to their new places rather than gliding.</summary>
     private void RefreshTourLayout()
@@ -462,8 +472,10 @@ public sealed partial class MainPage
             TourStep.Shortcuts => HomeContentBounds(),
             _ => TourTargetOf(step)?.Rect,
         };
+        double cardHeight = Math.Max(TourCard.DesiredSize.Height, wasCollapsed ? 0 : TourCard.ActualHeight);
+        _tourCardPlacedHeight = cardHeight;
         (double x, double y) = TourLayout.PlaceCard(
-            target, TourCard.Width, TourCard.DesiredSize.Height, width, height, FirstRunTour.PlacementOf(step));
+            target, TourCard.Width, cardHeight, width, height, FirstRunTour.PlacementOf(step));
         TourCard.Margin = new Thickness(x, y, 0, 0);
     }
 

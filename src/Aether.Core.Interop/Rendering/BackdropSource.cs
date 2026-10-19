@@ -12,6 +12,15 @@ public enum BackdropSlot
 
     /// <summary>The floating sidebar.</summary>
     Sidebar = 1,
+
+    /// <summary>The export chip and clip drawer.</summary>
+    Clip = 2,
+
+    /// <summary>The dialog card: Open URL or the phone pairing card, never both at once.</summary>
+    Card = 3,
+
+    /// <summary>The flyout that is open (audio and subtitles, video); only one is ever open.</summary>
+    Popup = 4,
 }
 
 /// <summary>
@@ -23,7 +32,7 @@ public enum BackdropSlot
 public sealed class BackdropSource
 {
     /// <summary>The number of <see cref="BackdropSlot"/> values; size the buffer given to <see cref="TryGetFrames"/> with it.</summary>
-    public const int SlotCount = 2;
+    public const int SlotCount = 5;
 
     // A fade that nobody renders (another backend) must not keep the loop redrawing forever.
     private const double GraceMilliseconds = 100;

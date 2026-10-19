@@ -34,13 +34,21 @@ public static partial class TrackLabels
     /// <summary>
     /// The row text for <paramref name="track"/>. An external subtitle shows its file name; a track without a language
     /// is "Track N" after its id. <paramref name="trackText"/> is the localised "Track {0}", <paramref name="sdh"/> and
-    /// <paramref name="forced"/> the localised flags.
+    /// <paramref name="forced"/> the localised flags. A track that comes from a web address would show the address's
+    /// last part ("videoplayback?expire=..."), so it is named <paramref name="linkTitle"/>, the title of the video, instead.
     /// </summary>
-    public static string Format(MediaTrack track, string trackText, string sdh, string forced)
+    public static string Format(MediaTrack track, string trackText, string sdh, string forced, string? linkTitle = null)
     {
         if (track.ExternalFile is { } file)
         {
-            return Path.GetFileName(file);
+            if (!IsWebAddress(file))
+            {
+                return Path.GetFileName(file);
+            }
+            if (!string.IsNullOrWhiteSpace(linkTitle))
+            {
+                return linkTitle.Trim();
+            }
         }
 
         string? language = LanguageName(track.Language);
@@ -127,6 +135,9 @@ public static partial class TrackLabels
             _ => null,
         };
     }
+
+    private static bool IsWebAddress(string path) =>
+        path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>A title says something extra unless it just repeats the language, its tag or the SDH / Forced flag.</summary>
     private static bool AddsInformation(string? title, string? language, string? tag, string? flag) =>

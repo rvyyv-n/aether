@@ -235,6 +235,25 @@ public sealed partial class MainPage
         }
     }
 
+    // The folder button asks which to open, so a link can be played while a video is already on.
+    private void OnOpenButtonClick(object sender, RoutedEventArgs e) => FlyoutBase.ShowAttachedFlyout(OpenButton);
+
+    private void OnOpenMenuOpened(object sender, object e)
+    {
+        OpenButton.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherFillEmphasisRestBrush"];
+        OpenMenuFileItem.Text = AppStrings.Get("Menu_OpenFile");
+        OpenMenuUrlItem.Text = AppStrings.Get("Menu_OpenUrl");
+        OpenMenuFileItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenFile);
+        OpenMenuUrlItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenUrl);
+        HoldForMenu(true);
+    }
+
+    private void OnOpenMenuClosed(object sender, object e)
+    {
+        OpenButton.ClearValue(BackgroundProperty);
+        HoldForMenu(false);
+    }
+
     private void OnMoreClick(object sender, RoutedEventArgs e) => FlyoutBase.ShowAttachedFlyout(MoreButton);
 
     private void OnMoreMenuOpened(object sender, object e)

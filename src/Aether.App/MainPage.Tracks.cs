@@ -72,14 +72,20 @@ public sealed partial class MainPage
     private void ApplyTracks(TrackSnapshot snapshot)
     {
         _tracks = snapshot;
+        TracksPanel.LinkTitle = _streamTitle;
         TracksPanel.Show(snapshot);
     }
 
-    private void OnTracksFlyoutOpened(object? sender, object e) => HoldForMenu(true);
+    private void OnTracksFlyoutOpened(object? sender, object e)
+    {
+        HoldForMenu(true);
+        SetPopupSurface(TracksPanel);
+    }
 
     private void OnTracksFlyoutClosed(object? sender, object e)
     {
         HoldForMenu(false);
+        SetPopupSurface(null);
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
     }
 

@@ -37,6 +37,9 @@ public sealed partial class TracksPanel : UserControl
     /// <summary>A track was picked: <see cref="TrackChoice.Id"/> is null for Off.</summary>
     public event EventHandler<TrackChoice>? TrackChosen;
 
+    /// <summary>The playing link's video title, which names the tracks that arrive from a web address.</summary>
+    public string? LinkTitle { get; set; }
+
     public event EventHandler? AddSubtitleRequested;
 
     public event EventHandler<DelayStep>? DelayStepped;
@@ -78,7 +81,7 @@ public sealed partial class TracksPanel : UserControl
         foreach (MediaTrack track in tracks)
         {
             string label = TrackLabels.Format(
-                track, AppStrings.Get("Tracks_TrackN"), AppStrings.Get("Tracks_Sdh"), AppStrings.Get("Tracks_Forced"));
+                track, AppStrings.Get("Tracks_TrackN"), AppStrings.Get("Tracks_Sdh"), AppStrings.Get("Tracks_Forced"), LinkTitle);
             rows.Children.Add(Row(label, track.Selected, new TrackChoice(kind, track.Id)));
         }
     }
