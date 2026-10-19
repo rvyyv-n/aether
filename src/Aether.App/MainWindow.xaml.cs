@@ -120,11 +120,15 @@ public sealed partial class MainWindow : Window, IShellWindow
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonBackgroundColor = Colors.Transparent;
         titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        UpdateCaptionColors();
+        ApplyTheme();
+        App.Settings.Changed += OnSettingsChanged;
+        Closed += (_, _) => App.Settings.Changed -= OnSettingsChanged;
 
         Shell.ActualThemeChanged += (_, _) =>
         {
-            UpdateCaptionColors();
+            ApplyTheme();
+        App.Settings.Changed += OnSettingsChanged;
+        Closed += (_, _) => App.Settings.Changed -= OnSettingsChanged;
             ApplyTaskbarIcon();
         };
 
@@ -486,8 +490,31 @@ public sealed partial class MainWindow : Window, IShellWindow
     private void OnSystemColoursChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(() =>
     {
         ApplyTaskbarIcon();
-        UpdateCaptionColors();
+        ApplyTheme();
+        App.Settings.Changed += OnSettingsChanged;
+        Closed += (_, _) => App.Settings.Changed -= OnSettingsChanged;
     });
+
+    private void OnSettingsChanged(object? sender, SettingChangedEventArgs e)
+    {
+        if (e.Key == SettingKeys.Theme)
+        {
+            DispatcherQueue.TryEnqueue(ApplyTheme);
+        }
+    }
+
+    private void ApplyTheme()
+    {
+        string theme = App.Settings.Current.Theme;
+        Shell.RequestedTheme = theme switch
+        {
+            "light" => ElementTheme.Light,
+            "dark" => ElementTheme.Dark,
+            _ => ElementTheme.Default,
+        };
+        UpdateCaptionColors();
+        ApplyTaskbarIcon();
+    }
 
     private void UpdateCaptionColors()
     {

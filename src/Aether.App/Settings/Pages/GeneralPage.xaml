@@ -6,6 +6,9 @@
     xmlns:settings="using:Aether_App.Settings">
     <StackPanel Spacing="16">
         <settings:SettingsGroup>
+            <settings:SettingsRow x:Name="ThemeRow" Glyph="&#xE790;">
+                <ListBox x:Name="ThemeSegmented" Style="{StaticResource AetherSegmentedStyle}" />
+            </settings:SettingsRow>
             <settings:SettingsRow x:Name="BatterySaverRow" Glyph="&#xE850;">
                 <ToggleSwitch x:Name="BatterySaverToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
