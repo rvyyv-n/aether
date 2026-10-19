@@ -971,6 +971,7 @@
         4 above and below the items. Items are 32 tall, inset 4, radius 4; hover is FillSubtleHover.
     -->
     <Style x:Key="AetherMenuFlyoutPresenterStyle" TargetType="MenuFlyoutPresenter">
+        <Setter Property="RequestedTheme" Value="Dark" />
         <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogFallbackBrush}" />
         <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
         <Setter Property="BorderThickness" Value="1" />

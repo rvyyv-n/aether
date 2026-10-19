@@ -1093,6 +1093,7 @@ public sealed partial class MainPage : Page
         CloseLanStream();
         LeavePictureInPicture();
         _openUrl.Open(clipboard);
+        OpenUrlOverlay.RequestedTheme = HasVideo ? ElementTheme.Dark : ElementTheme.Default;
         OpenUrlBox.Text = _openUrl.Text;
         if (_fader is null)
         {
