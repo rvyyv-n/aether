@@ -30,23 +30,23 @@
                                 <VisualState x:Name="Normal" />
                                 <VisualState x:Name="PointerOver">
                                     <VisualState.Setters>
-                                        <Setter Target="ContentPresenter.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                        <Setter Target="ContentPresenter.Background" Value="{ThemeResource AetherFillSubtleHoverBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <VisualState.Setters>
-                                        <Setter Target="ContentPresenter.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                        <Setter Target="ContentPresenter.Background" Value="{ThemeResource AetherFillSubtlePressedBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Checked" />
                                 <VisualState x:Name="CheckedPointerOver">
                                     <VisualState.Setters>
-                                        <Setter Target="ContentPresenter.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                        <Setter Target="ContentPresenter.Background" Value="{ThemeResource AetherFillSubtleHoverBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="CheckedPressed">
                                     <VisualState.Setters>
-                                        <Setter Target="ContentPresenter.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                        <Setter Target="ContentPresenter.Background" Value="{ThemeResource AetherFillSubtlePressedBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="CheckedDisabled" />
@@ -121,7 +121,7 @@
                             <TextBlock
                                 x:Name="DescriptionText"
                                 Margin="0,2,0,0"
-                                Foreground="{StaticResource AetherTextSecondaryBrush}"
+                                Foreground="{ThemeResource AetherTextSecondaryBrush}"
                                 Style="{StaticResource AetherCaptionTextStyle}"
                                 Text="{TemplateBinding Description}"
                                 TextWrapping="Wrap" />
@@ -138,7 +138,7 @@
                                 x:Name="StateTextBlock"
                                 VerticalAlignment="Center"
                                 AutomationProperties.AccessibilityView="Raw"
-                                Foreground="{StaticResource AetherTextSecondaryBrush}"
+                                Foreground="{ThemeResource AetherTextSecondaryBrush}"
                                 Style="{StaticResource AetherBodyTextStyle}"
                                 Text="{TemplateBinding StateText}" />
                             <ContentPresenter
@@ -202,7 +202,7 @@
                                             TextWrapping="Wrap" />
                                         <TextBlock
                                             x:Name="DescriptionText"
-                                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                                            Foreground="{ThemeResource AetherTextSecondaryBrush}"
                                             Style="{StaticResource AetherCaptionTextStyle}"
                                             Text="{TemplateBinding Description}"
                                             TextWrapping="Wrap" />
@@ -221,7 +221,7 @@
                                     x:Name="Chevron"
                                     FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                     FontSize="12"
-                                    Foreground="{StaticResource AetherTextSecondaryBrush}"
+                                    Foreground="{ThemeResource AetherTextSecondaryBrush}"
                                     IsHitTestVisible="False" />
                             </StackPanel>
                         </Grid>
@@ -250,7 +250,7 @@
         <Setter Property="Padding" Value="12,0" />
         <Setter Property="FontFamily" Value="{StaticResource AetherUiFont}" />
         <Setter Property="FontSize" Value="{StaticResource AetherBodyFontSize}" />
-        <Setter Property="Foreground" Value="{StaticResource AetherTextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource AetherTextSecondaryBrush}" />
         <Setter Property="UseSystemFocusVisuals" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
@@ -267,37 +267,37 @@
                                 <VisualState x:Name="Normal" />
                                 <VisualState x:Name="PointerOver">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
-                                        <Setter Target="Presenter.Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+                                        <Setter Target="Root.Background" Value="{ThemeResource AetherFillSubtleHoverBrush}" />
+                                        <Setter Target="Presenter.Foreground" Value="{ThemeResource AetherTextPrimaryBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                        <Setter Target="Root.Background" Value="{ThemeResource AetherFillSubtlePressedBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Selected">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
-                                        <Setter Target="Presenter.Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+                                        <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisRestBrush}" />
+                                        <Setter Target="Presenter.Foreground" Value="{ThemeResource AetherTextPrimaryBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="SelectedUnfocused">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
-                                        <Setter Target="Presenter.Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+                                        <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisRestBrush}" />
+                                        <Setter Target="Presenter.Foreground" Value="{ThemeResource AetherTextPrimaryBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="SelectedPointerOver">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisHoverBrush}" />
-                                        <Setter Target="Presenter.Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+                                        <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisHoverBrush}" />
+                                        <Setter Target="Presenter.Foreground" Value="{ThemeResource AetherTextPrimaryBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="SelectedPressed">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisPressedBrush}" />
-                                        <Setter Target="Presenter.Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+                                        <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisPressedBrush}" />
+                                        <Setter Target="Presenter.Foreground" Value="{ThemeResource AetherTextPrimaryBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Disabled" />
@@ -319,8 +319,8 @@
 
     <!--  Segmented: 32 container (FillInput, StrokeControl, radius 4, padding 2), 28 items, selected FillEmphasis  -->
     <Style x:Key="AetherSegmentedStyle" TargetType="ListBox">
-        <Setter Property="Background" Value="{StaticResource AetherFillInputBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+        <Setter Property="Background" Value="{ThemeResource AetherFillInputBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeControlBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
         <Setter Property="Padding" Value="2" />
@@ -360,8 +360,8 @@
         TargetType="ComboBox">
         <Setter Property="MinWidth" Value="200" />
         <Setter Property="MinHeight" Value="{StaticResource AetherSizeComboHeight}" />
-        <Setter Property="Background" Value="{StaticResource AetherFillInputBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+        <Setter Property="Background" Value="{ThemeResource AetherFillInputBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeControlBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
     </Style>
 
@@ -371,8 +371,8 @@
         TargetType="TextBox">
         <Setter Property="Width" Value="260" />
         <Setter Property="MinHeight" Value="{StaticResource AetherSizeComboHeight}" />
-        <Setter Property="Background" Value="{StaticResource AetherFillInputBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+        <Setter Property="Background" Value="{ThemeResource AetherFillInputBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeControlBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
         <Setter Property="IsSpellCheckEnabled" Value="False" />
     </Style>
@@ -390,7 +390,7 @@
         BasedOn="{StaticResource AetherOutlinePillButtonStyle}"
         TargetType="Button">
         <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource AetherTextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource AetherTextSecondaryBrush}" />
         <Setter Property="FontSize" Value="{StaticResource AetherCaptionFontSize}" />
         <Setter Property="Padding" Value="8,0" />
     </Style>
@@ -411,8 +411,8 @@
         <Setter Property="Height" Value="{StaticResource AetherSizeKeycap}" />
         <Setter Property="MinWidth" Value="{StaticResource AetherSizeKeycap}" />
         <Setter Property="Padding" Value="8,0" />
-        <Setter Property="Background" Value="{StaticResource AetherFillInputBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeControlBrush}" />
+        <Setter Property="Background" Value="{ThemeResource AetherFillInputBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeControlBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
     </Style>

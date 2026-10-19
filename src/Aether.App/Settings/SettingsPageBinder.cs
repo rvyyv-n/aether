@@ -244,6 +244,7 @@ internal sealed class SettingsPageBinder
         note.Inlines.Clear();
         note.Inlines.Add(new Run { Text = AppStrings.Get("Settings_AppliesOnRestart") + " · " });
         note.Inlines.Add(link);
+        note.ActualThemeChanged += (_, _) => link.Foreground = SettingsGroup.Resource<Microsoft.UI.Xaml.Media.Brush>("AetherTextPrimaryBrush");
         Track(() => note.Visibility = keys.Any(App.Settings.IsRestartPending) ? Visibility.Visible : Visibility.Collapsed);
     }
 

@@ -20,6 +20,15 @@ public sealed partial class SettingsGroup : StackPanel
     public SettingsGroup()
     {
         Spacing = 4;
+        ActualThemeChanged += (_, _) =>
+        {
+            if (_divided)
+            {
+                Background = Resource<Brush>("AetherSurfaceGlassBrush");
+                BorderBrush = Resource<Brush>("AetherStrokeSurfaceBrush");
+            }
+            InvalidateMeasure();
+        };
     }
 
     public bool Divided

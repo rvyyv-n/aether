@@ -34,14 +34,14 @@
             Width="{StaticResource AetherSizeClipThumbWidth}"
             Height="{StaticResource AetherSizeClipThumbHeight}"
             VerticalAlignment="Center"
-            Background="{StaticResource AetherFillSubtleHoverBrush}"
+            Background="{ThemeResource AetherFillSubtleHoverBrush}"
             CornerRadius="{StaticResource AetherControlCornerRadius}">
             <Grid>
                 <FontIcon
                     x:Name="Glyph"
                     FontFamily="{ThemeResource SymbolThemeFontFamily}"
                     FontSize="{StaticResource AetherSizeIcon}"
-                    Foreground="{StaticResource AetherTextSecondaryBrush}" />
+                    Foreground="{ThemeResource AetherTextSecondaryBrush}" />
                 <Image x:Name="Thumbnail" Stretch="UniformToFill" />
             </Grid>
         </Border>

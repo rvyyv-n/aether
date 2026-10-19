@@ -20,7 +20,7 @@
                     x:Name="Icon"
                     FontFamily="{ThemeResource SymbolThemeFontFamily}"
                     FontSize="{StaticResource AetherSizeIcon}"
-                    Foreground="{StaticResource AetherTextSecondaryBrush}" />
+                    Foreground="{ThemeResource AetherTextSecondaryBrush}" />
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock
                         x:Name="NameText"

@@ -78,7 +78,7 @@
                 Click="OnResetColoursClick"
                 Style="{StaticResource AetherSettingsTextButtonStyle}" />
 
-            <Border Height="1" Margin="-16,4,-16,4" Background="{StaticResource AetherStrokeDividerBrush}" />
+            <Border Height="1" Margin="-16,4,-16,4" Background="{ThemeResource AetherStrokeDividerBrush}" />
             <TextBlock x:Name="LookHeading" Style="{StaticResource AetherCaptionStrongTextStyle}" />
 
             <StackPanel Spacing="4">

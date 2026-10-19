@@ -31,8 +31,8 @@
             Placement="Top">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
-                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogBrush}" />
-                    <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogBrush}" />
+                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
                     <Setter Property="BorderThickness" Value="1" />
                     <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
                     <Setter Property="Padding" Value="0" />
@@ -53,8 +53,8 @@
             Placement="TopEdgeAlignedRight">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
-                    <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogBrush}" />
-                    <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogBrush}" />
+                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
                     <Setter Property="BorderThickness" Value="1" />
                     <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
                     <Setter Property="Padding" Value="0" />
@@ -251,8 +251,8 @@
                     Width="{StaticResource AetherSizeHeroTile}"
                     Height="{StaticResource AetherSizeHeroTile}"
                     HorizontalAlignment="Center"
-                    Background="{StaticResource AetherSurfaceGlassBrush}"
-                    BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                    Background="{ThemeResource AetherSurfaceGlassBrush}"
+                    BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                     BorderThickness="1"
                     CornerRadius="{StaticResource AetherTileCornerRadius}">
                     <Grid>
@@ -265,7 +265,7 @@
                             Width="24"
                             Height="24"
                             Data="M5,5 H19 A2,2 0 0 1 21,7 V17 A2,2 0 0 1 19,19 H5 A2,2 0 0 1 3,17 V7 A2,2 0 0 1 5,5 Z M7,5 V19 M17,5 V19 M3,9.5 H7 M3,14.5 H7 M17,9.5 H21 M17,14.5 H21"
-                            Stroke="{StaticResource AetherTextPrimaryBrush}"
+                            Stroke="{ThemeResource AetherTextPrimaryBrush}"
                             StrokeEndLineCap="Round"
                             StrokeLineJoin="Round"
                             StrokeStartLineCap="Round"
@@ -419,7 +419,7 @@
                             Click="OnClearRecentsClick"
                             Content="Clear list"
                             FontSize="{StaticResource AetherCaptionFontSize}"
-                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Foreground="{ThemeResource AetherTextSecondaryBrush}"
                             Style="{StaticResource AetherOutlinePillButtonStyle}" />
                     </Grid>
                     <StackPanel x:Name="RecentsList" Spacing="4" />
@@ -545,7 +545,7 @@
                             Style="{StaticResource AetherStatusDotStyle}" />
                         <TextBlock
                             x:Name="StatusLabel"
-                            Foreground="{StaticResource AetherTextPrimaryBrush}"
+                            Foreground="{ThemeResource AetherTextPrimaryBrush}"
                             Style="{StaticResource AetherCaptionTextStyle}" />
                         <TextBlock x:Name="StatusDetail" Style="{StaticResource AetherCaptionTextStyle}" />
                     </StackPanel>
@@ -565,11 +565,11 @@
         <Rectangle
             x:Name="DropOutline"
             Margin="8,40,8,8"
-            Fill="{StaticResource AetherFillDropTargetBrush}"
+            Fill="{ThemeResource AetherFillDropTargetBrush}"
             IsHitTestVisible="False"
             RadiusX="8"
             RadiusY="8"
-            Stroke="{StaticResource AetherStrokeDropTargetBrush}"
+            Stroke="{ThemeResource AetherStrokeDropTargetBrush}"
             StrokeThickness="1"
             Visibility="Collapsed" />
 
@@ -620,11 +620,11 @@
                 <Rectangle
                     Height="{StaticResource AetherSizePipSeekLine}"
                     VerticalAlignment="Bottom"
-                    Fill="{StaticResource AetherFillProgressTrackBrush}" />
+                    Fill="{ThemeResource AetherFillProgressTrackBrush}" />
                 <Rectangle
                     Height="{StaticResource AetherSizePipSeekLine}"
                     VerticalAlignment="Bottom"
-                    Fill="{StaticResource AetherTextPrimaryBrush}"
+                    Fill="{ThemeResource AetherTextPrimaryBrush}"
                     RenderTransformOrigin="0,0.5">
                     <Rectangle.RenderTransform>
                         <ScaleTransform x:Name="PipSeekScale" ScaleX="0" />
@@ -749,7 +749,7 @@
                 x:Name="RailPeek"
                 Height="168"
                 VerticalAlignment="Top"
-                Background="{StaticResource AetherFillRangeBrush}"
+                Background="{ThemeResource AetherFillRangeBrush}"
                 CornerRadius="0,2,2,0"
                 IsHitTestVisible="False"
                 Opacity="0" />
@@ -763,8 +763,8 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             AutomationProperties.LandmarkType="Navigation"
-            Background="{StaticResource AetherSurfaceOsdBrush}"
-            BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+            Background="{ThemeResource AetherSurfaceOsdBrush}"
+            BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource AetherTransportCornerRadius}"
             PointerCanceled="OnRailPointerExited"
@@ -827,8 +827,8 @@
             Margin="16,0,16,24"
             Padding="7"
             VerticalAlignment="Bottom"
-            Background="{StaticResource AetherSurfaceOsdBrush}"
-            BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+            Background="{ThemeResource AetherSurfaceOsdBrush}"
+            BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource AetherTransportCornerRadius}"
             GettingFocus="OnOsdGettingFocus"
@@ -994,8 +994,8 @@
                                     <Flyout.FlyoutPresenterStyle>
                                         <!--  The 62% dialog tint; the blur behind it is drawn by the render thread (ADR-0013).  -->
                                         <Style TargetType="FlyoutPresenter">
-                                            <Setter Property="Background" Value="{StaticResource AetherSurfaceDialogBrush}" />
-                                            <Setter Property="BorderBrush" Value="{StaticResource AetherStrokeSurfaceBrush}" />
+                                            <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogBrush}" />
+                                            <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
                                             <Setter Property="BorderThickness" Value="1" />
                                             <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
                                             <Setter Property="Padding" Value="12,0" />
@@ -1157,8 +1157,8 @@
                 x:Name="SkipChapterButton"
                 Height="{StaticResource AetherSizeTransportButton}"
                 Padding="12,0,14,0"
-                Background="{StaticResource AetherSurfaceOsdBrush}"
-                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                Background="{ThemeResource AetherSurfaceOsdBrush}"
+                BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                 Click="OnSkipChapterClick"
                 Style="{StaticResource AetherOutlinePillButtonStyle}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -1196,7 +1196,7 @@
         -->
         <Grid
             x:Name="OpenUrlOverlay"
-            Background="{StaticResource AetherSurfaceScrimBrush}"
+            Background="{ThemeResource AetherSurfaceScrimBrush}"
             Visibility="Collapsed">
             <Border
                 x:Name="OpenUrlCard"
@@ -1204,8 +1204,8 @@
                 Margin="16"
                 Padding="24"
                 VerticalAlignment="Center"
-                Background="{StaticResource AetherSurfaceDialogBrush}"
-                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                Background="{ThemeResource AetherSurfaceDialogBrush}"
+                BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherOverlayCornerRadius}">
                 <StackPanel TabFocusNavigation="Cycle">
@@ -1221,7 +1221,7 @@
                     <TextBox
                         x:Name="OpenUrlBox"
                         Margin="0,8,0,0"
-                        Background="{StaticResource AetherFillInputBrush}"
+                        Background="{ThemeResource AetherFillInputBrush}"
                         InputScope="Url"
                         IsSpellCheckEnabled="False"
                         KeyDown="OnOpenUrlBoxKeyDown"
@@ -1278,7 +1278,7 @@
         -->
         <Grid
             x:Name="LanStreamOverlay"
-            Background="{StaticResource AetherSurfaceScrimBrush}"
+            Background="{ThemeResource AetherSurfaceScrimBrush}"
             PointerPressed="OnLanStreamOverlayPointerPressed"
             Visibility="Collapsed">
             <Border
@@ -1287,8 +1287,8 @@
                 Margin="16"
                 Padding="24"
                 VerticalAlignment="Center"
-                Background="{StaticResource AetherSurfaceDialogBrush}"
-                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                Background="{ThemeResource AetherSurfaceDialogBrush}"
+                BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherOverlayCornerRadius}">
                 <StackPanel TabFocusNavigation="Cycle">
@@ -1325,14 +1325,14 @@
                         <Border
                             x:Name="LanStreamCodeOff"
                             Padding="16"
-                            Background="{StaticResource AetherFillInputBrush}"
-                            BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                            Background="{ThemeResource AetherFillInputBrush}"
+                            BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                             BorderThickness="1"
                             CornerRadius="{StaticResource AetherOverlayCornerRadius}">
                             <StackPanel VerticalAlignment="Center" Spacing="12">
                                 <FontIcon
                                     FontSize="{StaticResource AetherSizeHeroGlyph}"
-                                    Foreground="{StaticResource AetherTextTertiaryBrush}"
+                                    Foreground="{ThemeResource AetherTextTertiaryBrush}"
                                     Glyph="&#xE8EA;" />
                                 <TextBlock
                                     x:Name="LanStreamCodeOffText"
@@ -1344,7 +1344,7 @@
                         </Border>
                         <Border
                             x:Name="LanStreamCodeTile"
-                            Background="{StaticResource AetherSurfaceCodeBrush}"
+                            Background="{ThemeResource AetherSurfaceCodeBrush}"
                             CornerRadius="{StaticResource AetherOverlayCornerRadius}"
                             Visibility="Collapsed">
                             <!--  Sized in code to the bitmap's own pixels: one image pixel per screen pixel keeps every module sharp.  -->
@@ -1393,12 +1393,12 @@
                         <Ellipse
                             x:Name="LanStreamNoteDot"
                             Margin="0,5,0,0"
-                            Fill="{StaticResource AetherStatusWarningBrush}"
+                            Fill="{ThemeResource AetherStatusWarningBrush}"
                             Style="{StaticResource AetherStatusDotStyle}" />
                         <TextBlock
                             x:Name="LanStreamNoteText"
                             Grid.Column="1"
-                            Foreground="{StaticResource AetherTextPrimaryBrush}"
+                            Foreground="{ThemeResource AetherTextPrimaryBrush}"
                             Style="{StaticResource AetherCaptionTextStyle}"
                             TextWrapping="Wrap" />
                     </Grid>
@@ -1423,14 +1423,14 @@
             <Border x:Name="TourBlocker" Background="Transparent" />
             <Path
                 x:Name="TourScrim"
-                Fill="{StaticResource AetherSurfaceScrimBrush}"
+                Fill="{ThemeResource AetherSurfaceScrimBrush}"
                 IsHitTestVisible="False" />
             <Rectangle
                 x:Name="TourRing"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 IsHitTestVisible="False"
-                Stroke="{StaticResource AetherStrokeInputFocusBrush}"
+                Stroke="{ThemeResource AetherStrokeInputFocusBrush}"
                 StrokeThickness="2" />
             <Border
                 x:Name="TourCard"
@@ -1438,8 +1438,8 @@
                 Padding="16"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Background="{StaticResource AetherSurfaceDialogFallbackBrush}"
-                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                Background="{ThemeResource AetherSurfaceDialogFallbackBrush}"
+                BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherOverlayCornerRadius}"
                 KeyDown="OnTourCardKeyDown"
@@ -1449,7 +1449,7 @@
                         <TextBlock
                             x:Name="TourProgress"
                             VerticalAlignment="Center"
-                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Foreground="{ThemeResource AetherTextSecondaryBrush}"
                             Style="{StaticResource AetherCaptionTextStyle}" />
                         <Button
                             x:Name="TourSkipButton"
@@ -1460,7 +1460,7 @@
                             BorderBrush="Transparent"
                             Click="OnTourSkipClick"
                             FontSize="{StaticResource AetherCaptionFontSize}"
-                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Foreground="{ThemeResource AetherTextSecondaryBrush}"
                             Style="{StaticResource AetherOutlinePillButtonStyle}" />
                     </Grid>
                     <StackPanel x:Name="TourContent" Margin="0,12,0,0" Spacing="4">
@@ -1470,7 +1470,7 @@
                             TextWrapping="Wrap" />
                         <TextBlock
                             x:Name="TourBody"
-                            Foreground="{StaticResource AetherTextSecondaryBrush}"
+                            Foreground="{ThemeResource AetherTextSecondaryBrush}"
                             Style="{StaticResource AetherBodyTextStyle}"
                             TextWrapping="Wrap" />
                         <StackPanel
@@ -1491,10 +1491,10 @@
                             Height="4"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center">
-                            <Border Background="{StaticResource AetherTextTertiaryBrush}" CornerRadius="2" Opacity="0.4" />
+                            <Border Background="{ThemeResource AetherTextTertiaryBrush}" CornerRadius="2" Opacity="0.4" />
                             <Border
                                 x:Name="TourBarFill"
-                                Background="{StaticResource AetherTextPrimaryBrush}"
+                                Background="{ThemeResource AetherTextPrimaryBrush}"
                                 CornerRadius="2" />
                         </Grid>
                         <Button

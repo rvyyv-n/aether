@@ -29,7 +29,7 @@
                 x:Name="Band"
                 Canvas.Top="6"
                 Height="{StaticResource AetherSizeClipRange}"
-                Background="{StaticResource AetherFillRangeBrush}"
+                Background="{ThemeResource AetherFillRangeBrush}"
                 CornerRadius="{StaticResource AetherControlCornerRadius}"
                 Visibility="Collapsed" />
             <!--  Fast cut lead-in: from the keyframe a lossless cut starts on up to In  -->
@@ -37,7 +37,7 @@
                 x:Name="LeadIn"
                 Canvas.Top="6"
                 Height="{StaticResource AetherSizeClipRange}"
-                Background="{StaticResource AetherFillRangeBrush}"
+                Background="{ThemeResource AetherFillRangeBrush}"
                 CornerRadius="4,0,0,4"
                 Opacity="0.5"
                 Visibility="Collapsed" />
@@ -48,34 +48,34 @@
                 Canvas.Top="4"
                 Width="1"
                 Height="24"
-                Fill="{StaticResource AetherTextTertiaryBrush}"
+                Fill="{ThemeResource AetherTextTertiaryBrush}"
                 Visibility="Collapsed" />
             <Rectangle
                 x:Name="InTick"
                 Canvas.Top="4"
                 Width="2"
                 Height="24"
-                Fill="{StaticResource AetherTextPrimaryBrush}"
+                Fill="{ThemeResource AetherTextPrimaryBrush}"
                 Visibility="Collapsed" />
             <Rectangle
                 x:Name="OutTick"
                 Canvas.Top="4"
                 Width="2"
                 Height="24"
-                Fill="{StaticResource AetherTextPrimaryBrush}"
+                Fill="{ThemeResource AetherTextPrimaryBrush}"
                 Visibility="Collapsed" />
             <Rectangle
                 x:Name="HoverLine"
                 Canvas.Top="8"
                 Width="1"
                 Height="16"
-                Fill="{StaticResource AetherTextSecondaryBrush}"
+                Fill="{ThemeResource AetherTextSecondaryBrush}"
                 Visibility="Collapsed" />
             <Ellipse
                 x:Name="Thumb"
                 Width="{StaticResource AetherSizeSeekThumb}"
                 Height="{StaticResource AetherSizeSeekThumb}"
-                Fill="{StaticResource AetherTextPrimaryBrush}"
+                Fill="{ThemeResource AetherTextPrimaryBrush}"
                 Stroke="#33000000"
                 StrokeThickness="1"
                 Visibility="Collapsed" />
@@ -95,8 +95,8 @@
             <Border
                 x:Name="Bubble"
                 Padding="7,3"
-                Background="{StaticResource AetherSurfaceDialogFallbackBrush}"
-                BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+                Background="{ThemeResource AetherSurfaceDialogFallbackBrush}"
+                BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherControlCornerRadius}"
                 IsHitTestVisible="False">

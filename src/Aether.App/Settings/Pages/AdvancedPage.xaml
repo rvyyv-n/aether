@@ -7,13 +7,13 @@
     <settings:SettingsGroup>
         <settings:SettingsRow x:Name="RepairAviIndexRow" Glyph="&#xE90F;">
             <settings:SettingsRow.Note>
-                <TextBlock x:Name="RepairAviIndexRestartNote" Margin="0,2,0,0" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                <TextBlock x:Name="RepairAviIndexRestartNote" Margin="0,2,0,0" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
             </settings:SettingsRow.Note>
             <ToggleSwitch x:Name="RepairAviIndexToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
         </settings:SettingsRow>
         <settings:SettingsRow x:Name="SkipDeblockingRow" Glyph="&#xE713;">
             <settings:SettingsRow.Note>
-                <TextBlock x:Name="SkipDeblockingRestartNote" Margin="0,2,0,0" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                <TextBlock x:Name="SkipDeblockingRestartNote" Margin="0,2,0,0" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
             </settings:SettingsRow.Note>
             <ComboBox x:Name="SkipDeblockingCombo" Style="{StaticResource AetherSettingsComboStyle}" />
         </settings:SettingsRow>
@@ -26,7 +26,7 @@
                         MaxLength="8192"
                         Style="{StaticResource AetherCustomOptionsTextBoxStyle}" />
                     <StackPanel x:Name="CustomOptionsErrors" Spacing="2" />
-                    <TextBlock x:Name="CustomOptionsRestartNote" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="CustomOptionsRestartNote" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
                 </StackPanel>
             </settings:SettingsRow.Note>
         </settings:SettingsRow>

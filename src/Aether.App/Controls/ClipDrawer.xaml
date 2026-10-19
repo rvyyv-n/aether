@@ -14,8 +14,8 @@
         HorizontalAlignment="Right"
         VerticalAlignment="Bottom"
         Padding="3"
-        Background="{StaticResource AetherSurfaceOsdBrush}"
-        BorderBrush="{StaticResource AetherStrokeSurfaceBrush}"
+        Background="{ThemeResource AetherSurfaceOsdBrush}"
+        BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
         BorderThickness="1"
         CornerRadius="12">
         <StackPanel>
@@ -107,7 +107,7 @@
                 <Border
                     Height="1"
                     Margin="-3,0,-3,0"
-                    Background="{StaticResource AetherStrokeDividerBrush}" />
+                    Background="{ThemeResource AetherStrokeDividerBrush}" />
                 <ScrollViewer
                     x:Name="RowsScroller"
                     HorizontalScrollMode="Disabled"
@@ -120,13 +120,13 @@
                     Padding="8,0"
                     Click="OnShowAllClick"
                     FontSize="{StaticResource AetherCaptionFontSize}"
-                    Foreground="{StaticResource AetherTextSecondaryBrush}"
+                    Foreground="{ThemeResource AetherTextSecondaryBrush}"
                     Style="{StaticResource AetherIconButtonStyle}"
                     Width="Auto" />
                 <Border
                     Height="1"
                     Margin="-3,0,-3,3"
-                    Background="{StaticResource AetherStrokeDividerBrush}" />
+                    Background="{ThemeResource AetherStrokeDividerBrush}" />
             </StackPanel>
 
             <StackPanel
@@ -138,7 +138,7 @@
                     Margin="9,0,4,0"
                     VerticalAlignment="Center"
                     Style="{StaticResource AetherCaptionTextStyle}"
-                    Foreground="{StaticResource AetherTextPrimaryBrush}" />
+                    Foreground="{ThemeResource AetherTextPrimaryBrush}" />
                 <Button
                     x:Name="ExportButton"
                     Height="{StaticResource AetherSizeControl}"

@@ -15,6 +15,7 @@ public sealed partial class KeycapStrip : StackPanel
         Orientation = Orientation.Horizontal;
         Spacing = 4;
         VerticalAlignment = VerticalAlignment.Center;
+        ActualThemeChanged += (_, _) => RebindKeys();
     }
 
     public IReadOnlyList<string>? Keys
@@ -23,14 +24,13 @@ public sealed partial class KeycapStrip : StackPanel
         set => SetValue(KeysProperty, value);
     }
 
-    private static void OnKeysChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private void RebindKeys()
     {
-        var strip = (KeycapStrip)d;
-        strip.Children.Clear();
-        IReadOnlyList<string> keys = strip.Keys ?? [];
+        Children.Clear();
+        IReadOnlyList<string> keys = Keys ?? [];
         foreach (string key in keys)
         {
-            strip.Children.Add(new Border
+            Children.Add(new Border
             {
                 Style = SettingsGroup.Resource<Style>("AetherKeycapStyle"),
                 Child = new TextBlock
@@ -43,6 +43,12 @@ public sealed partial class KeycapStrip : StackPanel
                 },
             });
         }
-        AutomationProperties.SetName(strip, string.Join(" + ", keys));
+        AutomationProperties.SetName(this, string.Join(" + ", keys));
+    }
+
+    private static void OnKeysChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var strip = (KeycapStrip)d;
+        strip.RebindKeys();
     }
 }

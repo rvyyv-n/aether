@@ -17,8 +17,8 @@ namespace Aether_App.Settings;
 [TemplatePart(Name = "ItemsHost", Type = typeof(FrameworkElement))]
 public sealed partial class SettingsExpander : ItemsControl
 {
-    private const string ExpandGlyph = ""; // ChevronDown
-    private const string CollapseGlyph = ""; // ChevronUp
+    private const string ExpandGlyph = "\ue70d"; // ChevronDown
+    private const string CollapseGlyph = "\ue70e"; // ChevronUp
 
     public static readonly DependencyProperty GlyphProperty = DependencyProperty.Register(
         nameof(Glyph), typeof(string), typeof(SettingsExpander), new PropertyMetadata(null, OnPartChanged));
@@ -102,6 +102,7 @@ public sealed partial class SettingsExpander : ItemsControl
             row.MinHeight = (double)Application.Current.Resources["AetherSizeSettingsSubRow"];
             row.BorderThickness = new Thickness(0, 1, 0, 0);
             row.BorderBrush = (Brush)Application.Current.Resources["AetherStrokeDividerBrush"];
+            row.ActualThemeChanged += (_, _) => row.BorderBrush = (Brush)Application.Current.Resources["AetherStrokeDividerBrush"];
         }
     }
 
