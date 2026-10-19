@@ -59,6 +59,9 @@ public interface IShellWindow
     /// <summary>Client width / height to keep while the user drags the edges; 0 lets the window resize freely.</summary>
     void SetVideoAspect(double aspect);
 
+    /// <summary>The picture fills the window behind the title bar, so the caption buttons draw light-on-dark.</summary>
+    void SetOverVideo(bool overVideo);
+
     /// <summary>
     /// Names the taskbar preview after the open file (null for the app name) and sets the buttons under it
     /// (11.14). Cheap to call often: nothing changes when the values are the same.
@@ -83,10 +86,10 @@ public sealed partial class MainWindow : Window, IShellWindow
     private const double FitMaxWorkAreaFraction = 0.9;
 
     // The caption colours live in the design tokens so the title-bar gear and Back read the same values.
-    private readonly Color _captionForeground;
-    private readonly Color _captionInactiveForeground;
-    private readonly Color _captionHover;
-    private readonly Color _captionPressed;
+    private Color _captionForeground;
+    private Color _captionInactiveForeground;
+    private Color _captionHover;
+    private Color _captionPressed;
     private readonly AspectRatioLock? _aspectLock;
     private readonly TaskbarThumbButtons? _taskbarButtons;
     private readonly string _playTip = AppStrings.Get("Taskbar_Play");
@@ -100,17 +103,12 @@ public sealed partial class MainWindow : Window, IShellWindow
     private readonly UISettings _uiSettings = new(); // held so ColorValuesChanged keeps firing
     private WindowRect? _pipBounds; // where the overlay was last, for the next time it opens
     private double _videoAspect;
+    private bool _overVideo;
 
     public MainWindow()
     {
         InitializeComponent();
         Title = AppStrings.Get("App_Name");
-
-        var resources = Application.Current.Resources;
-        _captionForeground = (Color)resources["AetherCaptionGlyphColor"];
-        _captionInactiveForeground = (Color)resources["AetherCaptionGlyphInactiveColor"];
-        _captionHover = (Color)resources["AetherCaptionHoverColor"];
-        _captionPressed = (Color)resources["AetherCaptionPressedColor"];
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(Shell.TitleBarDragRegion);
@@ -120,7 +118,15 @@ public sealed partial class MainWindow : Window, IShellWindow
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonBackgroundColor = Colors.Transparent;
         titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        ApplyCaptionGlyphs();
+        ApplyTheme();
+        App.Settings.Changed += OnSettingsChanged;
+        Closed += (_, _) => App.Settings.Changed -= OnSettingsChanged;
+
+        Shell.ActualThemeChanged += (_, _) =>
+        {
+            ApplyTheme();
+            ApplyTaskbarIcon();
+        };
 
 
         try
@@ -477,17 +483,58 @@ public sealed partial class MainWindow : Window, IShellWindow
     }
 
     // Raised off the UI thread when the Windows light/dark setting changes.
-    private void OnSystemColoursChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(ApplyTaskbarIcon);
-
-    private void ApplyCaptionGlyphs()
+    private void OnSystemColoursChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(() =>
     {
+        ApplyTaskbarIcon();
+        ApplyTheme();
+    });
+
+    private void OnSettingsChanged(object? sender, SettingChangedEventArgs e)
+    {
+        if (e.Key == SettingKeys.Theme)
+        {
+            DispatcherQueue.TryEnqueue(ApplyTheme);
+        }
+    }
+
+    private void ApplyTheme()
+    {
+        string theme = App.Settings.Current.Theme;
+        Shell.RequestedTheme = theme switch
+        {
+            "light" => ElementTheme.Light,
+            "dark" => ElementTheme.Dark,
+            _ => ElementTheme.Default,
+        };
+        UpdateCaptionColors();
+        ApplyTaskbarIcon();
+        ApplyBorder();
+    }
+
+    private void ApplyBorder() =>
+        WindowBorder.SetShown(
+            WinRT.Interop.WindowNative.GetWindowHandle(this),
+            shown: _videoAspect <= 0,
+            lightTheme: Shell.ActualTheme == ElementTheme.Light);
+
+    private void UpdateCaptionColors()
+    {
+        // Over a video the caption buttons stay light-on-dark whatever the theme; the window is dark behind them.
+        ElementTheme theme = _overVideo ? ElementTheme.Dark : Shell.ActualTheme;
+        _captionForeground = ThemeTokens.Get<Color>(theme, "AetherCaptionGlyphColor");
+        _captionInactiveForeground = ThemeTokens.Get<Color>(theme, "AetherCaptionGlyphInactiveColor");
+        _captionHover = ThemeTokens.Get<Color>(theme, "AetherCaptionHoverColor");
+        _captionPressed = ThemeTokens.Get<Color>(theme, "AetherCaptionPressedColor");
+
         AppWindowTitleBar titleBar = AppWindow.TitleBar;
         titleBar.ButtonForegroundColor = _captionForeground;
         titleBar.ButtonInactiveForegroundColor = _captionInactiveForeground;
         titleBar.ButtonHoverBackgroundColor = _captionHover;
         titleBar.ButtonPressedBackgroundColor = _captionPressed;
-        titleBar.ButtonHoverForegroundColor = Colors.White;
-        titleBar.ButtonPressedForegroundColor = Colors.White;
+
+        Color activeHoverGlyph = theme == ElementTheme.Light ? _captionForeground : Colors.White;
+        titleBar.ButtonHoverForegroundColor = activeHoverGlyph;
+        titleBar.ButtonPressedForegroundColor = activeHoverGlyph;
     }
 
     public void FitToVideo(int videoWidth, int videoHeight)
@@ -531,7 +578,18 @@ public sealed partial class MainWindow : Window, IShellWindow
         {
             _aspectLock.AspectRatio = aspect;
         }
-        WindowBorder.SetShown(WinRT.Interop.WindowNative.GetWindowHandle(this), shown: aspect <= 0);
+        ApplyBorder();
+    }
+
+    public void SetOverVideo(bool overVideo)
+    {
+        if (overVideo == _overVideo)
+        {
+            return;
+        }
+        _overVideo = overVideo;
+        UpdateCaptionColors();
+        ApplyBorder();
     }
 
     private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)

@@ -328,7 +328,7 @@ public sealed partial class MainPage
         _lanRendering = false;
 
         LanStreamStatusText.Text = AppStrings.Format(panel.StatusKey, panel.Watchers);
-        LanStreamStatusDot.Fill = ToneBrush(panel.StatusTone == LanStreamTone.Ready ? Tone.Success : Tone.Neutral);
+        LanStreamStatusDot.Fill = ToneBrush(LanStreamStatusDot, panel.StatusTone == LanStreamTone.Ready ? Tone.Success : Tone.Neutral);
 
         if (panel.ShowsCode && _lanServer is { } server && _lanAddress is { } address)
         {

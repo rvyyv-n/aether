@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <UserControl
+    RequestedTheme="Dark"
     x:Class="Aether_App.Controls.VideoPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -78,7 +79,7 @@
                 Click="OnResetColoursClick"
                 Style="{StaticResource AetherSettingsTextButtonStyle}" />
 
-            <Border Height="1" Margin="-16,4,-16,4" Background="{StaticResource AetherStrokeDividerBrush}" />
+            <Border Height="1" Margin="-16,4,-16,4" Background="{ThemeResource AetherStrokeDividerBrush}" />
             <TextBlock x:Name="LookHeading" Style="{StaticResource AetherCaptionStrongTextStyle}" />
 
             <StackPanel Spacing="4">

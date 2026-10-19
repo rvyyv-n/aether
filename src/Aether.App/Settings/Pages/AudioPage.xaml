@@ -13,7 +13,7 @@
         </settings:SettingsRow>
         <settings:SettingsRow x:Name="PassthroughRow" Glyph="&#xE994;">
             <settings:SettingsRow.Note>
-                <TextBlock x:Name="PassthroughRestartNote" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                <TextBlock x:Name="PassthroughRestartNote" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
             </settings:SettingsRow.Note>
             <ToggleSwitch x:Name="PassthroughToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
         </settings:SettingsRow>

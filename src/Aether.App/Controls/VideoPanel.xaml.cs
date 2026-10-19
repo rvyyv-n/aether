@@ -174,7 +174,7 @@ public sealed partial class VideoPanel : UserControl
     }
 
     /// <summary>A hairline between the groups of the grade list; it can be neither picked nor focused.</summary>
-    private static ComboBoxItem DividerItem() => new()
+    private ComboBoxItem DividerItem() => new()
     {
         IsEnabled = false,
         IsTabStop = false,
@@ -184,7 +184,7 @@ public sealed partial class VideoPanel : UserControl
         {
             Height = 1,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AetherStrokeDividerBrush"],
+            Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(this, "AetherStrokeDividerBrush"),
         },
     };
 

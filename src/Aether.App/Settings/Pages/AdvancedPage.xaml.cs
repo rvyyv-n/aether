@@ -78,7 +78,7 @@ public sealed partial class AdvancedPage : Page
         }
     }
 
-    private static StackPanel ErrorLine(string message)
+    private StackPanel ErrorLine(string message)
     {
         var resources = Application.Current.Resources;
         var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -86,7 +86,7 @@ public sealed partial class AdvancedPage : Page
         {
             Style = (Style)resources["AetherStatusDotStyle"],
             Margin = new Thickness(0, 5, 0, 0),
-            Fill = (Brush)resources["AetherStatusWarningBrush"],
+            Fill = ThemeTokens.Get<Brush>(this, "AetherStatusWarningBrush"),
         });
         line.Children.Add(new TextBlock
         {
@@ -115,10 +115,10 @@ public sealed partial class AdvancedPage : Page
             DefaultButton = ContentDialogButton.Close,
             PrimaryButtonStyle = (Style)resources["AetherEmphasisPillButtonStyle"],
             CloseButtonStyle = (Style)resources["AetherOutlinePillButtonStyle"],
-            Background = (Brush)resources["AetherSurfaceDialogFallbackBrush"],
-            BorderBrush = (Brush)resources["AetherStrokeSurfaceBrush"],
+            Background = ThemeTokens.Get<Brush>(this, "AetherSurfaceDialogFallbackBrush"),
+            BorderBrush = ThemeTokens.Get<Brush>(this, "AetherStrokeSurfaceBrush"),
             CornerRadius = (CornerRadius)resources["AetherOverlayCornerRadius"],
-            RequestedTheme = RequestedTheme,
+            RequestedTheme = ActualTheme,
         };
         dialog.Resources["ContentDialogMaxWidth"] = (double)resources["AetherSizeDialogWidth"];
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)

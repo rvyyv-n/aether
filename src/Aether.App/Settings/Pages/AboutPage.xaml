@@ -6,7 +6,7 @@
     xmlns:settings="using:Aether_App.Settings">
     <Page.Resources>
         <Style x:Key="EngineLabelStyle" BasedOn="{StaticResource AetherBodyTextStyle}" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource AetherTextSecondaryBrush}" />
+            <Setter Property="Foreground" Value="{ThemeResource AetherTextSecondaryBrush}" />
         </Style>
         <Style x:Key="EngineValueStyle" BasedOn="{StaticResource AetherBodyTextStyle}" TargetType="TextBlock">
             <Setter Property="IsTextSelectionEnabled" Value="True" />
@@ -65,9 +65,9 @@
                 <FontIcon Width="20" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16" Glyph="&#xE7E7;" />
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                     <TextBlock x:Name="TourTitle" Style="{StaticResource AetherBodyTextStyle}" />
-                    <TextBlock x:Name="TourDescription" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="TourDescription" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
                 </StackPanel>
-                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{StaticResource AetherTextSecondaryBrush}" Glyph="&#xE76C;" />
+                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource AetherTextSecondaryBrush}" Glyph="&#xE76C;" />
             </Grid>
         </Button>
         <Button
@@ -84,9 +84,9 @@
                 <FontIcon Width="20" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16" Glyph="&#xE8A5;" />
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                     <TextBlock x:Name="LicencesTitle" Style="{StaticResource AetherBodyTextStyle}" />
-                    <TextBlock x:Name="LicencesDescription" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="LicencesDescription" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
                 </StackPanel>
-                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{StaticResource AetherTextSecondaryBrush}" Glyph="&#xE76C;" />
+                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource AetherTextSecondaryBrush}" Glyph="&#xE76C;" />
             </Grid>
         </Button>
         <Button
@@ -103,14 +103,14 @@
                 <FontIcon Width="20" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16" Glyph="&#xEBE8;" />
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                     <TextBlock x:Name="ReportIssueTitle" Style="{StaticResource AetherBodyTextStyle}" />
-                    <TextBlock x:Name="ReportIssueDescription" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="ReportIssueDescription" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
                 </StackPanel>
-                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{StaticResource AetherTextSecondaryBrush}" Glyph="&#xE8A7;" />
+                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource AetherTextSecondaryBrush}" Glyph="&#xE8A7;" />
             </Grid>
         </Button>
         <settings:SettingsExpander x:Name="CreditExpander" Glyph="&#xE946;">
             <settings:SettingsRow x:Name="CreditVersionRow">
-                <TextBlock x:Name="CreditVersion" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherBodyTextStyle}" />
+                <TextBlock x:Name="CreditVersion" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherBodyTextStyle}" />
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="CreditPrivacyRow" />
             <settings:SettingsRow x:Name="CreditLicenceRow">

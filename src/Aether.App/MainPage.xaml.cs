@@ -101,6 +101,7 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         InitializeComponent();
+        ActualThemeChanged += (_, _) => Render();
         IsTabStop = true; // receives the frame-step and playback keys
         ApplyStaticStrings();
         // Light dismiss would otherwise swallow the first click on the pill, e.g. Mute under the flyout.
@@ -213,14 +214,19 @@ public sealed partial class MainPage : Page
     public void OnWindowActivationChanged(bool active)
     {
         _windowActive = active;
-        Brush glyph = (Brush)Application.Current.Resources[active ? "AetherCaptionGlyphBrush" : "AetherCaptionGlyphInactiveBrush"];
-        SettingsButton.Foreground = glyph;
-        SettingsBackButton.Foreground = glyph;
+        ApplyTitleBarButtonBrushes();
         if (!active)
         {
             _session?.ReleaseKeys();
         }
         UpdateCursor();
+    }
+
+    public void ApplyTitleBarButtonBrushes()
+    {
+        Brush glyph = ThemeTokens.Get<Brush>(TitleBar.ActualTheme, _windowActive ? "AetherCaptionGlyphBrush" : "AetherCaptionGlyphInactiveBrush");
+        SettingsButton.Foreground = glyph;
+        SettingsBackButton.Foreground = glyph;
     }
 
     // ---- Lifecycle and engine startup (4.6) ----
@@ -1093,6 +1099,7 @@ public sealed partial class MainPage : Page
         CloseLanStream();
         LeavePictureInPicture();
         _openUrl.Open(clipboard);
+        OpenUrlOverlay.RequestedTheme = HasVideo ? ElementTheme.Dark : ElementTheme.Default;
         OpenUrlBox.Text = _openUrl.Text;
         if (_fader is null)
         {
@@ -1422,7 +1429,7 @@ public sealed partial class MainPage : Page
         OpenUrlNoteDot.Visibility = dot is null ? Visibility.Collapsed : Visibility.Visible;
         if (dot is { } tone)
         {
-            OpenUrlNoteDot.Fill = ToneBrush(tone);
+            OpenUrlNoteDot.Fill = ToneBrush(OpenUrlNoteDot, tone);
         }
     }
 
@@ -1764,12 +1771,16 @@ public sealed partial class MainPage : Page
         // Between two files of a folder the overlay keeps its look rather than flashing the home screen; so does a
         // link switching quality while its new stream loads.
         bool hasVideo = (HasVideo || pip || _qualitySwitching) && !_settingsShown;
+        // The title bar sits on the picture, which is always dark; settings covers it with the backdrop again.
+        TitleBar.RequestedTheme = hasVideo ? ElementTheme.Dark : ElementTheme.Default;
+        ApplyTitleBarButtonBrushes();
+        _host?.SetOverVideo(hasVideo);
         bool fullScreen = _host?.IsFullScreen == true;
 
         // Video, scrims and controls.
         VideoSurface.Opacity = hasVideo ? 1 : 0;
         VideoHost.Background = (fullScreen || pip) && hasVideo
-            ? (Brush)Application.Current.Resources["AetherSurfaceLetterboxBrush"]
+            ? ThemeTokens.Get<Brush>(VideoHost, "AetherSurfaceLetterboxBrush")
             : null;
         HomeView.Visibility = !_settingsShown && (!hasVideo || _dragging) ? Visibility.Visible : Visibility.Collapsed;
         DropScrim.Visibility = hasVideo && _dragging ? Visibility.Visible : Visibility.Collapsed;
@@ -1935,18 +1946,18 @@ public sealed partial class MainPage : Page
         TitleDot.Visibility = titleTone is null ? Visibility.Collapsed : Visibility.Visible;
         if (titleTone is { } tone)
         {
-            TitleDot.Fill = ToneBrush(tone);
+            TitleDot.Fill = ToneBrush(TitleDot, tone);
         }
-        StatusDot.Fill = ToneBrush(status.Tone);
+        StatusDot.Fill = ToneBrush(StatusDot, status.Tone);
         StatusLabel.Text = status.Label;
         StatusDetail.Text = status.Detail ?? string.Empty;
         StatusDetail.Visibility = status.Detail is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    private static Brush ToneBrush(Tone tone) => (Brush)Application.Current.Resources[tone switch
+    private static Brush ToneBrush(FrameworkElement target, Tone tone) => ThemeTokens.Get<Brush>(target, tone switch
     {
         Tone.Success => "AetherStatusReadyBrush",
         Tone.Warning => "AetherStatusWarningBrush",
         _ => "AetherStatusNeutralBrush",
-    }];
+    });
 }

@@ -9,6 +9,7 @@ public static class SettingKeys
     public const string BatterySaver = "general.batterySaver";
     public const string OpenInRunningWindow = "general.openInRunningWindow";
     public const string TourSeen = "general.tourSeen";
+    public const string Theme = "general.theme";
     public const string PreciseSeeking = "playback.preciseSeeking";
     public const string ResumePlayback = "playback.resume";
     public const string LoopByDefault = "playback.loop";
@@ -185,6 +186,7 @@ public static class SettingDefinitions
         Flag(SettingKeys.BatterySaver, s => s.BatterySaver, (s, v) => s with { BatterySaver = v }),
         Flag(SettingKeys.OpenInRunningWindow, s => s.OpenInRunningWindow, (s, v) => s with { OpenInRunningWindow = v }),
         Flag(SettingKeys.TourSeen, s => s.TourSeen, (s, v) => s with { TourSeen = v }),
+        Choice(SettingKeys.Theme, s => s.Theme, (s, v) => s with { Theme = v }, false, "auto", "light", "dark"),
 
         Flag(SettingKeys.PreciseSeeking, s => s.PreciseSeeking, (s, v) => s with { PreciseSeeking = v }),
         Flag(SettingKeys.ResumePlayback, s => s.ResumePlayback, (s, v) => s with { ResumePlayback = v }),

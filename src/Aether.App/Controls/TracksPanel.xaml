@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <UserControl
+    RequestedTheme="Dark"
     x:Class="Aether_App.Controls.TracksPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -8,7 +9,7 @@
         <!--  A 32 px menu-style row: 4 radius, hover FillSubtleHover, no outline. The check column and label are set in code.  -->
         <Style x:Key="TrackRowButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource AetherTextPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{ThemeResource AetherTextPrimaryBrush}" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
@@ -32,12 +33,12 @@
                                     <VisualState x:Name="Normal" />
                                     <VisualState x:Name="PointerOver">
                                         <VisualState.Setters>
-                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                            <Setter Target="Root.Background" Value="{ThemeResource AetherFillSubtleHoverBrush}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Pressed">
                                         <VisualState.Setters>
-                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                            <Setter Target="Root.Background" Value="{ThemeResource AetherFillSubtlePressedBrush}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                 </VisualStateGroup>

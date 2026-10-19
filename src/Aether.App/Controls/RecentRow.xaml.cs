@@ -24,8 +24,9 @@ public sealed partial class RecentRow : UserControl
         string source = RecentDisplay.Source(item);
         if (missing)
         {
-            Icon.Foreground = Brush("AetherTextDisabledBrush");
-            NameText.Foreground = Brush("AetherTextSecondaryBrush");
+            // The row is not in the tree yet, so its theme is only known once it loads.
+            Loaded += (_, _) => ApplyMissingBrushes();
+            ActualThemeChanged += (_, _) => ApplyMissingBrushes();
             MetaText.Text = $"{AppStrings.Get("EmptyState_FileNotFound")} · {source}";
             DateText.Visibility = Visibility.Collapsed;
             RowButton.IsEnabled = false;
@@ -57,5 +58,11 @@ public sealed partial class RecentRow : UserControl
 
     private void OnRemoveClick(object sender, RoutedEventArgs e) => RemoveRequested?.Invoke(this, EventArgs.Empty);
 
-    private static Brush Brush(string key) => (Brush)Application.Current.Resources[key];
+    private void ApplyMissingBrushes()
+    {
+        Icon.Foreground = Brush("AetherTextDisabledBrush");
+        NameText.Foreground = Brush("AetherTextSecondaryBrush");
+    }
+
+    private Brush Brush(string key) => ThemeTokens.Get<Brush>(this, key);
 }

@@ -15,6 +15,7 @@ public sealed partial class KeycapStrip : StackPanel
         Orientation = Orientation.Horizontal;
         Spacing = 4;
         VerticalAlignment = VerticalAlignment.Center;
+        ActualThemeChanged += (_, _) => RebindKeys();
     }
 
     public IReadOnlyList<string>? Keys
@@ -23,26 +24,31 @@ public sealed partial class KeycapStrip : StackPanel
         set => SetValue(KeysProperty, value);
     }
 
-    private static void OnKeysChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private void RebindKeys()
     {
-        var strip = (KeycapStrip)d;
-        strip.Children.Clear();
-        IReadOnlyList<string> keys = strip.Keys ?? [];
+        Children.Clear();
+        IReadOnlyList<string> keys = Keys ?? [];
         foreach (string key in keys)
         {
-            strip.Children.Add(new Border
+            Children.Add(new Border
             {
-                Style = SettingsGroup.Resource<Style>("AetherKeycapStyle"),
+                Style = (Style)Application.Current.Resources["AetherKeycapStyle"],
                 Child = new TextBlock
                 {
-                    Style = SettingsGroup.Resource<Style>("AetherCaptionTextStyle"),
-                    Foreground = SettingsGroup.Resource<Microsoft.UI.Xaml.Media.Brush>("AetherTextPrimaryBrush"),
+                    Style = (Style)Application.Current.Resources["AetherCaptionTextStyle"],
+                    Foreground = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(this, "AetherTextPrimaryBrush"),
                     VerticalAlignment = VerticalAlignment.Center,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     Text = key,
                 },
             });
         }
-        AutomationProperties.SetName(strip, string.Join(" + ", keys));
+        AutomationProperties.SetName(this, string.Join(" + ", keys));
+    }
+
+    private static void OnKeysChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var strip = (KeycapStrip)d;
+        strip.RebindKeys();
     }
 }

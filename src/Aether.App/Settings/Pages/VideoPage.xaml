@@ -10,7 +10,7 @@
         </settings:SettingsRow>
         <settings:SettingsRow x:Name="HardwareDecodingRow" Glyph="&#xE950;">
             <settings:SettingsRow.Note>
-                <TextBlock x:Name="HardwareDecodingRestartNote" Margin="0,2,0,0" Foreground="{StaticResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                <TextBlock x:Name="HardwareDecodingRestartNote" Margin="0,2,0,0" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
             </settings:SettingsRow.Note>
             <ComboBox x:Name="HardwareDecodingCombo" Style="{StaticResource AetherSettingsComboStyle}" />
         </settings:SettingsRow>

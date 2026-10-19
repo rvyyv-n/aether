@@ -160,7 +160,29 @@ public class SettingsStoreTests
         Assert.Equal(new AetherSettings(), second.Current);
     }
 
+    [Fact]
+    public void Theme_Setting_Defaults_To_Auto_And_Accepts_Light_And_Dark()
+    {
+        var store = NewStore();
+
+        Assert.Equal("auto", store.Current.Theme);
+        Assert.False(store.RequiresRestart(SettingKeys.Theme));
+
+        Assert.True(store.Set(SettingKeys.Theme, "light"));
+        Assert.Equal("light", store.Current.Theme);
+
+        Assert.True(store.Set(SettingKeys.Theme, "dark"));
+        Assert.Equal("dark", store.Current.Theme);
+
+        Assert.True(store.Set(SettingKeys.Theme, "auto"));
+        Assert.Equal("auto", store.Current.Theme);
+
+        Assert.False(store.Set(SettingKeys.Theme, "blue"));
+        Assert.Equal("auto", store.Current.Theme);
+    }
+
     [Theory]
+    [InlineData(SettingKeys.Theme, "sepia")]
     [InlineData(SettingKeys.DeinterlaceMode, "linear")]
     [InlineData(SettingKeys.AspectRatio, "5:4")]
     [InlineData(SettingKeys.ScreenshotFormat, "gif")]

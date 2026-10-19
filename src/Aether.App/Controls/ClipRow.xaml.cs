@@ -26,6 +26,7 @@ public sealed partial class ClipRow : UserControl
 
     private bool _hovered;
     private bool _focused;
+    private static readonly SolidColorBrush TransparentBrush = new(Microsoft.UI.Colors.Transparent);
     private bool _exporting;
 
     private ClipRow()
@@ -45,8 +46,9 @@ public sealed partial class ClipRow : UserControl
         if (missing)
         {
             Glyph.Glyph = MissingGlyph;
-            Glyph.Foreground = Brush("AetherTextDisabledBrush");
-            NameText.Foreground = Brush("AetherTextSecondaryBrush");
+            // The row is not in the tree yet, so its theme is only known once it loads.
+            Loaded += (_, _) => ApplyMissingBrushes();
+            ActualThemeChanged += (_, _) => ApplyMissingBrushes();
             DetailsText.Text = AppStrings.Get("Clips_FileNotFound");
             FolderButton.Visibility = Visibility.Collapsed;
         }
@@ -198,7 +200,7 @@ public sealed partial class ClipRow : UserControl
     {
         bool shown = _exporting || _hovered || _focused;
         Actions.Opacity = shown ? 1 : 0;
-        Root.Background = _hovered ? Brush("AetherFillSubtleHoverBrush") : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        Root.Background = _hovered ? Brush("AetherFillSubtleHoverBrush") : TransparentBrush;
     }
 
     private bool IsInside(DependencyObject element)
@@ -220,5 +222,11 @@ public sealed partial class ClipRow : UserControl
         AutomationProperties.SetName(button, text);
     }
 
-    private static Brush Brush(string key) => (Brush)Application.Current.Resources[key];
+    private void ApplyMissingBrushes()
+    {
+        Glyph.Foreground = Brush("AetherTextDisabledBrush");
+        NameText.Foreground = Brush("AetherTextSecondaryBrush");
+    }
+
+    private Brush Brush(string key) => ThemeTokens.Get<Brush>(this, key);
 }

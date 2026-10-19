@@ -33,27 +33,27 @@
                                     <VisualState x:Name="Normal" />
                                     <VisualState x:Name="PointerOver">
                                         <VisualState.Setters>
-                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtleHoverBrush}" />
+                                            <Setter Target="Root.Background" Value="{ThemeResource AetherFillSubtleHoverBrush}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Pressed">
                                         <VisualState.Setters>
-                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillSubtlePressedBrush}" />
+                                            <Setter Target="Root.Background" Value="{ThemeResource AetherFillSubtlePressedBrush}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Selected">
                                         <VisualState.Setters>
-                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisRestBrush}" />
+                                            <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisRestBrush}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="PointerOverSelected">
                                         <VisualState.Setters>
-                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisHoverBrush}" />
+                                            <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisHoverBrush}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="PressedSelected">
                                         <VisualState.Setters>
-                                            <Setter Target="Root.Background" Value="{StaticResource AetherFillEmphasisPressedBrush}" />
+                                            <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisPressedBrush}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                 </VisualStateGroup>

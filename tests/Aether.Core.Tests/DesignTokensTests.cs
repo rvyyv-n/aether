@@ -79,17 +79,46 @@ public class DesignTokensTests
     public void Every_Key_Is_Unique()
     {
         var doc = LoadDesignTokens();
-        var keys = ExtractAllKeys(doc);
 
-        Assert.NotEmpty(keys);
+        // Keys within each theme dictionary must be unique.
+        var themeDictionaries = doc.Descendants(XamlNamespace + "ResourceDictionary")
+            .Where(d => d.Parent?.Name.LocalName == "ResourceDictionary.ThemeDictionaries")
+            .ToList();
 
-        var duplicates = keys
+        Assert.NotEmpty(themeDictionaries);
+
+        foreach (var dict in themeDictionaries)
+        {
+            var dictKeys = dict.Elements()
+                .Select(e => (string?)e.Attribute(XNamespace + "Key"))
+                .Where(k => !string.IsNullOrEmpty(k))
+                .Cast<string>()
+                .ToList();
+
+            var duplicates = dictKeys
+                .GroupBy(k => k, StringComparer.Ordinal)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+
+            Assert.Empty(duplicates);
+        }
+
+        // Keys outside theme dictionaries must also be unique.
+        var rootKeys = doc.Root!.Elements()
+            .Where(e => e.Name.LocalName != "ResourceDictionary.ThemeDictionaries")
+            .Select(e => (string?)e.Attribute(XNamespace + "Key"))
+            .Where(k => !string.IsNullOrEmpty(k))
+            .Cast<string>()
+            .ToList();
+
+        var rootDuplicates = rootKeys
             .GroupBy(k => k, StringComparer.Ordinal)
             .Where(g => g.Count() > 1)
             .Select(g => g.Key)
             .ToList();
 
-        Assert.Empty(duplicates);
+        Assert.Empty(rootDuplicates);
     }
 
     [Fact]

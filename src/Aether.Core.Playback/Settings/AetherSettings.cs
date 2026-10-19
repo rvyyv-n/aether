@@ -11,6 +11,8 @@ public sealed record AetherSettings
     public bool OpenInRunningWindow { get; init; } = true;
     /// <summary>The first-run tour (7.26) has been shown; Settings › About can show it again.</summary>
     public bool TourSeen { get; init; }
+    /// <summary><c>auto</c> (follows Windows), <c>light</c> or <c>dark</c>.</summary>
+    public string Theme { get; init; } = "auto";
 
     // Playback
     public bool PreciseSeeking { get; init; }
