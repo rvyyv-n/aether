@@ -514,8 +514,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     private void ApplyBorder() =>
         WindowBorder.SetShown(
             WinRT.Interop.WindowNative.GetWindowHandle(this),
-            shown: _videoAspect <= 0,
-            lightTheme: Shell.ActualTheme == ElementTheme.Light);
+            shown: !_overVideo);
 
     private void UpdateCaptionColors()
     {
