@@ -11,7 +11,8 @@ namespace Aether_App.Updates;
 /// </summary>
 internal sealed class VelopackUpdateEngine : IUpdateEngine
 {
-    private readonly UpdateManager _manager = new(new GithubSource(UpdateFeed.RepositoryUrl, null, prerelease: false));
+    // Pre-releases are included so beta testers move from one beta to the next (ADR-0021); revisit once 1.0 is out.
+    private readonly UpdateManager _manager = new(new GithubSource(UpdateFeed.RepositoryUrl, null, prerelease: true));
     private UpdateInfo? _found;
 
     public bool IsInstalled => _manager.IsInstalled;
