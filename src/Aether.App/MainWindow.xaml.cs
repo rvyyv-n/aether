@@ -167,8 +167,19 @@ public sealed partial class MainWindow : Window, IShellWindow
 
         Shell.Host = this;
         Activated += OnActivated;
+        if (PerfLog.IsEnabled)
+        {
+            EventHandler<object>? shown = null;
+            shown = (_, _) =>
+            {
+                Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= shown;
+                PerfLog.MarkWindowShown();
+            };
+            Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += shown;
+        }
         Closed += (_, _) =>
         {
+            Shell.WritePerfTotals();
             _taskbarButtons?.Dispose(); // before the display sync: it sits on top of that subclass
             DisplaySync.Dispose(); // before the aspect lock: it sits on top of that subclass
             _aspectLock?.Dispose();
