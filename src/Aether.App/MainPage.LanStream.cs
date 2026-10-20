@@ -7,6 +7,7 @@ using Aether_App.Controls;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -118,8 +119,12 @@ public sealed partial class MainPage
         _chrome.SetHold(ChromeHolds.Dialog, true);
         ApplyChrome();
         RenderLanStream();
-        LanStreamSwitch.Focus(FocusState.Programmatic);
+        FocusLanStreamCard();
     }
+
+    // A disabled switch cannot take focus, which would leave it on the page behind the scrim.
+    private void FocusLanStreamCard() =>
+        (LanStreamSwitch.IsEnabled ? (UIElement)LanStreamSwitch : LanStreamStatusText).Focus(FocusState.Programmatic);
 
     /// <summary>Esc, the shortcut and a click outside close it. True if it was open.</summary>
     private bool CloseLanStream()
@@ -327,7 +332,7 @@ public sealed partial class MainPage
         LanStreamSwitch.IsEnabled = panel.SwitchEnabled;
         _lanRendering = false;
 
-        LanStreamStatusText.Text = AppStrings.Format(panel.StatusKey, panel.Watchers);
+        SetLiveText(LanStreamStatusText, AppStrings.Format(panel.StatusKey, panel.Watchers));
         LanStreamStatusDot.Fill = ToneBrush(LanStreamStatusDot, panel.StatusTone == LanStreamTone.Ready ? Tone.Success : Tone.Neutral);
 
         if (panel.ShowsCode && _lanServer is { } server && _lanAddress is { } address)
@@ -344,8 +349,23 @@ public sealed partial class MainPage
 
         LanStreamNote.Visibility = panel.NoteKey is null ? Visibility.Collapsed : Visibility.Visible;
         LanStreamNoteDot.Visibility = panel.NoteIsWarning ? Visibility.Visible : Visibility.Collapsed;
-        LanStreamNoteText.Text = panel.NoteKey is { } note ? AppStrings.Format(note, LanStreamPort) : string.Empty;
+        SetLiveText(LanStreamNoteText, panel.NoteKey is { } note ? AppStrings.Format(note, LanStreamPort) : string.Empty);
         SyncLanWatchersTimer();
+    }
+
+    // Setting the text alone does not make Narrator speak a live region; the event does, so it fires only on a real change.
+    private static void SetLiveText(TextBlock block, string text)
+    {
+        if (block.Text == text)
+        {
+            return;
+        }
+        block.Text = text;
+        if (text.Length > 0)
+        {
+            var peer = FrameworkElementAutomationPeer.FromElement(block) ?? FrameworkElementAutomationPeer.CreatePeerForElement(block);
+            peer?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
+        }
     }
 
     private void SyncLanWatchersTimer()

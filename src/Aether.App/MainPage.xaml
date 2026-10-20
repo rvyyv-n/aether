@@ -1319,7 +1319,12 @@
                                     x:Name="LanStreamStatusDot"
                                     Margin="0,5,0,0"
                                     Style="{StaticResource AetherStatusDotStyle}" />
-                                <TextBlock x:Name="LanStreamStatusText" Style="{StaticResource AetherCaptionTextStyle}" />
+                                <!--  Selectable only so it can take focus when the switch is off, which keeps keyboard focus inside the card.  -->
+                                <TextBlock
+                                    x:Name="LanStreamStatusText"
+                                    AutomationProperties.LiveSetting="Polite"
+                                    IsTextSelectionEnabled="True"
+                                    Style="{StaticResource AetherCaptionTextStyle}" />
                             </StackPanel>
                         </StackPanel>
                         <ToggleSwitch
@@ -1410,6 +1415,7 @@
                         <TextBlock
                             x:Name="LanStreamNoteText"
                             Grid.Column="1"
+                            AutomationProperties.LiveSetting="Assertive"
                             Foreground="{ThemeResource AetherTextPrimaryBrush}"
                             Style="{StaticResource AetherCaptionTextStyle}"
                             TextWrapping="Wrap" />

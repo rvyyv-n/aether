@@ -166,7 +166,7 @@ public sealed partial class MainPage
         }
         else if (_lanShown)
         {
-            LanStreamSwitch.Focus(FocusState.Programmatic);
+            FocusLanStreamCard();
         }
         else if (!IsOpenUrlShown)
         {
