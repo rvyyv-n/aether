@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <!--
     Aether design tokens v2.1, generated from aether.tokens.json (the single source of truth).
-    Dark only, over the Mica Alt backdrop. Colour in the UI itself is reserved for status dots; there is no accent colour.
-    Merge into App.xaml after XamlControlsResources, and set Application.RequestedTheme="Dark".
+    Dark and Light theme dictionaries, over the Mica Alt backdrop. Colour in the UI itself is reserved for status dots; there is no accent colour.
+    Merge into App.xaml after XamlControlsResources; the theme is chosen in Settings.
     Keys: Aether + role. Colours have a *Color and a *Brush key. Sizes are effective pixels (x:Double).
 -->
 <ResourceDictionary

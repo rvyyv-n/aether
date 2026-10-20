@@ -87,9 +87,6 @@
   <data name="EmptyState_OpenUrl" xml:space="preserve">
     <value>Open URL</value>
   </data>
-  <data name="EmptyState_Hint" xml:space="preserve">
-    <value>Video files, YouTube and stream links</value>
-  </data>
   <data name="EmptyState_EngineReady" xml:space="preserve">
     <value>Ready</value>
   </data>
@@ -338,18 +335,6 @@
   <data name="Transport_Forward5s" xml:space="preserve">
     <value>Forward 5 s (→)</value>
   </data>
-  <data name="Transport_Back1Frame" xml:space="preserve">
-    <value>Back 1 frame (,)</value>
-  </data>
-  <data name="Transport_Forward1Frame" xml:space="preserve">
-    <value>Forward 1 frame (.)</value>
-  </data>
-  <data name="Transport_Loop" xml:space="preserve">
-    <value>Loop (L)</value>
-  </data>
-  <data name="Transport_AlwaysOnTop" xml:space="preserve">
-    <value>Always on top (T)</value>
-  </data>
   <data name="Transport_Mute" xml:space="preserve">
     <value>Mute (M)</value>
   </data>
@@ -440,12 +425,6 @@
   </data>
   <data name="Menu_Loop" xml:space="preserve">
     <value>Loop</value>
-  </data>
-  <data name="Menu_Back1Frame" xml:space="preserve">
-    <value>Back 1 frame</value>
-  </data>
-  <data name="Menu_Forward1Frame" xml:space="preserve">
-    <value>Forward 1 frame</value>
   </data>
   <data name="Menu_Clips" xml:space="preserve">
     <value>Clips</value>
