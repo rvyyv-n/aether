@@ -13,6 +13,7 @@
 ## ADR-0003: Zero Allocations on Video Hot-Paths
 - **Context:** High refresh rate playback (144Hz–360Hz) will suffer micro-stutter if garbage collection pauses occur during rendering or event handling.
 - **Decision:** No heap allocations on frame rendering or high-frequency event pump loops. Struct-backed view models, preallocated parameter blocks, and `GCSettings.LatencyMode = SustainedLowLatency` during playback.
+- **Update (11.5):** the collector settings were never actually applied. `Aether.App` now sets the workstation collector with concurrent (background) collection on in its project file and `SustainedLowLatency` at the top of `Program.Main`, for the whole process rather than only during playback. Concurrent collection stays on on purpose: `SustainedLowLatency` only takes effect with it, and is silently ignored when it is off. Both project settings carry into the Native AOT and the self-contained publish; `tools/measure-performance.ps1` prints the mode a build really runs with.
 - **Status:** Accepted.
 
 ## ADR-0005: DirectX COM Through Raw Vtable Calls

@@ -1,3 +1,4 @@
+using System.Runtime;
 using Aether.Core.Interop.Mpv;
 using Aether_App.Updates;
 using Microsoft.UI.Dispatching;
@@ -25,6 +26,10 @@ public static class Program
         // Unpackaged WinUI 3 MRT Core and native dependency resolution require the base directory
         // to be the working directory when launched via shell verbs, shortcuts, or external paths.
         Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
+        // Background collections with the low-pause mode: a full blocking collection mid-playback would drop frames
+        // (ADR-0003). The mode needs concurrent collection, which the project file keeps on.
+        GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
         if (SingleInstance.TryHandOff())
