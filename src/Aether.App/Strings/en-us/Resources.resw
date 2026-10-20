@@ -264,33 +264,6 @@
   </data>
 
   
-  <data name="YtDlp_UpdatePromptTitle" xml:space="preserve">
-    <value>Link playback needs an update</value>
-  </data>
-  <data name="YtDlp_UpdatePromptCaption" xml:space="preserve">
-    <value>yt-dlp 2026.03.17 is out of date</value>
-  </data>
-  <data name="YtDlp_UpdateNow" xml:space="preserve">
-    <value>Update now</value>
-  </data>
-  <data name="YtDlp_NotNow" xml:space="preserve">
-    <value>Not now</value>
-  </data>
-  <data name="YtDlp_UpdatingTitle" xml:space="preserve">
-    <value>Updating yt-dlp</value>
-  </data>
-  <data name="YtDlp_UpdatingProgress" xml:space="preserve">
-    <value>6.1 of 9.8 MB · 62%</value>
-  </data>
-  <data name="YtDlp_UpdateFailedTitle" xml:space="preserve">
-    <value>Couldn’t update link playback</value>
-  </data>
-  <data name="YtDlp_UpdateFailedMessage" xml:space="preserve">
-    <value>The download didn’t finish. Check your connection.</value>
-  </data>
-  <data name="YtDlp_UpdateFailedCaption" xml:space="preserve">
-    <value>yt-dlp 2026.03.17 is still installed</value>
-  </data>
 
   
   <data name="Transport_OpenFile" xml:space="preserve">
@@ -364,9 +337,6 @@
   </data>
   <data name="Transport_QualityAuto" xml:space="preserve">
     <value>Auto</value>
-  </data>
-  <data name="Transport_QualityDefaultFromSettings" xml:space="preserve">
-    <value>Default from Settings</value>
   </data>
   <data name="Transport_QualityAudioOnly" xml:space="preserve">
     <value>Audio only</value>
@@ -891,9 +861,6 @@
   </data>
   <data name="Settings_Shortcuts_OpenUrl" xml:space="preserve">
     <value>Open URL</value>
-  </data>
-  <data name="Settings_Shortcuts_PlayCopiedLink" xml:space="preserve">
-    <value>Play a copied link</value>
   </data>
   <data name="Settings_Shortcuts_SetIn" xml:space="preserve">
     <value>Set in</value>

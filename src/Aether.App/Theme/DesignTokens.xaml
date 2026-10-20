@@ -585,7 +585,6 @@
     <x:Double x:Key="AetherSizeTracksFlyout">536</x:Double>  <!-- Tracks flyout: 2 columns, padding 12, delay steppers with 32 px buttons and a 56 px tabular value -->
     <x:Double x:Key="AetherSizeVideoFlyout">340</x:Double>  <!-- Video flyout: padding 12,16, 32 px rows -->
     <x:Double x:Key="AetherSizeDiagnosticsWidth">300</x:Double>  <!-- Diagnostics overlay: top-left, 16 in (48 when the title bar shows), padding 8,8,12,16, rows 76 / *,  -->
-    <x:Double x:Key="AetherSizePipWidth">400</x:Double>  <!-- Picture in picture: AppWindow CompactOverlay, opens 400×225 (PipPlacement), drag minimum 256×144 -->
     <x:Double x:Key="AetherSizePipBackButton">32</x:Double>  <!-- "Back to full window": 32×32 in the title strip, left of the system Close -->
     <x:Double x:Key="AetherSizePipPlay">48</x:Double>  <!-- Centre play/pause in picture in picture, round -->
     <x:Double x:Key="AetherSizePipPlayIcon">20</x:Double>
