@@ -8,6 +8,7 @@ public sealed class UpdateController
 {
     private readonly IUpdateEngine _engine;
     private readonly SemaphoreSlim _busy = new(1, 1);
+    private readonly Lock _statusGate = new();
     private UpdateStatus _status;
 
     public UpdateController(IUpdateEngine engine)
@@ -16,7 +17,7 @@ public sealed class UpdateController
         _status = engine.IsInstalled ? UpdateStatus.Idle : new UpdateStatus(UpdateState.NotInstalled);
     }
 
-    /// <summary>Raised on whichever thread changed the status.</summary>
+    /// <summary>Raised on whichever thread changed the status, in the order the changes happened. Handlers must not block.</summary>
     public event Action<UpdateStatus>? StatusChanged;
 
     public UpdateStatus Status => Volatile.Read(ref _status);
@@ -43,13 +44,7 @@ public sealed class UpdateController
             }
 
             Set(new UpdateStatus(UpdateState.Downloading, found));
-            var progress = new Progress<double>(fraction =>
-            {
-                if (Status.State == UpdateState.Downloading)
-                {
-                    Set(new UpdateStatus(UpdateState.Downloading, found, Math.Clamp(fraction, 0, 1)));
-                }
-            });
+            var progress = new DownloadProgress(this, found);
             await _engine.DownloadAsync(progress, cancellationToken).ConfigureAwait(false);
             _engine.ApplyOnExit();
             return Set(new UpdateStatus(UpdateState.Ready, found));
@@ -94,10 +89,32 @@ public sealed class UpdateController
         || !ReleaseVersion.TryParse(_engine.CurrentVersion, out ReleaseVersion current)
         || next.CompareTo(current) > 0;
 
+    // Raised under the gate so a listener never sees the changes out of order.
     private UpdateStatus Set(UpdateStatus status)
     {
-        Volatile.Write(ref _status, status);
-        StatusChanged?.Invoke(status);
+        lock (_statusGate)
+        {
+            Volatile.Write(ref _status, status);
+            StatusChanged?.Invoke(status);
+        }
         return status;
+    }
+
+    // The engine reports progress from its own threads, and a late report can arrive after the download finished;
+    // checking and setting together keeps it from turning Ready back into Downloading, which would block Check now.
+    private void SetProgress(string version, double fraction)
+    {
+        lock (_statusGate)
+        {
+            if (_status.State == UpdateState.Downloading)
+            {
+                Set(new UpdateStatus(UpdateState.Downloading, version, Math.Clamp(fraction, 0, 1)));
+            }
+        }
+    }
+
+    private sealed class DownloadProgress(UpdateController controller, string version) : IProgress<double>
+    {
+        public void Report(double value) => controller.SetProgress(version, value);
     }
 }
