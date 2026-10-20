@@ -32,8 +32,9 @@ public enum LanStreamTone
 /// <param name="HasAddress">A home-network address was found for the phone to reach this PC on.</param>
 /// <param name="Watchers">Phones streaming right now, as the server counts them.</param>
 /// <param name="AddressChanged">The address moved while the server was on, so a phone has to scan again.</param>
+/// <param name="PublicNetwork">Windows marks the network as Public (a café or hotel), where others could watch too.</param>
 public readonly record struct LanStreamPanel(
-    LanStreamSource Source, LanServerState Server, bool HasAddress, int Watchers, bool AddressChanged)
+    LanStreamSource Source, LanServerState Server, bool HasAddress, int Watchers, bool AddressChanged, bool PublicNetwork = false)
 {
     public bool SwitchOn => Server is LanServerState.Starting or LanServerState.On;
 
@@ -73,11 +74,13 @@ public readonly record struct LanStreamPanel(
                 LanServerState.Failed => "LanStream_NoteFailed",
                 _ when !HasAddress => "LanStream_NoteNoNetwork",
                 LanServerState.On when AddressChanged => "LanStream_NoteAddressChanged",
+                _ when PublicNetwork => "LanStream_NotePublicNetwork",
                 _ => null,
             };
         }
     }
 
     /// <summary>Problems get the warning dot; a plain reason (no file, a link) and the address change get none.</summary>
-    public bool NoteIsWarning => NoteKey is "LanStream_NotePortBusy" or "LanStream_NoteFailed" or "LanStream_NoteNoNetwork";
+    public bool NoteIsWarning => NoteKey is "LanStream_NotePortBusy" or "LanStream_NoteFailed" or "LanStream_NoteNoNetwork"
+        or "LanStream_NotePublicNetwork";
 }

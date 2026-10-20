@@ -9,8 +9,9 @@ public class LanStreamPanelTests
         LanStreamSource source = LanStreamSource.File,
         bool hasAddress = true,
         int watchers = 0,
-        bool addressChanged = false) =>
-        new(source, server, hasAddress, watchers, addressChanged);
+        bool addressChanged = false,
+        bool publicNetwork = false) =>
+        new(source, server, hasAddress, watchers, addressChanged, publicNetwork);
 
     [Fact]
     public void Starts_Off_With_The_Switch_Ready_For_A_Local_File()
@@ -88,6 +89,26 @@ public class LanStreamPanelTests
     {
         Assert.Equal("LanStream_NoteAddressChanged", Panel(LanServerState.On, addressChanged: true).NoteKey);
         Assert.Null(Panel(addressChanged: true).NoteKey);
+    }
+
+    [Theory]
+    [InlineData(LanServerState.Off)]
+    [InlineData(LanServerState.On)]
+    public void A_Public_Network_Warns_Before_And_While_Streaming(LanServerState server)
+    {
+        LanStreamPanel panel = Panel(server, publicNetwork: true);
+
+        Assert.True(panel.SwitchEnabled);
+        Assert.Equal("LanStream_NotePublicNetwork", panel.NoteKey);
+        Assert.True(panel.NoteIsWarning);
+    }
+
+    [Fact]
+    public void A_Failure_Or_A_New_Address_Outranks_The_Public_Network_Warning()
+    {
+        Assert.Equal("LanStream_NoteFailed", Panel(LanServerState.Failed, publicNetwork: true).NoteKey);
+        Assert.Equal("LanStream_NoteAddressChanged", Panel(LanServerState.On, addressChanged: true, publicNetwork: true).NoteKey);
+        Assert.Equal("LanStream_NoteLink", Panel(source: LanStreamSource.Link, publicNetwork: true).NoteKey);
     }
 
     [Theory]

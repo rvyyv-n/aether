@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.NetworkInformation;
+using Aether.Core.Interop.Windowing;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Input;
 using Aether.Server.LanHost;
@@ -38,6 +39,8 @@ public sealed partial class MainPage
     private IPAddress? _lanAddress;
     private bool _lanAddressChanged;
     private int _lanAddressVersion;
+    private bool _lanPublicNetwork;
+    private int _lanCategoryVersion;
     private string? _lanCodeUrl;
     private double _lanCodeScale;
     private bool _lanShown;
@@ -310,6 +313,39 @@ public sealed partial class MainPage
             _lanAddressChanged = true;
         }
         _lanAddress = found;
+        RefreshLanNetworkCategory(found);
+    }
+
+    // Asking Windows takes a few milliseconds, so the card opens at once and the warning follows.
+    private async void RefreshLanNetworkCategory(IPAddress? address)
+    {
+        int version = ++_lanCategoryVersion;
+        bool isPublic = address is not null && await Task.Run(() => IsOnPublicNetwork(address)) == true;
+        if (version != _lanCategoryVersion || isPublic == _lanPublicNetwork)
+        {
+            return;
+        }
+        _lanPublicNetwork = isPublic;
+        RenderLanStream();
+    }
+
+    private static bool? IsOnPublicNetwork(IPAddress address)
+    {
+        foreach (NetworkInterface nic in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            try
+            {
+                if (nic.GetIPProperties().UnicastAddresses.Any(u => u.Address.Equals(address)) && Guid.TryParse(nic.Id, out Guid adapter))
+                {
+                    return NetworkCategory.IsPublic(adapter);
+                }
+            }
+            catch (NetworkInformationException)
+            {
+                // The adapter went away while being read; the next one may still match.
+            }
+        }
+        return null;
     }
 
     private void RenderLanStream()
@@ -325,7 +361,7 @@ public sealed partial class MainPage
             return;
         }
         var panel = new LanStreamPanel(
-            LanSource(), _lanState, _lanAddress is not null, _lanServer?.WatcherCount ?? 0, _lanAddressChanged);
+            LanSource(), _lanState, _lanAddress is not null, _lanServer?.WatcherCount ?? 0, _lanAddressChanged, _lanPublicNetwork);
 
         _lanRendering = true;
         LanStreamSwitch.IsOn = panel.SwitchOn;

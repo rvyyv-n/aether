@@ -1774,4 +1774,7 @@
   <data name="LanStream_NoteAddressChanged" xml:space="preserve">
     <value>This PC's address changed. Scan the new code on your phone.</value>
   </data>
+  <data name="LanStream_NotePublicNetwork" xml:space="preserve">
+    <value>Windows lists this as a public network, like café or hotel Wi-Fi. Others on it could watch too, so stream only on a network you trust.</value>
+  </data>
 </root>
