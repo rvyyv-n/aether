@@ -77,10 +77,6 @@
   <data name="EmptyState_Subtitle" xml:space="preserve">
     <value>Drop a file, paste a link or press Ctrl+O</value>
   </data>
-  <data name="EmptyState_SubtitleFilesOnly" xml:space="preserve">
-    <value>Drop a file or press {0}</value>
-    <comment>Shown until links play (streaming); {0} is the open-file key</comment>
-  </data>
   <data name="EmptyState_OpenFile" xml:space="preserve">
     <value>Open file</value>
   </data>
@@ -170,9 +166,6 @@
   </data>
   <data name="Shell_OpeningTitle" xml:space="preserve">
     <value>Opening file</value>
-  </data>
-  <data name="Shell_Loading" xml:space="preserve">
-    <value>Loading</value>
   </data>
   <data name="Shell_DropCaption" xml:space="preserve">
     <value>Play</value>
@@ -1011,9 +1004,6 @@
   </data>
 
   
-  <data name="Settings_QualityPreset_High" xml:space="preserve">
-    <value>High quality</value>
-  </data>
   <data name="Settings_SubtitleFont_Title" xml:space="preserve">
     <value>Subtitle font</value>
   </data>
@@ -1121,9 +1111,6 @@
   </data>
   <data name="Settings_Shortcuts_PressKeyCombination" xml:space="preserve">
     <value>Press a key combination</value>
-  </data>
-  <data name="Settings_Shortcuts_Reset" xml:space="preserve">
-    <value>Reset</value>
   </data>
   
   <data name="Common_On" xml:space="preserve">
