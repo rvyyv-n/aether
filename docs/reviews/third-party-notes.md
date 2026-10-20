@@ -31,7 +31,7 @@ Aether is GPL-3.0-only (ADR-0025). The licensing facts to track are the **build 
 - **Architectural & Legal Impact:**  
   In `Aether.PvP.Review.Clipping.ClipExportService`, FFmpeg is invoked strictly as an external CLI process via `Process.Start("ffmpeg.exe", ...)` using pipes and command-line arguments. Under FSF licensing doctrine, calling an independent CLI tool across the OS process boundary constitutes "mere aggregation" rather than a derivative work, meaning a GPL `ffmpeg.exe` on the user's system does not copyleft Aether's C# code.
 - **Bundling & Distribution Requirements:**  
-  FFmpeg is currently unbundled in `dist/Aether-portable/`. If Aether ever bundles `ffmpeg.exe` into `AetherInstaller.exe` or portable packages, Aether must:
+  FFmpeg is currently unbundled in `dist/Aether-portable/`. If Aether ever bundles `ffmpeg.exe` into the installer or portable packages, Aether must:
   1. Accompany the distribution with a written offer valid for at least three (3) years to provide the exact corresponding FFmpeg source code and build scripts (or provide direct source access).
   2. Include the full text of the GNU General Public License Version 3.  
   *The offer is in [THIRD_PARTY.md](../../THIRD_PARTY.md); the licence text is in [LICENSE](../../LICENSE).*

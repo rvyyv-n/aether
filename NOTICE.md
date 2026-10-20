@@ -21,7 +21,6 @@ If you pass the software on, you may remove these additional terms only as far a
 The application icon, the logo and the other brand artwork are not covered by the GPL. They remain copyright (C) 2026 rvyyv-n, all rights reserved. A fork must replace them with its own artwork. This covers:
 
 - `src/Aether.App/Assets/AppIcon.ico` and `src/Aether.App/Assets/AppIcon.light.ico`
-- `tools/installer/Aether.Installer/AppIcon.ico`
 - `src/Aether.Server.LanHost/favicon.svg`
 - `docs/assets/aether-icon*.png`, `docs/assets/aether-icon.svg` and everything in `docs/assets/logo-drafts/`
 - Any other file that shows the Aether logo or icon, such as the README logo

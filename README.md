@@ -112,12 +112,11 @@ aether/
 
 ## Installation & Running
 
-### Option 1: Standalone Installer (Recommended)
-Download and run `AetherInstaller.exe`:
-- **Zero Administrator Rights:** Installs cleanly into `%LOCALAPPDATA%\Programs\Aether`.
-- **Zero Certificates:** No test certificate installation or Developer Mode required.
-- **Windows Integration:** Adds Start Menu & Desktop shortcuts, registers in Windows Settings "Installed apps" with clean uninstaller, adds `aether.exe` to Run (`Win+R`), and registers "Play with Aether" context menu.
-- **Silent Scripted Install:** Run `AetherInstaller.exe --silent` (or `--uninstall` for clean removal).
+### Option 1: Installer (Recommended)
+Download and run `AetherPlayer-win-Setup.exe` from the latest release:
+- **Zero Administrator Rights:** A small setup window installs Aether for your account only; no terminal window, no certificates and no Developer Mode.
+- **Windows Integration:** Adds Start Menu and Desktop shortcuts, registers in Windows Settings "Installed apps" with a clean uninstaller, adds `aether.exe` to Run (`Win+R`), and registers the "Play with Aether" context menu.
+- **Updates:** Aether checks for new versions once a day (switch it off in Settings > About) and installs them when you close it.
 
 ### Option 2: Portable Runner
 Extract `Aether-portable.zip` anywhere (e.g. USB drive or folder) and launch:
@@ -151,14 +150,13 @@ Build incrementally and launch unpackaged in ~2-3 seconds:
 .\tools\run.ps1 -Host "path\to\video.mp4"
 ```
 
-### Packaging Standalone Binaries & Installer
-To generate the portable release bundle and standalone installer executable:
+### Packaging the Portable Bundle
+To generate the portable release bundle (the installer is made from it by the release workflow with Velopack):
 
 ```powershell
 .\tools\package-standalone.ps1
 ```
 This builds and outputs to `dist/`:
-- `AetherInstaller.exe` (Self-contained standalone single-file installer)
 - `Aether-portable.zip` (Portable archive)
 - `Aether-portable/` (Ready-to-run folder)
 
