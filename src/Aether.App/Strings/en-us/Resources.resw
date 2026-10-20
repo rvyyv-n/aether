@@ -1213,6 +1213,9 @@
   <data name="Settings_YtDlp_Updating" xml:space="preserve">
     <value>Updating…</value>
   </data>
+  <data name="Settings_YtDlp_Installing" xml:space="preserve">
+    <value>Installing…</value>
+  </data>
   <data name="YtDlp_InstallProgress" xml:space="preserve">
     <value>Installing… {0}%</value>
   </data>
