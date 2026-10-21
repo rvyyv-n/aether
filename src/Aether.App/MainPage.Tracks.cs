@@ -72,6 +72,7 @@ public sealed partial class MainPage
     private void ApplyTracks(TrackSnapshot snapshot)
     {
         _tracks = snapshot;
+        TracksPanel.RequestedTheme = ActualTheme; // rows built here must match the theme the flyout opens in
         TracksPanel.LinkTitle = _streamTitle;
         TracksPanel.Show(snapshot);
     }

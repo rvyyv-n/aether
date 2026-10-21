@@ -22,6 +22,10 @@ public sealed partial class MainPage
     private void SetPopupSurface(FrameworkElement? content)
     {
         _popupSurface = FindPresenter(content);
+        if (_popupSurface is Microsoft.UI.Xaml.Controls.Control presenter)
+        {
+            presenter.RequestedTheme = ActualTheme; // a flyout's popup does not reliably take the page's in-app theme
+        }
         PostBackdropRegion();
     }
 

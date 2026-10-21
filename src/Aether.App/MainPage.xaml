@@ -21,8 +21,9 @@
 
     <Page.Resources>
         <!--
-            Tracks flyout (9.2): opened from Audio and Subtitles in the right-click menu, centred above the pill. A translucent
-            surface: the render thread blurs the video behind it (ADR-0013); the panel scrolls inside it (MainPage.Tracks.cs).
+            Tracks flyout (9.2): opened from Audio and Subtitles in the right-click menu, centred above the pill. The bar's
+            surface in the app's theme: the render thread blurs the video behind it (ADR-0013); the panel scrolls inside it
+            (MainPage.Tracks.cs).
         -->
         <Flyout
             x:Name="TracksFlyout"
@@ -31,9 +32,8 @@
             Placement="Top">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
-                    <Setter Property="RequestedTheme" Value="Dark" />
-                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogBrush}" />
-                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceBarBrush}" />
+                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeBarBrush}" />
                     <Setter Property="BorderThickness" Value="1" />
                     <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
                     <Setter Property="Padding" Value="0" />
@@ -43,7 +43,7 @@
                     <Setter Property="MaxHeight" Value="2000" />
                 </Style>
             </Flyout.FlyoutPresenterStyle>
-            <controls:TracksPanel x:Name="TracksPanel" RequestedTheme="Dark" />
+            <controls:TracksPanel x:Name="TracksPanel" />
         </Flyout>
 
         <!--  Video flyout (9.3): right-aligned to the pill, on the same surface as the tracks flyout (MainPage.Video.cs).  -->
@@ -54,9 +54,8 @@
             Placement="TopEdgeAlignedRight">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
-                    <Setter Property="RequestedTheme" Value="Dark" />
-                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogBrush}" />
-                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceBarBrush}" />
+                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeBarBrush}" />
                     <Setter Property="BorderThickness" Value="1" />
                     <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
                     <Setter Property="Padding" Value="0" />
@@ -66,7 +65,7 @@
                     <Setter Property="MaxHeight" Value="2000" />
                 </Style>
             </Flyout.FlyoutPresenterStyle>
-            <controls:VideoPanel x:Name="VideoPanel" RequestedTheme="Dark" />
+            <controls:VideoPanel x:Name="VideoPanel" />
         </Flyout>
     </Page.Resources>
 

@@ -114,7 +114,7 @@
             <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="{StaticResource AetherSurfaceMenuColor}" />
             <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="{StaticResource AetherSurfaceMenuFallbackColor}" />
             <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="{StaticResource AetherStrokeMenuColor}" />
-            <!--  Player bar, sidebar and volume pop-up: the 62% ink glass in dark; light takes the menus' frosted card and faint edge, so they and the menus read as one family  -->
+            <!--  Player bar, sidebar and the volume, Now Playing and Video pop-ups: the 62% ink glass in dark; light takes the menus' frosted card and faint edge, so they and the menus read as one family  -->
             <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
             <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />

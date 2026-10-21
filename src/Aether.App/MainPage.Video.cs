@@ -69,6 +69,7 @@ public sealed partial class MainPage
             return;
         }
         VideoAdjustments baseline = VideoAdjustments.FromSettings(App.Settings.Current);
+        VideoPanel.RequestedTheme = ActualTheme; // the grade list's dividers take their colour from the panel's theme as they are built
         VideoPanel.Baseline = baseline;
         VideoPanel.Show(_video ?? baseline);
         VideoPanel.ShowLook(FallBackFromMissingGrade(CurrentLook));
