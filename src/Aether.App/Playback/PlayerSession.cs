@@ -4,6 +4,7 @@ using Aether.Core.Playback.Settings;
 using Aether.Core.Playback.Streams;
 using Aether_App.Controls;
 using Aether_App.Input;
+using Aether_App.Settings;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.System.Power;
@@ -111,6 +112,8 @@ public sealed class PlayerSession : IDisposable
         }
         var s = settings ?? App.Settings.Current;
         IReadOnlyList<KeyValuePair<string, string>> startOptions = MpvSettingsMap.StartOptions(s);
+        // The fonts that ship with Aether, so a subtitle set in one of them renders without it being installed.
+        KeyValuePair<string, string> fontsDirectory = new("sub-fonts-dir", BundledFonts.Directory);
         try
         {
             return MpvContext.Create(new MpvContextOptions
@@ -118,7 +121,7 @@ public sealed class PlayerSession : IDisposable
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
                 BackBufferSize = MpvSettingsMap.BackBufferSize(s),
-                AdditionalOptions = startOptions,
+                AdditionalOptions = [.. startOptions, fontsDirectory],
             });
         }
         catch (MpvException) when (startOptions.Count > 0)
@@ -130,6 +133,7 @@ public sealed class PlayerSession : IDisposable
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
                 BackBufferSize = MpvSettingsMap.BackBufferSize(s),
+                AdditionalOptions = [fontsDirectory],
             });
         }
     }

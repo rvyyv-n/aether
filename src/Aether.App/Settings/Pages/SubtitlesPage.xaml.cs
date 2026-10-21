@@ -147,7 +147,7 @@ public sealed partial class SubtitlesPage : Page
             string stored = App.Settings.Get(SettingKeys.SubtitleFont) as string ?? "";
             if (!_fonts.Contains(stored, StringComparer.OrdinalIgnoreCase))
             {
-                _fonts = FontList.Build(_fonts.Count == 0 ? SubtitleFonts : _fonts, stored);
+                _fonts = FontList.Build(_fonts.Count == 0 ? [.. SubtitleFonts, .. BundledFonts.Families] : _fonts, stored);
             }
             // Never overwrite what is being typed.
             if (SubtitleFontBox.Text != stored && SubtitleFontBox.FocusState == FocusState.Unfocused)
@@ -167,7 +167,7 @@ public sealed partial class SubtitlesPage : Page
         List<string> installed = await Task.Run(InstalledFonts.Families);
         if (installed.Count > 0)
         {
-            _fonts = FontList.Build(installed, App.Settings.Get(SettingKeys.SubtitleFont) as string);
+            _fonts = FontList.Build([.. installed, .. BundledFonts.Families], App.Settings.Get(SettingKeys.SubtitleFont) as string);
         }
     }
 
@@ -175,7 +175,7 @@ public sealed partial class SubtitlesPage : Page
     private void UpdatePreview()
     {
         AetherSettings s = App.Settings.Current;
-        PreviewText.FontFamily = new FontFamily(s.SubtitleFont);
+        PreviewText.FontFamily = new FontFamily(BundledFonts.PreviewFamily(s.SubtitleFont));
         PreviewText.FontWeight = s.SubtitleBold ? FontWeights.Bold : FontWeights.Normal;
         PreviewText.FontSize = double.Parse(MpvSettingsMap.SubtitleFontSize(s.SubtitleSize), CultureInfo.InvariantCulture) * 0.4;
         PreviewText.Foreground = new SolidColorBrush(ParseColour(MpvSettingsMap.SubtitleColor(s.SubtitleColor)));
