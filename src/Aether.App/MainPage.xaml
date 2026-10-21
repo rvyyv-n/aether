@@ -95,6 +95,7 @@
                     x:Name="ContextMenu"
                     Closed="OnContextMenuClosed"
                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                    ShouldConstrainToRootBounds="True"
                     Opened="OnContextMenuOpened"
                     Placement="BottomEdgeAlignedLeft">
                     <MenuFlyoutItem
@@ -881,6 +882,7 @@
                                     x:Name="OpenMenu"
                                     Closed="OnOpenMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    ShouldConstrainToRootBounds="True"
                                     Opened="OnOpenMenuOpened"
                                     Placement="TopEdgeAlignedLeft">
                                     <MenuFlyoutItem
@@ -913,6 +915,7 @@
                                     x:Name="SpeedMenu"
                                     Closed="OnSpeedMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    ShouldConstrainToRootBounds="True"
                                     Opened="OnSpeedMenuOpened"
                                     Placement="TopEdgeAlignedLeft" />
                             </FlyoutBase.AttachedFlyout>
@@ -930,6 +933,7 @@
                                     x:Name="QualityMenu"
                                     Closed="OnQualityMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    ShouldConstrainToRootBounds="True"
                                     Opened="OnQualityMenuOpened"
                                     Placement="TopEdgeAlignedLeft" />
                             </FlyoutBase.AttachedFlyout>
@@ -1063,6 +1067,7 @@
                                     x:Name="MoreMenu"
                                     Closed="OnMoreMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    ShouldConstrainToRootBounds="True"
                                     Opened="OnMoreMenuOpened"
                                     Placement="TopEdgeAlignedRight">
                                     <MenuFlyoutItem
