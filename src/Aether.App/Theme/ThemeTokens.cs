@@ -8,9 +8,7 @@ namespace Aether_App;
 /// </summary>
 public static class ThemeTokens
 {
-    private static ResourceDictionary? _light;
-    private static ResourceDictionary? _dark;
-
+    private static readonly Dictionary<(string Theme, string Key), object> Cache = [];
     private static readonly Windows.UI.ViewManagement.UISettings System = new();
 
     /// <summary>
@@ -35,30 +33,38 @@ public static class ThemeTokens
         {
             theme = Application.Current.RequestedTheme == ApplicationTheme.Light ? ElementTheme.Light : ElementTheme.Dark;
         }
-        Find();
-        ResourceDictionary? dictionary = theme == ElementTheme.Light ? _light : _dark;
-        if (dictionary is not null && dictionary.TryGetValue(key, out object? value))
+        string name = theme == ElementTheme.Light ? "Light" : "Dark";
+        if (Cache.TryGetValue((name, key), out object? cached))
         {
-            return (T)value;
+            return (T)cached;
+        }
+        if (TryFind(Application.Current.Resources, name, key, out object? value))
+        {
+            Cache[(name, key)] = value!;
+            return (T)value!;
         }
         return (T)Application.Current.Resources[key];
     }
 
-    private static void Find()
+    // Searches every merged dictionary, since the Windows App SDK's own controls resources have Light and Dark
+    // dictionaries too and must not be mistaken for Aether's; a token missing from the one that was found would fall
+    // back to Windows' theme and come out in the wrong colours.
+    private static bool TryFind(ResourceDictionary dictionary, string theme, string key, out object? value)
     {
-        if (_light is not null && _dark is not null)
+        if (dictionary.ThemeDictionaries.TryGetValue(theme, out object? themed)
+            && themed is ResourceDictionary themeDictionary
+            && themeDictionary.TryGetValue(key, out value))
         {
-            return;
+            return true;
         }
-        foreach (ResourceDictionary merged in Application.Current.Resources.MergedDictionaries)
+        foreach (ResourceDictionary merged in dictionary.MergedDictionaries)
         {
-            if (merged.ThemeDictionaries.TryGetValue("Light", out object? light)
-                && merged.ThemeDictionaries.TryGetValue("Dark", out object? dark))
+            if (TryFind(merged, theme, key, out value))
             {
-                _light = (ResourceDictionary)light;
-                _dark = (ResourceDictionary)dark;
-                return;
+                return true;
             }
         }
+        value = null;
+        return false;
     }
 }
