@@ -26,7 +26,7 @@ public sealed partial class StreamingPage : Page
             "Settings_StreamingQuality_Title", "Settings_StreamingQuality_Description");
         binder.Toggle(PreferGpuDecodableFormatsRow, PreferGpuDecodableFormatsToggle, SettingKeys.PreferGpuDecodableFormats,
             "Settings_PreferHardwareDecode_Title", "Settings_PreferHardwareDecode_Description");
-        binder.Toggle(YtDlpAutoUpdateRow, YtDlpAutoUpdateToggle, SettingKeys.YtDlpAutoUpdate,
+        binder.Toggle(null, YtDlpAutoUpdateToggle, SettingKeys.YtDlpAutoUpdate,
             "Settings_YtDlp_UpdateAutomatically_Title", "Settings_YtDlp_UpdateAutomatically_Description");
         binder.Slider(NetworkCacheRow, NetworkCacheSlider, NetworkCacheValue, SettingKeys.NetworkCacheMegabytes,
             "Settings_NetworkCache_Title", "Settings_NetworkCache_Description",
@@ -44,6 +44,7 @@ public sealed partial class StreamingPage : Page
             "Settings_RtspTransport_Title", "Settings_RtspTransport_Description");
 
         YtDlpRow.Header = AppStrings.Get("Settings_YtDlp_Title");
+        YtDlpAutoUpdateLabel.Text = AppStrings.Get("Settings_AutoLabel");
         YtDlpActionButton.Click += async (_, _) => await OnYtDlpActionAsync();
         YtDlpMissingNote.Text = AppStrings.Get("Settings_Streaming_YtDlpMissing");
         _ = LoadYtDlpAsync();
@@ -99,7 +100,7 @@ public sealed partial class StreamingPage : Page
         }
         if (hadFocus)
         {
-            // Back on the button, or on the switch below it once the button has nothing left to do.
+            // Back on the button, or on the switch beside it once the button has nothing left to do.
             Control target = YtDlpActionButton.Visibility == Visibility.Visible ? YtDlpActionButton : YtDlpAutoUpdateToggle;
             target.Focus(FocusState.Keyboard);
         }
@@ -112,7 +113,7 @@ public sealed partial class StreamingPage : Page
         YtDlpActionButton.Content = AppStrings.Get(missing ? "Settings_YtDlp_Download" : "Settings_YtDlp_UpdateNow");
         YtDlpActionButton.Visibility = Visibility.Visible;
         YtDlpMissingNote.Visibility = missing ? Visibility.Visible : Visibility.Collapsed;
-        foreach (Control row in new Control[] { YtDlpAutoUpdateRow, StreamingQualityRow, PreferGpuDecodableFormatsRow })
+        foreach (Control row in new Control[] { YtDlpAutoUpdateToggle, StreamingQualityRow, PreferGpuDecodableFormatsRow })
         {
             row.IsEnabled = !missing;
         }

@@ -55,8 +55,9 @@ public sealed partial class AboutPage : Page
         AutomationProperties.SetName(CopyDiagnosticsButton, AppStrings.Get("Settings_About_CopyDiagnostics"));
         CopyDiagnosticsButton.Click += async (_, _) => await CopyDiagnosticsAsync();
 
+        UpdatesAutoLabel.Text = AppStrings.Get("Settings_AutoLabel");
         var binder = new SettingsPageBinder(this);
-        binder.Toggle(UpdatesAutoRow, UpdatesAutoToggle, SettingKeys.UpdatesAutoCheck,
+        binder.Toggle(null, UpdatesAutoToggle, SettingKeys.UpdatesAutoCheck,
             "Settings_Updates_Auto_Title", "Settings_Updates_Auto_Description");
         UpdatesActionButton.Click += (_, _) =>
         {
@@ -104,7 +105,7 @@ public sealed partial class AboutPage : Page
         UpdatesActionButton.Content = AppStrings.Get(status.State == UpdateState.Ready ? "Settings_Updates_Restart" : "Settings_Updates_CheckNow");
         UpdatesActionButton.IsEnabled = status.CanCheck;
         UpdatesActionButton.Visibility = status.State == UpdateState.NotInstalled ? Visibility.Collapsed : Visibility.Visible;
-        UpdatesAutoRow.IsEnabled = status.State != UpdateState.NotInstalled;
+        UpdatesAutoToggle.IsEnabled = status.State != UpdateState.NotInstalled;
     }
 
     private static void SetUpLink(Button button, TextBlock text, string titleKey, string? helpKey, Uri target)

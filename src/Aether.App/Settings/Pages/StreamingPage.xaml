@@ -28,11 +28,11 @@
                 <ComboBox x:Name="RtspTransportCombo" Style="{StaticResource AetherSettingsComboStyle}" />
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="YtDlpRow" Glyph="&#xE896;">
-                <Button x:Name="YtDlpActionButton" Style="{StaticResource AetherOutlinePillButtonStyle}" Visibility="Collapsed" />
-            </settings:SettingsRow>
-            <!--  A blank glyph keeps the title in line with yt-dlp's, the setting it belongs to  -->
-            <settings:SettingsRow x:Name="YtDlpAutoUpdateRow" Glyph=" ">
-                <ToggleSwitch x:Name="YtDlpAutoUpdateToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Button x:Name="YtDlpActionButton" Style="{StaticResource AetherOutlinePillButtonStyle}" Visibility="Collapsed" />
+                    <TextBlock x:Name="YtDlpAutoUpdateLabel" VerticalAlignment="Center" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherBodyTextStyle}" />
+                    <ToggleSwitch x:Name="YtDlpAutoUpdateToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </StackPanel>
             </settings:SettingsRow>
         </settings:SettingsGroup>
         <TextBlock x:Name="YtDlpMissingNote" Margin="16,0" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" Visibility="Collapsed" />

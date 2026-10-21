@@ -78,11 +78,45 @@ internal sealed class SettingsPageBinder
         row.Description = descriptionKey is null ? null : AppStrings.Get(descriptionKey);
     }
 
-    public void Toggle(SettingsRow row, ToggleSwitch toggle, string key, string titleKey, string? descriptionKey = null)
+    /// <summary>Titles <paramref name="row"/>, or when the control sits in another setting's row, names the control and gives it a tooltip.</summary>
+    private static void DescribeControl(SettingsRow? row, FrameworkElement control, string titleKey, string? descriptionKey)
     {
-        Describe(row, titleKey, descriptionKey);
-        AutomationProperties.SetName(toggle, row.Header);
-        void ShowState() => row.StateText = AppStrings.Get(toggle.IsOn ? "Common_On" : "Common_Off");
+        string title = AppStrings.Get(titleKey);
+        if (row is not null)
+        {
+            Describe(row, titleKey, descriptionKey);
+        }
+        else
+        {
+            ToolTipService.SetToolTip(control, descriptionKey is null ? title : AppStrings.Get(descriptionKey));
+        }
+        AutomationProperties.SetName(control, title);
+    }
+
+    /// <summary>
+    /// A toggle over a boolean setting. With a null <paramref name="row"/> the toggle sits inside another setting's row (a
+    /// switch beside that row's button or box): it is named and given a tooltip from <paramref name="titleKey"/>, and the row
+    /// keeps its own title and shows no On or Off.
+    /// </summary>
+    public void Toggle(SettingsRow? row, ToggleSwitch toggle, string key, string titleKey, string? descriptionKey = null)
+    {
+        string title = AppStrings.Get(titleKey);
+        if (row is not null)
+        {
+            Describe(row, titleKey, descriptionKey);
+        }
+        else
+        {
+            ToolTipService.SetToolTip(toggle, title);
+        }
+        AutomationProperties.SetName(toggle, title);
+        void ShowState()
+        {
+            if (row is not null)
+            {
+                row.StateText = AppStrings.Get(toggle.IsOn ? "Common_On" : "Common_Off");
+            }
+        }
         toggle.Toggled += (_, _) =>
         {
             ShowState();
@@ -103,7 +137,7 @@ internal sealed class SettingsPageBinder
     /// the list (a language or device typed into the settings file) is added as its own entry instead of showing nothing.
     /// </summary>
     public void Choose(
-        SettingsRow row,
+        SettingsRow? row,
         Selector selector,
         string key,
         IReadOnlyList<Choice> choices,
@@ -111,8 +145,7 @@ internal sealed class SettingsPageBinder
         string? descriptionKey = null,
         bool allowCustom = false)
     {
-        Describe(row, titleKey, descriptionKey);
-        AutomationProperties.SetName(selector, row.Header);
+        DescribeControl(row, selector, titleKey, descriptionKey);
         List<Choice> items = [.. choices];
         foreach (Choice choice in items)
         {
@@ -162,10 +195,9 @@ internal sealed class SettingsPageBinder
     }
 
     /// <summary>A one-line text box over a text setting; the value is saved when the box loses focus or Enter is pressed.</summary>
-    public void TextEntry(SettingsRow row, TextBox box, string key, string titleKey, string? descriptionKey = null)
+    public void TextEntry(SettingsRow? row, TextBox box, string key, string titleKey, string? descriptionKey = null)
     {
-        Describe(row, titleKey, descriptionKey);
-        AutomationProperties.SetName(box, row.Header);
+        DescribeControl(row, box, titleKey, descriptionKey);
         void Commit()
         {
             if (!_updating)

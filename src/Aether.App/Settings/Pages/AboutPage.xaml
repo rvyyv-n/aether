@@ -28,11 +28,11 @@
         <TextBlock x:Name="UpdatesHeading" Margin="0,8,0,0" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource AetherCaptionStrongTextStyle}" />
         <settings:SettingsGroup>
             <settings:SettingsRow x:Name="UpdatesRow" Glyph="&#xE895;">
-                <Button x:Name="UpdatesActionButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
-            </settings:SettingsRow>
-            <!--  A blank glyph keeps the title in line with the update status, the setting it belongs to  -->
-            <settings:SettingsRow x:Name="UpdatesAutoRow" Glyph=" ">
-                <ToggleSwitch x:Name="UpdatesAutoToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Button x:Name="UpdatesActionButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
+                    <TextBlock x:Name="UpdatesAutoLabel" VerticalAlignment="Center" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherBodyTextStyle}" />
+                    <ToggleSwitch x:Name="UpdatesAutoToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </StackPanel>
             </settings:SettingsRow>
         </settings:SettingsGroup>
 
