@@ -943,23 +943,17 @@
   <data name="Settings_About_CopyDiagnostics" xml:space="preserve">
     <value>Copy diagnostics</value>
   </data>
-  <data name="Settings_About_CardTagline" xml:space="preserve">
-    <value>Everything stays on this device.</value>
-  </data>
-  <data name="Settings_About_CardLink" xml:space="preserve">
-    <value>GitHub · @rvyyv-n</value>
-  </data>
-  <data name="Settings_About_CreditVersion" xml:space="preserve">
-    <value>Version</value>
-  </data>
   <data name="Settings_About_CreditSource" xml:space="preserve">
     <value>Source code</value>
   </data>
-  <data name="Settings_About_CreditLicence" xml:space="preserve">
-    <value>Aether by rvyyv-n, licensed under GPL-3.0</value>
+  <data name="Settings_About_Credit" xml:space="preserve">
+    <value>By rvyyv-n · Licensed under GPL-3.0 · Everything stays on this device</value>
   </data>
-  <data name="Settings_About_CreditLicenceLink" xml:space="preserve">
-    <value>Read the licence</value>
+  <data name="Settings_About_ReleaseNotes" xml:space="preserve">
+    <value>Release notes</value>
+  </data>
+  <data name="Settings_About_Help" xml:space="preserve">
+    <value>Help</value>
   </data>
   <data name="Settings_About_Licences" xml:space="preserve">
     <value>Licences</value>

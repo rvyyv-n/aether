@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Settings now looks layered, like Wintoys and Windows 11's own Settings: the section list sits on the window's Mica backdrop and each page sits on a lighter rounded pane with a thin edge, with its cards a step lighter again, in both light and dark themes. On a narrow window the pane runs edge to edge under the section picker. The player, its menus and dialogs are unchanged.
+- Settings › About is tidier: a card at the top shows Aether's version and credit, with Release notes, Source code, Licences and Report an issue as a row of buttons under it, then Updates and Help (the tour and engine details) under their own headings. Licences now opens the third-party notices instead of the project's front page.
 
 ## [1.0.0] - 2026-10-21
 ### Added

@@ -318,6 +318,7 @@ Design work: Opus asks questions and plans first, Sonnet builds. Check blur over
 | 12.3 | More customisation: accent colour choice, player bar size and opacity, and which controls the bar shows | M |
 | 12.4 | Check both looks in light and dark on a real screen, with video blur against frame drops | S |
 | 12.5 | Phone streaming, fuller version: more features and a more polished pairing flyout and phone page, building on what Pass 11 ships and tests | M |
+| 12.6 | Settings layered like Wintoys: section list on Mica Alt, pages on a rounded layer pane with lighter cards, in light and dark; About page reworked with an identity card, a row of link buttons and section headings — **Done** | S |
 
 **v1.1 means:** Aether can follow Windows or be set to light, dark or the native Fluent look, with a few personal touches, without costing smoothness.
 

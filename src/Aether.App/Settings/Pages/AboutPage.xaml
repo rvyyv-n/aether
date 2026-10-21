@@ -12,113 +12,111 @@
             <Setter Property="IsTextSelectionEnabled" Value="True" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
+        <Style x:Key="AboutLinkButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">
+            <Setter Property="Background" Value="{ThemeResource AetherSurfaceCardBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Padding" Value="12,0" />
+        </Style>
     </Page.Resources>
-    <settings:SettingsGroup>
-        <settings:SettingsRow x:Name="EngineRow" Glyph="&#xE950;" VerticalContentAlignment="Top">
-            <settings:SettingsRow.Note>
-                <Grid Margin="0,8,0,0" ColumnSpacing="16" RowSpacing="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="112" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <TextBlock x:Name="DecoderLabel" Style="{StaticResource EngineLabelStyle}" />
-                    <TextBlock x:Name="DecoderText" Grid.Column="1" Style="{StaticResource EngineValueStyle}" />
-                    <TextBlock x:Name="RendererLabel" Grid.Row="1" Style="{StaticResource EngineLabelStyle}" />
-                    <TextBlock x:Name="RendererText" Grid.Column="1" Grid.Row="1" Style="{StaticResource EngineValueStyle}" />
-                    <TextBlock x:Name="MpvLabel" Grid.Row="2" Style="{StaticResource EngineLabelStyle}" />
-                    <TextBlock x:Name="MpvVersionText" Grid.Column="1" Grid.Row="2" Style="{StaticResource EngineValueStyle}" />
-                    <TextBlock x:Name="YtDlpLabel" Grid.Row="3" Style="{StaticResource EngineLabelStyle}" />
-                    <TextBlock x:Name="YtDlpVersionText" Grid.Column="1" Grid.Row="3" Style="{StaticResource EngineValueStyle}" />
-                </Grid>
-            </settings:SettingsRow.Note>
-            <Button x:Name="CopyDiagnosticsButton" Style="{StaticResource AetherOutlinePillButtonStyle}">
+    <!--
+        Wintoys-style About: the app's identity card with a row of links under it, then Updates and Help under
+        section headings. The links are equal-width pills that wrap two to a line on a narrow page.
+    -->
+    <StackPanel Spacing="8">
+        <settings:SettingsGroup>
+            <settings:SettingsRow x:Name="IdentityRow" Glyph="&#xE946;" />
+        </settings:SettingsGroup>
+        <VariableSizedWrapGrid ItemHeight="40" ItemWidth="176" Orientation="Horizontal">
+            <Button x:Name="ReleaseNotesButton" Style="{StaticResource AboutLinkButtonStyle}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE8C8;" />
-                    <TextBlock x:Name="CopyDiagnosticsText" />
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE7C3;" />
+                    <TextBlock x:Name="ReleaseNotesText" />
                 </StackPanel>
             </Button>
-        </settings:SettingsRow>
-        <settings:SettingsRow x:Name="UpdatesRow" Glyph="&#xE895;">
-            <Button x:Name="UpdatesActionButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
-        </settings:SettingsRow>
-        <!--  A blank glyph keeps the title in line with Updates, the setting it belongs to  -->
-        <settings:SettingsRow x:Name="UpdatesAutoRow" Glyph=" ">
-            <ToggleSwitch x:Name="UpdatesAutoToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
-        </settings:SettingsRow>
-        <Button
-            x:Name="TourButton"
-            MinHeight="{StaticResource AetherSizeSettingsRow}"
-            Padding="16,12"
-            Style="{StaticResource AetherRecentRowButtonStyle}">
-            <Grid ColumnSpacing="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <FontIcon Width="20" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16" Glyph="&#xE7E7;" />
-                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                    <TextBlock x:Name="TourTitle" Style="{StaticResource AetherBodyTextStyle}" />
-                    <TextBlock x:Name="TourDescription" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+            <Button x:Name="SourceCodeButton" Style="{StaticResource AboutLinkButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE943;" />
+                    <TextBlock x:Name="SourceCodeText" />
                 </StackPanel>
-                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource AetherTextSecondaryBrush}" Glyph="&#xE76C;" />
-            </Grid>
-        </Button>
-        <Button
-            x:Name="LicencesButton"
-            MinHeight="{StaticResource AetherSizeSettingsRow}"
-            Padding="16,12"
-            Style="{StaticResource AetherRecentRowButtonStyle}">
-            <Grid ColumnSpacing="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <FontIcon Width="20" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16" Glyph="&#xE8A5;" />
-                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                    <TextBlock x:Name="LicencesTitle" Style="{StaticResource AetherBodyTextStyle}" />
-                    <TextBlock x:Name="LicencesDescription" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+            </Button>
+            <Button x:Name="LicencesButton" Style="{StaticResource AboutLinkButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE8A5;" />
+                    <TextBlock x:Name="LicencesText" />
                 </StackPanel>
-                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource AetherTextSecondaryBrush}" Glyph="&#xE76C;" />
-            </Grid>
-        </Button>
-        <Button
-            x:Name="ReportIssueButton"
-            MinHeight="{StaticResource AetherSizeSettingsRow}"
-            Padding="16,12"
-            Style="{StaticResource AetherRecentRowButtonStyle}">
-            <Grid ColumnSpacing="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <FontIcon Width="20" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16" Glyph="&#xEBE8;" />
-                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                    <TextBlock x:Name="ReportIssueTitle" Style="{StaticResource AetherBodyTextStyle}" />
-                    <TextBlock x:Name="ReportIssueDescription" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+            </Button>
+            <Button x:Name="ReportIssueButton" Style="{StaticResource AboutLinkButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xEBE8;" />
+                    <TextBlock x:Name="ReportIssueText" />
                 </StackPanel>
-                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource AetherTextSecondaryBrush}" Glyph="&#xE8A7;" />
-            </Grid>
-        </Button>
-        <settings:SettingsExpander x:Name="CreditExpander" Glyph="&#xE946;">
-            <settings:SettingsRow x:Name="CreditVersionRow">
-                <TextBlock x:Name="CreditVersion" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherBodyTextStyle}" />
+            </Button>
+        </VariableSizedWrapGrid>
+
+        <TextBlock x:Name="UpdatesHeading" Margin="0,8,0,0" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+        <settings:SettingsGroup>
+            <settings:SettingsRow x:Name="UpdatesRow" Glyph="&#xE895;">
+                <Button x:Name="UpdatesActionButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
             </settings:SettingsRow>
-            <settings:SettingsRow x:Name="CreditPrivacyRow" />
-            <settings:SettingsRow x:Name="CreditLicenceRow">
-                <HyperlinkButton x:Name="CreditLicenceLink" />
+            <!--  A blank glyph keeps the title in line with the update status, the setting it belongs to  -->
+            <settings:SettingsRow x:Name="UpdatesAutoRow" Glyph=" ">
+                <ToggleSwitch x:Name="UpdatesAutoToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
-            <settings:SettingsRow x:Name="CreditLinkRow">
-                <HyperlinkButton x:Name="CreditLink" />
+        </settings:SettingsGroup>
+
+        <TextBlock x:Name="HelpHeading" Margin="0,8,0,0" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+        <settings:SettingsGroup>
+            <Button
+                x:Name="TourButton"
+                MinHeight="{StaticResource AetherSizeSettingsRow}"
+                Padding="16,12"
+                Style="{StaticResource AetherRecentRowButtonStyle}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Width="20" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16" Glyph="&#xE7E7;" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock x:Name="TourTitle" Style="{StaticResource AetherBodyTextStyle}" />
+                        <TextBlock x:Name="TourDescription" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource AetherTextSecondaryBrush}" Glyph="&#xE76C;" />
+                </Grid>
+            </Button>
+            <settings:SettingsRow x:Name="EngineRow" Glyph="&#xE950;" VerticalContentAlignment="Top">
+                <settings:SettingsRow.Note>
+                    <Grid Margin="0,8,0,0" ColumnSpacing="16" RowSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="112" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="DecoderLabel" Style="{StaticResource EngineLabelStyle}" />
+                        <TextBlock x:Name="DecoderText" Grid.Column="1" Style="{StaticResource EngineValueStyle}" />
+                        <TextBlock x:Name="RendererLabel" Grid.Row="1" Style="{StaticResource EngineLabelStyle}" />
+                        <TextBlock x:Name="RendererText" Grid.Column="1" Grid.Row="1" Style="{StaticResource EngineValueStyle}" />
+                        <TextBlock x:Name="MpvLabel" Grid.Row="2" Style="{StaticResource EngineLabelStyle}" />
+                        <TextBlock x:Name="MpvVersionText" Grid.Column="1" Grid.Row="2" Style="{StaticResource EngineValueStyle}" />
+                        <TextBlock x:Name="YtDlpLabel" Grid.Row="3" Style="{StaticResource EngineLabelStyle}" />
+                        <TextBlock x:Name="YtDlpVersionText" Grid.Column="1" Grid.Row="3" Style="{StaticResource EngineValueStyle}" />
+                    </Grid>
+                </settings:SettingsRow.Note>
+                <Button x:Name="CopyDiagnosticsButton" Style="{StaticResource AetherOutlinePillButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE8C8;" />
+                        <TextBlock x:Name="CopyDiagnosticsText" />
+                    </StackPanel>
+                </Button>
             </settings:SettingsRow>
-        </settings:SettingsExpander>
-    </settings:SettingsGroup>
+        </settings:SettingsGroup>
+    </StackPanel>
 </Page>

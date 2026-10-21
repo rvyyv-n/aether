@@ -7,7 +7,7 @@ namespace Aether_App.Settings;
 
 /// <summary>
 /// A stack of <see cref="SettingsRow"/> and <see cref="SettingsExpander"/> items (6.2). By default every item is its
-/// own rounded glass card, 4 apart. <see cref="Divided"/> puts them all in one card with a thin divider above every
+/// own rounded card, 4 apart. <see cref="Divided"/> puts them all in one card with a thin divider above every
 /// visible item but the first, for long uniform lists such as shortcuts.
 /// </summary>
 public sealed partial class SettingsGroup : StackPanel
@@ -24,7 +24,7 @@ public sealed partial class SettingsGroup : StackPanel
         {
             if (_divided)
             {
-                Background = Resource<Brush>("AetherSurfaceGlassBrush");
+                Background = Resource<Brush>("AetherSurfaceCardBrush");
                 BorderBrush = Resource<Brush>("AetherStrokeSurfaceBrush");
             }
             // Children get their brushes in MeasureOverride; their own ActualTheme has not necessarily flipped yet.
@@ -39,7 +39,7 @@ public sealed partial class SettingsGroup : StackPanel
         {
             _divided = value;
             Spacing = value ? 0 : 4;
-            Background = value ? Resource<Brush>("AetherSurfaceGlassBrush") : null;
+            Background = value ? Resource<Brush>("AetherSurfaceCardBrush") : null;
             BorderBrush = value ? Resource<Brush>("AetherStrokeSurfaceBrush") : null;
             BorderThickness = value ? CardBorder : default;
             CornerRadius = value ? Resource<CornerRadius>("AetherOverlayCornerRadius") : default;
@@ -65,7 +65,7 @@ public sealed partial class SettingsGroup : StackPanel
             }
             else
             {
-                control.Background = Resource<Brush>("AetherSurfaceGlassBrush");
+                control.Background = Resource<Brush>("AetherSurfaceCardBrush");
                 control.BorderBrush = Resource<Brush>("AetherStrokeSurfaceBrush");
                 control.BorderThickness = CardBorder;
                 control.CornerRadius = Resource<CornerRadius>("AetherOverlayCornerRadius");
