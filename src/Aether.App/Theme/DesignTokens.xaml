@@ -114,7 +114,7 @@
             <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="{StaticResource AetherSurfaceMenuColor}" />
             <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="{StaticResource AetherSurfaceMenuFallbackColor}" />
             <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="{StaticResource AetherStrokeMenuColor}" />
-            <!--  Player bar: the 62% ink glass in dark; light takes the menus' frosted card and faint edge, so bar and menus read as one family  -->
+            <!--  Player bar, sidebar and volume pop-up: the 62% ink glass in dark; light takes the menus' frosted card and faint edge, so they and the menus read as one family  -->
             <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
             <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
@@ -611,7 +611,7 @@
     <x:Double x:Key="AetherSizeClipThumbHeight">36</x:Double>
     <x:Double x:Key="AetherSizeMenuItem">32</x:Double>  <!-- Menu items: 4 px inset, padding 12, icon/check column 16, gap 12, shortcut gap 24, radius 4, hover fill.subtle.hover; menus on surface -->
     <x:Double x:Key="AetherSizeSpeedPill">40</x:Double>  <!-- Min width of the speed button: 36 tall like the transport buttons, Caption 12 semibold tabular -->
-    <x:Double x:Key="AetherSizeSidebarWidth">48</x:Double>  <!-- Sidebar: a floating pill 16 from the left edge, centred vertically; padding 6 around four 36 px items 4 apart (168 tall), the surface.osd tint with the bar's blur -->
+    <x:Double x:Key="AetherSizeSidebarWidth">48</x:Double>  <!-- Sidebar: a floating pill 16 from the left edge, centred vertically; padding 6 around four 36 px items 4 apart (168 tall), the bar's surface and blur -->
     <x:Double x:Key="AetherSizeSidebarItem">36</x:Double>  <!-- Sidebar items: 36 circles, 14 px glyphs; active = FillEmphasisRest + StrokeControl -->
     <x:Double x:Key="AetherSizeSidebarPadding">6</x:Double>  <!-- Outside the 1 px stroke; 6 + 18 = 24 is concentric with the pill's radius -->
     <x:Double x:Key="AetherSizeRailHotZone">14</x:Double>  <!-- Left-edge strip that wakes the sidebar; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->

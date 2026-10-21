@@ -883,6 +883,10 @@ public sealed partial class MainPage : Page
         }
         _chrome.SetHold(ChromeHolds.Flyout, true);
         SetPopupSurface(VolumeFlyoutContent);
+        if (_popupSurface is Control presenter)
+        {
+            presenter.RequestedTheme = ActualTheme; // a flyout's popup does not reliably take the page's in-app theme
+        }
         ApplyChrome();
     }
 

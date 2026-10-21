@@ -84,7 +84,8 @@
         <!--
             Time bubble, with the chapter's name above the time when it has one, 16 above the pill
             (BubbleLift is measured from the bar's top). Solid dialog fallback: in-app Acrylic would not
-            sample the swap chain under it (ADR-0013). Padding 4,8 less the hairline.
+            sample the swap chain under it (ADR-0013). Padding 4,8 less the hairline. Follows the bar's theme
+            (set from code), so in light it is a near-white card with dark text.
         -->
         <Popup
             x:Name="BubblePopup"
@@ -95,7 +96,6 @@
             <Border
                 x:Name="Bubble"
                 Padding="7,3"
-                RequestedTheme="Dark"
                 Background="{ThemeResource AetherSurfaceDialogFallbackBrush}"
                 BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"
