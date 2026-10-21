@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-10-21
 ### Added
 - A way to measure speed on your own PC: `tools\measure-performance.ps1` opens Aether a few times and reports how long the window takes to appear, and with `-Video` plays a clip and reports dropped frames and memory clean-up pauses. Aether only records these timings when the script asks it to.
 - Watch on your phone: press `S` or pick Stream in the right-click menu to open a card with a QR code and address. Streaming is off until you switch it on, shows how many phones are watching, and stops when you switch it off, close the file or quit.
