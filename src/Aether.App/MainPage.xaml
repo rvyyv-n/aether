@@ -809,7 +809,6 @@
         -->
         <Grid
             x:Name="ClipLayer"
-            RequestedTheme="Dark"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
             Margin="16,0,16,120"
             VerticalAlignment="Bottom"
@@ -1159,7 +1158,6 @@
         -->
         <Grid
             x:Name="SkipChapterLayer"
-            RequestedTheme="Dark"
             Margin="16,0,16,24"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
@@ -1171,8 +1169,8 @@
                 x:Name="SkipChapterButton"
                 Height="{StaticResource AetherSizeTransportButton}"
                 Padding="12,0,14,0"
-                Background="{ThemeResource AetherSurfaceOsdBrush}"
-                BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
+                Background="{ThemeResource AetherSurfaceBarBrush}"
+                BorderBrush="{ThemeResource AetherStrokeBarBrush}"
                 Click="OnSkipChapterClick"
                 Style="{StaticResource AetherOutlinePillButtonStyle}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -1197,7 +1195,6 @@
         -->
         <Grid
             x:Name="ToastLayer"
-            RequestedTheme="Dark"
             Margin="16,0,16,24"
             VerticalAlignment="Bottom"
             Visibility="Collapsed">

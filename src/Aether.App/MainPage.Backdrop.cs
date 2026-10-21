@@ -69,10 +69,15 @@ public sealed partial class MainPage
             : null;
         PostSurfaceRegion(BackdropSlot.Clip, ClipDrawer.Visibility == Visibility.Visible ? ClipDrawer.Surface : null, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0);
         PostSurfaceRegion(BackdropSlot.Card, card, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0);
-        PostSurfaceRegion(BackdropSlot.Popup, _popupSurface, fadeMilliseconds: 0);
+        // The flyout fades itself in and out, so its blur does too; an instant blur showed as a frosted patch before the card.
+        PostSurfaceRegion(BackdropSlot.Popup, _popupSurface, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0,
+            fadeOutMilliseconds: _fader?.RevealDurationMilliseconds(false) ?? 0);
     }
 
-    private void PostSurfaceRegion(BackdropSlot slot, FrameworkElement? surface, double fadeMilliseconds)
+    /// <param name="fadeOutMilliseconds">
+    /// How long the blur takes to leave. Zero turns it off at once; above zero it stays active at its last place while it fades.
+    /// </param>
+    private void PostSurfaceRegion(BackdropSlot slot, FrameworkElement? surface, double fadeMilliseconds, double fadeOutMilliseconds = 0)
     {
         int index = (int)slot;
         bool visible = _backdropAllowed && _isLoaded && VideoSurface.IsLoaded
@@ -80,8 +85,12 @@ public sealed partial class MainPage
         if (visible != _surfaceShown[index])
         {
             _surfaceShown[index] = visible;
-            VideoSurface.SetBackdropActive(slot, visible);
-            VideoSurface.FadeBackdrop(slot, visible, visible ? fadeMilliseconds : 0);
+            bool fadingOut = !visible && fadeOutMilliseconds > 0 && _backdropAllowed;
+            if (!fadingOut)
+            {
+                VideoSurface.SetBackdropActive(slot, visible);
+            }
+            VideoSurface.FadeBackdrop(slot, visible, visible ? fadeMilliseconds : fadingOut ? fadeOutMilliseconds : 0);
         }
         if (!visible || surface is null)
         {
