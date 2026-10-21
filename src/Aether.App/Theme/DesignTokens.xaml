@@ -67,6 +67,9 @@
             <Color x:Key="AetherSurfaceScrimColor">#4D000000</Color>  <!-- [screen 2] Behind dialogs. = Fluent SmokeFillDefault -->
             <Color x:Key="AetherSurfaceDialogColor">#9E0E1014</Color>  <!-- [decided] In-app Acrylic, tint ink at 62%, blur behind. Fallback when Acrylic is off (battery saver, transpare -->
             <Color x:Key="AetherSurfaceDialogFallbackColor">#F20E1014</Color>  <!-- [decided] Solid fallback for surface.dialog -->
+            <Color x:Key="AetherSurfaceMenuColor">#E3202226</Color>  <!-- Player menus over a blurring video: lifted charcoal at 89%, dense enough that the bar and its timecode never read through, with the blur showing only faintly at the edges -->
+            <Color x:Key="AetherSurfaceMenuFallbackColor">#FF202226</Color>  <!-- Player menus with no blur behind them (no video, picture in picture) -->
+            <Color x:Key="AetherStrokeMenuColor">#33000000</Color>  <!-- Edge of a player menu: dark, so it crisps the card on bright video without the pale ring a white edge drew -->
             <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>  <!-- [screen 3] Over video only: black 50% under the 32 px title bar, linear fade to 0 by 72 px. Keeps 'Aether' and -->
             <Color x:Key="AetherSurfaceOverlayStrongColor">#F20E1014</Color>  <!-- [screens 6-10] Same value as surface.dialogFallback. Diagnostics overlay: solid enough that TextSecondary hold -->
             <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>  <!-- [11.3] Behind the phone pairing QR code: white in every theme, the background phone cameras read best -->
@@ -108,6 +111,9 @@
             <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="{StaticResource AetherSurfaceScrimColor}" />
             <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="{StaticResource AetherSurfaceDialogColor}" />
             <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="{StaticResource AetherSurfaceDialogFallbackColor}" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="{StaticResource AetherSurfaceMenuColor}" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="{StaticResource AetherSurfaceMenuFallbackColor}" />
+            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="{StaticResource AetherStrokeMenuColor}" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
             <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
             <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />
@@ -235,6 +241,9 @@
             <Color x:Key="AetherSurfaceScrimColor">#4D000000</Color>  <!-- [screen 2] Behind dialogs. = Fluent SmokeFillDefault -->
             <Color x:Key="AetherSurfaceDialogColor">#9E0E1014</Color>  <!-- [decided] In-app Acrylic, tint ink at 62%, blur behind. Fallback when Acrylic is off (battery saver, transpare -->
             <Color x:Key="AetherSurfaceDialogFallbackColor">#F20E1014</Color>  <!-- [decided] Solid fallback for surface.dialog -->
+            <Color x:Key="AetherSurfaceMenuColor">#E3202226</Color>  <!-- Player menus over a blurring video: lifted charcoal at 89%, dense enough that the bar and its timecode never read through, with the blur showing only faintly at the edges -->
+            <Color x:Key="AetherSurfaceMenuFallbackColor">#FF202226</Color>  <!-- Player menus with no blur behind them (no video, picture in picture) -->
+            <Color x:Key="AetherStrokeMenuColor">#33000000</Color>  <!-- Edge of a player menu: dark, so it crisps the card on bright video without the pale ring a white edge drew -->
             <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>  <!-- [screen 3] Over video only: black 50% under the 32 px title bar, linear fade to 0 by 72 px. Keeps 'Aether' and -->
             <Color x:Key="AetherSurfaceOverlayStrongColor">#F20E1014</Color>  <!-- [screens 6-10] Same value as surface.dialogFallback. Diagnostics overlay: solid enough that TextSecondary hold -->
             <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>  <!-- [11.3] Behind the phone pairing QR code: white in every theme, the background phone cameras read best -->
@@ -276,6 +285,9 @@
             <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="{StaticResource AetherSurfaceScrimColor}" />
             <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="{StaticResource AetherSurfaceDialogColor}" />
             <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="{StaticResource AetherSurfaceDialogFallbackColor}" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="{StaticResource AetherSurfaceMenuColor}" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="{StaticResource AetherSurfaceMenuFallbackColor}" />
+            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="{StaticResource AetherStrokeMenuColor}" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
             <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
             <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />
@@ -404,6 +416,9 @@
             <Color x:Key="AetherSurfaceScrimColor">#4D000000</Color>
             <Color x:Key="AetherSurfaceDialogColor">#E6FFFFFF</Color>
             <Color x:Key="AetherSurfaceDialogFallbackColor">#FFF9F9F9</Color>
+            <Color x:Key="AetherSurfaceMenuColor">#E6FCFCFC</Color>
+            <Color x:Key="AetherSurfaceMenuFallbackColor">#FFFAFAFA</Color>
+            <Color x:Key="AetherStrokeMenuColor">#12000000</Color>
             <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>
             <Color x:Key="AetherSurfaceOverlayStrongColor">#F20E1014</Color>
             <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>
@@ -445,6 +460,9 @@
             <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="{StaticResource AetherSurfaceScrimColor}" />
             <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="{StaticResource AetherSurfaceDialogColor}" />
             <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="{StaticResource AetherSurfaceDialogFallbackColor}" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="{StaticResource AetherSurfaceMenuColor}" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="{StaticResource AetherSurfaceMenuFallbackColor}" />
+            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="{StaticResource AetherStrokeMenuColor}" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
             <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
             <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />
@@ -986,26 +1004,27 @@
         <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
     </Style>
     <!--
-        Transport menus (5.4, 5.7): solid dialog fallback until the page swaps in the frosted fill while a video is blurring behind it (MainPage.Backdrop.cs, ADR-0013), radius 8, StrokeSurface,
+        Transport menus (5.4, 5.7): frosted cards in the app's theme. Solid menu fallback until the page swaps in the frosted fill
+        and theme while a video is blurring behind it (MainPage.Backdrop.cs, ADR-0013), radius 8, StrokeMenu,
         4 above and below the items. Items are 32 tall, inset 4, radius 4; hover is FillSubtleHover.
     -->
     <Style x:Key="AetherMenuFlyoutPresenterStyle" TargetType="MenuFlyoutPresenter">
-        <Setter Property="RequestedTheme" Value="Dark" />
-        <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogFallbackBrush}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
-        <!-- No outline: the 6% white edge read as a faint light line against the video, and the solid fill already separates the menu. -->
-        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="{ThemeResource AetherSurfaceMenuFallbackBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeMenuBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BackgroundSizing" Value="OuterBorderEdge" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
         <Setter Property="Padding" Value="0,3" />
         <Setter Property="MaxWidth" Value="{StaticResource AetherSizeMenuMaxWidth}" />
-        <!-- The stock template draws its own border and shadow around the fill, which showed as a pale ring over bright video; this one is only the fill. -->
+        <!-- The stock template draws its own border and shadow around the fill, which showed as a pale ring over bright video; this one is the fill and its faint edge. -->
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="MenuFlyoutPresenter">
                     <Border
                         Background="{TemplateBinding Background}"
                         BackgroundSizing="OuterBorderEdge"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}">
                         <ScrollViewer
                             Padding="{TemplateBinding Padding}"

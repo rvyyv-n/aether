@@ -27,7 +27,8 @@ public sealed partial class MainPage
 
     /// <summary>
     /// The same for a menu, which has no content element of its own: its first item is inside the presenter. The menu is
-    /// frosted over a video and solid where there is no blur to go with it (no video, picture in picture).
+    /// frosted over a video and solid where there is no blur to go with it (no video, picture in picture). Menus follow the
+    /// app's theme, set here so a menu opened from the always-dark player bar still matches the rest of the app.
     /// </summary>
     private void SetMenuSurface(object? sender, bool open)
     {
@@ -36,8 +37,9 @@ public sealed partial class MainPage
             : null;
         if (presenter is Microsoft.UI.Xaml.Controls.Control control)
         {
+            control.RequestedTheme = ActualTheme;
             control.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(
-                control, _backdropAllowed ? "AetherSurfaceDialogBrush" : "AetherSurfaceDialogFallbackBrush");
+                ActualTheme, _backdropAllowed ? "AetherSurfaceMenuBrush" : "AetherSurfaceMenuFallbackBrush");
         }
         _popupSurface = presenter;
         PostBackdropRegion();

@@ -87,7 +87,7 @@
             SizeChanged="OnVideoHostSizeChanged">
             <FlyoutBase.AttachedFlyout>
                 <!--
-                    Right-click menu (9.1): solid like the transport menus and as wide as its longest label and shortcut
+                    Right-click menu (9.1): frosted like the transport menus and as wide as its longest label and shortcut
                     (the menu row styles in DesignTokens.xaml); the Recent submenu is 288. Labels, shortcuts and which
                     entries are enabled come from the code (MainPage.ContextMenu.cs).
                 -->
