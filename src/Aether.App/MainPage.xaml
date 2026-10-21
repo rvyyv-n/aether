@@ -751,7 +751,9 @@
             Tapped="OnRailHotZoneTapped">
             <Border
                 x:Name="RailPeek"
+                Width="4"
                 Height="168"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Background="{ThemeResource AetherFillRangeBrush}"
                 CornerRadius="0,2,2,0"

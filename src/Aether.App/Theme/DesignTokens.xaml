@@ -569,7 +569,7 @@
     <x:Double x:Key="AetherSizeSidebarWidth">48</x:Double>  <!-- Sidebar: a floating pill 16 from the left edge, centred vertically; padding 6 around four 36 px items 4 apart (168 tall), the surface.osd tint with the bar's blur -->
     <x:Double x:Key="AetherSizeSidebarItem">36</x:Double>  <!-- Sidebar items: 36 circles, 14 px glyphs; active = FillEmphasisRest + StrokeControl -->
     <x:Double x:Key="AetherSizeSidebarPadding">6</x:Double>  <!-- Outside the 1 px stroke; 6 + 18 = 24 is concentric with the pill's radius -->
-    <x:Double x:Key="AetherSizeRailHotZone">4</x:Double>  <!-- Left-edge strip that wakes the sidebar; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
+    <x:Double x:Key="AetherSizeRailHotZone">14</x:Double>  <!-- Left-edge strip that wakes the sidebar; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
     <x:Double x:Key="AetherSizeSettingsNav">220</x:Double>  <!-- Settings section list width; items 36 tall (navItem), radius 4, gap 2, 16 px icons -->
     <x:Double x:Key="AetherSizeNavItem">36</x:Double>  <!-- Settings section list item height -->
     <x:Double x:Key="AetherSizeSettingsRow">60</x:Double>  <!-- Settings row card min height: padding 12,16, 20 px icon, title Body + description Caption TextSecond -->
@@ -973,8 +973,8 @@
         <Setter Property="RequestedTheme" Value="Dark" />
         <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogFallbackBrush}" />
         <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <!-- Dark under the translucent edge, so a light window behind the menu does not show through it as a pale outline. -->
+        <!-- No outline: the 6% white edge read as a faint light line against the video, and the solid fill already separates the menu. -->
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="BackgroundSizing" Value="OuterBorderEdge" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
         <Setter Property="Padding" Value="0,3" />
