@@ -17,6 +17,7 @@ public sealed class UpdateControllerTests
         public int Downloads { get; private set; }
         public int AppliedOnExit { get; private set; }
         public int Restarts { get; private set; }
+        public IProgress<double>? LastProgress { get; private set; }
 
         public async Task<string?> CheckAsync(CancellationToken cancellationToken)
         {
@@ -31,6 +32,7 @@ public sealed class UpdateControllerTests
         public Task DownloadAsync(IProgress<double>? progress, CancellationToken cancellationToken)
         {
             Downloads++;
+            LastProgress = progress;
             progress?.Report(0.5);
             return DownloadFails is null ? Task.CompletedTask : throw DownloadFails;
         }
@@ -101,6 +103,34 @@ public sealed class UpdateControllerTests
         Assert.Equal(0, engine.Restarts);
         Assert.Contains(UpdateState.Checking, seen);
         Assert.Contains(UpdateState.Downloading, seen);
+    }
+
+    [Fact]
+    public async Task AProgressReportArrivingAfterTheDownload_DoesNotUndoReady()
+    {
+        var engine = new FakeEngine { Offer = "1.1.0" };
+        var controller = new UpdateController(engine);
+        await controller.CheckAndDownloadAsync();
+
+        engine.LastProgress!.Report(1.0);
+
+        Assert.Equal(UpdateState.Ready, controller.Status.State);
+    }
+
+    [Fact]
+    public async Task DownloadProgress_IsReportedInOrder()
+    {
+        var engine = new FakeEngine { Offer = "1.1.0" };
+        var controller = new UpdateController(engine);
+        var seen = new List<UpdateStatus>();
+        controller.StatusChanged += seen.Add;
+
+        await controller.CheckAndDownloadAsync();
+
+        Assert.Equal(
+            [UpdateState.Checking, UpdateState.Downloading, UpdateState.Downloading, UpdateState.Ready],
+            seen.Select(s => s.State));
+        Assert.Equal(0.5, seen[2].Progress);
     }
 
     [Fact]

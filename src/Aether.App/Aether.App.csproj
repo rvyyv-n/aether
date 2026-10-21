@@ -19,6 +19,9 @@
     <Nullable>enable</Nullable>
     <!-- Program.cs is the entry point, so a launch can be handed to a running window before any window exists. -->
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <!-- Low-pause collector (ADR-0003): workstation, with background collection, which SustainedLowLatency (set in Program.Main) needs. -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>

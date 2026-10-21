@@ -7,7 +7,6 @@ crisp in the taskbar and title bar.
 
 Writes:
   src/Aether.App/Assets/AppIcon.ico, AppIcon.light.ico
-  tools/installer/Aether.Installer/AppIcon.ico
   docs/assets/aether-icon.png, aether-icon-light.png, aether-icon.svg (follows the viewer's theme)
   src/Aether.Server.LanHost/favicon.svg (the same SVG, the phone watch page's tab icon)
 
@@ -133,7 +132,6 @@ def main():
     assets = ROOT / "src/Aether.App/Assets"
     save_ico(assets / "AppIcon.ico", "dark")
     save_ico(assets / "AppIcon.light.ico", "light")
-    save_ico(ROOT / "tools/installer/Aether.Installer/AppIcon.ico", "dark")
     docs = ROOT / "docs/assets"
     render(256, "dark").save(docs / "aether-icon.png")
     render(256, "light").save(docs / "aether-icon-light.png")

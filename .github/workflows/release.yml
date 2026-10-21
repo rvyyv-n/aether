@@ -1,6 +1,6 @@
 name: Release
 
-# Runs when a version tag such as v1.1.0 is pushed. It builds the installer, the portable zip and the Velopack update packages, and uploads
+# Runs when a version tag such as v1.1.0 is pushed. It builds the Velopack installer (Setup.exe) and update packages and the portable zip, and uploads
 # them to a DRAFT GitHub release; nothing is public until the draft is published by hand. Unsigned for now (ADR-0021).
 on:
   push:
@@ -44,7 +44,7 @@ jobs:
           if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "Tag '${{ github.ref_name }}' is not a version like v1.2.3." }
           "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Build installer and portable zip
+      - name: Build the portable zip
         shell: pwsh
         run: ./tools/package-standalone.ps1 -Version $env:VERSION
 
@@ -62,13 +62,13 @@ jobs:
         run: >
           vpk pack --packId $env:PACK_ID --packVersion $env:VERSION --packTitle Aether --packAuthors rvyyv-n
           --packDir dist/Aether-portable --mainExe Aether.App.exe --icon src/Aether.App/Assets/AppIcon.ico -o releases
-          --exclude ".*(AetherInstaller\.exe|Install\.cmd|Install\.ps1|Aether\.cmd|run-portable\.cmd|\.pdb)$"
+          --exclude ".*(Aether\.cmd|run-portable\.cmd|\.pdb)$"
 
       - name: Upload to a draft release
         shell: pwsh
         run: |
           vpk upload github --repoUrl "https://github.com/${{ github.repository }}" --token "${{ secrets.GITHUB_TOKEN }}" `
             --tag "${{ github.ref_name }}" --releaseName "Aether $env:VERSION" -o releases
-          gh release upload "${{ github.ref_name }}" dist/Aether-portable.zip dist/AetherInstaller.exe --clobber
+          gh release upload "${{ github.ref_name }}" dist/Aether-portable.zip --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

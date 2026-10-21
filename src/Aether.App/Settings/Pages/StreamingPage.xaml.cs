@@ -73,8 +73,10 @@ public sealed partial class StreamingPage : Page
     private async Task OnYtDlpActionAsync()
     {
         bool installing = _ytDlpPath is null;
+        // Disabling the button takes focus away from it, so remember whether to bring it back afterwards.
+        bool hadFocus = YtDlpActionButton.FocusState != FocusState.Unfocused;
         YtDlpActionButton.IsEnabled = false;
-        YtDlpActionButton.Content = AppStrings.Get("Settings_YtDlp_Updating");
+        YtDlpActionButton.Content = AppStrings.Get(installing ? "Settings_YtDlp_Installing" : "Settings_YtDlp_Updating");
         var progress = new Progress<double>(fraction =>
             YtDlpActionButton.Content = AppStrings.Format("YtDlp_InstallProgress", (int)(fraction * 100)));
         (YtDlpInstallOutcome outcome, string? version) = await YtDlpManager.InstallLatestAsync(onlyIfNewer: !installing, progress);
@@ -94,6 +96,12 @@ public sealed partial class StreamingPage : Page
                 YtDlpActionButton.Visibility = Visibility.Visible;
                 AppToasts.Show("ytdlp-update", AppStrings.Get(installing ? "Toast_YtDlpInstallFailed" : "Toast_YtDlpUpdateFailed"), ToastTone.Failure);
                 break;
+        }
+        if (hadFocus)
+        {
+            // Back on the button, or on the switch below it once the button has nothing left to do.
+            Control target = YtDlpActionButton.Visibility == Visibility.Visible ? YtDlpActionButton : YtDlpAutoUpdateToggle;
+            target.Focus(FocusState.Keyboard);
         }
     }
 

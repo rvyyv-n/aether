@@ -129,7 +129,23 @@ public sealed partial class MainPage : Page
             UpdateToastPlacement();
         };
         VideoSurface.CompositionScaleChanged += (_, _) => PostBackdropRegion();
-        VideoSurface.PlayerReady += (_, _) => OpenPending();
+        VideoSurface.PlayerReady += (_, _) =>
+        {
+            PerfLog.Mark("engine_ready_ms");
+            OpenPending();
+        };
+    }
+
+    /// <summary>As the window closes: the session's dropped frames and collector totals for the measurement script.</summary>
+    internal void WritePerfTotals()
+    {
+        if (!PerfLog.IsEnabled)
+        {
+            return;
+        }
+        PlayerViewModel? model = _session?.ViewModel;
+        PerfLog.WriteSessionTotals(
+            model?.DroppedFrames ?? 0, model?.DecoderDroppedFrames ?? 0, VideoSurface.RenderLoop?.FramesPresented ?? 0, model?.DisplayFps ?? 0);
     }
 
     /// <summary>Labels that never change, from the strings file (the XAML text is only a design-time stand-in).</summary>
