@@ -36,6 +36,7 @@ public sealed partial class MainPage
             SpeedMenu.Items.Add(item);
         }
         ShowSpeed(PlaybackSpeed.Normal);
+        Osd.ActualThemeChanged += (_, _) => ApplySpeedLook(); // the bar follows the app's theme, and the off-1x fill is set from code
         foreach (Button button in new[]
         {
             OpenButton, SpeedButton, QualityButton, BackButton, PlayPauseButton, ForwardButton,

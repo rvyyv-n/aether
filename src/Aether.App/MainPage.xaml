@@ -824,21 +824,21 @@
         <!--
             Transport card: the seek row, then the buttons, 4 apart. min(520, window - 32) wide and 88 tall:
             padding 8 (7 here, the 1 px stroke is the eighth), a 32 px seek row and a 36 px button row.
-            A plain 62% ink tint with a hairline edge and radius 24. 24 above the bottom.
+            A plain 62% ink tint with a hairline edge and radius 24. 24 above the bottom. Follows the app's theme: in light it
+            is the menus' frosted near-white card with dark glyphs, so bar and menus match.
             While a video plays it shrinks to the 48 px slim pill (7.11, s5-08): padding 6, and the seek row slides down
             between Play and Mute while the other buttons fade (MainPage.Bar.cs). Both rows overlap in one grid for that.
             min(520, window - 32) fits every button at any width, so there is no narrow layout any more (5.7 retired).
         -->
         <Border
             x:Name="Osd"
-            RequestedTheme="Dark"
             Height="{StaticResource AetherSizeOsdHeight}"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
             Margin="16,0,16,24"
             Padding="7"
             VerticalAlignment="Bottom"
-            Background="{ThemeResource AetherSurfaceOsdBrush}"
-            BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
+            Background="{ThemeResource AetherSurfaceBarBrush}"
+            BorderBrush="{ThemeResource AetherStrokeBarBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource AetherTransportCornerRadius}"
             GettingFocus="OnOsdGettingFocus"

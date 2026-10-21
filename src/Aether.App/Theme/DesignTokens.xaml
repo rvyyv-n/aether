@@ -114,6 +114,9 @@
             <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="{StaticResource AetherSurfaceMenuColor}" />
             <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="{StaticResource AetherSurfaceMenuFallbackColor}" />
             <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="{StaticResource AetherStrokeMenuColor}" />
+            <!--  Player bar: the 62% ink glass in dark; light takes the menus' frosted card and faint edge, so bar and menus read as one family  -->
+            <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
+            <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
             <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
             <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />
@@ -288,6 +291,8 @@
             <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="{StaticResource AetherSurfaceMenuColor}" />
             <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="{StaticResource AetherSurfaceMenuFallbackColor}" />
             <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="{StaticResource AetherStrokeMenuColor}" />
+            <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
+            <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
             <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
             <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />
@@ -463,6 +468,8 @@
             <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="{StaticResource AetherSurfaceMenuColor}" />
             <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="{StaticResource AetherSurfaceMenuFallbackColor}" />
             <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="{StaticResource AetherStrokeMenuColor}" />
+            <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="{StaticResource AetherSurfaceMenuColor}" />
+            <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="{StaticResource AetherStrokeMenuColor}" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
             <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
             <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />

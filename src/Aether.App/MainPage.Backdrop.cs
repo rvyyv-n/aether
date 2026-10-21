@@ -28,7 +28,7 @@ public sealed partial class MainPage
     /// <summary>
     /// The same for a menu, which has no content element of its own: its first item is inside the presenter. The menu is
     /// frosted over a video and solid where there is no blur to go with it (no video, picture in picture). Menus follow the
-    /// app's theme, set here so a menu opened from the always-dark player bar still matches the rest of the app.
+    /// app's theme, set here so a menu opened from inside a forced-dark layer still matches the rest of the app.
     /// </summary>
     private void SetMenuSurface(object? sender, bool open)
     {
