@@ -300,7 +300,7 @@ public sealed partial class PrecisionSeekBar : UserControl
         string title = chapter >= 0 ? _chapters[chapter].Title.Trim() : "";
         ChapterText.Text = title;
         ChapterText.Visibility = title.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-        Bubble.RequestedTheme = ActualTheme; // popup content does not inherit the bar's theme
+        Bubble.RequestedTheme = ThemeTokens.AppTheme; // popup content does not inherit the bar's theme
         BubblePopup.IsOpen = true;
         Bubble.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         Size size = Bubble.DesiredSize;

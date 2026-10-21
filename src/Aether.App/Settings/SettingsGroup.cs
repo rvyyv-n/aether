@@ -75,5 +75,5 @@ public sealed partial class SettingsGroup : StackPanel
         return base.MeasureOverride(availableSize);
     }
 
-    private T Resource<T>(string key) => ThemeTokens.Get<T>(this, key);
+    private static T Resource<T>(string key) => ThemeTokens.Get<T>(ThemeTokens.AppTheme, key);
 }

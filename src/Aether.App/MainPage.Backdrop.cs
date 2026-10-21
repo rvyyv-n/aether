@@ -24,7 +24,7 @@ public sealed partial class MainPage
         _popupSurface = FindPresenter(content);
         if (_popupSurface is Microsoft.UI.Xaml.Controls.Control presenter)
         {
-            presenter.RequestedTheme = ActualTheme; // a flyout's popup does not reliably take the page's in-app theme
+            presenter.RequestedTheme = ThemeTokens.AppTheme; // a flyout's popup does not reliably take the page's in-app theme
         }
         PostBackdropRegion();
     }
@@ -41,9 +41,9 @@ public sealed partial class MainPage
             : null;
         if (presenter is Microsoft.UI.Xaml.Controls.Control control)
         {
-            control.RequestedTheme = ActualTheme;
+            control.RequestedTheme = ThemeTokens.AppTheme;
             control.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(
-                ActualTheme, _backdropAllowed ? "AetherSurfaceMenuBrush" : "AetherSurfaceMenuFallbackBrush");
+                ThemeTokens.AppTheme, _backdropAllowed ? "AetherSurfaceMenuBrush" : "AetherSurfaceMenuFallbackBrush");
         }
         _popupSurface = presenter;
         PostBackdropRegion();

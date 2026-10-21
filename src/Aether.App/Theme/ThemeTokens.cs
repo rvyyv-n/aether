@@ -11,6 +11,22 @@ public static class ThemeTokens
     private static ResourceDictionary? _light;
     private static ResourceDictionary? _dark;
 
+    private static readonly Windows.UI.ViewManagement.UISettings System = new();
+
+    /// <summary>
+    /// The theme the user's Appearance choice gives right now: Light or Dark as picked, or Windows' own when on Auto. Read
+    /// from the setting rather than from an element's ActualTheme, which can still show the old theme just after the
+    /// choice changes, and Application.RequestedTheme, which stays at what Windows was at launch.
+    /// </summary>
+    public static ElementTheme AppTheme => App.Settings.Current.Theme switch
+    {
+        "light" => ElementTheme.Light,
+        "dark" => ElementTheme.Dark,
+        _ => IsLight(System.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background)) ? ElementTheme.Light : ElementTheme.Dark,
+    };
+
+    private static bool IsLight(Windows.UI.Color background) => background.R + background.G + background.B > 382;
+
     public static T Get<T>(FrameworkElement element, string key) => Get<T>(element.ActualTheme, key);
 
     public static T Get<T>(ElementTheme theme, string key)
