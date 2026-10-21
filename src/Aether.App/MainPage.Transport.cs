@@ -204,6 +204,7 @@ public sealed partial class MainPage
         _speedMenuOpen = true;
         ApplySpeedLook();
         HoldForMenu(true);
+        SetMenuSurface(sender, true);
     }
 
     private void OnSpeedMenuClosed(object sender, object e)
@@ -211,6 +212,7 @@ public sealed partial class MainPage
         _speedMenuOpen = false;
         ApplySpeedLook();
         HoldForMenu(false);
+        SetMenuSurface(sender, false);
     }
 
     // Filled while its menu is open; filled and outlined, like Loop when on, while the speed is not 1x.
@@ -246,12 +248,14 @@ public sealed partial class MainPage
         OpenMenuFileItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenFile);
         OpenMenuUrlItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenUrl);
         HoldForMenu(true);
+        SetMenuSurface(sender, true);
     }
 
     private void OnOpenMenuClosed(object sender, object e)
     {
         OpenButton.ClearValue(BackgroundProperty);
         HoldForMenu(false);
+        SetMenuSurface(sender, false);
     }
 
     private void OnMoreClick(object sender, RoutedEventArgs e) => FlyoutBase.ShowAttachedFlyout(MoreButton);
@@ -262,12 +266,14 @@ public sealed partial class MainPage
         // The tracks flyout has nothing to list without a file, as in the right-click menu.
         MoreAudioItem.IsEnabled = MoreSubtitlesItem.IsEnabled = HasVideo;
         HoldForMenu(true);
+        SetMenuSurface(sender, true);
     }
 
     private void OnMoreMenuClosed(object sender, object e)
     {
         MoreButton.ClearValue(BackgroundProperty);
         HoldForMenu(false);
+        SetMenuSurface(sender, false);
         ShowTracksIfRequested();
     }
 

@@ -111,6 +111,7 @@ public sealed partial class MainPage
         _qualityMenuOpen = true;
         ApplyQualityLook();
         HoldForMenu(true);
+        SetMenuSurface(sender, true);
     }
 
     private void OnQualityMenuClosed(object sender, object e)
@@ -118,6 +119,7 @@ public sealed partial class MainPage
         _qualityMenuOpen = false;
         ApplyQualityLook();
         HoldForMenu(false);
+        SetMenuSurface(sender, false);
     }
 
     // Filled while its menu is open, as Speed is.

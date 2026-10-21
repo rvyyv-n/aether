@@ -986,7 +986,7 @@
         <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
     </Style>
     <!--
-        Transport menus (5.4, 5.7): solid dialog fallback over video (ADR-0013), radius 8, StrokeSurface,
+        Transport menus (5.4, 5.7): solid dialog fallback until the page swaps in the frosted fill while a video is blurring behind it (MainPage.Backdrop.cs, ADR-0013), radius 8, StrokeSurface,
         4 above and below the items. Items are 32 tall, inset 4, radius 4; hover is FillSubtleHover.
     -->
     <Style x:Key="AetherMenuFlyoutPresenterStyle" TargetType="MenuFlyoutPresenter">

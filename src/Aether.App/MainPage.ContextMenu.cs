@@ -155,11 +155,16 @@ public sealed partial class MainPage
         }
     }
 
-    private void OnContextMenuOpened(object? sender, object e) => HoldForMenu(true);
+    private void OnContextMenuOpened(object? sender, object e)
+    {
+        HoldForMenu(true);
+        SetMenuSurface(sender, true);
+    }
 
     private void OnContextMenuClosed(object? sender, object e)
     {
         HoldForMenu(false);
+        SetMenuSurface(sender, false);
         if (_tour.IsActive)
         {
             TourNextButton.Focus(FocusState.Programmatic);

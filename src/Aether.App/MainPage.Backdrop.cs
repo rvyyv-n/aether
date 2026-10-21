@@ -21,17 +21,38 @@ public sealed partial class MainPage
     /// <summary>The open flyout's presenter, so the blur follows it; null when none is open.</summary>
     private void SetPopupSurface(FrameworkElement? content)
     {
-        FrameworkElement? presenter = null;
-        for (DependencyObject? node = content; node is not null; node = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(node))
+        _popupSurface = FindPresenter(content);
+        PostBackdropRegion();
+    }
+
+    /// <summary>
+    /// The same for a menu, which has no content element of its own: its first item is inside the presenter. The menu is
+    /// frosted over a video and solid where there is no blur to go with it (no video, picture in picture).
+    /// </summary>
+    private void SetMenuSurface(object? sender, bool open)
+    {
+        FrameworkElement? presenter = open && sender is Microsoft.UI.Xaml.Controls.MenuFlyout { Items.Count: > 0 } menu
+            ? FindPresenter(menu.Items[0])
+            : null;
+        if (presenter is Microsoft.UI.Xaml.Controls.Control control)
         {
-            if (node is Microsoft.UI.Xaml.Controls.FlyoutPresenter found)
-            {
-                presenter = found;
-                break;
-            }
+            control.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(
+                control, _backdropAllowed ? "AetherSurfaceDialogBrush" : "AetherSurfaceDialogFallbackBrush");
         }
         _popupSurface = presenter;
         PostBackdropRegion();
+    }
+
+    private static FrameworkElement? FindPresenter(DependencyObject? content)
+    {
+        for (DependencyObject? node = content; node is not null; node = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(node))
+        {
+            if (node is Microsoft.UI.Xaml.Controls.FlyoutPresenter or Microsoft.UI.Xaml.Controls.MenuFlyoutPresenter)
+            {
+                return (FrameworkElement)node;
+            }
+        }
+        return null;
     }
 
     /// <summary>Blurs behind the clip chip and drawer, the open dialog card and the open flyout, like the transport card.</summary>
