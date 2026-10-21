@@ -21,40 +21,10 @@
         </Style>
     </Page.Resources>
     <!--
-        Wintoys-style About: the app's identity card with a row of links under it, then Updates and Help under
-        section headings. The links are equal-width pills that wrap two to a line on a narrow page.
+        Wintoys-style About: Updates and Help under section headings, then the app's identity card with a row of links
+        under it at the bottom. The links are equal-width pills that wrap two to a line on a narrow page.
     -->
     <StackPanel Spacing="8">
-        <settings:SettingsGroup>
-            <settings:SettingsRow x:Name="IdentityRow" Glyph="&#xE946;" />
-        </settings:SettingsGroup>
-        <VariableSizedWrapGrid ItemHeight="40" ItemWidth="176" Orientation="Horizontal">
-            <Button x:Name="ReleaseNotesButton" Style="{StaticResource AboutLinkButtonStyle}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE7C3;" />
-                    <TextBlock x:Name="ReleaseNotesText" />
-                </StackPanel>
-            </Button>
-            <Button x:Name="SourceCodeButton" Style="{StaticResource AboutLinkButtonStyle}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE943;" />
-                    <TextBlock x:Name="SourceCodeText" />
-                </StackPanel>
-            </Button>
-            <Button x:Name="LicencesButton" Style="{StaticResource AboutLinkButtonStyle}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE8A5;" />
-                    <TextBlock x:Name="LicencesText" />
-                </StackPanel>
-            </Button>
-            <Button x:Name="ReportIssueButton" Style="{StaticResource AboutLinkButtonStyle}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xEBE8;" />
-                    <TextBlock x:Name="ReportIssueText" />
-                </StackPanel>
-            </Button>
-        </VariableSizedWrapGrid>
-
         <TextBlock x:Name="UpdatesHeading" Margin="0,8,0,0" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource AetherCaptionStrongTextStyle}" />
         <settings:SettingsGroup>
             <settings:SettingsRow x:Name="UpdatesRow" Glyph="&#xE895;">
@@ -118,5 +88,36 @@
                 </Button>
             </settings:SettingsRow>
         </settings:SettingsGroup>
+
+        <TextBlock x:Name="AboutHeading" Margin="0,8,0,0" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+        <settings:SettingsGroup>
+            <settings:SettingsRow x:Name="IdentityRow" Glyph="&#xE946;" />
+        </settings:SettingsGroup>
+        <VariableSizedWrapGrid ItemHeight="40" ItemWidth="176" Orientation="Horizontal">
+            <Button x:Name="ReleaseNotesButton" Style="{StaticResource AboutLinkButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE7C3;" />
+                    <TextBlock x:Name="ReleaseNotesText" />
+                </StackPanel>
+            </Button>
+            <Button x:Name="SourceCodeButton" Style="{StaticResource AboutLinkButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE943;" />
+                    <TextBlock x:Name="SourceCodeText" />
+                </StackPanel>
+            </Button>
+            <Button x:Name="LicencesButton" Style="{StaticResource AboutLinkButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xE8A5;" />
+                    <TextBlock x:Name="LicencesText" />
+                </StackPanel>
+            </Button>
+            <Button x:Name="ReportIssueButton" Style="{StaticResource AboutLinkButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" Glyph="&#xEBE8;" />
+                    <TextBlock x:Name="ReportIssueText" />
+                </StackPanel>
+            </Button>
+        </VariableSizedWrapGrid>
     </StackPanel>
 </Page>

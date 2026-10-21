@@ -36,6 +36,7 @@ public sealed partial class AboutPage : Page
         SetUpLink(LicencesButton, LicencesText, "Settings_About_Licences", "Settings_About_LicencesDescription", Licences);
         SetUpLink(ReportIssueButton, ReportIssueText, "Settings_About_ReportIssue", "Settings_About_ReportIssueDescription", Issues);
         UpdatesHeading.Text = AppStrings.Get("Settings_Updates_Title");
+        AboutHeading.Text = AppStrings.Get("Settings_About_Heading");
         HelpHeading.Text = AppStrings.Get("Settings_About_Help");
 
         // The engine is not asked what it settled on; the decoder shown is the one chosen in Video settings.

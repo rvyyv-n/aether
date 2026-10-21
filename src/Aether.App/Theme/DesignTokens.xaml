@@ -999,6 +999,25 @@
         <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
         <Setter Property="Padding" Value="0,3" />
         <Setter Property="MaxWidth" Value="{StaticResource AetherSizeMenuMaxWidth}" />
+        <!-- The stock template draws its own border and shadow around the fill, which showed as a pale ring over bright video; this one is only the fill. -->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuFlyoutPresenter">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BackgroundSizing="OuterBorderEdge"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <ScrollViewer
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto"
+                            VerticalScrollMode="Auto">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <!--
         Menu rows (Pre-Pass 8): one column layout for every row, so the menu is as wide as its longest label and

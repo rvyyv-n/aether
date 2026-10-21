@@ -952,6 +952,9 @@
   <data name="Settings_About_ReleaseNotes" xml:space="preserve">
     <value>Release notes</value>
   </data>
+  <data name="Settings_About_Heading" xml:space="preserve">
+    <value>About</value>
+  </data>
   <data name="Settings_About_Help" xml:space="preserve">
     <value>Help</value>
   </data>
