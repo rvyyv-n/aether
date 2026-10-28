@@ -66,7 +66,7 @@ public sealed partial class MainPage
     {
         if (await StepQueue(queue => forward ? queue.Next(ended: false) : queue.Previous()) is { } target)
         {
-            Open(target);
+            Open(target, fromQueue: true);
         }
     }
 

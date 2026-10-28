@@ -29,6 +29,9 @@ public sealed partial class MainPage
     // reports after each change, so a subtitle file added with "select" is recorded under the id it was given.
     private TrackChoices? _trackChoices;
     private TrackChoices? _restoreTracks; // waiting for the restarted engine to finish loading the file
+    // The audio and subtitle the user last picked, by language, for the next files of the queue (13.4).
+    private TrackPreference? _trackPreference;
+    private TrackPreference? _followTracks; // waiting for the next file of the queue to finish loading
 
     private void InitializeTracks()
     {
@@ -94,7 +97,7 @@ public sealed partial class MainPage
     {
         string property = choice.Kind == TrackKind.Audio ? "aid" : "sid";
         string value = choice.Id is { } id ? id.ToString(CultureInfo.InvariantCulture) : "no";
-        _ = ChangeTracks(context => context.SetProperty(property, value));
+        _ = ChangeTracks(context => context.SetProperty(property, value), userChoice: true);
     }
 
     private void OnDelayStepped(object? sender, DelayStep step)
@@ -107,7 +110,7 @@ public sealed partial class MainPage
     }
 
     /// <summary>Applies the change on a pool thread, then redraws from what mpv now says.</summary>
-    private async Task ChangeTracks(Action<MpvContext> change)
+    private async Task ChangeTracks(Action<MpvContext> change, bool userChoice = false)
     {
         if (_session is not { } session)
         {
@@ -139,6 +142,10 @@ public sealed partial class MainPage
         if (_isLoaded && _session == session)
         {
             _trackChoices = TrackChoices.From(snapshot);
+            if (userChoice)
+            {
+                _trackPreference = TrackPreference.From(snapshot.Tracks);
+            }
             if (version == _tracksVersion && TracksFlyout.IsOpen)
             {
                 ApplyTracks(snapshot);
@@ -170,6 +177,23 @@ public sealed partial class MainPage
                 current = TrackSnapshot.Read(context);
             }
             foreach (string[] command in choices.Select(current))
+            {
+                Send(context, command);
+            }
+        });
+    }
+
+    /// <summary>Once the next file of the queue has loaded, picks the tracks matching what the user chose before it.</summary>
+    private void FollowTracksOnceLoaded()
+    {
+        if (_followTracks is not { } preference || !HasVideo || _session is null)
+        {
+            return;
+        }
+        _followTracks = null;
+        _ = ChangeTracks(context =>
+        {
+            foreach (string[] command in preference.Select(TrackSnapshot.Read(context).Tracks))
             {
                 Send(context, command);
             }

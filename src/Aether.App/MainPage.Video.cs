@@ -109,7 +109,7 @@ public sealed partial class MainPage
     }
 
     /// <summary>A new file starts from Settings → Video; after an engine restart the new engine gets the choices back.</summary>
-    private void ApplyVideoForOpen(bool afterRestart)
+    private void ApplyVideoForOpen(bool afterRestart, bool keepAdjustments)
     {
         PushLook();
         if (_video is null)
@@ -118,8 +118,11 @@ public sealed partial class MainPage
         }
         if (!afterRestart)
         {
-            _video = null;
-            FitVideo(); // the new file starts unrotated
+            if (!keepAdjustments)
+            {
+                _video = null; // another file starts unrotated and unzoomed
+            }
+            FitVideo();
             QueueWindowSync();
         }
         PushVideo();

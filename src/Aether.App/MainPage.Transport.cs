@@ -68,7 +68,7 @@ public sealed partial class MainPage
     {
         if (App.Settings.Current.PlayNextInFolder && await StepQueue(queue => queue.Next(ended: true)) is { } next)
         {
-            Open(next);
+            Open(next, fromQueue: true);
         }
     }
 

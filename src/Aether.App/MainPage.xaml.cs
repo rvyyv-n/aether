@@ -486,7 +486,8 @@ public sealed partial class MainPage : Page
     // ---- Playback ----
 
     /// <param name="link">The link this stream was resolved from, or null for a file.</param>
-    private void Open(string path, PlaybackCarryOver? carry = null, OpenedLink? link = null)
+    /// <param name="fromQueue">Moving through the queue: the next file keeps the picked languages and the video adjustments.</param>
+    private void Open(string path, PlaybackCarryOver? carry = null, OpenedLink? link = null, bool fromQueue = false)
     {
         if (_session is not { } session)
         {
@@ -515,7 +516,12 @@ public sealed partial class MainPage : Page
         _durationRecorded = false;
         _trackChoices = carry?.Tracks; // another file starts on mpv's own picks
         _restoreTracks = carry?.Tracks;
-        ApplyVideoForOpen(afterRestart: carry is not null);
+        if (!fromQueue && carry is null)
+        {
+            _trackPreference = null;
+        }
+        _followTracks = fromQueue ? _trackPreference : null;
+        ApplyVideoForOpen(afterRestart: carry is not null, keepAdjustments: fromQueue);
         TrySend(() =>
         {
             if (carry is { Paused: true })
@@ -611,6 +617,7 @@ public sealed partial class MainPage : Page
                 UpdateClock(vm); // an ended file reads its full duration
                 RecordDuration(vm);
                 RestoreTracksOnceLoaded();
+                FollowTracksOnceLoaded();
                 LoadChaptersOnceLoaded();
                 AddLinkSubtitlesOnceLoaded();
                 ShowResumeOfferOnceLoaded();
