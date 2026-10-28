@@ -244,3 +244,10 @@
   - `FolderPlaylist` only lists and sorts a folder's videos now; its neighbour lookups are gone.
 - **Consequences:** Repeat and shuffle work in the store but have no controls until the playlist drawer (13.3). A queue built from dropped files will need to skip the folder re-read.
 - **Status:** Accepted.
+
+## ADR-0027: Aether Draws Its Own Caption Buttons (12.10, 2026-10-29)
+- **Context:** Over a video the system caption buttons stayed fully opaque while the rest of the chrome faded. `AppWindowTitleBar` ignores alpha in the buttons' glyph colours, so they cannot be faded.
+- **Decision:** The system buttons are hidden (`TitleBarHeightOption.Collapsed`) and the page draws minimise, maximise and close in the title bar, fading them with the chrome. The window registers their rectangles as `NonClientRegionKind.Minimize`, `Maximize` and `Close` through `InputNonClientPointerSource`, so Windows keeps Snap Layouts over maximise and runs minimise and maximise itself. Windows does not run the Close region, so the window closes itself when a press and release both land on it. The regions take the pointer, so the window passes hover and press on to the buttons' visual states. The buttons' Click handlers serve UI Automation.
+- **Consequences:** Picture in picture shows only Close. Full screen hides the title bar and with it the buttons. The close-hover red is a design token.
+- **Status:** Accepted. Checked on screen: fade, Snap Layouts, maximise, restore, minimise, close, and waking after a restore.
+

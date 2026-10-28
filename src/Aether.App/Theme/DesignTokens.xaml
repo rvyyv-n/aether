@@ -93,10 +93,13 @@
             <Color x:Key="AetherStrokeDropTargetColor">#33FFFFFF</Color>  <!-- 20%. Inner window border while dragging -->
             <Color x:Key="AetherStrokeInputFocusColor">#FFFFFFFF</Color>  <!-- [screen 2] 2 px bottom edge of a focused text field. White, since there is no accent -->
             <Color x:Key="AetherStrokeLayerColor">#19000000</Color>  <!-- 1 px top and left edge of the settings layer. = Fluent CardStrokeColorDefault -->
-            <Color x:Key="AetherCaptionGlyphColor">#D9FFFFFF</Color>  <!-- 85%. Glyphs of the system caption buttons and the title-bar gear and Back; MainWindow reads the same value -->
+            <Color x:Key="AetherCaptionGlyphColor">#D9FFFFFF</Color>  <!-- 85%. Glyphs of the caption buttons and the title-bar gear and Back -->
             <Color x:Key="AetherCaptionGlyphInactiveColor">#73FFFFFF</Color>  <!-- 45%. Same glyphs while the window is inactive -->
             <Color x:Key="AetherCaptionHoverColor">#14FFFFFF</Color>  <!-- 8%. Hover fill of a caption button; the glyph turns white -->
             <Color x:Key="AetherCaptionPressedColor">#0AFFFFFF</Color>  <!-- 4%. Pressed fill of a caption button; the glyph stays white -->
+            <Color x:Key="AetherCaptionCloseHoverColor">#FFC42B1C</Color>
+            <Color x:Key="AetherCaptionClosePressedColor">#E6C42B1C</Color>
+            <Color x:Key="AetherCaptionCloseGlyphColor">#FFFFFFFF</Color>
             <Color x:Key="AetherStatusReadyColor">#FF4ADE80</Color>  <!-- Dots only, always beside a word -->
             <Color x:Key="AetherStatusWarningColor">#FFF2A35E</Color>  <!-- Failed, unsupported -->
             <Color x:Key="AetherStatusNeutralColor">#80FFFFFF</Color>  <!-- Starting, idle -->
@@ -144,6 +147,9 @@
             <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="#73FFFFFF" />
             <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="#14FFFFFF" />
             <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="#0AFFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionCloseHoverBrush" Color="#FFC42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionClosePressedBrush" Color="#E6C42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionCloseGlyphBrush" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="#FF4ADE80" />
             <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="#FFF2A35E" />
             <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="#80FFFFFF" />
@@ -270,10 +276,13 @@
             <Color x:Key="AetherStrokeDropTargetColor">#33FFFFFF</Color>  <!-- 20%. Inner window border while dragging -->
             <Color x:Key="AetherStrokeInputFocusColor">#FFFFFFFF</Color>  <!-- [screen 2] 2 px bottom edge of a focused text field. White, since there is no accent -->
             <Color x:Key="AetherStrokeLayerColor">#19000000</Color>  <!-- 1 px top and left edge of the settings layer. = Fluent CardStrokeColorDefault -->
-            <Color x:Key="AetherCaptionGlyphColor">#D9FFFFFF</Color>  <!-- 85%. Glyphs of the system caption buttons and the title-bar gear and Back; MainWindow reads the same value -->
+            <Color x:Key="AetherCaptionGlyphColor">#D9FFFFFF</Color>  <!-- 85%. Glyphs of the caption buttons and the title-bar gear and Back -->
             <Color x:Key="AetherCaptionGlyphInactiveColor">#73FFFFFF</Color>  <!-- 45%. Same glyphs while the window is inactive -->
             <Color x:Key="AetherCaptionHoverColor">#14FFFFFF</Color>  <!-- 8%. Hover fill of a caption button; the glyph turns white -->
             <Color x:Key="AetherCaptionPressedColor">#0AFFFFFF</Color>  <!-- 4%. Pressed fill of a caption button; the glyph stays white -->
+            <Color x:Key="AetherCaptionCloseHoverColor">#FFC42B1C</Color>
+            <Color x:Key="AetherCaptionClosePressedColor">#E6C42B1C</Color>
+            <Color x:Key="AetherCaptionCloseGlyphColor">#FFFFFFFF</Color>
             <Color x:Key="AetherStatusReadyColor">#FF4ADE80</Color>  <!-- Dots only, always beside a word -->
             <Color x:Key="AetherStatusWarningColor">#FFF2A35E</Color>  <!-- Failed, unsupported -->
             <Color x:Key="AetherStatusNeutralColor">#80FFFFFF</Color>  <!-- Starting, idle -->
@@ -320,6 +329,9 @@
             <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="#73FFFFFF" />
             <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="#14FFFFFF" />
             <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="#0AFFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionCloseHoverBrush" Color="#FFC42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionClosePressedBrush" Color="#E6C42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionCloseGlyphBrush" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="#FF4ADE80" />
             <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="#FFF2A35E" />
             <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="#80FFFFFF" />
@@ -451,6 +463,9 @@
             <Color x:Key="AetherCaptionGlyphInactiveColor">#73000000</Color>
             <Color x:Key="AetherCaptionHoverColor">#14000000</Color>
             <Color x:Key="AetherCaptionPressedColor">#0A000000</Color>
+            <Color x:Key="AetherCaptionCloseHoverColor">#FFC42B1C</Color>
+            <Color x:Key="AetherCaptionClosePressedColor">#E6C42B1C</Color>
+            <Color x:Key="AetherCaptionCloseGlyphColor">#FFFFFFFF</Color>
             <Color x:Key="AetherStatusReadyColor">#FF15803D</Color>
             <Color x:Key="AetherStatusWarningColor">#FFC2410C</Color>
             <Color x:Key="AetherStatusNeutralColor">#80000000</Color>
@@ -497,6 +512,9 @@
             <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="#73000000" />
             <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="#14000000" />
             <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="#0A000000" />
+            <SolidColorBrush x:Key="AetherCaptionCloseHoverBrush" Color="#FFC42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionClosePressedBrush" Color="#E6C42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionCloseGlyphBrush" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="#FF15803D" />
             <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="#FFC2410C" />
             <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="#80000000" />
@@ -570,7 +588,7 @@
 
     <!--  Sizes  -->
     <x:Double x:Key="AetherSizeTitleBar">32</x:Double>
-    <x:Double x:Key="AetherSizeCaptionButtons">138</x:Double>  <!-- Width kept clear at top right (3 x 46) -->
+    <x:Double x:Key="AetherSizeCaptionGlyph">10</x:Double>  <!-- Minimise, maximise and close glyphs, as Windows draws them -->
     <x:Double x:Key="AetherSizeControl">32</x:Double>  <!-- Minimum height of every button and icon button. Icon button was 30 -->
     <x:Double x:Key="AetherSizeRow">52</x:Double>  <!-- Row cards -->
     <x:Double x:Key="AetherSizeIcon">16</x:Double>

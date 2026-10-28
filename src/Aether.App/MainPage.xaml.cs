@@ -177,6 +177,7 @@ public sealed partial class MainPage : Page
         AutomationProperties.SetName(VolumeButton, AppStrings.Get("Transport_Volume"));
         AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
         ApplyTransportStrings();
+        ApplyCaptionStrings();
         ApplyShortcutLabels();
         string backToFull = AppStrings.Get("Pip_BackToFullWindow");
         ToolTipService.SetToolTip(PipBackButton, backToFull);
@@ -217,15 +218,6 @@ public sealed partial class MainPage : Page
         }
     }
 
-    /// <summary>Keeps the gear flush with the system caption buttons, whatever their width at this display scale.</summary>
-    public void SetCaptionInset(double width)
-    {
-        if (width > 0)
-        {
-            CaptionReserve.Width = width;
-        }
-    }
-
     /// <summary>A key-up never arrives once the window loses activation; release held keys and the cursor.</summary>
     public void OnWindowActivationChanged(bool active)
     {
@@ -243,6 +235,9 @@ public sealed partial class MainPage : Page
         Brush glyph = ThemeTokens.Get<Brush>(TitleBar.ActualTheme, _windowActive ? "AetherCaptionGlyphBrush" : "AetherCaptionGlyphInactiveBrush");
         SettingsButton.Foreground = glyph;
         SettingsBackButton.Foreground = glyph;
+        CaptionMinimize.Foreground = glyph;
+        CaptionMaximize.Foreground = glyph;
+        CaptionClose.Foreground = glyph;
     }
 
     // ---- Lifecycle and engine startup (4.6) ----
@@ -1658,8 +1653,9 @@ public sealed partial class MainPage : Page
                 UpdateClock(clockVm);
             }
             _fader.Fade(TopScrim, visible);
-            // The gear, Back and the system caption buttons stay put; only the name fades.
             _fader.Fade(TitleText, visible);
+            _fader.Fade(SettingsButton, visible);
+            _fader.Fade(CaptionButtons, visible);
             _fader.Fade(PipChrome, visible);
             PipChrome.IsHitTestVisible = visible;
             _fader.Fade(Osd, visible);
@@ -1817,6 +1813,7 @@ public sealed partial class MainPage : Page
         TitleText.Visibility = pip ? Visibility.Collapsed : Visibility.Visible;
         SettingsButton.Visibility = pip || _settingsShown ? Visibility.Collapsed : Visibility.Visible;
         PipBackButton.Visibility = pip ? Visibility.Visible : Visibility.Collapsed;
+        CaptionMinimize.Visibility = CaptionMaximize.Visibility = pip ? Visibility.Collapsed : Visibility.Visible;
         // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
         TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
         TitleBadgeText.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;

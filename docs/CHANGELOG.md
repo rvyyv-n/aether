@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Over a video, the minimise, maximise and close buttons and the gear now fade out with the player controls and come back when you move the mouse, instead of staying on top of the picture. They work as before, including Snap Layouts when you hover over maximise.
 - Previous and next, on the taskbar preview and with Play next in folder, now go through a play queue built from the video's folder, ready for the coming playlist drawer, repeat and shuffle. They behave as before.
 - The blur behind the captions, Now Playing, Video and volume pop-ups, and the player menus, now fades in with the pop-up and leaves with it, instead of appearing and leaving a split second before it. Pop-ups and menus now fade in rather than slide, and close at once.
 - In light theme the toasts (such as "Resumed at..."), the Skip chapter button, the export chip and the clip drawer are now the same bright frosted card as the bar and menus, with dark text and icons; dark theme is unchanged.

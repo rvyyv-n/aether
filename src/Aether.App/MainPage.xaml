@@ -652,8 +652,8 @@
             Visibility="Collapsed" />
 
         <!--
-            Title bar: Back (settings only), name and release label (the drag region), the gear, then 138 px
-            left clear for the system caption buttons. The buttons sit outside the drag region so they take clicks.
+            Title bar: Back (settings only), name and release label (the drag region), the gear, then the caption
+            buttons. The buttons sit outside the drag region so they take clicks.
         -->
         <Grid
             x:Name="TitleBar"
@@ -724,11 +724,39 @@
                 Content="&#xEE47;"
                 Style="{StaticResource AetherTitleBarButtonStyle}"
                 Visibility="Collapsed" />
-            <!--  The window sets the width to the system's real caption-button inset; 138 is the 100% default.  -->
-            <Border
-                x:Name="CaptionReserve"
+            <!--  Aether's own caption buttons (12.10): the window registers them as its caption buttons, so Windows runs them.  -->
+            <StackPanel
+                x:Name="CaptionButtons"
                 Grid.Column="3"
-                Width="{StaticResource AetherSizeCaptionButtons}" />
+                Orientation="Horizontal">
+                <Button
+                    x:Name="CaptionMinimize"
+                    Click="OnCaptionMinimizeClick"
+                    Content="&#xE921;"
+                    FontSize="{StaticResource AetherSizeCaptionGlyph}"
+                    IsTabStop="False"
+                    Style="{StaticResource AetherTitleBarButtonStyle}" />
+                <Button
+                    x:Name="CaptionMaximize"
+                    Click="OnCaptionMaximizeClick"
+                    Content="&#xE922;"
+                    FontSize="{StaticResource AetherSizeCaptionGlyph}"
+                    IsTabStop="False"
+                    Style="{StaticResource AetherTitleBarButtonStyle}" />
+                <Button
+                    x:Name="CaptionClose"
+                    Click="OnCaptionCloseClick"
+                    Content="&#xE8BB;"
+                    FontSize="{StaticResource AetherSizeCaptionGlyph}"
+                    IsTabStop="False"
+                    Style="{StaticResource AetherTitleBarButtonStyle}">
+                    <Button.Resources>
+                        <StaticResource x:Key="AetherCaptionHoverBrush" ResourceKey="AetherCaptionCloseHoverBrush" />
+                        <StaticResource x:Key="AetherCaptionPressedBrush" ResourceKey="AetherCaptionClosePressedBrush" />
+                        <StaticResource x:Key="AetherTextPrimaryBrush" ResourceKey="AetherCaptionCloseGlyphBrush" />
+                    </Button.Resources>
+                </Button>
+            </StackPanel>
         </Grid>
 
         <!--  Diagnostics (Ctrl+I): top-left, 16 in from the edge and under the 32 px title bar.  -->

@@ -4,14 +4,12 @@ using Aether.Core.Playback.Settings;
 using Aether.Core.Playback.Windowing;
 using Aether_App.Controls;
 using Aether_App.Playback;
-using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.Win32;
 using Windows.Graphics;
-using Windows.UI;
 using Windows.UI.ViewManagement;
 
 namespace Aether_App;
@@ -62,6 +60,13 @@ public interface IShellWindow
     /// <summary>The picture fills the window behind the title bar, so the caption buttons draw light-on-dark.</summary>
     void SetOverVideo(bool overVideo);
 
+    /// <summary>The caption buttons' actions, for when they are invoked other than by the pointer (UI Automation).</summary>
+    void MinimizeWindow();
+
+    void ToggleMaximizeWindow();
+
+    void Close();
+
     /// <summary>
     /// Names the taskbar preview after the open file (null for the app name) and sets the buttons under it
     /// (11.14). Cheap to call often: nothing changes when the values are the same.
@@ -85,11 +90,8 @@ public sealed partial class MainWindow : Window, IShellWindow
     // A video opens at one video pixel per screen pixel, within this share of the work area.
     private const double FitMaxWorkAreaFraction = 0.9;
 
-    // The caption colours live in the design tokens so the title-bar gear and Back read the same values.
-    private Color _captionForeground;
-    private Color _captionInactiveForeground;
-    private Color _captionHover;
-    private Color _captionPressed;
+    private readonly RectInt32[][] _captionRegions = [[], [], []];
+    private NonClientRegionKind? _pressedCaption;
     private readonly AspectRatioLock? _aspectLock;
     private readonly TaskbarThumbButtons? _taskbarButtons;
     private readonly string _playTip = AppStrings.Get("Taskbar_Play");
@@ -113,11 +115,9 @@ public sealed partial class MainWindow : Window, IShellWindow
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(Shell.TitleBarDragRegion);
         ApplyTaskbarIcon();
-        AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Standard;
-
-        AppWindowTitleBar titleBar = AppWindow.TitleBar;
-        titleBar.ButtonBackgroundColor = Colors.Transparent;
-        titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+        // The page draws its own caption buttons, which fade with the chrome (12.10); the system's are hidden.
+        AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Collapsed;
+        Shell.LayoutUpdated += (_, _) => UpdateCaptionRegions();
         ApplyTheme();
         App.Settings.Changed += OnSettingsChanged;
         Closed += (_, _) => App.Settings.Changed -= OnSettingsChanged;
@@ -160,6 +160,9 @@ public sealed partial class MainWindow : Window, IShellWindow
         InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         nonClient.PointerEntered += OnNonClientPointerMoved;
         nonClient.PointerMoved += OnNonClientPointerMoved;
+        nonClient.PointerExited += (_, _) => Shell.SetCaptionPointer(null, pressed: false);
+        nonClient.PointerPressed += OnNonClientPointerPressed;
+        nonClient.PointerReleased += OnNonClientPointerReleased;
 
         App.Settings.Changed += OnSettingChanged;
         ApplyAlwaysOnTop();
@@ -441,8 +444,27 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     public event EventHandler? TitleBarPointerMoved;
 
+    private void OnNonClientPointerPressed(InputNonClientPointerSource sender, NonClientPointerEventArgs args)
+    {
+        _pressedCaption = args.RegionKind;
+        Shell.SetCaptionPointer(args.RegionKind, pressed: true);
+    }
+
+    // Windows runs the Minimize and Maximize regions itself but not Close, so a click on Close is closed here.
+    private void OnNonClientPointerReleased(InputNonClientPointerSource sender, NonClientPointerEventArgs args)
+    {
+        bool close = args.RegionKind == NonClientRegionKind.Close && _pressedCaption == NonClientRegionKind.Close;
+        _pressedCaption = null;
+        Shell.SetCaptionPointer(args.RegionKind, pressed: false);
+        if (close)
+        {
+            Close();
+        }
+    }
+
     private void OnNonClientPointerMoved(InputNonClientPointerSource sender, NonClientPointerEventArgs args)
     {
+        Shell.SetCaptionPointer(args.RegionKind, pressed: false);
         // Repeats at the same point (as WinUI does for client moves) are not activity.
         if (args.Point == _lastNonClientPointer)
         {
@@ -517,7 +539,6 @@ public sealed partial class MainWindow : Window, IShellWindow
             "dark" => ElementTheme.Dark,
             _ => ElementTheme.Default,
         };
-        UpdateCaptionColors();
         ApplyTaskbarIcon();
         ApplyBorder();
     }
@@ -527,24 +548,51 @@ public sealed partial class MainWindow : Window, IShellWindow
             WinRT.Interop.WindowNative.GetWindowHandle(this),
             shown: !_overVideo);
 
-    private void UpdateCaptionColors()
+    /// <summary>
+    /// Marks the page's caption buttons as the window's own, so Windows runs them, shows Snap Layouts over maximise and
+    /// keeps them out of the drag region. Rectangles are in client pixels; unchanged ones are not sent again.
+    /// </summary>
+    private void UpdateCaptionRegions()
     {
-        // Over a video the caption buttons stay light-on-dark whatever the theme; the window is dark behind them.
-        ElementTheme theme = _overVideo ? ElementTheme.Dark : Shell.ActualTheme;
-        _captionForeground = ThemeTokens.Get<Color>(theme, "AetherCaptionGlyphColor");
-        _captionInactiveForeground = ThemeTokens.Get<Color>(theme, "AetherCaptionGlyphInactiveColor");
-        _captionHover = ThemeTokens.Get<Color>(theme, "AetherCaptionHoverColor");
-        _captionPressed = ThemeTokens.Get<Color>(theme, "AetherCaptionPressedColor");
+        double scale = Shell.XamlRoot?.RasterizationScale ?? 0;
+        if (scale <= 0)
+        {
+            return;
+        }
+        InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
+        NonClientRegionKind[] kinds = [NonClientRegionKind.Minimize, NonClientRegionKind.Maximize, NonClientRegionKind.Close];
+        for (int i = 0; i < kinds.Length; i++)
+        {
+            RectInt32[] rects = Shell.CaptionButton(kinds[i]) is { } button
+                ? [ToClientPixels(button.TransformToVisual(null).TransformBounds(new Windows.Foundation.Rect(0, 0, button.ActualWidth, button.ActualHeight)), scale)]
+                : [];
+            if (!rects.AsSpan().SequenceEqual(_captionRegions[i]))
+            {
+                _captionRegions[i] = rects;
+                nonClient.SetRegionRects(kinds[i], rects);
+            }
+        }
+    }
 
-        AppWindowTitleBar titleBar = AppWindow.TitleBar;
-        titleBar.ButtonForegroundColor = _captionForeground;
-        titleBar.ButtonInactiveForegroundColor = _captionInactiveForeground;
-        titleBar.ButtonHoverBackgroundColor = _captionHover;
-        titleBar.ButtonPressedBackgroundColor = _captionPressed;
+    private static RectInt32 ToClientPixels(Windows.Foundation.Rect bounds, double scale) => new(
+        (int)Math.Round(bounds.X * scale), (int)Math.Round(bounds.Y * scale),
+        (int)Math.Round(bounds.Width * scale), (int)Math.Round(bounds.Height * scale));
 
-        Color activeHoverGlyph = theme == ElementTheme.Light ? _captionForeground : Colors.White;
-        titleBar.ButtonHoverForegroundColor = activeHoverGlyph;
-        titleBar.ButtonPressedForegroundColor = activeHoverGlyph;
+    public void MinimizeWindow() => (AppWindow.Presenter as OverlappedPresenter)?.Minimize();
+
+    public void ToggleMaximizeWindow()
+    {
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            if (presenter.State == OverlappedPresenterState.Maximized)
+            {
+                presenter.Restore();
+            }
+            else
+            {
+                presenter.Maximize();
+            }
+        }
     }
 
     public void FitToVideo(int videoWidth, int videoHeight)
@@ -598,7 +646,6 @@ public sealed partial class MainWindow : Window, IShellWindow
             return;
         }
         _overVideo = overVideo;
-        UpdateCaptionColors();
         ApplyBorder();
     }
 
@@ -608,7 +655,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         {
             TrackNormalBounds();
             DisplaySync.OnWindowMoved();
-            UpdateCaptionInset();
+            Shell.SetMaximized(AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Maximized });
         }
         if (args.DidPresenterChange)
         {
@@ -620,16 +667,5 @@ public sealed partial class MainWindow : Window, IShellWindow
     private void OnActivated(object sender, WindowActivatedEventArgs args)
     {
         Shell.OnWindowActivationChanged(args.WindowActivationState != WindowActivationState.Deactivated);
-        UpdateCaptionInset();
-    }
-
-    // RightInset is in physical pixels and changes with the display scale; the page lays out in DIPs.
-    private void UpdateCaptionInset()
-    {
-        double scale = Shell.XamlRoot?.RasterizationScale ?? 0;
-        if (scale > 0)
-        {
-            Shell.SetCaptionInset(AppWindow.TitleBar.RightInset / scale);
-        }
     }
 }
