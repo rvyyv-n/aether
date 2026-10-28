@@ -20,6 +20,7 @@
     mc:Ignorable="d">
 
     <Page.Resources>
+        <local:NoBackdrop x:Key="NoPopupBackdrop" />
         <!--
             Tracks flyout (9.2): opened from Audio and Subtitles in the right-click menu, centred above the pill. The bar's
             surface in the app's theme: the render thread blurs the video behind it (ADR-0013); the panel scrolls inside it
@@ -28,6 +29,7 @@
         <Flyout
             x:Name="TracksFlyout"
             AreOpenCloseAnimationsEnabled="False"
+            SystemBackdrop="{StaticResource NoPopupBackdrop}"
             Closed="OnTracksFlyoutClosed"
             Opened="OnTracksFlyoutOpened"
             Placement="Top">
@@ -51,6 +53,7 @@
         <Flyout
             x:Name="VideoFlyout"
             AreOpenCloseAnimationsEnabled="False"
+            SystemBackdrop="{StaticResource NoPopupBackdrop}"
             Closed="OnVideoFlyoutClosed"
             Opened="OnVideoFlyoutOpened"
             Placement="TopEdgeAlignedRight">
@@ -95,6 +98,7 @@
                 <MenuFlyout
                     x:Name="ContextMenu"
                     AreOpenCloseAnimationsEnabled="False"
+                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                     Closed="OnContextMenuClosed"
                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                     ShouldConstrainToRootBounds="True"
@@ -882,6 +886,7 @@
                                 <MenuFlyout
                                     x:Name="OpenMenu"
                                     AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnOpenMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                                     ShouldConstrainToRootBounds="True"
@@ -916,6 +921,7 @@
                                 <MenuFlyout
                                     x:Name="SpeedMenu"
                                     AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnSpeedMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                                     ShouldConstrainToRootBounds="True"
@@ -935,6 +941,7 @@
                                 <MenuFlyout
                                     x:Name="QualityMenu"
                                     AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnQualityMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                                     ShouldConstrainToRootBounds="True"
@@ -1006,6 +1013,7 @@
                                     x:Name="VolumeFlyout"
                                     AllowFocusOnInteraction="False"
                                     AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnVolumeFlyoutClosed"
                                     Opened="OnVolumeFlyoutOpened"
                                     Placement="Top">
@@ -1069,6 +1077,7 @@
                                 <MenuFlyout
                                     x:Name="MoreMenu"
                                     AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnMoreMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                                     ShouldConstrainToRootBounds="True"

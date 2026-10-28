@@ -18,17 +18,19 @@ public sealed partial class MainPage
     private readonly bool[] _surfaceShown = new bool[BackdropSource.SlotCount];
     private bool _backdropAllowed;
     private FrameworkElement? _popupSurface;
+    private const int PopupSettleFrames = 3;
+    private FrameworkElement? _pendingPopup;
+    private int _pendingPopupFrames;
 
     /// <summary>The open flyout's presenter, so the blur follows it; null when none is open.</summary>
     private void SetPopupSurface(FrameworkElement? content)
     {
-        _popupSurface = FindPresenter(content);
-        if (_popupSurface is Microsoft.UI.Xaml.Controls.Control presenter)
+        FrameworkElement? found = FindPresenter(content);
+        if (found is Microsoft.UI.Xaml.Controls.Control presenter)
         {
             presenter.RequestedTheme = ThemeTokens.AppTheme; // a flyout's popup does not reliably take the page's in-app theme
-            FadeInPopup(presenter);
         }
-        PostBackdropRegion();
+        ShowPopupSurface(found);
     }
 
     /// <summary>
@@ -46,24 +48,52 @@ public sealed partial class MainPage
             control.RequestedTheme = ThemeTokens.AppTheme;
             control.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(
                 ThemeTokens.AppTheme, _backdropAllowed ? "AetherSurfaceMenuBrush" : "AetherSurfaceMenuFallbackBrush");
-            FadeInPopup(control);
         }
-        _popupSurface = presenter;
-        PostBackdropRegion();
+        ShowPopupSurface(presenter);
     }
 
     /// <summary>
-    /// Flyouts have their own transition off, so they fade in here, on the same tick, length and curve as the blur behind
-    /// them, and both leave at once; two clocks put the blur a moment ahead of the flyout both ways (12.7).
+    /// Flyouts have their own transition and acrylic off (12.7). A flyout's popup is a window of its own that reaches the
+    /// screen a few frames after it opens, so a new one waits, invisible, for <see cref="PopupSettleFrames"/>, then it
+    /// and its blur fade in on the same tick, length and curve. Closing takes both away at once.
     /// </summary>
-    private void FadeInPopup(UIElement presenter)
+    private void ShowPopupSurface(FrameworkElement? presenter)
     {
-        if (_fader is null)
+        _pendingPopup = presenter;
+        if (presenter is null)
         {
+            _popupSurface = null;
+            PostBackdropRegion();
             return;
         }
         ElementCompositionPreview.GetElementVisual(presenter).Opacity = 0;
-        _fader.Reveal(presenter, true);
+        _pendingPopupFrames = PopupSettleFrames;
+        Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnPopupRendering;
+        Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += OnPopupRendering;
+    }
+
+    private void OnPopupRendering(object? sender, object e)
+    {
+        if (_pendingPopup is not null && --_pendingPopupFrames > 0)
+        {
+            return;
+        }
+        Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnPopupRendering;
+        if (_pendingPopup is null)
+        {
+            return;
+        }
+        _popupSurface = _pendingPopup;
+        _pendingPopup = null;
+        if (_fader is null)
+        {
+            ElementCompositionPreview.GetElementVisual(_popupSurface).Opacity = 1;
+        }
+        else
+        {
+            _fader.Reveal(_popupSurface, true);
+        }
+        PostBackdropRegion();
     }
 
     private static FrameworkElement? FindPresenter(DependencyObject? content)
