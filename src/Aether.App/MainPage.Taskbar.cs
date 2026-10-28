@@ -10,6 +10,8 @@ public sealed partial class MainPage
 {
     // The open file's folder, in play order; empty for a link.
     private readonly PlaylistStore _playlist = new();
+    // False while the queue is a drop of several files or folders, which is kept rather than read from a folder.
+    private bool _queueIsFolder = true;
 
     private void UpdateTaskbar(string? fileName)
     {
@@ -41,6 +43,11 @@ public sealed partial class MainPage
         if (!string.Equals(_playlist.Current, path, StringComparison.OrdinalIgnoreCase))
         {
             _playlist.Clear();
+            _queueIsFolder = true;
+        }
+        else if (!_queueIsFolder)
+        {
+            return;
         }
         if (isLink || !Path.IsPathFullyQualified(path))
         {
@@ -73,6 +80,10 @@ public sealed partial class MainPage
         {
             return null;
         }
+        if (!_queueIsFolder)
+        {
+            return step(_playlist);
+        }
         string[]? videos = await Task.Run(() => VideosBeside(current));
         if (videos is null || !_isLoaded || _session is null || _currentPath != current)
         {
@@ -82,19 +93,31 @@ public sealed partial class MainPage
         return step(_playlist);
     }
 
-    private static string[]? VideosBeside(string path)
+    /// <summary>Plays a drop of several files or folders (13.2) as a queue of its own, from its first video.</summary>
+    private async void OpenDropped(string[] files, string[] folders)
     {
-        if (Path.GetDirectoryName(path) is not { Length: > 0 } folder)
+        string[] queue = await Task.Run(() => FolderPlaylist.Dropped(files, folders, ListFolder));
+        if (queue.Length == 0 || !_isLoaded || _session is null)
         {
-            return null;
+            return;
         }
+        _playlist.Load(queue, queue[0]);
+        _queueIsFolder = false;
+        Open(queue[0]);
+    }
+
+    private static string[]? VideosBeside(string path) =>
+        Path.GetDirectoryName(path) is { Length: > 0 } folder ? FolderPlaylist.Videos(ListFolder(folder)) : null;
+
+    private static string[] ListFolder(string folder)
+    {
         try
         {
-            return FolderPlaylist.Videos(Directory.EnumerateFiles(folder));
+            return Directory.EnumerateFiles(folder).ToArray();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return null; // the folder went away or is unreadable: nowhere to go
+            return []; // the folder went away or is unreadable: nothing from it
         }
     }
 }

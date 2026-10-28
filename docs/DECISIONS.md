@@ -242,7 +242,7 @@
   - `PlaylistStore` in `Aether.Core.Playback` holds the queue, the playing entry and the play order behind one lock. Entries are objects, so a file queued twice is two entries. Shuffle is a Fisher-Yates order that plays each item once; a new round with Repeat All reshuffles and never starts with the item that just played.
   - The app still re-reads the folder before every jump, since files come and go, and loads the listing into the store. A listing equal to the queue (ignoring case) keeps the play order, so shuffle survives the re-read. Opening a file the queue did not move to starts a new queue.
   - `FolderPlaylist` only lists and sorts a folder's videos now; its neighbour lookups are gone.
-- **Consequences:** Repeat and shuffle work in the store but have no controls until the playlist drawer (13.3). A queue built from dropped files will need to skip the folder re-read.
+- **Consequences:** Repeat and shuffle work in the store but have no controls until the playlist drawer (13.3). A queue from a drop of several files or folders (13.2) is kept as dropped: it skips the folder re-read until a file outside it is opened.
 - **Status:** Accepted.
 
 ## ADR-0027: Aether Draws Its Own Caption Buttons (12.10, 2026-10-29)

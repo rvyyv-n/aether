@@ -70,6 +70,8 @@ public sealed partial class MainPage : Page
     private bool _windowSyncQueued;
     private bool _dragging;
     private string? _dragPath;
+    private string[] _dragFiles = [];
+    private string[] _dragFolders = [];
     private bool _dragSupported;
 
     private bool _windowActive = true;
@@ -1530,6 +1532,7 @@ public sealed partial class MainPage : Page
         }
         _dragging = true;
         _dragPath = null;
+        _dragFiles = _dragFolders = [];
         _dragSupported = false;
         _chrome.SetHold(ChromeHolds.Interaction, true);
         ApplyChrome();
@@ -1543,9 +1546,10 @@ public sealed partial class MainPage : Page
         try
         {
             IReadOnlyList<IStorageItem> items = await e.DataView.GetStorageItemsAsync();
-            IStorageItem? item = items.FirstOrDefault();
-            _dragPath = item?.Path;
-            _dragSupported = item is IStorageFile && MediaFormats.IsSupported(_dragPath) && _session is not null;
+            _dragPath = items.FirstOrDefault()?.Path;
+            _dragFiles = items.OfType<IStorageFile>().Select(f => f.Path).Where(MediaFormats.IsSupported).ToArray();
+            _dragFolders = items.OfType<IStorageFolder>().Select(f => f.Path).Where(p => p.Length > 0).ToArray();
+            _dragSupported = (_dragFiles.Length > 0 || _dragFolders.Length > 0) && _session is not null;
             e.AcceptedOperation = _dragSupported ? DataPackageOperation.Copy : DataPackageOperation.None;
         }
         catch (Exception)
@@ -1574,11 +1578,19 @@ public sealed partial class MainPage : Page
 
     private void OnDrop(object sender, DragEventArgs e)
     {
-        string? path = _dragSupported ? _dragPath : null;
+        (bool supported, string[] files, string[] folders) = (_dragSupported, _dragFiles, _dragFolders);
         EndDrag();
-        if (path is not null)
+        if (!supported)
         {
-            Open(path);
+            return;
+        }
+        if (files is [string file] && folders.Length == 0)
+        {
+            Open(file);
+        }
+        else
+        {
+            OpenDropped(files, folders);
         }
     }
 
@@ -1873,7 +1885,7 @@ public sealed partial class MainPage : Page
             {
                 SetHome(AppStrings.Get("Shell_DropToPlay"), AppStrings.Get("Shell_DropFormats"), null, engine);
             }
-            else if (_session is null && MediaFormats.IsSupported(_dragPath))
+            else if (_session is null && (_dragFiles.Length > 0 || _dragFolders.Length > 0))
             {
                 SetHome(AppStrings.Get("Shell_EngineNotReadyTitle"), Path.GetFileName(_dragPath) ?? string.Empty, Tone.Warning, engine);
             }
