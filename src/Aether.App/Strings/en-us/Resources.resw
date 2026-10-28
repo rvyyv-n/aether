@@ -939,6 +939,12 @@
   <data name="Settings_Shortcuts_PreviousChapter" xml:space="preserve">
     <value>Previous chapter</value>
   </data>
+  <data name="Settings_Shortcuts_NextFile" xml:space="preserve">
+    <value>Next video</value>
+  </data>
+  <data name="Settings_Shortcuts_PreviousFile" xml:space="preserve">
+    <value>Previous video</value>
+  </data>
   <data name="Settings_Shortcuts_Diagnostics" xml:space="preserve">
     <value>Diagnostics</value>
   </data>

@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- N plays the next video and Shift+N the previous one, and the keyboard's media keys (play/pause, next and previous track) work while Aether is in front. All of them can be changed in Settings › Shortcuts.
 - Dropping several videos, or a folder, onto the player now plays them in turn: the videos first in name order, then each folder's videos. Previous and next, on the taskbar and with Play next in folder, step through what you dropped. Dropping one video works as before.
 - Settings › General has an accent colour: None keeps Aether black and white as before, or pick Aether Cyan, Ice Blue, Mint, Amethyst, Sunset, Slate or type any hex colour. It colours the switches, the selected chips and side list item, the primary buttons and the play button, in light and dark, and changes at once.
 - Over a video, the minimise, maximise and close buttons and the gear now fade out with the player controls and come back when you move the mouse, instead of staying on top of the picture. They work as before, including Snap Layouts when you hover over maximise.

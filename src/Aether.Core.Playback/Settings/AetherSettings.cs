@@ -161,6 +161,8 @@ public sealed record AetherSettings
     public string ShortcutExportClip { get; init; } = "";
     public string ShortcutNextChapter { get; init; } = "";
     public string ShortcutPreviousChapter { get; init; } = "";
+    public string ShortcutNextFile { get; init; } = "";
+    public string ShortcutPreviousFile { get; init; } = "";
     public string ShortcutSidebar { get; init; } = "";
     public string ShortcutLanStream { get; init; } = "";
 }

@@ -129,6 +129,8 @@ public sealed class ShortcutMap
         ShortcutAction.ExportClip => settings.ShortcutExportClip,
         ShortcutAction.NextChapter => settings.ShortcutNextChapter,
         ShortcutAction.PreviousChapter => settings.ShortcutPreviousChapter,
+        ShortcutAction.NextFile => settings.ShortcutNextFile,
+        ShortcutAction.PreviousFile => settings.ShortcutPreviousFile,
         ShortcutAction.Sidebar => settings.ShortcutSidebar,
         ShortcutAction.ToggleLanStream => settings.ShortcutLanStream,
         _ => "",

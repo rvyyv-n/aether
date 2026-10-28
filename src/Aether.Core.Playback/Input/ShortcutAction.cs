@@ -29,6 +29,8 @@ public enum ShortcutAction
     ExportClip,
     NextChapter,
     PreviousChapter,
+    NextFile,
+    PreviousFile,
     Sidebar,
     ToggleLanStream,
 }

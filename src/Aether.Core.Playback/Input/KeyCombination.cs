@@ -21,6 +21,9 @@ public readonly record struct KeyCombination(int Key, KeyModifiers Modifiers = K
     public const int F11 = 0x7A;
     public const int OemComma = 0xBC;
     public const int OemPeriod = 0xBE;
+    public const int MediaNext = 0xB0;
+    public const int MediaPrevious = 0xB1;
+    public const int MediaPlayPause = 0xB3;
 
     public static KeyCombination Letter(char letter, KeyModifiers modifiers = KeyModifiers.None) =>
         new(char.ToUpperInvariant(letter), modifiers);
@@ -162,6 +165,9 @@ public readonly record struct KeyCombination(int Key, KeyModifiers Modifiers = K
             (0xDC, "Backslash", "\\"),
             (0xDD, "CloseBracket", "]"),
             (0xDE, "Quote", "'"),
+            (MediaNext, "MediaNext", "Next track"),
+            (MediaPrevious, "MediaPrevious", "Previous track"),
+            (MediaPlayPause, "MediaPlayPause", "Play/Pause"),
         ]);
         return [.. names];
     }
