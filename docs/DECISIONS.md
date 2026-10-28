@@ -235,3 +235,12 @@
 - **Consequences:** No LGPL libmpv swap is needed (roadmap 11.15 cancelled). The full GPL text lives in `LICENSE`, and `THIRD_PARTY.md` points to it (11.16 done). The written source offer for libmpv and FFmpeg stays. Official releases, the signing certificate and the update channel remain the project's own.
 - **Fallback if Aether ever goes proprietary or closed:** swap in an LGPL libmpv and accept the losses below. Scouted 2026-10-19 (unverified by us): the prebuilt `mpv-dev-lgpl-x86_64` builds from zhongfly/mpv-winbuild (daily, LGPL stated, checksums but not code-signed, no ANGLE needed); or our own GitHub Actions build of `shinchiro/mpv-winbuild-cmake` with `-Dgpl=false` and an FFmpeg without `--enable-gpl` (first build about 3 hours, later about 20 to 35 minutes). What an LGPL build loses: live denoise (`hqdn3d`, GPL-only; replace with `atadenoise`, `nlmeans` or our own GPU shader), the rubberband pitch-correcting stretch, DVD menus, audio CD, AviSynth, teletext, digital TV input, AVS2, and the x264/x265 encoders (playback does not use them; clip export runs the separate `ffmpeg.exe`).
 - **Status:** Accepted. A lawyer has not reviewed the section 7 wording.
+
+## ADR-0026: One Play Queue, Read From the Folder on Every Jump (13.1, 2026-10-29)
+- **Context:** Previous and next (taskbar buttons, Play next in folder) each looked up the open file's neighbours on disk. Pass 13 adds repeat, shuffle and an editable queue, which need one place that knows the play order.
+- **Decision:**
+  - `PlaylistStore` in `Aether.Core.Playback` holds the queue, the playing entry and the play order behind one lock. Entries are objects, so a file queued twice is two entries. Shuffle is a Fisher-Yates order that plays each item once; a new round with Repeat All reshuffles and never starts with the item that just played.
+  - The app still re-reads the folder before every jump, since files come and go, and loads the listing into the store. A listing equal to the queue (ignoring case) keeps the play order, so shuffle survives the re-read. Opening a file the queue did not move to starts a new queue.
+  - `FolderPlaylist` only lists and sorts a folder's videos now; its neighbour lookups are gone.
+- **Consequences:** Repeat and shuffle work in the store but have no controls until the playlist drawer (13.3). A queue built from dropped files will need to skip the folder re-read.
+- **Status:** Accepted.

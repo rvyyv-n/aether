@@ -4,12 +4,10 @@ namespace Aether.Core.Tests;
 
 public class TaskbarControlsTests
 {
-    private static readonly FolderNeighbours Both = new("prev.mp4", "next.mp4");
-
     [Fact]
     public void No_File_Disables_Every_Button()
     {
-        TaskbarControls controls = TaskbarControls.From(PlaybackStatus.Idle, Both);
+        TaskbarControls controls = TaskbarControls.From(PlaybackStatus.Idle, hasPrevious: true, hasNext: true);
 
         Assert.False(controls.PreviousEnabled);
         Assert.False(controls.PlayPauseEnabled);
@@ -23,7 +21,7 @@ public class TaskbarControlsTests
     [InlineData(PlaybackStatus.Ended, PlayButtonAction.Replay)]
     public void Middle_Button_Follows_Playback(PlaybackStatus status, PlayButtonAction expected)
     {
-        TaskbarControls controls = TaskbarControls.From(status, default);
+        TaskbarControls controls = TaskbarControls.From(status, hasPrevious: false, hasNext: false);
 
         Assert.Equal(expected, controls.PlayPause);
         Assert.True(controls.PlayPauseEnabled);
@@ -32,7 +30,7 @@ public class TaskbarControlsTests
     [Fact]
     public void Play_Pause_Waits_For_The_File_To_Load()
     {
-        TaskbarControls controls = TaskbarControls.From(PlaybackStatus.Loading, Both);
+        TaskbarControls controls = TaskbarControls.From(PlaybackStatus.Loading, hasPrevious: true, hasNext: true);
 
         Assert.False(controls.PlayPauseEnabled);
         Assert.True(controls.PreviousEnabled);
@@ -40,17 +38,17 @@ public class TaskbarControlsTests
     }
 
     [Fact]
-    public void Previous_And_Next_Follow_The_Folder_Neighbours()
+    public void Previous_And_Next_Follow_The_Queue()
     {
         Assert.Equal(
             new TaskbarControls(false, PlayButtonAction.Pause, true, true),
-            TaskbarControls.From(PlaybackStatus.Playing, new FolderNeighbours(null, "next.mp4")));
+            TaskbarControls.From(PlaybackStatus.Playing, hasPrevious: false, hasNext: true));
         Assert.Equal(
             new TaskbarControls(true, PlayButtonAction.Pause, true, false),
-            TaskbarControls.From(PlaybackStatus.Playing, new FolderNeighbours("prev.mp4", null)));
+            TaskbarControls.From(PlaybackStatus.Playing, hasPrevious: true, hasNext: false));
         Assert.Equal(
             new TaskbarControls(false, PlayButtonAction.Pause, true, false),
-            TaskbarControls.From(PlaybackStatus.Playing, default));
+            TaskbarControls.From(PlaybackStatus.Playing, hasPrevious: false, hasNext: false));
     }
 
     [Fact]

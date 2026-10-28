@@ -504,7 +504,7 @@ public sealed partial class MainPage : Page
         _currentWebLink = link?.WebLink;
         _streamTitle = link?.Title;
         SyncLanStreamSource(path);
-        RefreshNeighbours(path, isLink: link is not null);
+        RefreshQueue(path, isLink: link is not null);
         ResetChapters(link?.Chapters);
         ResetLinkSubtitles(link?.Subtitles, carry);
         ResetQuality(link);

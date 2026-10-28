@@ -8,12 +8,13 @@ namespace Aether_App;
 /// </summary>
 public sealed partial class MainPage
 {
-    // The files either side of the open one; empty for a link or while the folder is still being read.
-    private FolderNeighbours _neighbours;
+    // The open file's folder, in play order; empty for a link.
+    private readonly PlaylistStore _playlist = new();
 
     private void UpdateTaskbar(string? fileName)
     {
-        TaskbarControls controls = TaskbarControls.From(_session?.ViewModel.Status ?? PlaybackStatus.Idle, _neighbours);
+        TaskbarControls controls = TaskbarControls.From(
+            _session?.ViewModel.Status ?? PlaybackStatus.Idle, _playlist.CanGoPrevious, _playlist.CanGoNext);
         _host?.SetTaskbar(fileName, controls);
     }
 
@@ -33,51 +34,67 @@ public sealed partial class MainPage
         }
     }
 
-    /// <summary>Reads the folder of a newly opened local file to learn which of the buttons have somewhere to go.</summary>
-    private async void RefreshNeighbours(string path, bool isLink)
+    /// <summary>Queues up the folder of a newly opened local file, so the buttons know where they can go.</summary>
+    private async void RefreshQueue(string path, bool isLink)
     {
-        _neighbours = default;
+        // A file the queue moved to keeps the queue's order; any other file starts a new one.
+        if (!string.Equals(_playlist.Current, path, StringComparison.OrdinalIgnoreCase))
+        {
+            _playlist.Clear();
+        }
         if (isLink || !Path.IsPathFullyQualified(path))
         {
             return;
         }
-        FolderNeighbours found = await Task.Run(() => NeighboursOnDisk(path));
+        string[]? videos = await Task.Run(() => VideosBeside(path));
         // The user may have opened something else, or closed the page, while the folder was read.
-        if (_isLoaded && _currentPath == path)
+        if (videos is not null && _isLoaded && _currentPath == path)
         {
-            _neighbours = found;
+            _playlist.Load(videos, path);
             Render();
         }
     }
 
     private async void OpenNeighbour(bool forward)
     {
-        if (_currentPath is not { } current || _currentWebLink is not null || !Path.IsPathFullyQualified(current))
-        {
-            return;
-        }
-        // Read again rather than trusting the earlier listing: files may have come and gone since.
-        FolderNeighbours found = await Task.Run(() => NeighboursOnDisk(current));
-        string? target = forward ? found.Next : found.Previous;
-        if (target is not null && _isLoaded && _session is not null && _currentPath == current)
+        if (await StepQueue(queue => forward ? queue.Next(ended: false) : queue.Previous()) is { } target)
         {
             Open(target);
         }
     }
 
-    private static FolderNeighbours NeighboursOnDisk(string path)
+    /// <summary>
+    /// Reads the open file's folder again rather than trusting the queue, since files may have come and gone, then
+    /// moves the queue with <paramref name="step"/>. Null for a link, an unreadable folder, or nowhere to go.
+    /// </summary>
+    private async Task<string?> StepQueue(Func<PlaylistStore, string?> step)
+    {
+        if (_currentPath is not { } current || _currentWebLink is not null || !Path.IsPathFullyQualified(current))
+        {
+            return null;
+        }
+        string[]? videos = await Task.Run(() => VideosBeside(current));
+        if (videos is null || !_isLoaded || _session is null || _currentPath != current)
+        {
+            return null;
+        }
+        _playlist.Load(videos, current);
+        return step(_playlist);
+    }
+
+    private static string[]? VideosBeside(string path)
     {
         if (Path.GetDirectoryName(path) is not { Length: > 0 } folder)
         {
-            return default;
+            return null;
         }
         try
         {
-            return FolderPlaylist.NeighboursOf(path, Directory.EnumerateFiles(folder));
+            return FolderPlaylist.Videos(Directory.EnumerateFiles(folder));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return default; // the folder went away or is unreadable: no buttons
+            return null; // the folder went away or is unreadable: nowhere to go
         }
     }
 }

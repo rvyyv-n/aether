@@ -63,29 +63,10 @@ public sealed partial class MainPage
         }
     }
 
-    /// <summary>Plays the next video in the folder when a local file ends and Play next in folder is on.</summary>
+    /// <summary>Plays the next video in the queue when a local file ends and Play next in folder is on.</summary>
     private async void OnFileEnded(object? sender, EventArgs e)
     {
-        if (!App.Settings.Current.PlayNextInFolder
-            || _currentPath is not { } finished
-            || !Path.IsPathFullyQualified(finished)
-            || Path.GetDirectoryName(finished) is not { Length: > 0 } folder)
-        {
-            return;
-        }
-        string? next = await Task.Run(() =>
-        {
-            try
-            {
-                return FolderPlaylist.NextAfter(finished, Directory.EnumerateFiles(folder));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                return null; // the folder went away or is unreadable: stay on the last frame
-            }
-        });
-        // The user may have opened something else, or closed the page, while the folder was read.
-        if (next is not null && _isLoaded && _session is not null && _currentPath == finished)
+        if (App.Settings.Current.PlayNextInFolder && await StepQueue(queue => queue.Next(ended: true)) is { } next)
         {
             Open(next);
         }
