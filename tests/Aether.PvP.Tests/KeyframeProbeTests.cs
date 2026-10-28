@@ -167,7 +167,8 @@ public sealed class KeyframeProbeTests
         await WaitUntil(() => probe.Started.Count == 1);
         probe.Delay = TimeSpan.Zero;
         tracker.Track("v.mp4", 20);
-        await WaitUntil(() => results.Contains(19));
+        // The stale probe records its cancellation on its own continuation, which can land after the new result.
+        await WaitUntil(() => { lock (results) lock (probe.Cancelled) return results.Contains(19) && probe.Cancelled.Count > 0; });
 
         Assert.Equal([10.0], probe.Cancelled);
         Assert.DoesNotContain(9.0, results.OfType<double>());
