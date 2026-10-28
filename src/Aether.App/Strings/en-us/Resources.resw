@@ -313,6 +313,36 @@
   <data name="Transport_Seek" xml:space="preserve">
     <value>Seek</value>
   </data>
+  <data name="Settings_Accent_Title" xml:space="preserve">
+    <value>Accent colour</value>
+  </data>
+  <data name="Settings_Accent_Description" xml:space="preserve">
+    <value>Colours the switches, the selected chips and the play button. None keeps Aether black and white</value>
+  </data>
+  <data name="Settings_Accent_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Settings_Accent_Cyan" xml:space="preserve">
+    <value>Aether Cyan</value>
+  </data>
+  <data name="Settings_Accent_Ice" xml:space="preserve">
+    <value>Ice Blue</value>
+  </data>
+  <data name="Settings_Accent_Mint" xml:space="preserve">
+    <value>Mint</value>
+  </data>
+  <data name="Settings_Accent_Amethyst" xml:space="preserve">
+    <value>Amethyst</value>
+  </data>
+  <data name="Settings_Accent_Sunset" xml:space="preserve">
+    <value>Sunset</value>
+  </data>
+  <data name="Settings_Accent_Slate" xml:space="preserve">
+    <value>Slate</value>
+  </data>
+  <data name="Settings_Accent_Custom" xml:space="preserve">
+    <value>Custom colour, as hex</value>
+  </data>
   <data name="Caption_Minimize" xml:space="preserve">
     <value>Minimize</value>
   </data>

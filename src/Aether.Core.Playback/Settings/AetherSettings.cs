@@ -13,6 +13,8 @@ public sealed record AetherSettings
     public bool TourSeen { get; init; }
     /// <summary><c>auto</c> (follows Windows), <c>light</c> or <c>dark</c>.</summary>
     public string Theme { get; init; } = "auto";
+    /// <summary><c>none</c>, an <see cref="AccentPalette"/> preset id or <c>#RRGGBB</c> (12.9).</summary>
+    public string Accent { get; init; } = AccentPalette.None;
 
     // Playback
     public bool PreciseSeeking { get; init; }

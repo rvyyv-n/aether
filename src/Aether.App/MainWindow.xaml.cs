@@ -524,7 +524,7 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     private void OnSettingsChanged(object? sender, SettingChangedEventArgs e)
     {
-        if (e.Key == SettingKeys.Theme)
+        if (e.Key is SettingKeys.Theme or SettingKeys.Accent)
         {
             DispatcherQueue.TryEnqueue(ApplyTheme);
         }
@@ -539,6 +539,7 @@ public sealed partial class MainWindow : Window, IShellWindow
             "dark" => ElementTheme.Dark,
             _ => ElementTheme.Default,
         };
+        AccentTheme.Apply(App.Settings.Current.Accent);
         ApplyTaskbarIcon();
         ApplyBorder();
     }

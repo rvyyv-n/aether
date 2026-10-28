@@ -251,3 +251,9 @@
 - **Consequences:** Picture in picture shows only Close. Full screen hides the title bar and with it the buttons. The close-hover red is a design token.
 - **Status:** Accepted. Checked on screen: fade, Snap Layouts, maximise, restore, minimise, close, and waking after a restore.
 
+## ADR-0028: An Optional Accent Colour, Off by Default (12.9, 2026-10-29)
+- **Context:** The design reserved colour for status dots; roadmap 12.9 asks for accent presets and a custom hex colour.
+- **Decision:** The default stays `none`, which keeps the black-and-white look. A chosen accent recolours the existing theme brushes in place (`AccentTheme`, from `AccentPalette.Overrides`): the WinUI accent fills and the switch fills solid, the emphasis fills a translucent tint, and the switch knob and text on the accent dark or white by contrast. Light and dark both take it; `none` restores the colours the brushes were built with. The setting is `general.accent`: `none`, a preset id, or `#RRGGBB`.
+- **Consequences:** Nothing restarts or reloads; every surface using those brushes changes at once. A new accent-coloured surface must use one of the overridden keys to follow the choice.
+- **Status:** Accepted.
+

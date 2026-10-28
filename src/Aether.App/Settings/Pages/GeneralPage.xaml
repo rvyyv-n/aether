@@ -4,10 +4,32 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:settings="using:Aether_App.Settings">
+    <Page.Resources>
+        <Style x:Key="AccentSwatchStyle" TargetType="Ellipse">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Stroke" Value="{ThemeResource AetherStrokeControlBrush}" />
+            <Setter Property="StrokeThickness" Value="1" />
+        </Style>
+    </Page.Resources>
     <StackPanel Spacing="16">
         <settings:SettingsGroup>
             <settings:SettingsRow x:Name="ThemeRow" Glyph="&#xE790;">
                 <ListBox x:Name="ThemeSegmented" Style="{StaticResource AetherSegmentedStyle}" />
+            </settings:SettingsRow>
+            <settings:SettingsRow x:Name="AccentRow" Glyph="&#xE771;">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <ListBox x:Name="AccentSwatches" Style="{StaticResource AetherSegmentedStyle}">
+                        <ListBoxItem Tag="none"><Ellipse Style="{StaticResource AccentSwatchStyle}" /></ListBoxItem>
+                        <ListBoxItem Tag="cyan"><Ellipse Style="{StaticResource AccentSwatchStyle}" /></ListBoxItem>
+                        <ListBoxItem Tag="ice"><Ellipse Style="{StaticResource AccentSwatchStyle}" /></ListBoxItem>
+                        <ListBoxItem Tag="mint"><Ellipse Style="{StaticResource AccentSwatchStyle}" /></ListBoxItem>
+                        <ListBoxItem Tag="amethyst"><Ellipse Style="{StaticResource AccentSwatchStyle}" /></ListBoxItem>
+                        <ListBoxItem Tag="sunset"><Ellipse Style="{StaticResource AccentSwatchStyle}" /></ListBoxItem>
+                        <ListBoxItem Tag="slate"><Ellipse Style="{StaticResource AccentSwatchStyle}" /></ListBoxItem>
+                    </ListBox>
+                    <TextBox x:Name="AccentHex" Width="96" VerticalAlignment="Center" PlaceholderText="#RRGGBB" />
+                </StackPanel>
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="BatterySaverRow" Glyph="&#xE850;">
                 <ToggleSwitch x:Name="BatterySaverToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
