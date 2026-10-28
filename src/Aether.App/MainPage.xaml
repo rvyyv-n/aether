@@ -27,6 +27,7 @@
         -->
         <Flyout
             x:Name="TracksFlyout"
+            AreOpenCloseAnimationsEnabled="False"
             Closed="OnTracksFlyoutClosed"
             Opened="OnTracksFlyoutOpened"
             Placement="Top">
@@ -49,6 +50,7 @@
         <!--  Video flyout (9.3): right-aligned to the pill, on the same surface as the tracks flyout (MainPage.Video.cs).  -->
         <Flyout
             x:Name="VideoFlyout"
+            AreOpenCloseAnimationsEnabled="False"
             Closed="OnVideoFlyoutClosed"
             Opened="OnVideoFlyoutOpened"
             Placement="TopEdgeAlignedRight">
@@ -92,6 +94,7 @@
                 -->
                 <MenuFlyout
                     x:Name="ContextMenu"
+                    AreOpenCloseAnimationsEnabled="False"
                     Closed="OnContextMenuClosed"
                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                     ShouldConstrainToRootBounds="True"
@@ -878,6 +881,7 @@
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="OpenMenu"
+                                    AreOpenCloseAnimationsEnabled="False"
                                     Closed="OnOpenMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                                     ShouldConstrainToRootBounds="True"
@@ -911,6 +915,7 @@
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="SpeedMenu"
+                                    AreOpenCloseAnimationsEnabled="False"
                                     Closed="OnSpeedMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                                     ShouldConstrainToRootBounds="True"
@@ -929,6 +934,7 @@
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="QualityMenu"
+                                    AreOpenCloseAnimationsEnabled="False"
                                     Closed="OnQualityMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                                     ShouldConstrainToRootBounds="True"
@@ -999,6 +1005,7 @@
                                 <Flyout
                                     x:Name="VolumeFlyout"
                                     AllowFocusOnInteraction="False"
+                                    AreOpenCloseAnimationsEnabled="False"
                                     Closed="OnVolumeFlyoutClosed"
                                     Opened="OnVolumeFlyoutOpened"
                                     Placement="Top">
@@ -1061,6 +1068,7 @@
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="MoreMenu"
+                                    AreOpenCloseAnimationsEnabled="False"
                                     Closed="OnMoreMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
                                     ShouldConstrainToRootBounds="True"

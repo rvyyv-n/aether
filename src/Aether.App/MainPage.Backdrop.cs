@@ -1,6 +1,7 @@
 using Aether.Core.Interop.DirectX;
 using Aether.Core.Interop.Rendering;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Hosting;
 using Windows.Foundation;
 
 namespace Aether_App;
@@ -25,6 +26,7 @@ public sealed partial class MainPage
         if (_popupSurface is Microsoft.UI.Xaml.Controls.Control presenter)
         {
             presenter.RequestedTheme = ThemeTokens.AppTheme; // a flyout's popup does not reliably take the page's in-app theme
+            FadeInPopup(presenter);
         }
         PostBackdropRegion();
     }
@@ -44,9 +46,24 @@ public sealed partial class MainPage
             control.RequestedTheme = ThemeTokens.AppTheme;
             control.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(
                 ThemeTokens.AppTheme, _backdropAllowed ? "AetherSurfaceMenuBrush" : "AetherSurfaceMenuFallbackBrush");
+            FadeInPopup(control);
         }
         _popupSurface = presenter;
         PostBackdropRegion();
+    }
+
+    /// <summary>
+    /// Flyouts have their own transition off, so they fade in here, on the same tick, length and curve as the blur behind
+    /// them, and both leave at once; two clocks put the blur a moment ahead of the flyout both ways (12.7).
+    /// </summary>
+    private void FadeInPopup(UIElement presenter)
+    {
+        if (_fader is null)
+        {
+            return;
+        }
+        ElementCompositionPreview.GetElementVisual(presenter).Opacity = 0;
+        _fader.Reveal(presenter, true);
     }
 
     private static FrameworkElement? FindPresenter(DependencyObject? content)
@@ -69,31 +86,17 @@ public sealed partial class MainPage
             : null;
         PostSurfaceRegion(BackdropSlot.Clip, ClipDrawer.Visibility == Visibility.Visible ? ClipDrawer.Surface : null, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0);
         PostSurfaceRegion(BackdropSlot.Card, card, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0);
-        // The flyout fades itself in and out, so its blur does too; an instant blur showed as a frosted patch before the card.
-        PostSurfaceRegion(BackdropSlot.Popup, _popupSurface, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0,
-            fadeOutMilliseconds: _fader?.RevealDurationMilliseconds(false) ?? 0);
+        PostSurfaceRegion(BackdropSlot.Popup, _popupSurface, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0);
     }
 
-    /// <param name="fadeOutMilliseconds">
-    /// How long the blur takes to leave. Zero turns it off at once; above zero it stays active at its last place while it fades.
-    /// </param>
-    private void PostSurfaceRegion(BackdropSlot slot, FrameworkElement? surface, double fadeMilliseconds, double fadeOutMilliseconds = 0)
+    private void PostSurfaceRegion(BackdropSlot slot, FrameworkElement? surface, double fadeMilliseconds)
     {
         int index = (int)slot;
         bool visible = _backdropAllowed && _isLoaded && VideoSurface.IsLoaded
             && surface is { IsLoaded: true, ActualWidth: > 0, ActualHeight: > 0 };
-        if (visible != _surfaceShown[index])
-        {
-            _surfaceShown[index] = visible;
-            bool fadingOut = !visible && fadeOutMilliseconds > 0 && _backdropAllowed;
-            if (!fadingOut)
-            {
-                VideoSurface.SetBackdropActive(slot, visible);
-            }
-            VideoSurface.FadeBackdrop(slot, visible, visible ? fadeMilliseconds : fadingOut ? fadeOutMilliseconds : 0);
-        }
         if (!visible || surface is null)
         {
+            ShowSurface(slot, false, 0);
             return;
         }
 
@@ -123,6 +126,19 @@ public sealed partial class MainPage
             _postedSurfaceRegions[index] = region;
             VideoSurface.PostBackdrop(slot, region);
         }
+        // After the post, so the first frame of a new blur is drawn at the new card, not where the last one was.
+        ShowSurface(slot, true, fadeMilliseconds);
+    }
+
+    private void ShowSurface(BackdropSlot slot, bool visible, double fadeMilliseconds)
+    {
+        if (visible == _surfaceShown[(int)slot])
+        {
+            return;
+        }
+        _surfaceShown[(int)slot] = visible;
+        VideoSurface.SetBackdropActive(slot, visible);
+        VideoSurface.FadeBackdrop(slot, visible, fadeMilliseconds);
     }
 
     /// <summary>Re-measures the cards against the video surface and posts each if it moved, resized or the scale changed.</summary>

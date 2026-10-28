@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- The blur behind the captions, Now Playing, Video and volume pop-ups, and the player menus, now fades in and out together with the pop-up instead of appearing a split second before it.
+- The blur behind the captions, Now Playing, Video and volume pop-ups, and the player menus, now fades in with the pop-up and leaves with it, instead of appearing and leaving a split second before it. Pop-ups and menus now fade in rather than slide, and close at once.
 - In light theme the toasts (such as "Resumed at..."), the Skip chapter button, the export chip and the clip drawer are now the same bright frosted card as the bar and menus, with dark text and icons; dark theme is unchanged.
 - Settings now looks layered, like Wintoys and Windows 11's own Settings: the section list sits on the window's Mica backdrop and each page sits on a lighter rounded pane with a thin edge, with its cards a step lighter again, in both light and dark themes. On a narrow window the pane runs edge to edge under the section picker. The player, its menus and dialogs are unchanged.
 - Settings › About is tidier: Updates and Help come first, then a card at the bottom shows Aether's version and credit, with Release notes, Source code, Licences and Report an issue as a row of buttons under it. Licences now opens the third-party notices instead of the project's front page.
