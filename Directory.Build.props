@@ -9,9 +9,9 @@
     <Deterministic>true</Deterministic>
     <InvariantGlobalization>false</InvariantGlobalization>
     <Version>1.0.0</Version>
-    <Company>rvyyv-n</Company>
-    <Authors>rvyyv-n</Authors>
+    <Company>Aether Contributors</Company>
+    <Authors>Aether Contributors</Authors>
     <Product>Aether</Product>
-    <Copyright>Copyright © 2026 rvyyv-n</Copyright>
+    <Copyright>Copyright © 2026 Aether Contributors</Copyright>
   </PropertyGroup>
 </Project>

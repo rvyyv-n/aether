@@ -13,14 +13,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/rvyyv-n/aether/releases/latest"><img src="https://img.shields.io/github/v/release/rvyyv-n/aether?include_prereleases&label=download&style=flat-square&color=6b5bff" alt="Latest release" /></a>
-  <a href="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml"><img src="https://img.shields.io/github/actions/workflow/status/rvyyv-n/aether/build-aot.yml?branch=master&style=flat-square&label=build" alt="Build status" /></a>
+  <a href="https://github.com/aether-player/aether/releases/latest"><img src="https://img.shields.io/github/v/release/aether-player/aether?include_prereleases&label=download&style=flat-square&color=6b5bff" alt="Latest release" /></a>
+  <a href="https://github.com/aether-player/aether/actions/workflows/build-aot.yml"><img src="https://img.shields.io/github/actions/workflow/status/aether-player/aether/build-aot.yml?branch=master&style=flat-square&label=build" alt="Build status" /></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows11&logoColor=white" alt="Windows 10 and 11" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-lightgrey?style=flat-square" alt="GPL-3.0 licence" /></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/rvyyv-n/aether/releases/latest"><b>Download</b></a> &nbsp;·&nbsp;
+  <a href="https://github.com/aether-player/aether/releases/latest"><b>Download</b></a> &nbsp;·&nbsp;
   <a href="#features">Features</a> &nbsp;·&nbsp;
   <a href="#keyboard-shortcuts">Shortcuts</a> &nbsp;·&nbsp;
   <a href="docs/CHANGELOG.md">Changelog</a> &nbsp;·&nbsp;
@@ -39,64 +39,33 @@
 
 Most players are either heavy and slow to respond, or fast but dated. Aether is a small, native Windows 11 player with no web layer in between. Seeking, scrubbing and frame stepping feel immediate, even on 144–360 Hz game recordings.
 
-It's made for people who review footage, cut clips, and want a player that stays out of the way.
+### Play anything, instantly
 
-<table>
-  <tr>
-    <td width="33%" valign="top">
-      <h3>🎯 Look closely</h3>
-      Step one frame at a time in either direction, scrub smoothly, and jump between chapters.
-    </td>
-    <td width="33%" valign="top">
-      <h3>✂️ Cut fast</h3>
-      Mark In and Out, then export. Fast cuts take a fraction of a second; Precise cuts land on the exact frame.
-    </td>
-    <td width="33%" valign="top">
-      <h3>📱 Watch anywhere</h3>
-      Press <kbd>S</kbd>, switch streaming on and scan the code to carry on watching on your phone.
-    </td>
-  </tr>
-</table>
+- **Plays almost every container and codec** through an embedded [libmpv](https://mpv.io) engine: MKV, MP4, WebM, AVI, TS, ProRes, AV1, HEVC, H.264, VP9 and more.
+- **Hardware-accelerated decode** via Direct3D 11 (`d3d11va`) with graceful fallback to software decode.
+- **Zero-drop presentation loop**: frames flow from the decoder straight to a DirectX 11 swap chain; no managed copies in the presentation path.
+- **High-refresh sync**: reads the monitor's native refresh rate (60, 120, 144, 240, 360 Hz) and paces frames smoothly with no micro-judder.
+- **Web links**: paste a YouTube or other web video link (<kbd>Ctrl</kbd>+<kbd>V</kbd> or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd>) to stream directly at full resolution with chapter marks, subtitles, quality selection and resume. Ships with [yt-dlp](https://github.com/yt-dlp/yt-dlp) and updates it automatically.
 
-<br />
+### Lossless clips & frame-accurate cuts
 
-## Features
+- Mark In (<kbd>I</kbd>) and Out (<kbd>O</kbd>) directly on the seek bar.
+- **Fast mode**: saves a lossless clip in under 300 ms with stream copy (`-c copy`) via FFmpeg, with keyframe start indicators showing exact boundary landings.
+- **Precise mode**: frame-accurate re-encode using your graphics card's hardware encoder (NVIDIA NVENC, Intel Quick Sync, AMD AMF, or CPU x264), with optional target file size limits (10 MB, 25 MB, 50 MB, or custom) and progress tracking.
+- Drag finished clips directly from the drawer into Discord, File Explorer, or a web browser.
+- Instant frame copy (<kbd>Ctrl</kbd>+<kbd>C</kbd>) and snapshot save (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>) at native source resolution.
 
-### Playback that keeps up
+### Watch on your phone
 
-Hardware decoding straight to the screen, paced to your monitor's real refresh rate, so 120 and 144 fps clips play every frame. Opening a video queues the rest of its folder, and Aether remembers where you left off in every file and link.
+- Press <kbd>S</kbd> to open the phone streaming card.
+- Aether starts a lightweight local streaming server and displays a QR code.
+- Scan it with your phone's camera to watch the video on your phone over Wi-Fi with instant seeking and no transcoding delay.
+- The server stops as soon as you close the card, file, or app.
 
-<!-- SCREENSHOT: slim bar over a playing video, or the Diagnostics panel (Ctrl+I) showing frame rate and refresh.
-<img src="docs/screenshots/playback.png" width="820" alt="Aether's slim controls over a playing video" />
--->
+### Picture in picture
 
-### Clips without the wait
-
-Press <kbd>I</kbd> and <kbd>O</kbd>, then <kbd>Ctrl</kbd>+<kbd>E</kbd>. **Fast** copies the stream as-is with no quality loss. **Precise** re-encodes on your graphics card (NVIDIA, Intel or AMD, with a software fallback) so the clip starts and ends on the exact frame, and can fit a size limit like 10 or 25 MB for Discord.
-
-<!-- SCREENSHOT: clip drawer open, showing Fast/Precise, size limit and a clip row exporting.
-<img src="docs/screenshots/clips.png" width="820" alt="The clip drawer with Fast and Precise export" />
--->
-
-### Your phone as a second screen
-
-Press <kbd>S</kbd> (or pick Stream in the right-click menu), switch streaming on and scan the QR code. The open file plays in your phone's browser over your home network. Nothing leaves your network, and it stops when you switch it off, close the file or quit.
-
-<!-- SCREENSHOT: the streaming card with QR code, ideally beside a phone photo playing the same video.
-<img src="docs/screenshots/stream.png" width="820" alt="The phone streaming card with its QR code" />
--->
-
-### Links too
-
-Paste a YouTube link (or one from 1,000+ other sites) with <kbd>Ctrl</kbd>+<kbd>V</kbd> and it plays, with a quality picker, subtitles, chapter marks and an optional sponsor skip. The link helper (yt-dlp) comes built in and keeps itself up to date.
-
-### Make it look right
-
-Grades, sharpen, grain and denoise in the Video panel, with your own `.cube` looks if you have them. Zoom, rotate and adjust colour per file. Pop the video into a small always-on-top window with <kbd>P</kbd>.
-
-<!-- SCREENSHOT: Video panel open with a Grade applied.
-<img src="docs/screenshots/look.png" width="820" alt="The Video panel with a colour grade applied" />
--->
+- Press <kbd>P</kbd> or right-click to float the video in a compact, always-on-top window.
+- The playback engine and swap chain transition smoothly with no restart or frame stutter.
 
 ### Feels like Windows
 
@@ -110,7 +79,7 @@ Mica backdrop, borderless window, light and dark themes, and controls that fade 
 
 ## Install
 
-**[Download `AetherPlayer-win-Setup.exe`](https://github.com/rvyyv-n/aether/releases/latest)** and run it.
+**[Download `AetherPlayer-win-Setup.exe`](https://github.com/aether-player/aether/releases/latest)** and run it.
 
 - Installs for your account only. No admin rights, certificates or Developer Mode.
 - Adds Start menu and desktop shortcuts, **Play with Aether** in the right-click menu, and a clean uninstall in Settings › Installed apps.
@@ -196,7 +165,7 @@ Aether is one of a family of native Windows 11 apps that share the same design l
 
 ## License
 
-Aether is by [rvyyv-n](https://github.com/rvyyv-n) and licensed under the **GNU General Public License v3.0 only**. See [LICENSE](LICENSE).
+Aether is by [Aether Contributors](https://github.com/aether-player) and licensed under the **GNU General Public License v3.0 only**. See [LICENSE](LICENSE).
 
 - [NOTICE.md](NOTICE.md): attribution terms. The icon, logo and brand artwork are not covered by the GPL and remain all rights reserved.
 - [TRADEMARKS.md](TRADEMARKS.md): what forks may do with the name and logo.

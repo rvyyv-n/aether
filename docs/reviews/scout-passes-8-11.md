@@ -16,17 +16,17 @@ Because an active design task is concurrently modifying `MainPage.xaml`, `MainPa
 
 ### 1. Existing Assets
 - **Windowing & Presenters:**
-  - [`MainWindow.xaml.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/MainWindow.xaml.cs): Manages the `AppWindow` and toggles presenters between `Overlapped` and `FullScreen`. Implements [`IShellWindow`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/MainWindow.xaml.cs#L19).
-  - [`AspectRatioLock.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/Windowing/AspectRatioLock.cs): Subclasses `GWLP_WNDPROC` to handle `WM_SIZING` and `WM_GETMINMAXINFO`.
+  - [`MainWindow.xaml.cs`](../../src/Aether.App/MainWindow.xaml.cs): Manages the `AppWindow` and toggles presenters between `Overlapped` and `FullScreen`. Implements [`IShellWindow`](../../src/Aether.App/MainWindow.xaml.cs#L19).
+  - [`AspectRatioLock.cs`](../../src/Aether.Core.Interop/Windowing/AspectRatioLock.cs): Subclasses `GWLP_WNDPROC` to handle `WM_SIZING` and `WM_GETMINMAXINFO`.
 - **Design Tokens & Strings:**
-  - [`DesignTokens.xaml`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Theme/DesignTokens.xaml#L228): Already reserves `AetherSizePipWidth` (400 DIPs).
-  - [`Resources.resw`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Strings/en-us/Resources.resw#L522): Strings `Pip_BackToFullWindow` and `Settings_Shortcuts_PictureInPicture` are already present.
+  - [`DesignTokens.xaml`](../../src/Aether.App/Theme/DesignTokens.xaml#L228): Already reserves `AetherSizePipWidth` (400 DIPs).
+  - [`Resources.resw`](../../src/Aether.App/Strings/en-us/Resources.resw#L522): Strings `Pip_BackToFullWindow` and `Settings_Shortcuts_PictureInPicture` are already present.
 - **Keyboard Shortcuts & Menus:**
-  - [`ShortcutActions.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Playback/Input/ShortcutActions.cs): `ShortcutAction.TogglePictureInPicture` is already mapped to the `P` key by default.
+  - [`ShortcutActions.cs`](../../src/Aether.Core.Playback/Input/ShortcutActions.cs): `ShortcutAction.TogglePictureInPicture` is already mapped to the `P` key by default.
   - Context menu in `MainPage.xaml.cs` has the "Picture in picture" entry placed, currently disabled.
 - **Rendering & Surface Engine:**
-  - [`MpvVideoSurface.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Controls/MpvVideoSurface.cs): Contains `AttachPlayer` and `DetachPlayer`, along with `SetBackdropActive(false)` (ADR-0013 requires disabling backdrop blur in PiP).
-  - [`MpvRenderLoop.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs): Owns device generation, DXGI presenter, and thread lifecycle.
+  - [`MpvVideoSurface.cs`](../../src/Aether.App/Controls/MpvVideoSurface.cs): Contains `AttachPlayer` and `DetachPlayer`, along with `SetBackdropActive(false)` (ADR-0013 requires disabling backdrop blur in PiP).
+  - [`MpvRenderLoop.cs`](../../src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs): Owns device generation, DXGI presenter, and thread lifecycle.
 
 ### 2. Required Contracts & Stubs
 - **`IShellWindow` Extension:**
@@ -48,8 +48,8 @@ Because an active design task is concurrently modifying `MainPage.xaml`, `MainPa
   - `MainPage.xaml` & `MainPage.xaml.cs` (PiP chrome hiding, hover bar, "Back to full window" button).
   - `DesignTokens.xaml` (any additional PiP control tokens).
 - **Pure Core / Engine Tasks (Can Start Immediately):**
-  - Refactoring [`AspectRatioLock.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/Windowing/AspectRatioLock.cs) to support dynamic minimum sizing and safe multi-window transitions.
-  - Adding thread-synchronized hand-over / detach-attach tests in [`MpvRenderLoopTests.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/tests/Aether.Core.Tests/MpvRenderLoopTests.cs).
+  - Refactoring [`AspectRatioLock.cs`](../../src/Aether.Core.Interop/Windowing/AspectRatioLock.cs) to support dynamic minimum sizing and safe multi-window transitions.
+  - Adding thread-synchronized hand-over / detach-attach tests in [`MpvRenderLoopTests.cs`](../../tests/Aether.Core.Tests/MpvRenderLoopTests.cs).
   - Implementing PiP lifecycle state machine in `Aether.Core.Playback`.
 
 ### 5. Micro-Batch Build Split & Model Allocation
@@ -70,14 +70,14 @@ Because an active design task is concurrently modifying `MainPage.xaml`, `MainPa
 
 ### 1. Existing Assets
 - **Flow & Validation State Machine:**
-  - [`OpenUrlFlow.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Playback/OpenUrlFlow.cs): Fully implemented state machine with stages (`Closed`, `Editing`, `GettingStream`, `StillWorking`), notes (`Hint`, `Invalid`, `Unavailable`), and 10-second `StillWorkingAfter` transition timer.
-  - [`WebLink.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Playback/WebLink.cs): URI validation and host parsing (`WebLink.Host()`).
+  - [`OpenUrlFlow.cs`](../../src/Aether.Core.Playback/OpenUrlFlow.cs): Fully implemented state machine with stages (`Closed`, `Editing`, `GettingStream`, `StillWorking`), notes (`Hint`, `Invalid`, `Unavailable`), and 10-second `StillWorkingAfter` transition timer.
+  - [`WebLink.cs`](../../src/Aether.Core.Playback/WebLink.cs): URI validation and host parsing (`WebLink.Host()`).
 - **External Tooling & Settings:**
-  - [`ExternalTools.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Settings/ExternalTools.cs): `FindYtDlp()`, `YtDlpVersionAsync()`, and `UpdateYtDlpAsync()` with process tree timeout management.
-  - [`StreamingPage.xaml.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Settings/Pages/StreamingPage.xaml.cs): Streaming settings (`StreamingQuality`, `PreferGpuDecodableFormats`, `YtDlpAutoUpdate`, `NetworkCacheMegabytes`, `HttpProxy`, `RtspTransport`).
+  - [`ExternalTools.cs`](../../src/Aether.App/Settings/ExternalTools.cs): `FindYtDlp()`, `YtDlpVersionAsync()`, and `UpdateYtDlpAsync()` with process tree timeout management.
+  - [`StreamingPage.xaml.cs`](../../src/Aether.App/Settings/Pages/StreamingPage.xaml.cs): Streaming settings (`StreamingQuality`, `PreferGpuDecodableFormats`, `YtDlpAutoUpdate`, `NetworkCacheMegabytes`, `HttpProxy`, `RtspTransport`).
 - **Resources & Recents:**
-  - [`Resources.resw`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Strings/en-us/Resources.resw): All 15 link-resolution and error strings already exist (`Stream_GettingStream`, `Stream_StillWorking`, `Stream_UnavailablePrivate`, `Stream_OfflineTitle`, `Stream_SignInRequiredTitle`, `Stream_RegionBlockedTitle`, `Stream_SiteNotSupportedTitle`, etc.).
-  - [`RecentsStore.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Playback/Recents/RecentsStore.cs): Built to store web links (`IsLink`, case-sensitive matching, `RecentDisplay.Source`).
+  - [`Resources.resw`](../../src/Aether.App/Strings/en-us/Resources.resw): All 15 link-resolution and error strings already exist (`Stream_GettingStream`, `Stream_StillWorking`, `Stream_UnavailablePrivate`, `Stream_OfflineTitle`, `Stream_SignInRequiredTitle`, `Stream_RegionBlockedTitle`, `Stream_SiteNotSupportedTitle`, etc.).
+  - [`RecentsStore.cs`](../../src/Aether.Core.Playback/Recents/RecentsStore.cs): Built to store web links (`IsLink`, case-sensitive matching, `RecentDisplay.Source`).
 
 ### 2. Required Contracts & Stubs
 - **`IYtDlpStreamResolver` Service:**
@@ -121,11 +121,11 @@ Because an active design task is concurrently modifying `MainPage.xaml`, `MainPa
 
 ### 1. Existing Assets
 - **Clipping Service & Request Model:**
-  - [`ClipExportService.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.PvP.Review/Clipping/ClipExportService.cs): Pre-warms FFmpeg, manages temporary `.part` files, provides atomic renaming, duplicate naming prevention, and process tree cancellation.
-  - [`ClipRequest.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.PvP.Review/Clipping/ClipRequest.cs) & [`FfmpegArguments.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.PvP.Review/Clipping/FfmpegArguments.cs): Stream copy argument generation (`-c copy`).
+  - [`ClipExportService.cs`](../../src/Aether.PvP.Review/Clipping/ClipExportService.cs): Pre-warms FFmpeg, manages temporary `.part` files, provides atomic renaming, duplicate naming prevention, and process tree cancellation.
+  - [`ClipRequest.cs`](../../src/Aether.PvP.Review/Clipping/ClipRequest.cs) & [`FfmpegArguments.cs`](../../src/Aether.PvP.Review/Clipping/FfmpegArguments.cs): Stream copy argument generation (`-c copy`).
 - **Drawer & Transport UI:**
-  - [`ClipDrawer.xaml.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Controls/ClipDrawer.xaml.cs): In/out range display, export triggering, row rendering, and drag-and-drop export.
-  - [`PrecisionSeekBar.xaml.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Controls/PrecisionSeekBar.xaml.cs): Visual In/Out marker bands.
+  - [`ClipDrawer.xaml.cs`](../../src/Aether.App/Controls/ClipDrawer.xaml.cs): In/out range display, export triggering, row rendering, and drag-and-drop export.
+  - [`PrecisionSeekBar.xaml.cs`](../../src/Aether.App/Controls/PrecisionSeekBar.xaml.cs): Visual In/Out marker bands.
 
 ### 2. Required Contracts & Stubs
 - **`ClipRequest` Enhancements:**
@@ -177,9 +177,9 @@ Because an active design task is concurrently modifying `MainPage.xaml`, `MainPa
 
 ### 1. Existing Assets
 - **Server & Pairing Implementation:**
-  - [`KestrelStreamServer.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Server.LanHost/KestrelStreamServer.cs): HTTP 206 partial content streaming, token authentication, `/watch` endpoint delivering HTML5 shell, and IP address detection.
-  - [`QrPairingService.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Server.LanHost/QrPairingService.cs): In-memory SVG and PNG QR generation using `QRCoder`.
-  - [`ServerTests.cs`](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/tests/Aether.Server.Tests/ServerTests.cs): Passing unit tests for range requests, token authentication, and QR generation.
+  - [`KestrelStreamServer.cs`](../../src/Aether.Server.LanHost/KestrelStreamServer.cs): HTTP 206 partial content streaming, token authentication, `/watch` endpoint delivering HTML5 shell, and IP address detection.
+  - [`QrPairingService.cs`](../../src/Aether.Server.LanHost/QrPairingService.cs): In-memory SVG and PNG QR generation using `QRCoder`.
+  - [`ServerTests.cs`](../../tests/Aether.Server.Tests/ServerTests.cs): Passing unit tests for range requests, token authentication, and QR generation.
 - **Shortcut & Settings Reservations:**
   - `ShortcutAction.ToggleLanStream` is defined and mapped to key `S` by default.
   - "Stream" entry is present in context menu and reserved on the hover rail.

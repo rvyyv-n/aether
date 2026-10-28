@@ -202,7 +202,7 @@ Mockups: screens 9 (menus), 10 (notifications) and 8.1–8.2 (diagnostics).
 | 7.25 | Apply the approved review findings R1–R7 after the design work, verifying each first (details in `docs/reviews/pass-7-findings.md`): keyframe seek and coalesced 5 s skips (R1); keep readahead under the safe auto mode for software decode (R2); no per-frame layout or clock strings while the bar is hidden (R3); back-buffer size follows the cache size (R4); no forced redraws or false swap reports during fades (R5); fractional refresh rates such as 59.94 and 119.88 Hz (R6); wait for the old render thread before an engine restart builds a new one (R7). Declined: R8–R11 — **Done** (fixed: R1 skips follow Precise seeking and a held arrow key sends one seek at a time, R4 back buffer is half the cache (8–512 MiB), R5 no swap report without a new video frame, R6 exact refresh rate from the display configuration API with the whole-number reading as fallback, R7 restart waits up to 250 ms for the old render thread; already fine: R2 and R3, done earlier) | L |
 
 | 7.26 | First-run tour: on the first launch only, four short cards over the empty home screen (open or drop a file, the right-click menu, key shortcuts including I/O clips, the settings gear) with Next and Skip; "Show the tour again" in Settings › About — **Done** (spec in `docs/reviews/pass-7-first-run-tour-spec.md`: six steps that light the real controls one at a time — Open file and Open URL, the bar (a dashed outline where it will sit when no video is open), the side rail held open, the real right-click menu, the user's current keys including I/O and Ctrl+E, and the gear — with a card beside each: Next, Back, Skip tour, ← and →, Esc skips; it shows once on a launch that lands on an idle home screen, the "seen" flag is saved as it opens, and Settings › About › Show the tour again replays it; the light glides on the bar's tween and the card enters like a toast in both motion styles, all instant with Windows animations off. Checked on screen and done; fixes to follow in the fixes pass) | M |
-| 7.27 | Settings › About links to the author's GitHub (github.com/rvyyv-n) — **Done** (a GitHub row above Licences opens github.com/rvyyv-n in the default browser) | S |
+| 7.27 | Settings › About links to the author's GitHub (github.com/aether-player) — **Done** (a GitHub row above Licences opens github.com/aether-player in the default browser) | S |
 | 7.28 | Auto updater: needs its own plan first (where releases live, signing, silent or prompted). Not built in Pass 7 — **Done** (plan only: `docs/reviews/pass-7-auto-updater-plan.md`, ADR-0021 proposed. Velopack with releases on GitHub, small delta downloads, a daily check plus "Check for updates" in Settings › About, applied on exit or on Restart from a toast; WinGet later. Open questions on signing, default on/off and repo visibility) | M |
 
 ---
@@ -217,7 +217,7 @@ Notes from using the app. Items 8.1, 8.5 and 8.6 are design work (Opus asks ques
 | P8.2 | General settings page only has two settings (battery saver, open files in the running window). Decide what belongs there (for example start-up behaviour, language, remember window size and position, recent files, updates) and add it, or merge the page into another — **Done** (window size and always-on-top moved here from Playback; build pending owner check) | S |
 | P8.3 | Settings list: a small stray shade or light patch fills the bottom corner of the selected row (and of an active setting). Find which layer draws it and clip it to the row's rounded shape | S | **Done** (owner confirmed)
 | P8.4 | Subtitle font picker does nothing: make the chosen font actually reach mpv (`sub-font`), then add more subtitle styling: size, colour, outline, background box, position and bold, with a live preview — **Done** (font, size, colour, outline, box, position, bold and live preview were built earlier; tests pass) | M |
-| P8.5 | About page: replace the "the author's projects at github.com/rvyyv-n" row with a closing card like Rise's (app name and version, a line that everything stays on this device, "Source on GitHub · @rvyyv-n") so it no longer calls the user the author — **Done** (build passes; owner to check on screen) | S |
+| P8.5 | About page: replace the "the author's projects at github.com/aether-player" row with a closing card like Rise's (app name and version, a line that everything stays on this device, "Source on GitHub · @aether-player") so it no longer calls the user the author — **Done** (build passes; owner to check on screen) | S |
 | P8.6 | Onboarding tour: (a) card 2 runs off the bottom of the window and hides Next until the window is resized, so keep each card fully inside the window; (b) "Skip tour" is clipped at its edge; (c) the sidebar must not exist during the tour, so its slide-in no longer plays before the next card; (d) make the tour livelier, with cards that slide and fade between steps, a gentle pulse on the highlighted spot and a progress bar that animates, all off with reduced motion; (e) move the keyboard-keys card into open space (centred, not on top of the file list); (f) tell people they can play YouTube and other web links in Aether (Open URL, or paste a link) — **Done** (side-rail step removed and the rail stays shut during the tour; card placement fixed; Skip button padded; pulsing ring and animated progress bar, off with reduced motion; keys card sits beside the home content; web links added to the first card; tests pass, owner to check on screen) | M |
 | P8.7 | Video stutters whenever the player bar (or any overlay) appears, resizes, grows or hides, and plays smoothly once it is gone. Suspect the card blur pass (about 0.5 ms a frame, ADR-0013) and layout changes forcing extra redraws of the swap chain during the fade. Measure dropped frames with the blur off and on, then fix: for example skip the blur while the card animates, animate with transform/opacity only (no resize), or lower the blur cost | M | **Fixed** (commit b89efde; owner confirmed the stutter is gone)
 | P8.8 | Self-sufficient yt-dlp: ship a copy of `yt-dlp.exe` inside the installer and portable zip (it is public domain; add it to the licence file) so the first link works with no setup, and let the app keep it fresh because sites break older copies within weeks. If it is ever missing or deleted, one click installs it. Wherever it is missing (Streaming page, Open URL dialog, link failure), offer an Install button that downloads the latest `yt-dlp.exe` from the official GitHub release into Aether's own folder under the user's profile (no admin rights, no PATH edits), shows progress, checks the download against the release's published SHA-256, and starts using it at once with no restart. Aether uses the newest of its downloaded copy, the bundled copy and one on PATH. The tour mentions web links (P8.6 f) but needs no install step. Add Update now and a short "updated" toast, remove it cleanly on uninstall, and keep it up to date on a schedule the user can switch off. Offline or failed downloads give a plain message and a Retry; nothing is downloaded until the user clicks. Tests for the version check, hash verification and path choice | M |
@@ -307,30 +307,140 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 
 ---
 
-### v1.1: Themes & Customisation (after the v1 release)
+### v1.1: Themes & Customisation (Active Sprint)
 
-Design work: Opus asks questions and plans first, Sonnet builds. Check blur over live video for stutter before shipping (ADR-0013).
+Design work: Opus plans architecture and tokens, Sonnet / Opus builds. Check blur over live video for stutter before shipping (ADR-0013).
 
-| # | Task | Effort |
-|:---|:---|:---:|
-| 12.1 | Light mode, plus a Theme choice in Settings: Dark, Light or follow Windows. Every screen, flyout and the player bar read well in both | M |
-| 12.2 | "Native" look beside the current one: Windows 11 Fluent Acrylic panels, the system accent colour and system corner radii for menus, flyouts, sidebar and settings | L |
-| 12.3 | More customisation: accent colour choice, player bar size and opacity, and which controls the bar shows | M |
-| 12.4 | Check both looks in light and dark on a real screen, with video blur against frame drops | S |
-| 12.5 | Phone streaming, fuller version: more features and a more polished pairing flyout and phone page, building on what Pass 11 ships and tests | M |
-| 12.6 | Settings layered like Wintoys: section list on Mica Alt, pages on a rounded layer pane with lighter cards, in light and dark; About page reworked with an identity card, a row of link buttons and section headings — **Done** | S |
-| 12.7 | Popup blur timing: the blur behind menus and pop-ups (captions, Video, volume, speed, Open, overflow) shows and leaves a moment before the pop-up itself, in both directions, which looks janky. A shared fade (1a7dc73) did not fix it. Find out what the pop-up really does (its own open and close animation, when Opened and Closed fire, how late the XAML popup paints) and make the blur and the pop-up appear and leave in the same frame; consider turning off the pop-up transition so only one thing animates | S |
-| 12.8 | Dark theme still wrong when Windows is on light: with Appearance set to Dark, the Settings cards come out light grey with white text, and the player menus likely do too. Two fixes (24a3650 read the Appearance choice directly, d9117b1 made the token lookup search every merged dictionary) did not cure it on the installed build. Find the real cause: which brush the cards actually get (SettingsGroup, ThemeTokens, the Dark dictionary values), whether a stale cached brush survives a theme change, and whether the Default dictionary is picked over Dark. Check Auto, Light and Dark with Windows on both themes | S |
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 12.1 | Light mode completion: Bright frosted cards across all UI elements (player bar, sidebar, menus, toasts, Now Playing, and Video pop-ups built in commits d0b4c55-1a7dc73). Finish remaining flyouts, dialogs, and ensure consistent high-contrast text and glyph contrast in all edge cases. | M | In Progress |
+| 12.2 | "Native" look mode: Optional alternate appearance mode in Settings > General: standard Windows 11 Acrylic backdrops, system accent colour (`SystemAccentColor`), and system standard 8 px corner radii for buttons, flyouts, and cards alongside Aether's custom frosted glass styling. | L | Open |
+| 12.3 | Player bar customisation: Settings > Playback configuration allowing users to customize visible transport buttons and reorder controls (Frame Steppers, A-B Loop, Speed, Quality, Audio/Subtitle tracks, Always-on-top, Chapter Skip). | M | Open |
+| 12.4 | Real-screen visual check with video blur: Measure frame timing and ensure 0 dropped frames during card resize, pop-up entrance, and theme transitions across 60 Hz, 120 Hz, and 180+ Hz displays. | S | Open |
+| 12.5 | Phone streaming v2: Enhanced mobile player shell at `/watch`: smooth touch gestures for seeking and volume, on-screen scrubber bar, lock-screen MediaSession API integration, and connection quality indicator. | M | Open |
+| 12.6 | Settings layered like Wintoys: section list on Mica Alt, pages on a rounded layer pane with lighter cards, in light and dark; About page reworked with an identity card, a row of link buttons and section headings | S | **Done** |
+| 12.7 | Popup blur timing frame sync: The blur behind menus and pop-ups (captions, Video, volume, speed, Open, overflow) shows and leaves a moment before the pop-up itself. Investigate XAML `Popup` open/close transition timing vs ANGLE backdrop blur pass. Either synchronize fade timing to the exact layout render frame or suppress XAML popup entrance animation to ensure zero visual lead/lag. | S | Open |
+| 12.8 | Dark theme fallback bug fix when Windows is in Light theme: With Appearance set to Dark in Settings while Windows is set to Light, Settings cards and certain flyouts still inherit Windows light grey colors. Force app-level `RequestedTheme` on `RootFrame` / `AppWindow` and ensure `ThemeTokens` lookup strictly prioritizes the selected Dark dictionary over system defaults. | S | Open |
+| 12.9 | Accent colour customization: Add an Accent Colour selector in Settings > Appearance with curated presets (Aether Cyan, Ice Blue, Mint, Amethyst, Sunset, Slate) and custom HEX support, dynamically binding into `AetherFillEmphasisRest` and active toggle indicators. | M | Open |
+| 12.10 | Title bar custom caption buttons: Replace native OS caption buttons with custom WinUI Fluent caption buttons (Min, Max, Close) that smoothly fade in/out together with the player chrome during video playback instead of staying permanently 100% opaque. | M | Open |
 
-**v1.1 means:** Aether can follow Windows or be set to light, dark or the native Fluent look, with a few personal touches, without costing smoothness.
+**v1.1 means:** Aether can follow Windows or be set to light, dark, native Fluent, or custom accent themes with flawless blur synchronization and zero dropped frames.
+
+---
+
+### Pass 13: Playlist, Queue & Folder Playback Engine (v1.2)
+
+One-shot target for Opus: UI-agnostic queue store, folder auto-discovery, smooth auto-advance, and sliding playlist drawer.
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 13.1 | `PlaylistStore` & Queue state machine in `Aether.Core.Playback`: thread-safe model holding ordered playback items (local files and web links), active index, repeat modes (None, Repeat All, Repeat One), shuffle (Fisher-Yates with non-repeating history), and next/previous track resolution. | M | Open |
+| 13.2 | Folder auto-discovery & drag-and-drop batch queueing: When opening a single video file, automatically discover and index sibling media files in the same directory in natural numerical/alphabetical sort order. Dropping multiple files or a directory onto the player immediately populates the queue. | M | Open |
+| 13.3 | `PlaylistDrawer` UI: Smooth slide-over drawer (accessible via side rail, right-click menu, or hotkey `Q`) showing queued items with file name, duration, active playing indicator, drag-to-reorder, remove button, clear queue, and search filter box. Matches frosted glass theme tokens. | M | Open |
+| 13.4 | Seamless auto-advance across tracks: On `MPV_EVENT_END_FILE`, automatically transition to the next queue item without tearing or window reconstruction. Carry over player volume, speed, audio/subtitle preferences, and aspect ratio. | S | Open |
+| 13.5 | Windows Media Transport & Taskbar thumbnail integration: Wire playlist Previous (`Ctrl+Left`) and Next (`Ctrl+Right`) actions to system media keys (`MediaNextTrack`, `MediaPreviousTrack`) and taskbar thumbnail preview navigation buttons. | S | Open |
+| 13.6 | Test suite for Playlist & Queue: Unit tests for playlist navigation, wrap-around, repeat modes, shuffle randomness and idempotency, natural file sorting, and transition error handling. | S | Open |
+
+**Pass 13 means:** Continuous playback across entire series or folders with an intuitive sliding playlist drawer and full media key integration.
+
+---
+
+### Pass 14: Advanced Audio Suite — Equalizer, Compressor & Multi-Track Mixer (v1.3)
+
+One-shot target for Opus: Real-time libmpv audio filter graphs (`lavfi`), 10-band graphic EQ, loudness normalization, and OBS multi-track VoD mixing.
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 14.1 | 10-band graphic equalizer engine in `Aether.Core.Playback`: Construct real-time mpv filter graphs via `lavfi=[equalizer=...]` with standard frequency bands (31 Hz, 62 Hz, 125 Hz, 250 Hz, 500 Hz, 1 kHz, 2 kHz, 4 kHz, 8 kHz, 16 kHz), +/-12 dB gain sliders, and preamp gain. | M | Open |
+| 14.2 | Equalizer UI & Presets: Beautiful EQ control panel in Settings > Audio and Tracks Flyout: 10 vertical sliders with dB readout, master preamp, Reset button, and curated presets (Flat, Bass Boost, Vocal Enhancer, Treble Boost, Rock, Electronic, Cinema/Action). Persisted in settings. | M | Open |
+| 14.3 | Dynamic Range Compression & Night Mode Normalization: Integrate `lavfi=[dynaudnorm]` in Audio settings / flyout. Intelligently compresses deafening explosions and elevates quiet dialogue for late-night viewing without manual volume hunting. | S | Open |
+| 14.4 | Multi-Track Audio Mixer: For gameplay recordings (OBS / ShadowPlay) containing separate audio streams (e.g. Track 1 Game, Track 2 Mic, Track 3 Discord, Track 4 Music): expose independent volume faders and mute buttons in the Tracks flyout to mix audio live during playback. | M | Open |
+| 14.5 | Audio suite test coverage: Unit tests verifying `lavfi` filter syntax generation, dynamic filter changes without engine stall, EQ preset persistence, and multi-track property dispatch. | S | Open |
+
+**Pass 14 means:** Studio-grade audio control with instant 10-band EQ presets, late-night volume compression, and streamer multi-track VoD isolation.
+
+---
+
+### Pass 15: Subtitle Intelligence & Dual Subtitles (v1.4)
+
+One-shot target for Opus: Automatic loose-matching of external subtitle files, dual simultaneous subtitles (`secondary-sid`), and interactive searchable transcript timeline.
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 15.1 | Smart external subtitle auto-matcher: Automatic scan of media directory for matching subtitle files (`.srt`, `.vtt`, `.ass`, `.sub`) with fuzzy name matching, language tag extraction (`.en`, `.es`, `.ja`, `.forced`), and auto-loading into mpv via `sub-add`. | S | Open |
+| 15.2 | Dual / Secondary Subtitle rendering: Wire libmpv `secondary-sid` in the Tracks flyout: enable selecting a primary subtitle (e.g. English bottom) and a secondary subtitle (e.g. Japanese top) simultaneously for language learners and international viewers. | M | Open |
+| 15.3 | Interactive Subtitle Transcript Pane: Client-side parser for SRT, VTT, and ASS into timestamped text entries. Displays a searchable sidebar pane: type keywords to filter dialog, and click any line to instantly seek the video to that exact frame. | M | Open |
+| 15.4 | Hotkey subtitle synchronization nudging: Shortcuts `[` and `]` nudge subtitle delay by +/-50 ms live with a brief on-screen toast display (`Subtitle delay: +150 ms`). Reset delay with `Shift+[`. | S | Open |
+| 15.5 | Subtitle test suite: Unit tests for fuzzy subtitle file matching, language code parsing, ASS tag sanitization for transcript preview, and dual-sid property updates. | S | Open |
+
+**Pass 15 means:** Instant subtitle discovery, dual-language learning support, and interactive text search that jumps straight to dialogue in the video.
+
+---
+
+### Pass 16: SponsorBlock & Web Streaming Enhancements (v1.5)
+
+One-shot target for Opus: Opt-in SponsorBlock skip engine, visual segment markers on `PrecisionSeekBar`, and live stream DVR buffer.
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 16.1 | SponsorBlock client engine in `Aether.Core.Playback`: Opt-in service querying `https://sponsor.ajay.app/api/skipSegments?videoID=...` for YouTube links. Parses segment categories (Sponsor, Self-Promotion, Interaction Reminder, Intro/Intermission, Outro/Credits). Off by default with clear privacy notice. | M | Open |
+| 16.2 | SponsorBlock visual segments on `PrecisionSeekBar`: Render colored overlay strips across the seek bar representing detected segments (green for sponsor, blue for intro/outro, yellow for self-promo). | S | Open |
+| 16.3 | Auto-skip & toast notification: When the playhead enters an active segment, automatically seek to segment end (or show a discreet "Skip Sponsor" chip if set to manual). Display a brief toast: "Skipped Sponsor · Back". | S | Open |
+| 16.4 | Live stream DVR buffer & "LIVE" edge badge: Detect live streams from yt-dlp/mpv (`demuxer-cache-state`). Display a pulsating red/green "LIVE" badge on transport, allow scrubbing backward through available DVR cache, and click "LIVE" to jump to the real-time stream edge. | M | Open |
+| 16.5 | Tests for SponsorBlock & DVR: Unit tests for API JSON parsing, segment collision algorithms, seek threshold triggers, and live cache state tracking. | S | Open |
+
+**Pass 16 means:** Smart streaming playback that respects the viewer's time with visual sponsor markers, seamless auto-skipping, and full live DVR controls.
+
+---
+
+### Pass 17: DirectX 11 10-bit HDR Pipeline & GPU Diagnostics (v1.6)
+
+One-shot target for Opus: `Aether.Core.Interop` DirectX 11 swap chain upgrade, HDR10 wide color gamut metadata pass-through, and real-time GPU frame render time queries.
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 17.1 | HDR display capability query: Use `IDXGIOutput6::GetDesc1` in `D3D11DeviceManager` to query monitor color space, peak luminance, and HDR support. Expose `IsHdrAvailable` and `IsHdrActive` to playback settings. | M | Open |
+| 17.2 | 10-bit HDR swap chain format: When HDR is active, configure the `IDXGISwapChain1` format to `DXGI_FORMAT_R10G10B10A2_UNORM` and set color space to `DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020` via `IDXGISwapChain3::SetColorSpace1`. | M | Open |
+| 17.3 | libmpv HDR metadata pass-through: Pass `target-colorspace-hint=yes` and `target-trc=pq` to libmpv render context to output raw BT.2020 PQ to the 10-bit swap chain; maintain fallback tone-mapping to BT.709 SDR on standard displays. | S | Open |
+| 17.4 | Direct3D 11 GPU query engine in Diagnostics (`Ctrl+I`): Implement `ID3D11Query` timestamp disjoint and timestamp queries to compute real GPU frame render duration (ms), unparking the GPU row in the Diagnostics panel. | M | Open |
+| 17.5 | Interop HDR & GPU query test suite: Test DXGI format selection, HDR metadata struct marshaling, mock D3D11 query safety, and SDR fallback behavior. | S | Open |
+
+**Pass 17 means:** True 10-bit HDR10 video presentation with zero banding, native wide color gamut passthrough, and precise hardware GPU frame render timing.
+
+---
+
+### Pass 18: PvP Frame Analysis & Side-by-Side Dual Clip Comparison (v1.7)
+
+One-shot target for Opus: Multi-surface synchronization in `Aether.PvP.Review`, synchronized dual-video playback, and paused frame drawing annotations.
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 18.1 | Dual video surface layout: Layout mode in `Aether.PvP.Review` / `Aether.App` supporting side-by-side or split-screen presentation with an interactive, draggable vertical split slider comparing two video sources. | M | Open |
+| 18.2 | Synchronized dual playback & frame stepping: Lock playheads between both videos with configurable time offset / sync point (e.g. align at timestamp of first hit). Both clips advance, reverse, and frame-step synchronously. | M | Open |
+| 18.3 | On-screen canvas annotations on pause: Transparent drawing canvas over the paused frame: draw trajectory arrows, circles, measure pixel distances, and add callout text notes. | M | Open |
+| 18.4 | Comparison video & annotated snapshot export: Export side-by-side comparison video using FFmpeg filter complex (`[0:v][1:v]hstack`) or export annotated frame snapshot with annotations baked in at native resolution. | M | Open |
+| 18.5 | Tests for dual synchronization & annotation pipeline: Unit tests for dual-clock delta synchronizer, time offset persistence, and annotation drawing serialization. | S | Open |
+
+**Pass 18 means:** Elite competitive analysis toolset with split-screen frame comparison, synchronized stepping, and telestrator-style canvas annotations.
+
+---
+
+### Pass 19: End-to-End UI Automation Test Suite with FlaUI (v1.8)
+
+One-shot target for Opus: Automated integration test harness verifying the unpackaged WinUI 3 app, window lifecycle, and controls.
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 19.1 | Test project `tests/Aether.App.UiTests` setup: Configure project with FlaUI (UIA3) targeting the compiled unpackaged `Aether.App.exe`. | S | Open |
+| 19.2 | Automated smoke tests: Cold start timing to main window, window maximize/minimize/restore, clean exit, and file launch via command line argument. | M | Open |
+| 19.3 | Automated controls & navigation tests: Play/Pause toggling via Space key, seek bar dragging, opening Settings via `Ctrl+,`, navigating sections, and verifying right-click flyout display. | M | Open |
+| 19.4 | CI test workflow & artifact cleanup: Scripted test execution in GitHub Actions with automatic process termination and test result logging. | S | Open |
+
+**Pass 19 means:** Automated UI verification guaranteeing zero regressions in the WinUI 3 presentation layer across Windows builds.
 
 ---
 
 ### Parked
 
-- **SponsorBlock auto-skip:** needs a lookup to sponsor.ajay.app, which conflicts with "everything stays on this device". If built later: opt-in, off by default, credited on the About card and in `THIRD_PARTY.md`.
-- **Hover rail (screen 6):** now task 7.21 in Pass 7. Clips and Stream also stay in the right-click menu and shortcuts.
-- **GPU timing row in Diagnostics:** libmpv doesn't expose it. Would need our own D3D11 timestamp queries.
-- **Customisable bar:** choosing and ordering the bar's buttons. After v1, not before the design is matched.
-- **10-bit HDR swap chain output** (`R10G10B10A2_UNORM`): after v1. Playback tone-maps to 8-bit today.
-- **Automated UI tests (FlaUI):** after v1. Screens are checked by hand for now.
+- **Vulkan swap chain interop (`VK_KHR_win32_surface`):** Experimental alternative to Direct3D 11 for cross-platform research.
+- **AV1 hardware encoding in precise export:** When hardware vendor libraries (NVENC/AMF) achieve consistent rate control flags across all generations.
