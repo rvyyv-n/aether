@@ -435,6 +435,48 @@
   <data name="Queue_Remove" xml:space="preserve">
     <value>Remove from the queue</value>
   </data>
+  <data name="Equalizer_Title" xml:space="preserve">
+    <value>Equalizer</value>
+  </data>
+  <data name="Equalizer_Description" xml:space="preserve">
+    <value>Shape the sound with a preamp and ten bands, or pick a preset</value>
+  </data>
+  <data name="Equalizer_Preset" xml:space="preserve">
+    <value>Equalizer preset</value>
+  </data>
+  <data name="Equalizer_Preset_flat" xml:space="preserve">
+    <value>Flat</value>
+  </data>
+  <data name="Equalizer_Preset_bass" xml:space="preserve">
+    <value>Bass boost</value>
+  </data>
+  <data name="Equalizer_Preset_vocal" xml:space="preserve">
+    <value>Vocal</value>
+  </data>
+  <data name="Equalizer_Preset_treble" xml:space="preserve">
+    <value>Treble boost</value>
+  </data>
+  <data name="Equalizer_Preset_rock" xml:space="preserve">
+    <value>Rock</value>
+  </data>
+  <data name="Equalizer_Preset_electronic" xml:space="preserve">
+    <value>Electronic</value>
+  </data>
+  <data name="Equalizer_Preset_cinema" xml:space="preserve">
+    <value>Cinema</value>
+  </data>
+  <data name="Equalizer_Preset_custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="Equalizer_Preamp" xml:space="preserve">
+    <value>Preamp</value>
+  </data>
+  <data name="Equalizer_PreampShort" xml:space="preserve">
+    <value>Pre</value>
+  </data>
+  <data name="Equalizer_Band" xml:space="preserve">
+    <value>{0} Hz</value>
+  </data>
   <data name="Rail_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>

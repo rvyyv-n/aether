@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- A 10-band equalizer with a preamp, in Settings › Audio and in the Audio and Subtitles pop-up. Pick Flat, Bass boost, Vocal, Treble boost, Rock, Electronic or Cinema, or set the bands yourself; changes are heard at once, without a break in the sound.
 - A queue drawer on the right shows what plays next: press Q, or pick Queue in the sidebar or the right-click menu. Click a video to play it, drag to reorder, remove one or clear them all, filter by name, and turn on shuffle or repeat (all, or this video).
 - Menus and pop-ups work on the first click again. Since they started fading in with their blur, a click on a menu item went through it to the player underneath and only closed the menu.
 - Moving on to the next video of a folder or drop keeps your choices: the audio and subtitle language you picked (or subtitles off), and the zoom, rotation and aspect ratio. Volume and speed carry over as before. Opening a video any other way starts fresh.

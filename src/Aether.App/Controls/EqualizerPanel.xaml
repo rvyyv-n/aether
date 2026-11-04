@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Aether_App.Controls.EqualizerPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Equalizer (14.2): an optional title and switch, the preset picker and Reset, then the preamp and ten vertical
+        ±12 dB sliders with their readout above and the band below. The columns are built in code.
+    -->
+    <StackPanel Spacing="8">
+        <Grid x:Name="ToggleRow" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                x:Name="TitleText"
+                VerticalAlignment="Center"
+                Style="{StaticResource AetherCaptionStrongTextStyle}" />
+            <ToggleSwitch
+                x:Name="EnabledToggle"
+                Grid.Column="1"
+                Style="{StaticResource AetherSettingsToggleStyle}"
+                Toggled="OnEnabledToggled" />
+        </Grid>
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ComboBox
+                x:Name="PresetCombo"
+                MinWidth="160"
+                SelectionChanged="OnPresetChanged"
+                Style="{StaticResource AetherSettingsComboStyle}" />
+            <Button
+                x:Name="ResetButton"
+                Grid.Column="1"
+                Click="OnResetClick"
+                Style="{StaticResource AetherSettingsTextButtonStyle}" />
+        </Grid>
+        <Grid x:Name="Bands" ColumnSpacing="2" />
+    </StackPanel>
+</UserControl>
