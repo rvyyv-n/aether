@@ -13,6 +13,7 @@ public enum TrackKind
 /// <param name="ChannelLayout"><c>demux-channels</c> (stereo, 5.1(side)) for audio, or null.</param>
 /// <param name="ChannelCount"><c>demux-channel-count</c>, used when the layout name is missing or unfamiliar.</param>
 /// <param name="ExternalFile">The path of a loaded subtitle file, or null for a track inside the video file.</param>
+/// <param name="Secondary">The subtitle shown as the second one (<c>secondary-sid</c>); <paramref name="Selected"/> is then false.</param>
 public sealed record MediaTrack(
     int Id,
     TrackKind Kind,
@@ -23,4 +24,5 @@ public sealed record MediaTrack(
     bool HearingImpaired,
     bool Forced,
     bool Selected,
-    string? ExternalFile);
+    string? ExternalFile,
+    bool Secondary = false);

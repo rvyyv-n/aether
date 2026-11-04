@@ -20,6 +20,9 @@ public sealed class TrackList
     /// <summary>The selected subtitle, or null when subtitles are off.</summary>
     public MediaTrack? SelectedSubtitle => Subtitles.FirstOrDefault(t => t.Selected);
 
+    /// <summary>The second subtitle shown with it (15.2), or null.</summary>
+    public MediaTrack? SecondarySubtitle => Subtitles.FirstOrDefault(t => t.Secondary);
+
     /// <summary>Video tracks are ignored. Anything unreadable gives an empty list rather than an error.</summary>
     public static TrackList Parse(string? json)
     {
@@ -68,6 +71,8 @@ public sealed class TrackList
             return null;
         }
         int channels = entry.TryGetProperty("demux-channel-count", out JsonElement count) && count.TryGetInt32(out int n) ? n : 0;
+        bool selected = Flag(entry, "selected");
+        bool secondary = selected && entry.TryGetProperty("main-selection", out JsonElement order) && order.TryGetInt32(out int o) && o == 1;
         return new MediaTrack(
             trackId,
             kind,
@@ -77,8 +82,9 @@ public sealed class TrackList
             channels,
             Flag(entry, "hearing-impaired"),
             Flag(entry, "forced"),
-            Flag(entry, "selected"),
-            Flag(entry, "external") ? Text(entry, "external-filename") : null);
+            selected && !secondary,
+            Flag(entry, "external") ? Text(entry, "external-filename") : null,
+            secondary);
     }
 
     private static string? Text(JsonElement entry, string name) =>

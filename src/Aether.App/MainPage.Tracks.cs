@@ -141,7 +141,7 @@ public sealed partial class MainPage
 
     private void OnTrackChosen(object? sender, TrackChoice choice)
     {
-        string property = choice.Kind == TrackKind.Audio ? "aid" : "sid";
+        string property = choice.Kind == TrackKind.Audio ? "aid" : choice.Secondary ? "secondary-sid" : "sid";
         if (choice.Kind == TrackKind.Audio)
         {
             _session?.PrepareForAudioRestart();

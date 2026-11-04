@@ -28,6 +28,7 @@ public sealed partial class TracksPanel : UserControl
         InitializeComponent();
         AudioHeader.Text = AppStrings.Get("Tracks_Audio");
         SubtitleHeader.Text = AppStrings.Get("Tracks_Subtitles");
+        SecondaryHeader.Text = AppStrings.Get("Tracks_SecondSubtitle");
         AudioDelayLabel.Text = AppStrings.Get("Tracks_AudioDelay");
         SubtitleDelayLabel.Text = AppStrings.Get("Tracks_SubtitleDelay");
         AddSubtitleLabel.Text = AppStrings.Get("Tracks_AddSubtitleFile");
@@ -107,6 +108,7 @@ public sealed partial class TracksPanel : UserControl
         FillMix();
         Fill(AudioRows, tracks.Audio, offRow: false);
         Fill(SubtitleRows, tracks.Subtitles, offRow: true);
+        FillSecondary(tracks.Subtitles);
         AudioDelayValue.Text = TrackDelay.Format(snapshot.AudioDelay);
         SubtitleDelayValue.Text = TrackDelay.Format(snapshot.SubtitleDelay);
     }
@@ -132,6 +134,23 @@ public sealed partial class TracksPanel : UserControl
         foreach (MediaTrack track in tracks)
         {
             rows.Children.Add(Row(Label(track), track.Selected && !(kind == TrackKind.Audio && MixToggle.IsOn), new TrackChoice(kind, track.Id)));
+        }
+    }
+
+    /// <summary>Off and every subtitle but the main one; shown once there are two to choose between.</summary>
+    private void FillSecondary(IReadOnlyList<MediaTrack> subtitles)
+    {
+        SecondaryRows.Children.Clear();
+        Visibility shown = subtitles.Count >= 2 ? Visibility.Visible : Visibility.Collapsed;
+        SecondaryHeader.Visibility = SecondaryRows.Visibility = shown;
+        if (shown != Visibility.Visible)
+        {
+            return;
+        }
+        SecondaryRows.Children.Add(Row(AppStrings.Get("Tracks_Off"), !subtitles.Any(t => t.Secondary), new TrackChoice(TrackKind.Subtitle, null, Secondary: true)));
+        foreach (MediaTrack track in subtitles.Where(t => !t.Selected))
+        {
+            SecondaryRows.Children.Add(Row(Label(track), track.Secondary, new TrackChoice(TrackKind.Subtitle, track.Id, Secondary: true)));
         }
     }
 
@@ -314,7 +333,8 @@ public sealed partial class TracksPanel : UserControl
 }
 
 /// <param name="Id">The mpv track id, or null for Off.</param>
-public sealed record TrackChoice(TrackKind Kind, int? Id);
+/// <param name="Secondary">The pick is for the second subtitle (15.2).</param>
+public sealed record TrackChoice(TrackKind Kind, int? Id, bool Secondary = false);
 
 /// <param name="Direction">-1 for earlier, +1 for later.</param>
 public sealed record DelayStep(TrackKind Kind, int Direction);

@@ -483,6 +483,9 @@
   <data name="Tracks_Mix" xml:space="preserve">
     <value>Mix tracks</value>
   </data>
+  <data name="Tracks_SecondSubtitle" xml:space="preserve">
+    <value>Second subtitle, at the top</value>
+  </data>
   <data name="Tracks_MixDescription" xml:space="preserve">
     <value>Play every audio track at once, each at its own level, such as game, mic and chat from a recording</value>
   </data>

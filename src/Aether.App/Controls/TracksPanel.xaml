@@ -183,6 +183,11 @@
                             TextTrimming="CharacterEllipsis" />
                     </Grid>
                 </Button>
+                <TextBlock
+                    x:Name="SecondaryHeader"
+                    Margin="8,12,8,4"
+                    Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                <StackPanel x:Name="SecondaryRows" />
                 <Grid Margin="0,8,0,0" ColumnSpacing="4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
