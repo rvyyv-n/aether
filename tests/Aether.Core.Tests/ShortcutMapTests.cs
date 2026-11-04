@@ -55,6 +55,17 @@ public class ShortcutMapTests
     }
 
     [Fact]
+    public void Brackets_Nudge_The_Subtitles_And_Shift_Bracket_Resets_Them()
+    {
+        Assert.Equal(ShortcutAction.SubtitleEarlier, ShortcutMap.Defaults.Find(new KeyCombination(0xDB)));
+        Assert.Equal(ShortcutAction.SubtitleLater, ShortcutMap.Defaults.Find(new KeyCombination(0xDD)));
+        Assert.Equal(ShortcutAction.SubtitleDelayReset, ShortcutMap.Defaults.Find(new KeyCombination(0xDB, KeyModifiers.Shift)));
+        Assert.Equal("shortcuts.subtitleEarlier", ShortcutActions.SettingKey(ShortcutAction.SubtitleEarlier));
+        Assert.Equal("shortcuts.subtitleLater", ShortcutActions.SettingKey(ShortcutAction.SubtitleLater));
+        Assert.Equal("shortcuts.subtitleDelayReset", ShortcutActions.SettingKey(ShortcutAction.SubtitleDelayReset));
+    }
+
+    [Fact]
     public void Media_Keys_Play_Pause_And_Step_Through_The_Queue()
     {
         Assert.Equal(["Space", "MediaPlayPause"], Defaults(ShortcutAction.PlayPause));

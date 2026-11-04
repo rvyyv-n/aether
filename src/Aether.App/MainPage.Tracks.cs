@@ -2,8 +2,10 @@ using System.Globalization;
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Audio;
+using Aether.Core.Playback.Input;
 using Aether.Core.Playback.Tracks;
 using Aether_App.Controls;
+using Aether_App.Input;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -165,6 +167,43 @@ public sealed partial class MainPage
         // Shown at once, so a second press builds on the first instead of on what mpv last reported.
         ApplyTracks(audio ? _tracks with { AudioDelay = next } : _tracks with { SubtitleDelay = next });
         _ = ChangeTracks(context => context.SetProperty(audio ? "audio-delay" : "sub-delay", TrackDelay.ForMpv(next)));
+    }
+
+    /// <summary>
+    /// [ and ] move the subtitles 50 ms earlier or later, Shift+[ (<paramref name="direction"/> 0) puts them back, and a
+    /// toast says where they are now. Read from mpv, so the flyout's stepper and the keys build on each other.
+    /// </summary>
+    private async void NudgeSubtitles(int direction)
+    {
+        double now = 0;
+        await ChangeTracks(context =>
+        {
+            double current = TrackSnapshot.Read(context).SubtitleDelay;
+            now = direction == 0 ? 0 : TrackDelay.Nudged(current, direction);
+            context.SetProperty("sub-delay", TrackDelay.ForMpv(now));
+        });
+        _toasts?.Show(new ToastRequest("subtitle-delay", AppStrings.Format("Toast_SubtitleDelay", TrackDelay.Milliseconds(now))));
+    }
+
+    /// <summary>
+    /// WinUI fires no accelerator for a plain punctuation key such as [ or ], so a key no accelerator took is matched
+    /// against the subtitle nudges here. One an accelerator handled arrives handled, so nothing runs twice.
+    /// </summary>
+    private bool NudgeFromKey(Windows.System.VirtualKey key)
+    {
+        int? direction = App.Shortcuts.Map.Find(new KeyCombination((int)key, KeyboardModifiers.Current())) switch
+        {
+            ShortcutAction.SubtitleEarlier => -1,
+            ShortcutAction.SubtitleLater => +1,
+            ShortcutAction.SubtitleDelayReset => 0,
+            _ => null,
+        };
+        if (direction is not { } d || !HasVideo || ArePlayerKeysPaused)
+        {
+            return false;
+        }
+        NudgeSubtitles(d);
+        return true;
     }
 
     /// <summary>Applies the change on a pool thread, then redraws from what mpv now says.</summary>

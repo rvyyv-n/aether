@@ -33,6 +33,9 @@ public enum ShortcutAction
     PreviousFile,
     Queue,
     Transcript,
+    SubtitleEarlier,
+    SubtitleLater,
+    SubtitleDelayReset,
     Sidebar,
     ToggleLanStream,
 }

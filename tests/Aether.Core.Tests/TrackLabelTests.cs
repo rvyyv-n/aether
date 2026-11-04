@@ -200,8 +200,9 @@ public class TrackDelayTests
     [Theory]
     [InlineData(0, "0.0 s")]
     [InlineData(0.3, "+0.3 s")]
-    [InlineData(-1.25, "−1.2 s")]
-    [InlineData(-0.04, "0.0 s")]
+    [InlineData(0.15, "+0.15 s")]
+    [InlineData(-1.25, "−1.25 s")]
+    [InlineData(-0.004, "0.0 s")]
     public void Format_Shows_A_Sign_Only_When_There_Is_A_Delay(double seconds, string expected)
     {
         using var _ = new CultureScope("en-US");
@@ -215,6 +216,35 @@ public class TrackDelayTests
         using var _ = new CultureScope("de-DE");
 
         Assert.Equal("-0.3", TrackDelay.ForMpv(-0.3));
+        Assert.Equal("0.15", TrackDelay.ForMpv(0.15));
+    }
+
+    [Fact]
+    public void A_Nudge_Is_50_ms_And_Lands_Exactly()
+    {
+        double value = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            value = TrackDelay.Nudged(value, +1);
+        }
+
+        Assert.Equal(0.15, value);
+        Assert.Equal(0, TrackDelay.Nudged(0.05, -1));
+        Assert.Equal(-0.05, TrackDelay.Nudged(0, -1));
+        Assert.Equal(TrackDelay.Limit, TrackDelay.Nudged(TrackDelay.Limit, +1));
+        Assert.Equal(0.25, TrackDelay.Stepped(0.15, +1));
+    }
+
+    [Theory]
+    [InlineData(0.15, "+150 ms")]
+    [InlineData(-0.05, "−50 ms")]
+    [InlineData(0, "0 ms")]
+    [InlineData(1.5, "+1500 ms")]
+    public void The_Toast_Says_The_Delay_In_Milliseconds(double seconds, string expected)
+    {
+        using var _ = new CultureScope("en-US");
+
+        Assert.Equal(expected, TrackDelay.Milliseconds(seconds));
     }
 
     private sealed class CultureScope : IDisposable

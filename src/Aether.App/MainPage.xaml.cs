@@ -1038,7 +1038,14 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void OnAnyKeyDown(object sender, KeyRoutedEventArgs e) => NotifyActivity();
+    private void OnAnyKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        NotifyActivity();
+        if (!e.Handled && NudgeFromKey(e.Key))
+        {
+            e.Handled = true;
+        }
+    }
 
     /// <summary>Player keys stand down while the Open URL field, the phone card, settings or the tour has the keyboard.</summary>
     private bool ArePlayerKeysPaused => IsOpenUrlShown || _lanShown || _settingsShown || _tour.IsActive || IsTextInputFocused();

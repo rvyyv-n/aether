@@ -170,6 +170,9 @@ public sealed record AetherSettings
     public string ShortcutPreviousFile { get; init; } = "";
     public string ShortcutQueue { get; init; } = "";
     public string ShortcutTranscript { get; init; } = "";
+    public string ShortcutSubtitleEarlier { get; init; } = "";
+    public string ShortcutSubtitleLater { get; init; } = "";
+    public string ShortcutSubtitleDelayReset { get; init; } = "";
     public string ShortcutSidebar { get; init; } = "";
     public string ShortcutLanStream { get; init; } = "";
 }

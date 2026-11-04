@@ -1,14 +1,11 @@
 using Aether.Core.Playback.Input;
 using Aether_App.Input;
-using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
-using Windows.System;
-using Windows.UI.Core;
 
 namespace Aether_App.Settings.Pages;
 
@@ -41,7 +38,8 @@ public sealed partial class ShortcutsPage : Page
         // Fixed keys (frame steps, Escape) are listed with the ones that can be changed, in the order of 6.7.
         Add(PlaybackGroup, ShortcutAction.PlayPause, ShortcutAction.SkipBack, ShortcutAction.SkipForward,
             ShortcutAction.SkipBackFine, ShortcutAction.SkipForwardFine, ShortcutAction.SkipBackLong, ShortcutAction.SkipForwardLong,
-            ShortcutAction.PreviousChapter, ShortcutAction.NextChapter, ShortcutAction.PreviousFile, ShortcutAction.NextFile);
+            ShortcutAction.PreviousChapter, ShortcutAction.NextChapter, ShortcutAction.PreviousFile, ShortcutAction.NextFile,
+            ShortcutAction.SubtitleEarlier, ShortcutAction.SubtitleLater, ShortcutAction.SubtitleDelayReset);
         PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Back1Frame", ","));
         PlaybackGroup.Children.Add(FixedRow("Settings_Shortcuts_Forward1Frame", "."));
         Add(PlaybackGroup, ShortcutAction.Mute, ShortcutAction.Loop, ShortcutAction.CopyFrame, ShortcutAction.SaveFrame);
@@ -230,7 +228,7 @@ public sealed partial class ShortcutsPage : Page
         }
 
         e.Handled = true;
-        var combination = new KeyCombination(key, CurrentModifiers());
+        var combination = new KeyCombination(key, KeyboardModifiers.Current());
         if (combination.IsReserved)
         {
             _reserved = true;
@@ -242,22 +240,4 @@ public sealed partial class ShortcutsPage : Page
         Refresh();
     }
 
-    private static KeyModifiers CurrentModifiers()
-    {
-        static bool Down(VirtualKey key) => InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(CoreVirtualKeyStates.Down);
-        KeyModifiers modifiers = KeyModifiers.None;
-        if (Down(VirtualKey.Control))
-        {
-            modifiers |= KeyModifiers.Ctrl;
-        }
-        if (Down(VirtualKey.Menu))
-        {
-            modifiers |= KeyModifiers.Alt;
-        }
-        if (Down(VirtualKey.Shift))
-        {
-            modifiers |= KeyModifiers.Shift;
-        }
-        return modifiers;
-    }
 }
