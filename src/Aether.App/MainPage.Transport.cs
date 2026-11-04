@@ -103,6 +103,7 @@ public sealed partial class MainPage
             return;
         }
         _chapterSkipper.OnUserSeek(seconds);
+        _segmentSkipper.OnUserSeek(seconds);
         _chrome.SetHold(ChromeHolds.Interaction, dragging);
         ApplyChrome();
         PositionText.Text = Timecode.FormatClock(seconds, session.ViewModel.Duration);

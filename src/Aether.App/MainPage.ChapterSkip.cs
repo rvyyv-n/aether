@@ -103,7 +103,7 @@ public sealed partial class MainPage
     /// </summary>
     private void SyncSkipChapter()
     {
-        ChapterSkipOffer? offer = CurrentSkipOffer;
+        ChapterSkipOffer? offer = CurrentSkipOffer ?? SponsorSkipOffer;
         double position = _session?.ViewModel.Position ?? 0;
         bool wanted = _skipPrompt.Update(offer?.Target, position, _chrome.IsVisible || _pointerOnSkipChapter);
         bool blocked = IsPictureInPicture || _settingsShown || Osd.Visibility != Visibility.Visible
@@ -166,9 +166,13 @@ public sealed partial class MainPage
 
     private void OnSkipChapterClick(object sender, RoutedEventArgs e)
     {
-        if (CurrentSkipOffer is { } offer && HasVideo)
+        if ((CurrentSkipOffer ?? SponsorSkipOffer) is { } offer && HasVideo)
         {
             _skipPrompt.Used();
+            if (CurrentSkipOffer is null)
+            {
+                UseSponsorOffer();
+            }
             UserSeekToChapter(offer.Target);
             SyncSkipChapter();
         }

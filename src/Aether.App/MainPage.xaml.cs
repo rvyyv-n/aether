@@ -600,6 +600,7 @@ public sealed partial class MainPage : Page
         switch (e.PropertyName)
         {
             case nameof(PlayerViewModel.Position):
+                OnSponsorPosition(vm);
                 OnChapterSkipPosition(vm);
                 UpdateClock(vm);
                 if (_sidePanel == SidePanel.Transcript)
