@@ -27,6 +27,9 @@
         <settings:SettingsRow x:Name="VolumeNormalisationRow" Glyph="&#xE9E9;">
             <ToggleSwitch x:Name="VolumeNormalisationToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
         </settings:SettingsRow>
+        <settings:SettingsRow x:Name="NightModeRow" Glyph="&#xE708;">
+            <ToggleSwitch x:Name="NightModeToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+        </settings:SettingsRow>
         <settings:SettingsExpander x:Name="EqualizerExpander" Glyph="&#xE9E9;">
             <settings:SettingsExpander.HeaderContent>
                 <ToggleSwitch x:Name="EqualizerToggle" Style="{StaticResource AetherSettingsToggleStyle}" />

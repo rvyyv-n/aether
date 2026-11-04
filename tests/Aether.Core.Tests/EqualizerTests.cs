@@ -157,17 +157,17 @@ public class EqualizerTests
         var sync = new MpvSettingsSync(sent.Add);
         var settings = new AetherSettings { EqualizerEnabled = true };
         sync.Apply(settings, false);
-        sync.PrepareForFile();
+        sync.PrepareForAudioRestart();
         sent.Clear();
 
         // A live move changes the running filter only; mpv builds the next file's filter from the saved entry.
         sync.Apply(settings with { EqualizerCurve = "0;4,0,0,0,0,0,0,0,0,0" }, false);
-        sync.PrepareForFile();
+        sync.PrepareForAudioRestart();
 
         Assert.Equal(["af", "remove", "@aether-eq"], sent[^2]);
         Assert.Equal(["af", "add", Equalizer.Filter(new EqualizerCurve(0, [4, 0, 0, 0, 0, 0, 0, 0, 0, 0]))], sent[^1]);
         int count = sent.Count;
-        sync.PrepareForFile();
+        sync.PrepareForAudioRestart();
         Assert.Equal(count, sent.Count);
     }
 

@@ -13,9 +13,10 @@ public sealed class MpvSettingsSync(Action<string[]> send)
     private readonly object _gate = new();
     private readonly Dictionary<string, string> _sent = new(StringComparer.Ordinal);
     private bool _normalising;
+    private bool _night;
     private string? _deinterlacer;
     // The curve the running equalizer has, and the one its entry in mpv's filter list was added with: slider moves
-    // reach the running filter only, so the two part until PrepareForFile.
+    // reach the running filter only, so the two part until PrepareForAudioRestart.
     private EqualizerCurve? _equalizer;
     private EqualizerCurve? _equalizerEntry;
 
@@ -45,6 +46,15 @@ public sealed class MpvSettingsSync(Action<string[]> send)
                 _normalising = plan.NormaliseVolume;
             }
 
+            if (plan.NightMode != _night)
+            {
+                foreach (string[] command in NightMode.Commands(plan.NightMode))
+                {
+                    _send(command);
+                }
+                _night = plan.NightMode;
+            }
+
             if (plan.DeinterlaceFilter != _deinterlacer)
             {
                 foreach (string[] command in MpvSettingsMap.DeinterlaceCommands(plan.DeinterlaceFilter))
@@ -70,10 +80,10 @@ public sealed class MpvSettingsSync(Action<string[]> send)
     }
 
     /// <summary>
-    /// Before a file loads: mpv builds its filters from their entries, so an equalizer moved live since it was added is
-    /// added again with where the sliders are now.
+    /// Before mpv restarts the audio (a new file, another audio track, a new mix): it builds the filters again from their
+    /// entries, so an equalizer moved live since it was added is added again with where the sliders are now.
     /// </summary>
-    public void PrepareForFile()
+    public void PrepareForAudioRestart()
     {
         lock (_gate)
         {

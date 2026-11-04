@@ -111,6 +111,23 @@
                         Style="{StaticResource AetherIconButtonStyle}"
                         Tag="Audio" />
                 </Grid>
+                <Grid Margin="0,4,0,0" ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="NightLabel"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        TextTrimming="CharacterEllipsis" />
+                    <ToggleSwitch
+                        x:Name="NightToggle"
+                        Grid.Column="1"
+                        Style="{StaticResource AetherSettingsToggleStyle}"
+                        Toggled="OnNightToggled" />
+                </Grid>
             </StackPanel>
 
             <StackPanel Grid.Column="1">

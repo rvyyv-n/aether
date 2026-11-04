@@ -477,6 +477,12 @@
   <data name="Equalizer_Band" xml:space="preserve">
     <value>{0} Hz</value>
   </data>
+  <data name="Settings_NightMode_Title" xml:space="preserve">
+    <value>Night mode</value>
+  </data>
+  <data name="Settings_NightMode_Description" xml:space="preserve">
+    <value>Softens loud scenes and lifts quiet dialogue, for watching at low volume. Replaces volume normalisation while on</value>
+  </data>
   <data name="Rail_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>

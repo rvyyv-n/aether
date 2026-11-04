@@ -73,6 +73,8 @@ public sealed record AetherSettings
     public bool EqualizerEnabled { get; init; }
     /// <summary>The equalizer's preamp and ten bands, as <see cref="Audio.EqualizerCurve"/> writes them.</summary>
     public string EqualizerCurve { get; init; } = "0;0,0,0,0,0,0,0,0,0,0";
+    /// <summary>Compresses loud scenes and lifts quiet dialogue (14.3).</summary>
+    public bool NightMode { get; init; }
 
     // Subtitles
     public bool ShowSubtitles { get; init; } = true;

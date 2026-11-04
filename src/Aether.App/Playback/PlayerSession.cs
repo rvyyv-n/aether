@@ -174,11 +174,14 @@ public sealed class PlayerSession : IDisposable
             ? seconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
             : "none";
         _context.CommandAsync(new MpvCommand("set", "start", start));
-        _settingsSync.PrepareForFile();
+        _settingsSync.PrepareForAudioRestart();
         _context.CommandAsync(string.IsNullOrEmpty(fileOptions)
             ? new MpvCommand("loadfile", path, "replace")
             : new MpvCommand("loadfile", path, "replace", "-1", fileOptions)); // -1: the playlist index mpv 0.38+ expects before options
     }
+
+    /// <summary>Call before switching the audio track or the mix, which rebuild the audio filters. Non-blocking.</summary>
+    public void PrepareForAudioRestart() => _settingsSync.PrepareForAudioRestart();
 
     /// <summary>Toggles pause; on an ended file restarts it from 0. Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>

@@ -1,4 +1,6 @@
+using Aether.Core.Playback.Settings;
 using Aether.Core.Playback.Tracks;
+using Aether_App.Settings;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -31,6 +33,32 @@ public sealed partial class TracksPanel : UserControl
         foreach (Button up in new[] { AudioDelayUp, SubtitleDelayUp })
         {
             NameButton(up, later);
+        }
+        NightLabel.Text = AppStrings.Get("Settings_NightMode_Title");
+        ToolTipService.SetToolTip(NightToggle, AppStrings.Get("Settings_NightMode_Description"));
+        AutomationProperties.SetName(NightToggle, NightLabel.Text);
+        Loaded += (_, _) =>
+        {
+            App.Settings.Changed += OnSettingsChanged;
+            NightToggle.IsOn = App.Settings.Current.NightMode;
+        };
+        Unloaded += (_, _) => App.Settings.Changed -= OnSettingsChanged;
+    }
+
+    private void OnSettingsChanged(object? sender, SettingChangedEventArgs e)
+    {
+        if (e.Key == SettingKeys.NightMode)
+        {
+            DispatcherQueue.TryEnqueue(() => NightToggle.IsOn = App.Settings.Current.NightMode);
+        }
+    }
+
+    private void OnNightToggled(object sender, RoutedEventArgs e)
+    {
+        if (NightToggle.IsOn != App.Settings.Current.NightMode)
+        {
+            App.Settings.Set(SettingKeys.NightMode, NightToggle.IsOn);
+            SettingsSaver.Save();
         }
     }
 

@@ -96,6 +96,10 @@ public sealed partial class MainPage
     private void OnTrackChosen(object? sender, TrackChoice choice)
     {
         string property = choice.Kind == TrackKind.Audio ? "aid" : "sid";
+        if (choice.Kind == TrackKind.Audio)
+        {
+            _session?.PrepareForAudioRestart();
+        }
         string value = choice.Id is { } id ? id.ToString(CultureInfo.InvariantCulture) : "no";
         _ = ChangeTracks(context => context.SetProperty(property, value), userChoice: true);
     }
