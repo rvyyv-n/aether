@@ -1225,6 +1225,26 @@
                         VerticalAlignment="Center"
                         Style="{StaticResource AetherTimecodeSecondaryTextStyle}"
                         Text="00:00" />
+                    <!--  Live streams (16.4): in place of the length, a LIVE badge whose dot pulses at the live edge; a click goes back to it  -->
+                    <Button
+                        x:Name="LiveBadge"
+                        Grid.Column="2"
+                        Padding="8,0"
+                        Click="OnLiveBadgeClick"
+                        Style="{StaticResource AetherSpeedPillButtonStyle}"
+                        Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Ellipse
+                                x:Name="LiveDot"
+                                Width="8"
+                                Height="8"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                x:Name="LiveText"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                        </StackPanel>
+                    </Button>
                 </Grid>
             </Grid>
         </Border>

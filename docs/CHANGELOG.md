@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Live streams get a LIVE badge in place of the length. Scrub back through what has been loaded, see how far behind live you are, and click LIVE to catch up.
 - With SponsorBlock on, a marked part is skipped as it starts and a toast offers Back to watch it after all. Turn off Skip automatically to get a Skip button instead.
 - SponsorBlock for YouTube, off until you turn it on in Settings › Streaming: the parts viewers marked as sponsors, self-promotion or reminders to subscribe (and, if you choose, intros and outros) show as coloured strips on the seek bar. Aether sends the service only a short hash prefix, never which video you watch.
 - Subtitles out of sync? Press ] to show them 50 ms later or [ for 50 ms earlier, and Shift+[ to put them back; a toast shows the delay. The keys can be changed in Settings › Shortcuts.

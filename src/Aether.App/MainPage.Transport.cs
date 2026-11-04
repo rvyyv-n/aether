@@ -102,12 +102,13 @@ public sealed partial class MainPage
         {
             return;
         }
-        _chapterSkipper.OnUserSeek(seconds);
-        _segmentSkipper.OnUserSeek(seconds);
+        double target = FromSeekBar(seconds);
+        _chapterSkipper.OnUserSeek(target);
+        _segmentSkipper.OnUserSeek(target);
         _chrome.SetHold(ChromeHolds.Interaction, dragging);
         ApplyChrome();
-        PositionText.Text = Timecode.FormatClock(seconds, session.ViewModel.Duration);
-        TrySend(() => session.Seek(seconds, dragging));
+        PositionText.Text = SeekBarClock(target, session.ViewModel.Duration);
+        TrySend(() => session.Seek(target, dragging));
     }
 
     private void SkipBy(double seconds)

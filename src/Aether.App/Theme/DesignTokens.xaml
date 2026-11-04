@@ -552,6 +552,8 @@
     <SolidColorBrush x:Key="AetherMarkSelfPromoBrush" Color="#FFFFFF00" />
     <SolidColorBrush x:Key="AetherMarkInteractionBrush" Color="#FFCC00FF" />
     <SolidColorBrush x:Key="AetherMarkIntroOutroBrush" Color="#FF0202ED" />
+    <!--  The live edge dot (16.4): broadcast red, the same in both themes  -->
+    <SolidColorBrush x:Key="AetherLiveBrush" Color="#FFE81123" />
 
     
 

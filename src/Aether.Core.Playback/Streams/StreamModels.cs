@@ -52,7 +52,8 @@ public sealed record ResolvedStream(
     IReadOnlyList<StreamFormat>? Formats = null,
     IReadOnlyList<StreamSubtitle>? Subtitles = null,
     string? VideoFormatId = null,
-    string? AudioFormatId = null);
+    string? AudioFormatId = null,
+    bool IsLive = false);
 
 public sealed class StreamResolutionException : Exception
 {

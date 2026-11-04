@@ -191,7 +191,7 @@ public sealed partial class MainPage
             string title = _streamTitle ?? WebLink.Host(link) ?? link;
             Open(resolved.StreamUrl, carry, new OpenedLink(
                 link, title, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters, resolved.Subtitles,
-                qualities, QualityOptions.Resolve(option.Key, qualities)));
+                qualities, QualityOptions.Resolve(option.Key, qualities), resolved.IsLive));
             _qualitySwitching = playing;
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)

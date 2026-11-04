@@ -402,6 +402,15 @@
   <data name="Toast_SubtitleDelay" xml:space="preserve">
     <value>Subtitle delay: {0}</value>
   </data>
+  <data name="Transport_Live" xml:space="preserve">
+    <value>LIVE</value>
+  </data>
+  <data name="Transport_LiveNow" xml:space="preserve">
+    <value>Watching live</value>
+  </data>
+  <data name="Transport_GoLive" xml:space="preserve">
+    <value>Go to live</value>
+  </data>
   <data name="Settings_SponsorBlock_Title" xml:space="preserve">
     <value>SponsorBlock</value>
   </data>

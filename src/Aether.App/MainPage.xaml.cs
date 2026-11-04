@@ -123,6 +123,7 @@ public sealed partial class MainPage : Page
         InitializeLanStream();
         InitializeQueue();
         InitializeSponsorBlock();
+        InitializeLive();
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -321,7 +322,7 @@ public sealed partial class MainPage : Page
     /// <param name="Qualities">The sizes the quality picker lists; <paramref name="Quality"/> is the one playing.</param>
     private sealed record OpenedLink(
         string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl, IReadOnlyList<StreamChapter>? Chapters,
-        IReadOnlyList<StreamSubtitle>? Subtitles, IReadOnlyList<QualityOption> Qualities, QualityOption Quality);
+        IReadOnlyList<StreamSubtitle>? Subtitles, IReadOnlyList<QualityOption> Qualities, QualityOption Quality, bool IsLive = false);
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
     private sealed record PlaybackCarryOver(
@@ -509,6 +510,7 @@ public sealed partial class MainPage : Page
         ResetLinkSubtitles(link?.Subtitles, carry);
         ResetSubtitleFiles(path, isLink: link is not null, carry);
         LoadSponsorSegments(link?.WebLink);
+        ResetLive(link?.IsLive == true);
         ResetQuality(link);
         // A restart carries the position over by itself; only a saved position is worth announcing.
         ResetResumeOffer(carry is null ? startAt : null, resumeKey);
@@ -678,6 +680,10 @@ public sealed partial class MainPage : Page
         DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
         SyncClipRange();
         UpdatePipSeek(vm);
+        if (UpdateLiveClock(vm))
+        {
+            return;
+        }
         SeekBar.Duration = vm.Duration;
         double position = TransportState.DisplayPosition(vm.State);
         SeekBar.Position = position;
@@ -1280,7 +1286,7 @@ public sealed partial class MainPage : Page
             IReadOnlyList<QualityOption> qualities = QualityOptions.From(resolved.Formats);
             Open(resolved.StreamUrl, carry, new OpenedLink(
                 link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters, resolved.Subtitles,
-                qualities, QualityOptions.Resolve(savedQuality, qualities)));
+                qualities, QualityOptions.Resolve(savedQuality, qualities), resolved.IsLive));
 
             _ = Task.Run(() =>
             {
