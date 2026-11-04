@@ -113,6 +113,12 @@ public sealed record AetherSettings
     public string HttpProxy { get; init; } = "";
     /// <summary>mpv <c>rtsp-transport</c>: <c>tcp</c>, <c>udp</c>, <c>http</c> or <c>udp_multicast</c>.</summary>
     public string RtspTransport { get; init; } = "tcp";
+    /// <summary>Asks SponsorBlock for the parts of YouTube videos to skip (16.1); off until the user turns it on.</summary>
+    public bool SponsorBlock { get; init; }
+    /// <summary>The SponsorBlock categories to skip, by their SponsorBlock names.</summary>
+    public string SponsorBlockCategories { get; init; } = "sponsor,selfpromo,interaction";
+    /// <summary>True skips a segment as it starts; false offers a Skip button instead.</summary>
+    public bool SponsorBlockAutoSkip { get; init; } = true;
 
     // Advanced
     /// <summary>Multi-line text, one <c>key=value</c> mpv option per line (see <see cref="MpvOptionsValidator"/>).</summary>

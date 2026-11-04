@@ -122,6 +122,7 @@ public sealed partial class MainPage : Page
         InitializeVideo();
         InitializeLanStream();
         InitializeQueue();
+        InitializeSponsorBlock();
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -507,6 +508,7 @@ public sealed partial class MainPage : Page
         ResetChapters(link?.Chapters);
         ResetLinkSubtitles(link?.Subtitles, carry);
         ResetSubtitleFiles(path, isLink: link is not null, carry);
+        LoadSponsorSegments(link?.WebLink);
         ResetQuality(link);
         // A restart carries the position over by itself; only a saved position is worth announcing.
         ResetResumeOffer(carry is null ? startAt : null, resumeKey);

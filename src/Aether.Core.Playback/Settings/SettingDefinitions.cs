@@ -66,6 +66,9 @@ public static class SettingKeys
     public const string NetworkCacheMegabytes = "streaming.cacheMegabytes";
     public const string HttpProxy = "streaming.httpProxy";
     public const string RtspTransport = "streaming.rtspTransport";
+    public const string SponsorBlock = "streaming.sponsorBlock";
+    public const string SponsorBlockCategories = "streaming.sponsorBlockCategories";
+    public const string SponsorBlockAutoSkip = "streaming.sponsorBlockAutoSkip";
     public const string RepairAviIndex = "advanced.repairAviIndex";
     public const string SkipDeblocking = "advanced.skipDeblocking";
     public const string CustomMpvOptions = "advanced.customMpvOptions";
@@ -259,6 +262,15 @@ public static class SettingDefinitions
         Range(SettingKeys.NetworkCacheMegabytes, s => s.NetworkCacheMegabytes, (s, v) => s with { NetworkCacheMegabytes = v }, 16, 2048, restart: true),
         Text(SettingKeys.HttpProxy, s => s.HttpProxy, (s, v) => s with { HttpProxy = v }),
         Choice(SettingKeys.RtspTransport, s => s.RtspTransport, (s, v) => s with { RtspTransport = v }, false, "tcp", "udp", "http", "udp_multicast"),
+        Flag(SettingKeys.SponsorBlock, s => s.SponsorBlock, (s, v) => s with { SponsorBlock = v }),
+        new SettingDefinition<string>
+        {
+            Key = SettingKeys.SponsorBlockCategories,
+            Get = s => s.SponsorBlockCategories,
+            With = (s, v) => s with { SponsorBlockCategories = v },
+            IsValid = v => v.Length <= MaxText && Streams.SponsorBlock.FormatCategories(Streams.SponsorBlock.ParseCategories(v)) == v,
+        },
+        Flag(SettingKeys.SponsorBlockAutoSkip, s => s.SponsorBlockAutoSkip, (s, v) => s with { SponsorBlockAutoSkip = v }),
 
         Flag(SettingKeys.RepairAviIndex, s => s.RepairAviIndex, (s, v) => s with { RepairAviIndex = v }, restart: true),
         Choice(SettingKeys.SkipDeblocking, s => s.SkipDeblocking, (s, v) => s with { SkipDeblocking = v }, true, "default", "nonref", "nonkey", "all"),

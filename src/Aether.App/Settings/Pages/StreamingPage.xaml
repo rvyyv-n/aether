@@ -34,6 +34,29 @@
                     <ToggleSwitch x:Name="YtDlpAutoUpdateToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
                 </StackPanel>
             </settings:SettingsRow>
+            <settings:SettingsExpander x:Name="SponsorBlockExpander" Glyph="&#xE8C9;">
+                <settings:SettingsExpander.HeaderContent>
+                    <ToggleSwitch x:Name="SponsorBlockToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </settings:SettingsExpander.HeaderContent>
+                <settings:SettingsRow x:Name="SponsorBlockAutoSkipRow">
+                    <ToggleSwitch x:Name="SponsorBlockAutoSkipToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </settings:SettingsRow>
+                <settings:SettingsRow x:Name="SponsorBlockSponsorRow">
+                    <ToggleSwitch x:Name="SponsorBlockSponsorToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </settings:SettingsRow>
+                <settings:SettingsRow x:Name="SponsorBlockSelfPromoRow">
+                    <ToggleSwitch x:Name="SponsorBlockSelfPromoToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </settings:SettingsRow>
+                <settings:SettingsRow x:Name="SponsorBlockInteractionRow">
+                    <ToggleSwitch x:Name="SponsorBlockInteractionToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </settings:SettingsRow>
+                <settings:SettingsRow x:Name="SponsorBlockIntroRow">
+                    <ToggleSwitch x:Name="SponsorBlockIntroToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </settings:SettingsRow>
+                <settings:SettingsRow x:Name="SponsorBlockOutroRow">
+                    <ToggleSwitch x:Name="SponsorBlockOutroToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </settings:SettingsRow>
+            </settings:SettingsExpander>
         </settings:SettingsGroup>
         <TextBlock x:Name="YtDlpMissingNote" Margin="16,0" Foreground="{ThemeResource AetherTextSecondaryBrush}" Style="{StaticResource AetherCaptionTextStyle}" TextWrapping="Wrap" Visibility="Collapsed" />
     </StackPanel>

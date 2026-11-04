@@ -1,5 +1,6 @@
 using Aether.Core.Playback;
 using Aether.Core.Playback.Settings;
+using Aether.Core.Playback.Streams;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -8,6 +9,50 @@ namespace Aether_App.Settings.Pages;
 public sealed partial class StreamingPage : Page
 {
     private string? _ytDlpPath;
+
+    /// <summary>SponsorBlock (16.1): the switch with what it sends in its description, auto-skip, and a switch per category.</summary>
+    private void BindSponsorBlock(SettingsPageBinder binder)
+    {
+        SponsorBlockExpander.Header = AppStrings.Get("Settings_SponsorBlock_Title");
+        SponsorBlockExpander.Description = AppStrings.Get("Settings_SponsorBlock_Description");
+        binder.Toggle(null, SponsorBlockToggle, SettingKeys.SponsorBlock, "Settings_SponsorBlock_Title");
+        binder.Toggle(SponsorBlockAutoSkipRow, SponsorBlockAutoSkipToggle, SettingKeys.SponsorBlockAutoSkip,
+            "Settings_SponsorBlockAutoSkip_Title", "Settings_SponsorBlockAutoSkip_Description");
+        (SettingsRow Row, ToggleSwitch Toggle, SponsorCategory Category, string Title)[] categories =
+        [
+            (SponsorBlockSponsorRow, SponsorBlockSponsorToggle, SponsorCategory.Sponsor, AppStrings.Get("SponsorBlock_Sponsor")),
+            (SponsorBlockSelfPromoRow, SponsorBlockSelfPromoToggle, SponsorCategory.SelfPromo, AppStrings.Get("SponsorBlock_SelfPromo")),
+            (SponsorBlockInteractionRow, SponsorBlockInteractionToggle, SponsorCategory.Interaction, AppStrings.Get("SponsorBlock_Interaction")),
+            (SponsorBlockIntroRow, SponsorBlockIntroToggle, SponsorCategory.Intro, AppStrings.Get("SponsorBlock_Intro")),
+            (SponsorBlockOutroRow, SponsorBlockOutroToggle, SponsorCategory.Outro, AppStrings.Get("SponsorBlock_Outro")),
+        ];
+        bool showing = false;
+        foreach ((SettingsRow row, ToggleSwitch toggle, SponsorCategory category, string title) in categories)
+        {
+            row.Header = title;
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, title);
+            toggle.Toggled += (_, _) =>
+            {
+                if (showing)
+                {
+                    return;
+                }
+                IEnumerable<SponsorCategory> chosen = categories.Where(c => c.Toggle.IsOn).Select(c => c.Category);
+                App.Settings.Set(SettingKeys.SponsorBlockCategories, SponsorBlock.FormatCategories(chosen));
+                SettingsSaver.Save();
+            };
+        }
+        binder.Track(() =>
+        {
+            showing = true;
+            IReadOnlyList<SponsorCategory> on = SponsorBlock.ParseCategories(App.Settings.Current.SponsorBlockCategories);
+            foreach ((_, ToggleSwitch toggle, SponsorCategory category, _) in categories)
+            {
+                toggle.IsOn = on.Contains(category);
+            }
+            showing = false;
+        });
+    }
 
     public StreamingPage()
     {
@@ -32,6 +77,7 @@ public sealed partial class StreamingPage : Page
             "Settings_NetworkCache_Title", "Settings_NetworkCache_Description",
             megabytes => AppStrings.Format("Settings_NetworkCache_Value", megabytes));
         binder.RestartNote(NetworkCacheRestartNote, SettingKeys.NetworkCacheMegabytes);
+        BindSponsorBlock(binder);
         HttpProxyBox.PlaceholderText = AppStrings.Get("Settings_HttpProxy_Placeholder");
         binder.TextEntry(HttpProxyRow, HttpProxyBox, SettingKeys.HttpProxy, "Settings_HttpProxy_Title", "Settings_HttpProxy_Description");
         binder.Choose(RtspTransportRow, RtspTransportCombo, SettingKeys.RtspTransport,
