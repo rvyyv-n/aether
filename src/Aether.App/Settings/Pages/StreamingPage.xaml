@@ -38,6 +38,7 @@
                 <settings:SettingsExpander.HeaderContent>
                     <ToggleSwitch x:Name="SponsorBlockToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
                 </settings:SettingsExpander.HeaderContent>
+                <settings:SettingsRow x:Name="SponsorBlockPrivacyRow" />
                 <settings:SettingsRow x:Name="SponsorBlockAutoSkipRow">
                     <ToggleSwitch x:Name="SponsorBlockAutoSkipToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
                 </settings:SettingsRow>

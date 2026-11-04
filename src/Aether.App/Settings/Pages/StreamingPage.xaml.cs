@@ -16,6 +16,7 @@ public sealed partial class StreamingPage : Page
         SponsorBlockExpander.Header = AppStrings.Get("Settings_SponsorBlock_Title");
         SponsorBlockExpander.Description = AppStrings.Get("Settings_SponsorBlock_Description");
         binder.Toggle(null, SponsorBlockToggle, SettingKeys.SponsorBlock, "Settings_SponsorBlock_Title");
+        SettingsPageBinder.Describe(SponsorBlockPrivacyRow, "Settings_SponsorBlockPrivacy_Title", "Settings_SponsorBlockPrivacy_Description");
         binder.Toggle(SponsorBlockAutoSkipRow, SponsorBlockAutoSkipToggle, SettingKeys.SponsorBlockAutoSkip,
             "Settings_SponsorBlockAutoSkip_Title", "Settings_SponsorBlockAutoSkip_Description");
         (SettingsRow Row, ToggleSwitch Toggle, SponsorCategory Category, string Title)[] categories =

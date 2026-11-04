@@ -406,7 +406,13 @@
     <value>SponsorBlock</value>
   </data>
   <data name="Settings_SponsorBlock_Description" xml:space="preserve">
-    <value>Skips sponsors and other parts of YouTube videos that viewers have marked. When on, Aether asks sponsor.ajay.app for each YouTube video you play, sending only the first four characters of a hash of its id, so the service cannot tell which video it is</value>
+    <value>Skips sponsors and other parts of YouTube videos that viewers have marked</value>
+  </data>
+  <data name="Settings_SponsorBlockPrivacy_Title" xml:space="preserve">
+    <value>What is sent</value>
+  </data>
+  <data name="Settings_SponsorBlockPrivacy_Description" xml:space="preserve">
+    <value>For each YouTube video, sponsor.ajay.app gets the first four characters of a hash of its id, shared by many videos, so it cannot tell which one you watch</value>
   </data>
   <data name="Settings_SponsorBlockAutoSkip_Title" xml:space="preserve">
     <value>Skip automatically</value>
