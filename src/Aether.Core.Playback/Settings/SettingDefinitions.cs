@@ -43,6 +43,8 @@ public static class SettingKeys
     public const string VolumeNormalisation = "audio.normalise";
     public const string PitchCorrection = "audio.pitchCorrection";
     public const string StereoDownmix = "audio.stereoDownmix";
+    public const string EqualizerEnabled = "audio.equalizer";
+    public const string EqualizerCurve = "audio.equalizerCurve";
     public const string ShowSubtitles = "subtitles.show";
     public const string PreferredAudioLanguage = "subtitles.audioLanguage";
     public const string PreferredSubtitleLanguage = "subtitles.language";
@@ -227,6 +229,8 @@ public static class SettingDefinitions
         Flag(SettingKeys.VolumeNormalisation, s => s.VolumeNormalisation, (s, v) => s with { VolumeNormalisation = v }),
         Flag(SettingKeys.PitchCorrection, s => s.PitchCorrection, (s, v) => s with { PitchCorrection = v }),
         Flag(SettingKeys.StereoDownmix, s => s.StereoDownmix, (s, v) => s with { StereoDownmix = v }),
+        Flag(SettingKeys.EqualizerEnabled, s => s.EqualizerEnabled, (s, v) => s with { EqualizerEnabled = v }),
+        new SettingDefinition<string> { Key = SettingKeys.EqualizerCurve, Get = s => s.EqualizerCurve, With = (s, v) => s with { EqualizerCurve = v }, IsValid = v => Audio.EqualizerCurve.TryParse(v, out _) },
 
         Flag(SettingKeys.ShowSubtitles, s => s.ShowSubtitles, (s, v) => s with { ShowSubtitles = v }),
         Text(SettingKeys.PreferredAudioLanguage, s => s.PreferredAudioLanguage, (s, v) => s with { PreferredAudioLanguage = v }),

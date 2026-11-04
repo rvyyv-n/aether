@@ -70,6 +70,9 @@ public sealed record AetherSettings
     public bool PitchCorrection { get; init; } = true;
     /// <summary>Mixes multi-channel tracks down to stereo.</summary>
     public bool StereoDownmix { get; init; }
+    public bool EqualizerEnabled { get; init; }
+    /// <summary>The equalizer's preamp and ten bands, as <see cref="Audio.EqualizerCurve"/> writes them.</summary>
+    public string EqualizerCurve { get; init; } = "0;0,0,0,0,0,0,0,0,0,0";
 
     // Subtitles
     public bool ShowSubtitles { get; init; } = true;

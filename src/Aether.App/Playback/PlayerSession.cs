@@ -174,6 +174,7 @@ public sealed class PlayerSession : IDisposable
             ? seconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
             : "none";
         _context.CommandAsync(new MpvCommand("set", "start", start));
+        _settingsSync.PrepareForFile();
         _context.CommandAsync(string.IsNullOrEmpty(fileOptions)
             ? new MpvCommand("loadfile", path, "replace")
             : new MpvCommand("loadfile", path, "replace", "-1", fileOptions)); // -1: the playlist index mpv 0.38+ expects before options
