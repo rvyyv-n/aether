@@ -14,6 +14,13 @@ public class EqualizerTests
         public void Write(string content) { }
     }
 
+    private sealed class MemoryStorage : ISettingsStorage
+    {
+        public string? Content { get; set; }
+        public string? Read() => Content;
+        public void Write(string content) => Content = content;
+    }
+
     [Fact]
     public void Ten_Standard_Bands_From_31_Hz_To_16_kHz() =>
         Assert.Equal([31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000], Equalizer.Frequencies);
@@ -127,6 +134,37 @@ public class EqualizerTests
         Assert.True(store.Set(SettingKeys.EqualizerCurve, "2;1,1,1,1,1,1,1,1,1,1"));
         Assert.False(store.Set(SettingKeys.EqualizerCurve, "2;1,1"));
         Assert.Equal("2;1,1,1,1,1,1,1,1,1,1", store.Current.EqualizerCurve);
+    }
+
+    [Fact]
+    public void A_Preset_And_Night_Mode_Survive_A_Restart()
+    {
+        var disk = new MemoryStorage();
+        var store = new SettingsStore(disk);
+        string bass = EqualizerPresets.Find("bass")!.Curve.ToString();
+        store.Set(SettingKeys.EqualizerEnabled, true);
+        store.Set(SettingKeys.EqualizerCurve, bass);
+        store.Set(SettingKeys.NightMode, true);
+        store.Save();
+
+        var reopened = new SettingsStore(disk);
+        reopened.Load();
+
+        Assert.True(reopened.Current.EqualizerEnabled);
+        Assert.True(reopened.Current.NightMode);
+        Assert.True(EqualizerCurve.TryParse(reopened.Current.EqualizerCurve, out EqualizerCurve? curve));
+        Assert.Equal("bass", EqualizerPresets.KeyOf(curve));
+    }
+
+    [Fact]
+    public void A_Hand_Edited_Broken_Curve_Falls_Back_To_Flat()
+    {
+        var disk = new MemoryStorage { Content = "{\"audio.equalizer\": true, \"audio.equalizerCurve\": \"9;loud\"}" };
+        var store = new SettingsStore(disk);
+        store.Load();
+
+        Assert.True(store.Current.EqualizerEnabled);
+        Assert.Equal(EqualizerCurve.Flat.ToString(), store.Current.EqualizerCurve);
     }
 
     [Fact]

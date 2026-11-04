@@ -18,6 +18,21 @@ public static class TrackMix
 {
     public const int MaxPercent = 200;
 
+    /// <summary>
+    /// What starts or changes the mix (<paramref name="graph"/>), or with null ends it, after which mpv plays
+    /// <paramref name="restoreTrack"/> again, or its own pick when that is null: the mix leaves it on no single track.
+    /// </summary>
+    public static IReadOnlyList<string[]> Commands(string? graph, bool mixing, int? restoreTrack)
+    {
+        if (graph is not null)
+        {
+            return [["set", "lavfi-complex", graph]];
+        }
+        return mixing
+            ? [["set", "lavfi-complex", ""], ["set", "aid", restoreTrack?.ToString(CultureInfo.InvariantCulture) ?? "auto"]]
+            : [];
+    }
+
     public static IReadOnlyList<MixLevel> Start(IEnumerable<int> trackIds) => trackIds.Select(id => new MixLevel(id, 100, false)).ToArray();
 
     /// <summary>The <c>lavfi-complex</c> value for <paramref name="levels"/>; the mix ends in <c>[ao]</c>, the audio output.</summary>

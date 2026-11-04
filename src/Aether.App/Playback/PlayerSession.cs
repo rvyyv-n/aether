@@ -193,15 +193,14 @@ public sealed class PlayerSession : IDisposable
     /// </summary>
     public void SetMix(string? graph, int? restoreTrack)
     {
-        if (graph is null && !_mixing)
+        IReadOnlyList<string[]> commands = TrackMix.Commands(graph, _mixing, restoreTrack);
+        if (commands.Count > 0)
         {
-            return;
+            _settingsSync.PrepareForAudioRestart();
         }
-        _settingsSync.PrepareForAudioRestart();
-        _context.CommandAsync(new MpvCommand("set", "lavfi-complex", graph ?? ""));
-        if (graph is null)
+        foreach (string[] command in commands)
         {
-            _context.CommandAsync(new MpvCommand("set", "aid", restoreTrack?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "auto"));
+            _context.CommandAsync(new MpvCommand(command));
         }
         _mixing = graph is not null;
     }

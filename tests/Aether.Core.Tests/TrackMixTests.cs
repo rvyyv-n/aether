@@ -57,6 +57,21 @@ public class TrackMixTests
     }
 
     [Fact]
+    public void Starting_A_Mix_Sends_The_Graph_And_Ending_It_Picks_A_Track_Again()
+    {
+        string graph = TrackMix.Graph([new MixLevel(1, 100, false), new MixLevel(2, 100, false)]);
+
+        Assert.Equal([["set", "lavfi-complex", graph]], TrackMix.Commands(graph, mixing: false, restoreTrack: null));
+        Assert.Equal([["set", "lavfi-complex", graph]], TrackMix.Commands(graph, mixing: true, restoreTrack: null));
+        Assert.Equal([["set", "lavfi-complex", ""], ["set", "aid", "2"]], TrackMix.Commands(null, mixing: true, restoreTrack: 2));
+        Assert.Equal([["set", "lavfi-complex", ""], ["set", "aid", "auto"]], TrackMix.Commands(null, mixing: true, restoreTrack: null));
+    }
+
+    [Fact]
+    public void Ending_A_Mix_That_Never_Started_Sends_Nothing() =>
+        Assert.Empty(TrackMix.Commands(null, mixing: false, restoreTrack: 1));
+
+    [Fact]
     public void Everything_Starts_At_Full_And_Unmuted()
     {
         IReadOnlyList<MixLevel> levels = TrackMix.Start([3, 5]);
