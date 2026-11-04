@@ -515,6 +515,9 @@ public sealed partial class MainPage : Page
         string fileOptions = MpvLoadOptions.ForStream(link?.AudioUrl);
         _fitWindowPending = carry is null; // after a restart the window keeps the size it has
         _durationRecorded = false;
+        TracksPanel.EndMix();
+        _pendingMix = null;
+        _mixPending = false;
         _trackChoices = carry?.Tracks; // another file starts on mpv's own picks
         _restoreTracks = carry?.Tracks;
         if (!fromQueue && carry is null)

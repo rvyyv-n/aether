@@ -1,8 +1,10 @@
 using System.Globalization;
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
+using Aether.Core.Playback.Audio;
 using Aether.Core.Playback.Tracks;
 using Aether_App.Controls;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -32,6 +34,11 @@ public sealed partial class MainPage
     // The audio and subtitle the user last picked, by language, for the next files of the queue (13.4).
     private TrackPreference? _trackPreference;
     private TrackPreference? _followTracks; // waiting for the next file of the queue to finish loading
+    // The mix waiting to be sent: a fader sends many changes a second, and each one restarts mpv's audio.
+    private IReadOnlyList<MixLevel>? _pendingMix;
+    private bool _mixPending;
+    private int? _trackBeforeMix;
+    private DispatcherQueueTimer? _mixTimer;
 
     private void InitializeTracks()
     {
@@ -40,6 +47,45 @@ public sealed partial class MainPage
         TracksPanel.TrackChosen += OnTrackChosen;
         TracksPanel.AddSubtitleRequested += OnAddSubtitleRequested;
         TracksPanel.DelayStepped += OnDelayStepped;
+        TracksPanel.MixChanged += OnMixChanged;
+        _mixTimer = DispatcherQueue.CreateTimer();
+        _mixTimer.Interval = TimeSpan.FromMilliseconds(120);
+        _mixTimer.IsRepeating = false;
+        _mixTimer.Tick += (_, _) => SendMix();
+    }
+
+    private void OnMixChanged(object? sender, IReadOnlyList<MixLevel>? levels)
+    {
+        if (levels is not null && _pendingMix is null)
+        {
+            _trackBeforeMix = _tracks.Tracks.Audio.FirstOrDefault(t => t.Selected)?.Id;
+        }
+        _pendingMix = levels;
+        _mixPending = true;
+        if (levels is null)
+        {
+            SendMix(); // ending the mix is one change; no reason to wait
+        }
+        else if (_mixTimer is { IsRunning: false } timer)
+        {
+            timer.Start();
+        }
+    }
+
+    private void SendMix()
+    {
+        _mixTimer?.Stop();
+        if (!_mixPending || _session is not { } session)
+        {
+            return;
+        }
+        _mixPending = false;
+        IReadOnlyList<MixLevel>? levels = _pendingMix;
+        TrySend(() => session.SetMix(levels is null ? null : TrackMix.Graph(levels), _trackBeforeMix));
+        if (levels is null)
+        {
+            _trackBeforeMix = null;
+        }
     }
 
     /// <summary>The menu closes after this click, and its Closed handler opens the flyout, so the two holds do not cross.</summary>
@@ -99,6 +145,14 @@ public sealed partial class MainPage
         if (choice.Kind == TrackKind.Audio)
         {
             _session?.PrepareForAudioRestart();
+            if (_pendingMix is not null && _session is { } session)
+            {
+                _mixTimer?.Stop();
+                _pendingMix = null;
+                _mixPending = false;
+                _trackBeforeMix = null;
+                TrySend(() => session.SetMix(null, choice.Id));
+            }
         }
         string value = choice.Id is { } id ? id.ToString(CultureInfo.InvariantCulture) : "no";
         _ = ChangeTracks(context => context.SetProperty(property, value), userChoice: true);

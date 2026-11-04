@@ -76,6 +76,32 @@
                     Margin="8,4,8,4"
                     Style="{StaticResource AetherCaptionStrongTextStyle}" />
                 <StackPanel x:Name="AudioRows" />
+                <Grid
+                    x:Name="MixToggleRow"
+                    Margin="0,4,0,0"
+                    ColumnSpacing="4"
+                    Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="MixLabel"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        TextTrimming="CharacterEllipsis" />
+                    <ToggleSwitch
+                        x:Name="MixToggle"
+                        Grid.Column="1"
+                        Style="{StaticResource AetherSettingsToggleStyle}"
+                        Toggled="OnMixToggled" />
+                </Grid>
+                <StackPanel
+                    x:Name="MixRows"
+                    Margin="8,0,0,0"
+                    Spacing="4"
+                    Visibility="Collapsed" />
                 <Grid Margin="0,8,0,0" ColumnSpacing="4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />

@@ -49,6 +49,23 @@ public sealed class AudioFiltersMpvTests : IDisposable
         Assert.Contains("@" + NightMode.FilterLabel, mpv.GetPropertyString("af"));
     }
 
+    [MpvFact]
+    public async Task Two_Tracks_Mix_Change_Level_Live_And_Go_Back_To_One()
+    {
+        using MpvContext mpv = await Playing(tracks: 2);
+
+        mpv.SetProperty("lavfi-complex", TrackMix.Graph([new MixLevel(1, 100, false), new MixLevel(2, 50, false)]));
+        await AssertStillPlaying(mpv);
+        mpv.SetProperty("lavfi-complex", TrackMix.Graph([new MixLevel(1, 30, false), new MixLevel(2, 150, true)]));
+        await AssertStillPlaying(mpv);
+        Assert.Contains("volume@m2=volume=0", mpv.GetPropertyString("lavfi-complex"));
+
+        mpv.SetProperty("lavfi-complex", "");
+        mpv.SetProperty("aid", "1");
+        await AssertStillPlaying(mpv);
+        Assert.Equal("1", mpv.GetPropertyString("aid"));
+    }
+
     private async Task<MpvContext> Playing(int tracks)
     {
         if (!NativeTestEnvironment.IsFfmpegAvailable(out string? ffmpeg))

@@ -1,5 +1,6 @@
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
+using Aether.Core.Playback.Audio;
 using Aether.Core.Playback.Settings;
 using Aether.Core.Playback.Streams;
 using Aether_App.Controls;
@@ -33,6 +34,7 @@ public sealed class PlayerSession : IDisposable
     private readonly LoopRestart _loop = new();
     private readonly FileEnd _fileEnd = new();
     private readonly MpvSettingsSync _settingsSync;
+    private bool _mixing;
     private readonly DisplayRefreshSync? _display;
     private readonly DisplayWakeLock _wake = new();
     private double _subtitleClearance;
@@ -174,6 +176,8 @@ public sealed class PlayerSession : IDisposable
             ? seconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
             : "none";
         _context.CommandAsync(new MpvCommand("set", "start", start));
+        // The mix names this file's tracks; the next file picks its own track again.
+        SetMix(null, restoreTrack: null);
         _settingsSync.PrepareForAudioRestart();
         _context.CommandAsync(string.IsNullOrEmpty(fileOptions)
             ? new MpvCommand("loadfile", path, "replace")
@@ -182,6 +186,25 @@ public sealed class PlayerSession : IDisposable
 
     /// <summary>Call before switching the audio track or the mix, which rebuild the audio filters. Non-blocking.</summary>
     public void PrepareForAudioRestart() => _settingsSync.PrepareForAudioRestart();
+
+    /// <summary>
+    /// Plays several audio tracks at once through <paramref name="graph"/> (<see cref="TrackMix.Graph"/>), or with null
+    /// ends the mix and goes back to <paramref name="restoreTrack"/> (mpv's choice when null). Non-blocking.
+    /// </summary>
+    public void SetMix(string? graph, int? restoreTrack)
+    {
+        if (graph is null && !_mixing)
+        {
+            return;
+        }
+        _settingsSync.PrepareForAudioRestart();
+        _context.CommandAsync(new MpvCommand("set", "lavfi-complex", graph ?? ""));
+        if (graph is null)
+        {
+            _context.CommandAsync(new MpvCommand("set", "aid", restoreTrack?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "auto"));
+        }
+        _mixing = graph is not null;
+    }
 
     /// <summary>Toggles pause; on an ended file restarts it from 0. Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>

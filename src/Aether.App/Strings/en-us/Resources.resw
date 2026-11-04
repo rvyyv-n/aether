@@ -480,6 +480,18 @@
   <data name="Settings_NightMode_Title" xml:space="preserve">
     <value>Night mode</value>
   </data>
+  <data name="Tracks_Mix" xml:space="preserve">
+    <value>Mix tracks</value>
+  </data>
+  <data name="Tracks_MixDescription" xml:space="preserve">
+    <value>Play every audio track at once, each at its own level, such as game, mic and chat from a recording</value>
+  </data>
+  <data name="Tracks_MixMute" xml:space="preserve">
+    <value>Mute {0}</value>
+  </data>
+  <data name="Tracks_MixLevel" xml:space="preserve">
+    <value>{0} level</value>
+  </data>
   <data name="Settings_NightMode_Description" xml:space="preserve">
     <value>Softens loud scenes and lifts quiet dialogue, for watching at low volume. Replaces volume normalisation while on</value>
   </data>
