@@ -31,6 +31,7 @@ public enum ShortcutAction
     PreviousChapter,
     NextFile,
     PreviousFile,
+    Queue,
     Sidebar,
     ToggleLanStream,
 }

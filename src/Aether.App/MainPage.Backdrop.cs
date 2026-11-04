@@ -133,7 +133,22 @@ public sealed partial class MainPage
             ShowSurface(slot, false, 0);
             return;
         }
+        if (MeasureSurface(surface) is not { } region)
+        {
+            return; // a popup that is closing is already out of the tree; the next layout pass tidies up
+        }
+        if (region != _postedSurfaceRegions[index])
+        {
+            _postedSurfaceRegions[index] = region;
+            VideoSurface.PostBackdrop(slot, region);
+        }
+        // After the post, so the first frame of a new blur is drawn at the new card, not where the last one was.
+        ShowSurface(slot, true, fadeMilliseconds);
+    }
 
+    /// <summary>Where <paramref name="surface"/> sits over the video, in swap-chain pixels; null when it is out of the tree.</summary>
+    private BackdropRegion? MeasureSurface(FrameworkElement surface)
+    {
         float scaleX = VideoSurface.CompositionScaleX;
         float scaleY = VideoSurface.CompositionScaleY;
         Rect bounds;
@@ -143,7 +158,7 @@ public sealed partial class MainPage
         }
         catch (Exception e) when (e is ArgumentException or InvalidOperationException or System.Runtime.InteropServices.COMException)
         {
-            return; // a popup that is closing is already out of the tree; the next layout pass tidies up
+            return null;
         }
         double radius = surface switch
         {
@@ -152,16 +167,9 @@ public sealed partial class MainPage
             _ => 0,
         };
         SwapChainTargetSize target = DxgiPresenter.ComputeTargetSize(VideoSurface.ActualWidth, VideoSurface.ActualHeight, scaleX, scaleY);
-        var region = new BackdropRegion(
+        return new BackdropRegion(
             (float)(bounds.X * scaleX), (float)(bounds.Y * scaleY), (float)(bounds.Width * scaleX), (float)(bounds.Height * scaleY),
             (float)(radius * scaleX), scaleX, target.Width, target.Height);
-        if (region != _postedSurfaceRegions[index])
-        {
-            _postedSurfaceRegions[index] = region;
-            VideoSurface.PostBackdrop(slot, region);
-        }
-        // After the post, so the first frame of a new blur is drawn at the new card, not where the last one was.
-        ShowSurface(slot, true, fadeMilliseconds);
     }
 
     private void ShowSurface(BackdropSlot slot, bool visible, double fadeMilliseconds)
@@ -180,6 +188,7 @@ public sealed partial class MainPage
     {
         PostSidebarRegion();
         PostSurfaceRegions();
+        PostQueueRegion();
         if (!_isLoaded || Osd.Visibility != Visibility.Visible || !Osd.IsLoaded || !VideoSurface.IsLoaded)
         {
             return;

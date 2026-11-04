@@ -159,6 +159,14 @@
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE714;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxQueue"
+                        Click="OnQueueMenuClick"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8FD;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem
                         x:Name="CtxCopyFrame"
@@ -788,7 +796,7 @@
             <Border
                 x:Name="RailPeek"
                 Width="4"
-                Height="168"
+                Height="208"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Background="{ThemeResource AetherFillRangeBrush}"
@@ -799,7 +807,7 @@
         <Border
             x:Name="Rail"
             Width="{StaticResource AetherSizeSidebarWidth}"
-            Height="168"
+            Height="208"
             Margin="16,40,0,0"
             Padding="5"
             HorizontalAlignment="Left"
@@ -823,6 +831,11 @@
                     x:Name="RailClips"
                     Click="OnRailClipsClick"
                     Content="&#xE8F1;"
+                    Style="{StaticResource AetherSidebarItemStyle}" />
+                <Button
+                    x:Name="RailQueue"
+                    Click="OnRailQueueClick"
+                    Content="&#xE8FD;"
                     Style="{StaticResource AetherSidebarItemStyle}" />
                 <Button
                     x:Name="RailStream"
@@ -852,6 +865,14 @@
             PointerExited="OnOsdPointerExited"
             Visibility="Collapsed">
             <controls:ClipDrawer x:Name="ClipDrawer" />
+        </Grid>
+
+        <!--  Queue drawer (13.3): right-aligned between the title bar and the full transport card; MainPage.Queue.cs places and slides it.  -->
+        <Grid
+            x:Name="QueueLayer"
+            HorizontalAlignment="Right"
+            Visibility="Collapsed">
+            <controls:PlaylistDrawer x:Name="QueueDrawer" VerticalAlignment="Top" />
         </Grid>
 
         <!--

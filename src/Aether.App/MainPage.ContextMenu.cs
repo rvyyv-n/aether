@@ -28,6 +28,7 @@ public sealed partial class MainPage
         CtxSubtitles.Text = AppStrings.Get("Menu_Subtitles");
         CtxSpeed.Text = AppStrings.Get("Menu_Speed");
         CtxVideo.Text = AppStrings.Get("Menu_Video");
+        CtxQueue.Text = AppStrings.Get("Menu_Queue");
         CtxCopyFrame.Text = AppStrings.Get("Menu_CopyFrame");
         CtxSaveFrame.Text = AppStrings.Get("Menu_SaveFrame");
         CtxPictureInPicture.Text = AppStrings.Get("Menu_PictureInPicture");

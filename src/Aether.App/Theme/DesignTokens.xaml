@@ -629,7 +629,7 @@
     <x:Double x:Key="AetherSizeClipThumbHeight">36</x:Double>
     <x:Double x:Key="AetherSizeMenuItem">32</x:Double>  <!-- Menu items: 4 px inset, padding 12, icon/check column 16, gap 12, shortcut gap 24, radius 4, hover fill.subtle.hover; menus on surface -->
     <x:Double x:Key="AetherSizeSpeedPill">40</x:Double>  <!-- Min width of the speed button: 36 tall like the transport buttons, Caption 12 semibold tabular -->
-    <x:Double x:Key="AetherSizeSidebarWidth">48</x:Double>  <!-- Sidebar: a floating pill 16 from the left edge, centred vertically; padding 6 around four 36 px items 4 apart (168 tall), the bar's surface and blur -->
+    <x:Double x:Key="AetherSizeSidebarWidth">48</x:Double>  <!-- Sidebar: a floating pill 16 from the left edge, centred vertically; padding 6 around five 36 px items 4 apart (208 tall), the bar's surface and blur -->
     <x:Double x:Key="AetherSizeSidebarItem">36</x:Double>  <!-- Sidebar items: 36 circles, 14 px glyphs; active = FillEmphasisRest + StrokeControl -->
     <x:Double x:Key="AetherSizeSidebarPadding">6</x:Double>  <!-- Outside the 1 px stroke; 6 + 18 = 24 is concentric with the pill's radius -->
     <x:Double x:Key="AetherSizeRailHotZone">14</x:Double>  <!-- Left-edge strip that wakes the sidebar; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
@@ -646,6 +646,7 @@
     <x:Double x:Key="AetherSizeContextMenu">276</x:Double>  <!-- Room the tour leaves for the right-click menu, which fits its content (about 220 in English); submenu 288; items 32 with 16 px icon column and right-aligned shortcut (Caption) -->
     <x:Double x:Key="AetherSizeMenuMaxWidth">320</x:Double>  <!-- Any menu: labels trim past this -->
     <x:Double x:Key="AetherSizeTracksFlyout">536</x:Double>  <!-- Tracks flyout: 2 columns, padding 12, delay steppers with 32 px buttons and a 56 px tabular value -->
+    <x:Double x:Key="AetherSizeQueueDrawerWidth">340</x:Double>  <!-- Queue drawer: a card 16 from the right edge between the title bar and the bar; padding 8, 32 px rows -->
     <x:Double x:Key="AetherSizeVideoFlyout">340</x:Double>  <!-- Video flyout: padding 12,16, 32 px rows -->
     <x:Double x:Key="AetherSizeDiagnosticsWidth">300</x:Double>  <!-- Diagnostics overlay: top-left, 16 in (48 when the title bar shows), padding 8,8,12,16, rows 76 / *,  -->
     <x:Double x:Key="AetherSizePipBackButton">32</x:Double>  <!-- "Back to full window": 32×32 in the title strip, left of the system Close -->

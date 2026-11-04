@@ -66,7 +66,8 @@ public sealed partial class MainPage
     /// <summary>Plays the next video in the queue when a local file ends and Play next in folder is on.</summary>
     private async void OnFileEnded(object? sender, EventArgs e)
     {
-        if (App.Settings.Current.PlayNextInFolder && await StepQueue(queue => queue.Next(ended: true)) is { } next)
+        if ((App.Settings.Current.PlayNextInFolder || _playlist.Repeat != RepeatMode.None)
+            && await StepQueue(queue => queue.Next(ended: true)) is { } next)
         {
             Open(next, fromQueue: true);
         }
@@ -322,11 +323,7 @@ public sealed partial class MainPage
         ClipDrawer.Update(range, _currentPath, _session?.ViewModel.Duration ?? 0);
     }
 
-    private void OnClipDrawerHoldChanged(object? sender, EventArgs e)
-    {
-        _chrome.SetHold(ChromeHolds.Drawer, ClipDrawer.IsOpen || ClipDrawer.IsDraggingOut);
-        ApplyChrome();
-    }
+    private void OnClipDrawerHoldChanged(object? sender, EventArgs e) => SyncDrawerHold();
 
     /// <summary>In and Out belong to one file: opening another clears them.</summary>
     private void SyncClipRange()

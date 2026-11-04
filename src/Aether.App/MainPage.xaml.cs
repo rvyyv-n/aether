@@ -121,6 +121,7 @@ public sealed partial class MainPage : Page
         InitializeTracks();
         InitializeVideo();
         InitializeLanStream();
+        InitializeQueue();
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -996,7 +997,7 @@ public sealed partial class MainPage : Page
 
     private void OnEscapeAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (EndTour() || CloseRail() || CloseLanStream())
+        if (EndTour() || CloseRail() || CloseQueue() || CloseLanStream())
         {
             args.Handled = true;
         }
@@ -1822,10 +1823,13 @@ public sealed partial class MainPage : Page
         // ADR-0013: no blur in picture in picture; there is no card to blur behind.
         VideoSurface.SetBackdropActive(BackdropSlot.Bar, hasVideo && !pip);
         VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, hasVideo && !pip);
+        VideoSurface.SetBackdropActive(BackdropSlot.Queue, hasVideo && !pip);
         _backdropAllowed = hasVideo && !pip;
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         PlaceRail();
+        PlaceQueue();
+        RefreshQueueDrawer();
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         string? fileName = _streamTitle ?? (HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null);
         TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");

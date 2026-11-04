@@ -131,6 +131,7 @@ public sealed class ShortcutMap
         ShortcutAction.PreviousChapter => settings.ShortcutPreviousChapter,
         ShortcutAction.NextFile => settings.ShortcutNextFile,
         ShortcutAction.PreviousFile => settings.ShortcutPreviousFile,
+        ShortcutAction.Queue => settings.ShortcutQueue,
         ShortcutAction.Sidebar => settings.ShortcutSidebar,
         ShortcutAction.ToggleLanStream => settings.ShortcutLanStream,
         _ => "",

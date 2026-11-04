@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Aether_App.Controls.PlaylistDrawer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Aether_App.Controls">
+
+    <UserControl.Resources>
+        <Style x:Key="QueueItemStyle" TargetType="ListViewItem">
+            <Setter Property="MinHeight" Value="{StaticResource AetherSizeMenuItem}" />
+            <Setter Property="Height" Value="{StaticResource AetherSizeMenuItem}" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="8,0,2,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border
+                            x:Name="Root"
+                            Background="Transparent"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                            <Border.BackgroundTransition>
+                                <BrushTransition Duration="0:0:0.083" />
+                            </Border.BackgroundTransition>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="Root.Background" Value="{ThemeResource AetherFillSubtleHoverBrush}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="Root.Background" Value="{ThemeResource AetherFillSubtlePressedBrush}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Center"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="QueueRowTemplate" x:DataType="local:PlaylistDrawerRow">
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <FontIcon
+                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    FontSize="10"
+                    Foreground="{ThemeResource AetherTextPrimaryBrush}"
+                    Glyph="&#xF5B0;"
+                    Visibility="{x:Bind PlayingVisibility}" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    FontWeight="{x:Bind TitleWeight}"
+                    Style="{StaticResource AetherBodyTextStyle}"
+                    Text="{x:Bind Title}"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="NoWrap"
+                    ToolTipService.ToolTip="{x:Bind Item}" />
+                <TextBlock
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource AetherTimecodeSecondaryTextStyle}"
+                    Text="{x:Bind Duration, Mode=OneWay}" />
+                <Button
+                    Grid.Column="3"
+                    Width="28"
+                    Height="28"
+                    AutomationProperties.Name="{x:Bind RemoveLabel}"
+                    Click="OnRemoveClick"
+                    Content="&#xE711;"
+                    FontSize="10"
+                    Style="{StaticResource AetherIconButtonStyle}"
+                    Tag="{x:Bind}"
+                    ToolTipService.ToolTip="{x:Bind RemoveLabel}" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!--
+        Queue drawer (13.3): a card on the right edge on the bar's surface, with the render thread's blur behind it
+        (BackdropSlot.Queue). Header with the count, shuffle, repeat, clear and close; a filter box; then the queue as
+        32 px rows that can be dragged into a new order while nothing filters them.
+    -->
+    <Border
+        x:Name="Panel"
+        Width="{StaticResource AetherSizeQueueDrawerWidth}"
+        Padding="8"
+        Background="{ThemeResource AetherSurfaceBarBrush}"
+        BorderBrush="{ThemeResource AetherStrokeBarBrush}"
+        BorderThickness="1"
+        CornerRadius="16">
+        <Grid RowSpacing="8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid Padding="8,0,0,0" ColumnSpacing="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="TitleText" Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                    <TextBlock x:Name="CountText" Style="{StaticResource AetherCaptionTextStyle}" />
+                </StackPanel>
+                <ToggleButton
+                    x:Name="ShuffleButton"
+                    Grid.Column="1"
+                    Click="OnShuffleClick"
+                    Content="&#xE8B1;"
+                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    Style="{StaticResource AetherIconToggleButtonStyle}" />
+                <ToggleButton
+                    x:Name="RepeatButton"
+                    Grid.Column="2"
+                    Click="OnRepeatClick"
+                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    Style="{StaticResource AetherIconToggleButtonStyle}" />
+                <Button
+                    x:Name="ClearButton"
+                    Grid.Column="3"
+                    Click="OnClearClick"
+                    Content="&#xE74D;"
+                    Style="{StaticResource AetherIconButtonStyle}" />
+                <Button
+                    x:Name="CloseButton"
+                    Grid.Column="4"
+                    Click="OnCloseClick"
+                    Content="&#xE711;"
+                    Style="{StaticResource AetherIconButtonStyle}" />
+            </Grid>
+
+            <TextBox
+                x:Name="FilterBox"
+                Grid.Row="1"
+                Style="{StaticResource AetherSettingsTextBoxStyle}"
+                TextChanged="OnFilterChanged" />
+
+            <ListView
+                x:Name="RowList"
+                Grid.Row="2"
+                AllowDrop="True"
+                CanDragItems="True"
+                CanReorderItems="True"
+                DragItemsCompleted="OnDragItemsCompleted"
+                IsItemClickEnabled="True"
+                ItemClick="OnItemClick"
+                ItemContainerStyle="{StaticResource QueueItemStyle}"
+                ItemTemplate="{StaticResource QueueRowTemplate}"
+                SelectionMode="None" />
+            <TextBlock
+                x:Name="EmptyText"
+                Grid.Row="2"
+                Margin="8,4"
+                Style="{StaticResource AetherCaptionTextStyle}"
+                TextWrapping="Wrap"
+                Visibility="Collapsed" />
+        </Grid>
+    </Border>
+</UserControl>

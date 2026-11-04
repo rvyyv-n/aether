@@ -156,6 +156,7 @@ public sealed partial class MainPage
         ShortcutAction.PreviousChapter => OnPreviousChapterAccelerator,
         ShortcutAction.NextFile => (_, args) => OnTransportKey(args, () => OpenNeighbour(forward: true)),
         ShortcutAction.PreviousFile => (_, args) => OnTransportKey(args, () => OpenNeighbour(forward: false)),
+        ShortcutAction.Queue => OnQueueAccelerator,
         ShortcutAction.Sidebar => OnSidebarAccelerator,
         ShortcutAction.ToggleLanStream => OnLanStreamAccelerator,
         _ => throw new ArgumentOutOfRangeException(nameof(action)),
