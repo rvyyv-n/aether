@@ -32,9 +32,9 @@ public sealed partial class EqualizerPanel : UserControl
         AutomationProperties.SetName(PresetCombo, AppStrings.Get("Equalizer_Preset"));
         foreach (EqualizerPreset preset in EqualizerPresets.All)
         {
-            PresetCombo.Items.Add(new ComboBoxItem { Content = AppStrings.Get("Equalizer_Preset_" + preset.Key), Tag = preset.Key });
+            PresetCombo.Items.Add(new ComboBoxItem { Content = PresetName(preset.Key), Tag = preset.Key });
         }
-        PresetCombo.Items.Add(new ComboBoxItem { Content = AppStrings.Get("Equalizer_Preset_custom"), Tag = EqualizerPresets.Custom, IsEnabled = false });
+        PresetCombo.Items.Add(new ComboBoxItem { Content = PresetName(EqualizerPresets.Custom), Tag = EqualizerPresets.Custom, IsEnabled = false });
 
         for (int column = 0; column < 12; column++)
         {
@@ -58,6 +58,18 @@ public sealed partial class EqualizerPanel : UserControl
         };
         Unloaded += (_, _) => App.Settings.Changed -= OnSettingsChanged;
     }
+
+    private static string PresetName(string key) => key switch
+    {
+        "flat" => AppStrings.Get("Equalizer_Preset_flat"),
+        "bass" => AppStrings.Get("Equalizer_Preset_bass"),
+        "vocal" => AppStrings.Get("Equalizer_Preset_vocal"),
+        "treble" => AppStrings.Get("Equalizer_Preset_treble"),
+        "rock" => AppStrings.Get("Equalizer_Preset_rock"),
+        "electronic" => AppStrings.Get("Equalizer_Preset_electronic"),
+        "cinema" => AppStrings.Get("Equalizer_Preset_cinema"),
+        _ => AppStrings.Get("Equalizer_Preset_custom"),
+    };
 
     /// <summary>Hides the title and switch, for Settings, where the row above holds them.</summary>
     public bool ShowsToggle
