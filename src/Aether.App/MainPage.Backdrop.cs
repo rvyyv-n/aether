@@ -55,7 +55,9 @@ public sealed partial class MainPage
     /// <summary>
     /// Flyouts have their own transition and acrylic off (12.7). A flyout's popup is a window of its own that reaches the
     /// screen a few frames after it opens, so a new one waits, invisible, for <see cref="PopupSettleFrames"/>, then it
-    /// and its blur fade in on the same tick, length and curve. Closing takes both away at once.
+    /// and its blur fade in on the same tick, length and curve. Closing takes both away at once. The fade runs on the
+    /// presenter's template root, never the presenter: setting the presenter's own visual's opacity takes the whole
+    /// flyout out of WinUI's hit testing, so clicks fell through it to the page.
     /// </summary>
     private void ShowPopupSurface(FrameworkElement? presenter)
     {
@@ -66,7 +68,7 @@ public sealed partial class MainPage
             PostBackdropRegion();
             return;
         }
-        ElementCompositionPreview.GetElementVisual(presenter).Opacity = 0;
+        ElementCompositionPreview.GetElementVisual(Fill(presenter)).Opacity = 0;
         _pendingPopupFrames = PopupSettleFrames;
         Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnPopupRendering;
         Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += OnPopupRendering;
@@ -87,14 +89,16 @@ public sealed partial class MainPage
         _pendingPopup = null;
         if (_fader is null)
         {
-            ElementCompositionPreview.GetElementVisual(_popupSurface).Opacity = 1;
+            ElementCompositionPreview.GetElementVisual(Fill(_popupSurface)).Opacity = 1;
         }
         else
         {
-            _fader.Reveal(_popupSurface, true);
+            _fader.Reveal(Fill(_popupSurface), true);
         }
         PostBackdropRegion();
     }
+
+    private static UIElement Fill(FrameworkElement presenter) => (UIElement)Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(presenter, 0);
 
     private static FrameworkElement? FindPresenter(DependencyObject? content)
     {

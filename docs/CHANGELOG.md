@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Menus and pop-ups work on the first click again. Since they started fading in with their blur, a click on a menu item went through it to the player underneath and only closed the menu.
 - Moving on to the next video of a folder or drop keeps your choices: the audio and subtitle language you picked (or subtitles off), and the zoom, rotation and aspect ratio. Volume and speed carry over as before. Opening a video any other way starts fresh.
 - N plays the next video and Shift+N the previous one, and the keyboard's media keys (play/pause, next and previous track) work while Aether is in front. All of them can be changed in Settings › Shortcuts.
 - Dropping several videos, or a folder, onto the player now plays them in turn: the videos first in name order, then each folder's videos. Previous and next, on the taskbar and with Play next in folder, step through what you dropped. Dropping one video works as before.
