@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Subtitle files beside a video, or in a Subs folder next to it, are found even when their names differ a little (`show.s01e02.en.srt` for `Show S01E02 1080p.mkv`), labelled by language, and the one in your preferred language is turned on.
 - Recordings with several audio tracks (game, mic, chat, music) can play them all at once: turn on Mix tracks in the Audio and Subtitles pop-up and set each track's level or mute it. Picking a single track goes back to normal.
 - Night mode softens explosions and lifts quiet dialogue, so a film can be watched at low volume. Turn it on in Settings › Audio or in the Audio and Subtitles pop-up.
 - A 10-band equalizer with a preamp, in Settings › Audio and in the Audio and Subtitles pop-up. Pick Flat, Bass boost, Vocal, Treble boost, Rock, Electronic or Cinema, or set the bands yourself; changes are heard at once, without a break in the sound.

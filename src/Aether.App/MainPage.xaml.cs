@@ -506,6 +506,7 @@ public sealed partial class MainPage : Page
         RefreshQueue(path, isLink: link is not null);
         ResetChapters(link?.Chapters);
         ResetLinkSubtitles(link?.Subtitles, carry);
+        ResetSubtitleFiles(path, isLink: link is not null, carry);
         ResetQuality(link);
         // A restart carries the position over by itself; only a saved position is worth announcing.
         ResetResumeOffer(carry is null ? startAt : null, resumeKey);
@@ -624,6 +625,7 @@ public sealed partial class MainPage : Page
                 FollowTracksOnceLoaded();
                 LoadChaptersOnceLoaded();
                 AddLinkSubtitlesOnceLoaded();
+                AddSubtitleFilesOnceLoaded();
                 ShowResumeOfferOnceLoaded();
                 EndQualitySwitchOnceLoaded();
                 Render();

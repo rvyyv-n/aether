@@ -164,6 +164,7 @@ public static class MpvSettingsMap
             new("sub-back-color", SubtitleBackColor(settings.SubtitleBackground)),
             // Without this, a subtitle file that carries its own styling keeps its own font, colour and size.
             new("sub-ass-override", settings.SubtitleOverrideStyled ? "force" : "scale"),
+            new("sub-auto", "no"),
             new("ytdl-format", YtdlFormat(settings.StreamingQuality, settings.PreferGpuDecodableFormats)),
             new("deinterlace", YesNo(settings.Deinterlace && settings.DeinterlaceMode == "auto")),
             new("video-aspect-override", settings.AspectRatio == "auto" ? "-1" : settings.AspectRatio),
