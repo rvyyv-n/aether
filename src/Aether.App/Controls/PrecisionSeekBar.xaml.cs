@@ -1,5 +1,6 @@
 using Aether.Core.Playback;
 using Aether.Core.Playback.Chapters;
+using Aether.Core.Playback.Streams;
 using Aether.PvP.Review.Clipping;
 using System.Globalization;
 using Microsoft.UI.Xaml;
@@ -24,6 +25,7 @@ public sealed partial class PrecisionSeekBar : UserControl
     private const double WindowInset = 8; // the bubble keeps clear of the window edges
     private const double ChapterGap = 2;
     private const double MinChapterPiece = 6; // closer chapter starts share a piece, so the bar never turns to slivers
+    private const double MinMarkWidth = 2;
 
     private double _duration;
     private double _position;
@@ -34,6 +36,7 @@ public sealed partial class PrecisionSeekBar : UserControl
     private double _pointerX = double.NaN;
     private double _dragTime;
     private ChapterList _chapters = ChapterList.Empty;
+    private IReadOnlyList<SponsorSegment> _skipSegments = [];
     private readonly List<Piece> _pieces = [];
 
     public PrecisionSeekBar()
@@ -114,6 +117,17 @@ public sealed partial class PrecisionSeekBar : UserControl
         }
     }
 
+    /// <summary>The SponsorBlock segments of the open video, drawn over the track in their category's colour (16.2).</summary>
+    public IReadOnlyList<SponsorSegment> SkipSegments
+    {
+        get => _skipSegments;
+        set
+        {
+            _skipSegments = value;
+            ArrangeMarks();
+        }
+    }
+
     /// <summary>The open file's chapters; <see cref="ChapterList.Empty"/> clears the marks.</summary>
     public ChapterList Chapters
     {
@@ -140,6 +154,7 @@ public sealed partial class PrecisionSeekBar : UserControl
     private void Arrange()
     {
         ArrangePieces();
+        ArrangeMarks();
         ArrangeProgress();
         ArrangeBuffered();
         ArrangeRange();
@@ -204,6 +219,35 @@ public sealed partial class PrecisionSeekBar : UserControl
             Canvas.SetLeft(piece.Played, piece.Start);
         }
     }
+
+    private void ArrangeMarks()
+    {
+        Marks.Children.Clear();
+        foreach (SponsorSegment segment in _skipSegments)
+        {
+            if (SeekBarMath.Span(segment.Start, segment.End, BarWidth, _duration, MinMarkWidth) is not (double left, double width))
+            {
+                continue;
+            }
+            var strip = new Border
+            {
+                Width = width,
+                Height = 4,
+                CornerRadius = new CornerRadius(2),
+                Background = (Brush)Application.Current.Resources[MarkBrush(segment.Category)],
+            };
+            Canvas.SetLeft(strip, left);
+            Marks.Children.Add(strip);
+        }
+    }
+
+    private static string MarkBrush(SponsorCategory category) => category switch
+    {
+        SponsorCategory.Sponsor => "AetherMarkSponsorBrush",
+        SponsorCategory.SelfPromo => "AetherMarkSelfPromoBrush",
+        SponsorCategory.Interaction => "AetherMarkInteractionBrush",
+        _ => "AetherMarkIntroOutroBrush",
+    };
 
     // The brush key rides in Tag so the strips can be recoloured when the theme changes.
     private Border Bar(string brushKey) => new()

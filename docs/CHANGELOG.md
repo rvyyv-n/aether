@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- SponsorBlock for YouTube, off until you turn it on in Settings › Streaming: the parts viewers marked as sponsors, self-promotion or reminders to subscribe (and, if you choose, intros and outros) show as coloured strips on the seek bar. Aether sends the service only a short hash prefix, never which video you watch.
 - Subtitles out of sync? Press ] to show them 50 ms later or [ for 50 ms earlier, and Shift+[ to put them back; a toast shows the delay. The keys can be changed in Settings › Shortcuts.
 - A transcript of what is said: press Ctrl+T, or pick Transcript in the right-click menu, to see every subtitle line with its time. Search for a word to find the scene and click a line to jump there. Subtitles inside the video need ffmpeg installed.
 - Two subtitles at once, for learning a language: pick a second subtitle in the Audio and Subtitles pop-up and it shows at the top while the first stays at the bottom.

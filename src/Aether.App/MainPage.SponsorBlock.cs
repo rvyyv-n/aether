@@ -61,5 +61,9 @@ public sealed partial class MainPage
         }
     }
 
-    private void ShowSponsorSegments(IReadOnlyList<SponsorSegment> segments) => _sponsorSegments = segments;
+    private void ShowSponsorSegments(IReadOnlyList<SponsorSegment> segments)
+    {
+        _sponsorSegments = segments;
+        SeekBar.SkipSegments = segments;
+    }
 }

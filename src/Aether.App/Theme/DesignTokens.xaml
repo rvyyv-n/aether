@@ -547,6 +547,12 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
+    <!--  SponsorBlock segments on the seek bar (16.2): SponsorBlock's own colours, so they read the same as on YouTube; the same in both themes  -->
+    <SolidColorBrush x:Key="AetherMarkSponsorBrush" Color="#FF00D400" />
+    <SolidColorBrush x:Key="AetherMarkSelfPromoBrush" Color="#FFFFFF00" />
+    <SolidColorBrush x:Key="AetherMarkInteractionBrush" Color="#FFCC00FF" />
+    <SolidColorBrush x:Key="AetherMarkIntroOutroBrush" Color="#FF0202ED" />
+
     
 
     <!--  Type. Segoe UI Variable; Cascadia Mono for timecodes and the custom mpv options field only.  -->
