@@ -84,7 +84,9 @@ public sealed class TrackList
             Flag(entry, "forced"),
             selected && !secondary,
             Flag(entry, "external") ? Text(entry, "external-filename") : null,
-            secondary);
+            secondary,
+            Text(entry, "codec"),
+            entry.TryGetProperty("ff-index", out JsonElement index) && index.TryGetInt32(out int i) ? i : null);
     }
 
     private static string? Text(JsonElement entry, string name) =>

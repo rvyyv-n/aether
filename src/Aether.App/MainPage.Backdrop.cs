@@ -188,7 +188,7 @@ public sealed partial class MainPage
     {
         PostSidebarRegion();
         PostSurfaceRegions();
-        PostQueueRegion();
+        PostSideRegion();
         if (!_isLoaded || Osd.Visibility != Visibility.Visible || !Osd.IsLoaded || !VideoSurface.IsLoaded)
         {
             return;

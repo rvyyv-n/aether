@@ -103,6 +103,7 @@ public static class SettingKeys
     public const string ShortcutNextFile = "shortcuts.nextFile";
     public const string ShortcutPreviousFile = "shortcuts.previousFile";
     public const string ShortcutQueue = "shortcuts.queue";
+    public const string ShortcutTranscript = "shortcuts.transcript";
     public const string ShortcutSidebar = "shortcuts.sidebar";
     public const string ShortcutLanStream = "shortcuts.lanStream";
 }
@@ -296,6 +297,7 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutNextFile, s => s.ShortcutNextFile, (s, v) => s with { ShortcutNextFile = v }),
         Shortcut(SettingKeys.ShortcutPreviousFile, s => s.ShortcutPreviousFile, (s, v) => s with { ShortcutPreviousFile = v }),
         Shortcut(SettingKeys.ShortcutQueue, s => s.ShortcutQueue, (s, v) => s with { ShortcutQueue = v }),
+        Shortcut(SettingKeys.ShortcutTranscript, s => s.ShortcutTranscript, (s, v) => s with { ShortcutTranscript = v }),
         Shortcut(SettingKeys.ShortcutSidebar, s => s.ShortcutSidebar, (s, v) => s with { ShortcutSidebar = v }),
         Shortcut(SettingKeys.ShortcutLanStream, s => s.ShortcutLanStream, (s, v) => s with { ShortcutLanStream = v }),
     ];

@@ -167,6 +167,14 @@
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8FD;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxTranscript"
+                        Click="OnTranscriptMenuClick"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8A5;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem
                         x:Name="CtxCopyFrame"
@@ -867,12 +875,16 @@
             <controls:ClipDrawer x:Name="ClipDrawer" />
         </Grid>
 
-        <!--  Queue drawer (13.3): right-aligned between the title bar and the full transport card; MainPage.Queue.cs places and slides it.  -->
+        <!--  The card on the right edge, the queue drawer (13.3) or the transcript (15.3): between the title bar and the full transport card; MainPage.SidePanel.cs places and slides it.  -->
         <Grid
-            x:Name="QueueLayer"
+            x:Name="SideLayer"
             HorizontalAlignment="Right"
             Visibility="Collapsed">
             <controls:PlaylistDrawer x:Name="QueueDrawer" VerticalAlignment="Top" />
+            <controls:TranscriptPane
+                x:Name="TranscriptPane"
+                VerticalAlignment="Top"
+                Visibility="Collapsed" />
         </Grid>
 
         <!--

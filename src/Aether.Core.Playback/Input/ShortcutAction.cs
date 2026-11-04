@@ -32,6 +32,7 @@ public enum ShortcutAction
     NextFile,
     PreviousFile,
     Queue,
+    Transcript,
     Sidebar,
     ToggleLanStream,
 }

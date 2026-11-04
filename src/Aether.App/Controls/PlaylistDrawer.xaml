@@ -96,12 +96,12 @@
 
     <!--
         Queue drawer (13.3): a card on the right edge on the bar's surface, with the render thread's blur behind it
-        (BackdropSlot.Queue). Header with the count, shuffle, repeat, clear and close; a filter box; then the queue as
+        (BackdropSlot.SidePanel). Header with the count, shuffle, repeat, clear and close; a filter box; then the queue as
         32 px rows that can be dragged into a new order while nothing filters them.
     -->
     <Border
         x:Name="Panel"
-        Width="{StaticResource AetherSizeQueueDrawerWidth}"
+        Width="{StaticResource AetherSizeSidePanelWidth}"
         Padding="8"
         Background="{ThemeResource AetherSurfaceBarBrush}"
         BorderBrush="{ThemeResource AetherStrokeBarBrush}"

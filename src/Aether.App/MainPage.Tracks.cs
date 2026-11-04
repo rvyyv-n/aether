@@ -200,6 +200,7 @@ public sealed partial class MainPage
         if (_isLoaded && _session == session)
         {
             _trackChoices = TrackChoices.From(snapshot);
+            FollowTranscript(snapshot);
             if (userChoice)
             {
                 _trackPreference = TrackPreference.From(snapshot.Tracks);

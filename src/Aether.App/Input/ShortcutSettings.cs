@@ -148,6 +148,7 @@ public sealed class ShortcutSettings
         ShortcutAction.NextFile => "Settings_Shortcuts_NextFile",
         ShortcutAction.PreviousFile => "Settings_Shortcuts_PreviousFile",
         ShortcutAction.Queue => "Settings_Shortcuts_Queue",
+        ShortcutAction.Transcript => "Settings_Shortcuts_Transcript",
         ShortcutAction.Sidebar => "Settings_Shortcuts_Sidebar",
         ShortcutAction.ToggleLanStream => "Settings_Shortcuts_LanStream",
         _ => throw new ArgumentOutOfRangeException(nameof(action)),

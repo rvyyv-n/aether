@@ -22,8 +22,8 @@ public enum BackdropSlot
     /// <summary>The flyout that is open (audio and subtitles, video); only one is ever open.</summary>
     Popup = 4,
 
-    /// <summary>The queue drawer.</summary>
-    Queue = 5,
+    /// <summary>The card on the right edge: the queue or the transcript, one at a time.</summary>
+    SidePanel = 5,
 }
 
 /// <summary>

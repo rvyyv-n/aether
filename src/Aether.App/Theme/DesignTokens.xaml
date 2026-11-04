@@ -646,7 +646,7 @@
     <x:Double x:Key="AetherSizeContextMenu">276</x:Double>  <!-- Room the tour leaves for the right-click menu, which fits its content (about 220 in English); submenu 288; items 32 with 16 px icon column and right-aligned shortcut (Caption) -->
     <x:Double x:Key="AetherSizeMenuMaxWidth">320</x:Double>  <!-- Any menu: labels trim past this -->
     <x:Double x:Key="AetherSizeTracksFlyout">536</x:Double>  <!-- Tracks flyout: 2 columns, padding 12, delay steppers with 32 px buttons and a 56 px tabular value -->
-    <x:Double x:Key="AetherSizeQueueDrawerWidth">340</x:Double>  <!-- Queue drawer: a card 16 from the right edge between the title bar and the bar; padding 8, 32 px rows -->
+    <x:Double x:Key="AetherSizeSidePanelWidth">340</x:Double>  <!-- The queue or transcript card, 16 from the right edge between the title bar and the bar; padding 8 -->
     <x:Double x:Key="AetherSizeVideoFlyout">340</x:Double>  <!-- Video flyout: padding 12,16, 32 px rows -->
     <x:Double x:Key="AetherSizeDiagnosticsWidth">300</x:Double>  <!-- Diagnostics overlay: top-left, 16 in (48 when the title bar shows), padding 8,8,12,16, rows 76 / *,  -->
     <x:Double x:Key="AetherSizePipBackButton">32</x:Double>  <!-- "Back to full window": 32×32 in the title strip, left of the system Close -->

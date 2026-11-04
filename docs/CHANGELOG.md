@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- A transcript of what is said: press Ctrl+T, or pick Transcript in the right-click menu, to see every subtitle line with its time. Search for a word to find the scene and click a line to jump there. Subtitles inside the video need ffmpeg installed.
 - Two subtitles at once, for learning a language: pick a second subtitle in the Audio and Subtitles pop-up and it shows at the top while the first stays at the bottom.
 - Subtitle files beside a video, or in a Subs folder next to it, are found even when their names differ a little (`show.s01e02.en.srt` for `Show S01E02 1080p.mkv`), labelled by language, and the one in your preferred language is turned on.
 - Recordings with several audio tracks (game, mic, chat, music) can play them all at once: turn on Mix tracks in the Audio and Subtitles pop-up and set each track's level or mute it. Picking a single track goes back to normal.

@@ -517,6 +517,7 @@ public sealed partial class MainPage : Page
         _fitWindowPending = carry is null; // after a restart the window keeps the size it has
         _durationRecorded = false;
         TracksPanel.EndMix();
+        _transcriptKey = null;
         _pendingMix = null;
         _mixPending = false;
         _trackChoices = carry?.Tracks; // another file starts on mpv's own picks
@@ -599,6 +600,10 @@ public sealed partial class MainPage : Page
             case nameof(PlayerViewModel.Position):
                 OnChapterSkipPosition(vm);
                 UpdateClock(vm);
+                if (_sidePanel == SidePanel.Transcript)
+                {
+                    TranscriptPane.SetPosition(vm.Position);
+                }
                 break;
             case nameof(PlayerViewModel.Duration):
                 UpdateClock(vm);
@@ -626,6 +631,7 @@ public sealed partial class MainPage : Page
                 LoadChaptersOnceLoaded();
                 AddLinkSubtitlesOnceLoaded();
                 AddSubtitleFilesOnceLoaded();
+                LoadTranscriptOnceLoaded();
                 ShowResumeOfferOnceLoaded();
                 EndQualitySwitchOnceLoaded();
                 Render();
@@ -1002,7 +1008,7 @@ public sealed partial class MainPage : Page
 
     private void OnEscapeAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (EndTour() || CloseRail() || CloseQueue() || CloseLanStream())
+        if (EndTour() || CloseRail() || CloseSidePanel() || CloseLanStream())
         {
             args.Handled = true;
         }
@@ -1828,13 +1834,13 @@ public sealed partial class MainPage : Page
         // ADR-0013: no blur in picture in picture; there is no card to blur behind.
         VideoSurface.SetBackdropActive(BackdropSlot.Bar, hasVideo && !pip);
         VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, hasVideo && !pip);
-        VideoSurface.SetBackdropActive(BackdropSlot.Queue, hasVideo && !pip);
+        VideoSurface.SetBackdropActive(BackdropSlot.SidePanel, hasVideo && !pip);
         _backdropAllowed = hasVideo && !pip;
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         PlaceRail();
-        PlaceQueue();
-        RefreshQueueDrawer();
+        PlaceSidePanel();
+        RefreshSidePanel();
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         string? fileName = _streamTitle ?? (HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null);
         TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");
