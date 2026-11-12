@@ -19,10 +19,10 @@
                 <ToggleSwitch x:Name="PlayNextInFolderToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="ChapterAutoSkipRow" Glyph="&#xE893;">
-                <ToggleSwitch x:Name="ChapterAutoSkipToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
-            </settings:SettingsRow>
-            <settings:SettingsRow x:Name="ChapterSkipNamesRow" Glyph="&#xE70F;">
-                <TextBox x:Name="ChapterSkipNamesBox" Style="{StaticResource AetherSettingsTextBoxStyle}" />
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBox x:Name="ChapterSkipNamesBox" Style="{StaticResource AetherSettingsTextBoxStyle}" />
+                    <ToggleSwitch x:Name="ChapterAutoSkipToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+                </StackPanel>
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="PreventSleepRow" Glyph="&#xE706;">
                 <ToggleSwitch x:Name="PreventSleepToggle" Style="{StaticResource AetherSettingsToggleStyle}" />

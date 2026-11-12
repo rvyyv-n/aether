@@ -9,74 +9,48 @@ public class FolderPlaylistTests
     private static string[] Files(params string[] names) => names.Select(n => Dir + n).ToArray();
 
     [Fact]
-    public void Natural_Order_Puts_Ep2_Before_Ep10()
+    public void Videos_Are_In_Natural_Order()
     {
-        string[] files = Files("ep10.mkv", "ep1.mkv", "ep2.mkv");
-
-        Assert.Equal(Dir + "ep2.mkv", FolderPlaylist.NextAfter(Dir + "ep1.mkv", files));
-        Assert.Equal(Dir + "ep10.mkv", FolderPlaylist.NextAfter(Dir + "ep2.mkv", files));
-    }
-
-    [Fact]
-    public void Last_File_Has_No_Next()
-    {
-        Assert.Null(FolderPlaylist.NextAfter(Dir + "ep10.mkv", Files("ep10.mkv", "ep2.mkv")));
+        Assert.Equal(Files("ep1.mkv", "ep2.mkv", "ep10.mkv"), FolderPlaylist.Videos(Files("ep10.mkv", "ep1.mkv", "ep2.mkv")));
     }
 
     [Fact]
     public void Other_Formats_Are_Skipped()
     {
-        string[] files = Files("a.mp4", "b.txt", "c.srt", "d.avi", "e.MKV");
-
-        Assert.Equal(Dir + "e.MKV", FolderPlaylist.NextAfter(Dir + "a.mp4", files));
+        Assert.Equal(Files("a.mp4", "e.MKV"), FolderPlaylist.Videos(Files("a.mp4", "b.txt", "c.srt", "d.avi", "e.MKV")));
     }
 
     [Fact]
-    public void Current_File_Is_Found_Ignoring_Case()
+    public void Empty_Folder_Has_No_Videos()
     {
-        Assert.Equal(Dir + "b.mp4", FolderPlaylist.NextAfter(Dir.ToUpperInvariant() + "A.MP4", Files("a.mp4", "b.mp4")));
-    }
-
-    [Fact]
-    public void File_Missing_From_The_Listing_Has_No_Next()
-    {
-        Assert.Null(FolderPlaylist.NextAfter(Dir + "gone.mp4", Files("a.mp4", "b.mp4")));
-    }
-
-    [Fact]
-    public void Empty_Folder_Has_No_Next()
-    {
-        Assert.Null(FolderPlaylist.NextAfter(Dir + "a.mp4", []));
-    }
-
-    [Fact]
-    public void Previous_Goes_Back_In_The_Same_Order()
-    {
-        string[] files = Files("ep10.mkv", "ep1.mkv", "ep2.mkv");
-
-        Assert.Equal(Dir + "ep2.mkv", FolderPlaylist.PreviousBefore(Dir + "ep10.mkv", files));
-        Assert.Equal(Dir + "ep1.mkv", FolderPlaylist.PreviousBefore(Dir + "ep2.mkv", files));
-        Assert.Null(FolderPlaylist.PreviousBefore(Dir + "ep1.mkv", files));
-    }
-
-    [Fact]
-    public void Neighbours_Are_Missing_At_The_Ends_And_For_Unlisted_Files()
-    {
-        string[] files = Files("a.mp4", "b.mp4", "c.mp4");
-
-        Assert.Equal(new FolderNeighbours(null, Dir + "b.mp4"), FolderPlaylist.NeighboursOf(Dir + "a.mp4", files));
-        Assert.Equal(new FolderNeighbours(Dir + "a.mp4", Dir + "c.mp4"), FolderPlaylist.NeighboursOf(Dir + "b.mp4", files));
-        Assert.Equal(new FolderNeighbours(Dir + "b.mp4", null), FolderPlaylist.NeighboursOf(Dir + "c.mp4", files));
-        Assert.Equal(default, FolderPlaylist.NeighboursOf(Dir + "gone.mp4", files));
-        Assert.Equal(default, FolderPlaylist.NeighboursOf(Dir + "a.mp4", Files("a.mp4")));
+        Assert.Empty(FolderPlaylist.Videos([]));
     }
 
     [Fact]
     public void Sorting_Uses_The_File_Name_Not_The_Folder()
     {
-        string[] files = [@"C:\z\a.mp4", @"C:\z\b.mp4"];
+        Assert.Equal([@"C:.mp4", @"C:.mp4"], FolderPlaylist.Videos([@"C:.mp4", @"C:.mp4"]));
+    }
 
-        Assert.Equal(@"C:\z\b.mp4", FolderPlaylist.NextAfter(@"C:\z\a.mp4", files));
+    [Fact]
+    public void Dropped_Files_Come_First_In_Natural_Order_Then_Each_Folder()
+    {
+        var listings = new Dictionary<string, string[]>
+        {
+            [@"C:\b-season"] = [@"C:\b-season\e2.mkv", @"C:\b-season\notes.txt", @"C:\b-season\e1.mkv"],
+            [@"C:\a-season"] = [@"C:\a-season\x.mp4"],
+        };
+
+        string[] queue = FolderPlaylist.Dropped(
+            Files("ep10.mkv", "readme.txt", "ep2.mkv"), [@"C:\b-season", @"C:\a-season"], folder => listings[folder]);
+
+        Assert.Equal([Dir + "ep2.mkv", Dir + "ep10.mkv", @"C:\a-season\x.mp4", @"C:\b-season\e1.mkv", @"C:\b-season\e2.mkv"], queue);
+    }
+
+    [Fact]
+    public void Dropping_Nothing_Playable_Gives_An_Empty_Queue()
+    {
+        Assert.Empty(FolderPlaylist.Dropped(Files("a.txt"), [@"C:\empty"], _ => []));
     }
 
     [Theory]

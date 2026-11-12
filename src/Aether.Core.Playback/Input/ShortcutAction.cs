@@ -29,6 +29,13 @@ public enum ShortcutAction
     ExportClip,
     NextChapter,
     PreviousChapter,
+    NextFile,
+    PreviousFile,
+    Queue,
+    Transcript,
+    SubtitleEarlier,
+    SubtitleLater,
+    SubtitleDelayReset,
     Sidebar,
     ToggleLanStream,
 }

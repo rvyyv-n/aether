@@ -20,5 +20,10 @@ public sealed partial class AudioPage : Page
         binder.Toggle(VolumeNormalisationRow, VolumeNormalisationToggle, SettingKeys.VolumeNormalisation, "Settings_VolumeNormalisation_Title", "Settings_VolumeNormalisation_Description");
         binder.Toggle(PitchCorrectionRow, PitchCorrectionToggle, SettingKeys.PitchCorrection, "Settings_PitchCorrection_Title", "Settings_PitchCorrection_Description");
         binder.Toggle(StereoDownmixRow, StereoDownmixToggle, SettingKeys.StereoDownmix, "Settings_StereoDownmix_Title", "Settings_StereoDownmix_Description");
+        binder.Toggle(NightModeRow, NightModeToggle, SettingKeys.NightMode, "Settings_NightMode_Title", "Settings_NightMode_Description");
+        EqualizerExpander.Header = AppStrings.Get("Equalizer_Title");
+        EqualizerExpander.Description = AppStrings.Get("Equalizer_Description");
+        binder.Toggle(null, EqualizerToggle, SettingKeys.EqualizerEnabled, "Equalizer_Title");
+        EqualizerExpander.IsExpanded = App.Settings.Current.EqualizerEnabled;
     }
 }

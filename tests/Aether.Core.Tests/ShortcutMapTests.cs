@@ -34,7 +34,6 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.SkipForwardLong, "Ctrl+Right")]
     [InlineData(ShortcutAction.SetIn, "I")]
     [InlineData(ShortcutAction.SetOut, "O")]
-    [InlineData(ShortcutAction.PlayPause, "Space")]
     [InlineData(ShortcutAction.Mute, "M")]
     [InlineData(ShortcutAction.Loop, "L")]
     [InlineData(ShortcutAction.AlwaysOnTop, "T")]
@@ -47,10 +46,34 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.NextChapter, "PageDown")]
     [InlineData(ShortcutAction.PreviousChapter, "PageUp")]
     [InlineData(ShortcutAction.Sidebar, "B")]
+    [InlineData(ShortcutAction.Queue, "Q")]
+    [InlineData(ShortcutAction.Transcript, "Ctrl+T")]
     [InlineData(ShortcutAction.ToggleLanStream, "S")]
     public void Defaults_Are_Todays_Keys(ShortcutAction action, string expected)
     {
         Assert.Equal([expected], Defaults(action));
+    }
+
+    [Fact]
+    public void Brackets_Nudge_The_Subtitles_And_Shift_Bracket_Resets_Them()
+    {
+        Assert.Equal(ShortcutAction.SubtitleEarlier, ShortcutMap.Defaults.Find(new KeyCombination(0xDB)));
+        Assert.Equal(ShortcutAction.SubtitleLater, ShortcutMap.Defaults.Find(new KeyCombination(0xDD)));
+        Assert.Equal(ShortcutAction.SubtitleDelayReset, ShortcutMap.Defaults.Find(new KeyCombination(0xDB, KeyModifiers.Shift)));
+        Assert.Equal("shortcuts.subtitleEarlier", ShortcutActions.SettingKey(ShortcutAction.SubtitleEarlier));
+        Assert.Equal("shortcuts.subtitleLater", ShortcutActions.SettingKey(ShortcutAction.SubtitleLater));
+        Assert.Equal("shortcuts.subtitleDelayReset", ShortcutActions.SettingKey(ShortcutAction.SubtitleDelayReset));
+    }
+
+    [Fact]
+    public void Media_Keys_Play_Pause_And_Step_Through_The_Queue()
+    {
+        Assert.Equal(["Space", "MediaPlayPause"], Defaults(ShortcutAction.PlayPause));
+        Assert.Equal(["N", "MediaNext"], Defaults(ShortcutAction.NextFile));
+        Assert.Equal(["Shift+N", "MediaPrevious"], Defaults(ShortcutAction.PreviousFile));
+        Assert.Equal("shortcuts.nextFile", ShortcutActions.SettingKey(ShortcutAction.NextFile));
+        Assert.Equal("shortcuts.previousFile", ShortcutActions.SettingKey(ShortcutAction.PreviousFile));
+        Assert.Equal(ShortcutAction.NextFile, ShortcutMap.Defaults.Find(Key("MediaNext")));
     }
 
     [Fact]
@@ -329,7 +352,7 @@ public class ShortcutMapTests
         Assert.Empty(resetMute.ConflictsOf(ShortcutAction.Loop));
 
         // Clearing via Rebind to an unused key
-        ShortcutMap reboundMute = conflicting.With(ShortcutAction.Mute, [Key("N")]);
+        ShortcutMap reboundMute = conflicting.With(ShortcutAction.Mute, [Key("J")]);
         Assert.False(reboundMute.HasConflict(ShortcutAction.Mute));
         Assert.False(reboundMute.HasConflict(ShortcutAction.Loop));
         Assert.Empty(reboundMute.ConflictsOf(ShortcutAction.Mute));
@@ -546,7 +569,7 @@ public class ShortcutMapTests
 
         // Unmentioned keys stay default
         Assert.True(map.IsDefault(ShortcutAction.PlayPause));
-        Assert.Equal([Key("Space")], map.Get(ShortcutAction.PlayPause));
+        Assert.Equal([Key("Space"), Key("MediaPlayPause")], map.Get(ShortcutAction.PlayPause));
     }
 
     [Theory]

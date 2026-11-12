@@ -9,13 +9,17 @@ namespace Aether.Core.Playback.Tracks;
 /// <param name="SubtitleId">The embedded subtitle track in use; null with no <paramref name="SubtitleFile"/> means Off.</param>
 /// <param name="SubtitleFile">The subtitle file in use, or null.</param>
 /// <param name="ExternalFiles">Every subtitle file that was loaded at the time.</param>
+/// <param name="SecondaryId">The embedded second subtitle (15.2); null with no <paramref name="SecondaryFile"/> means none.</param>
+/// <param name="SecondaryFile">The second subtitle when it is a file, or null.</param>
 public sealed record TrackChoices(
     int? AudioId,
     int? SubtitleId,
     string? SubtitleFile,
     double AudioDelay,
     double SubtitleDelay,
-    IReadOnlyList<string> ExternalFiles)
+    IReadOnlyList<string> ExternalFiles,
+    int? SecondaryId = null,
+    string? SecondaryFile = null)
 {
     private const double DelayTolerance = 0.001;
 
@@ -23,13 +27,16 @@ public sealed record TrackChoices(
     {
         MediaTrack? audio = snapshot.Tracks.Audio.FirstOrDefault(t => t.Selected);
         MediaTrack? subtitle = snapshot.Tracks.SelectedSubtitle;
+        MediaTrack? secondary = snapshot.Tracks.SecondarySubtitle;
         return new TrackChoices(
             audio?.Id,
             subtitle is { ExternalFile: null } ? subtitle.Id : null,
             subtitle?.ExternalFile,
             snapshot.AudioDelay,
             snapshot.SubtitleDelay,
-            [.. snapshot.Tracks.Subtitles.Select(t => t.ExternalFile).OfType<string>()]);
+            [.. snapshot.Tracks.Subtitles.Select(t => t.ExternalFile).OfType<string>()],
+            secondary is { ExternalFile: null } ? secondary.Id : null,
+            secondary?.ExternalFile);
     }
 
     /// <summary>The subtitle files to load again: those that are not on <paramref name="current"/> already (mpv loads matching files itself).</summary>
@@ -58,6 +65,20 @@ public sealed record TrackChoices(
         else if (wanted is null && SubtitleFile is null && SubtitleId is null && current.Tracks.SelectedSubtitle is not null)
         {
             commands.Add(["set", "sid", "no"]);
+        }
+
+        MediaTrack? second = SecondaryFile is { } secondFile
+            ? current.Tracks.Subtitles.FirstOrDefault(t => t.ExternalFile is { } loaded && SameFile(loaded, secondFile))
+            : SecondaryId is { } secondId
+                ? current.Tracks.Subtitles.FirstOrDefault(t => t.Id == secondId && t.ExternalFile is null)
+                : null;
+        if (second is { Secondary: false })
+        {
+            commands.Add(["set", "secondary-sid", second.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)]);
+        }
+        else if (second is null && SecondaryFile is null && SecondaryId is null && current.Tracks.SecondarySubtitle is not null)
+        {
+            commands.Add(["set", "secondary-sid", "no"]);
         }
 
         if (Math.Abs(AudioDelay - current.AudioDelay) > DelayTolerance)

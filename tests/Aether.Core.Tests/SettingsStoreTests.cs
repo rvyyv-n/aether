@@ -181,6 +181,21 @@ public class SettingsStoreTests
         Assert.Equal("auto", store.Current.Theme);
     }
 
+    [Fact]
+    public void Accent_Setting_Defaults_To_None_And_Takes_Presets_And_Hex()
+    {
+        var store = NewStore();
+
+        Assert.Equal("none", store.Current.Accent);
+        Assert.False(store.RequiresRestart(SettingKeys.Accent));
+        Assert.True(store.Set(SettingKeys.Accent, "mint"));
+        Assert.Equal("mint", store.Current.Accent);
+        Assert.True(store.Set(SettingKeys.Accent, "#A1B2C3"));
+        Assert.Equal("#A1B2C3", store.Current.Accent);
+        Assert.False(store.Set(SettingKeys.Accent, "teal-ish"));
+        Assert.Equal("#A1B2C3", store.Current.Accent);
+    }
+
     [Theory]
     [InlineData(SettingKeys.Theme, "sepia")]
     [InlineData(SettingKeys.DeinterlaceMode, "linear")]

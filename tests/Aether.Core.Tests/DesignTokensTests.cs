@@ -183,6 +183,53 @@ public class DesignTokensTests
         Assert.Empty(unresolved);
     }
 
+    private static List<XElement> ThemeDictionaries(XDocument doc) =>
+        doc.Descendants(XamlNamespace + "ResourceDictionary")
+            .Where(d => d.Parent?.Name.LocalName == "ResourceDictionary.ThemeDictionaries")
+            .ToList();
+
+    // WinUI builds a theme dictionary's entries on first use and resolves their references against the app's theme
+    // then, not the dictionary's: a Light brush first read from code under Windows dark took the Dark colour (12.8).
+    [Fact]
+    public void Theme_Dictionaries_Hold_No_Resource_References()
+    {
+        var references = ThemeDictionaries(LoadDesignTokens())
+            .SelectMany(d => d.Descendants().SelectMany(e => e.Attributes().Select(a => a.Value).Append(e.Value))
+                .Where(v => v.Contains("{StaticResource", StringComparison.Ordinal) || v.Contains("{ThemeResource", StringComparison.Ordinal))
+                .Select(v => $"{d.Attribute(XNamespace + "Key")?.Value}: {v}"))
+            .Distinct()
+            .ToList();
+
+        Assert.Empty(references);
+    }
+
+    [Fact]
+    public void Every_Themed_Brush_Matches_Its_Color()
+    {
+        var aliases = LegacyAliasKeys.ToHashSet(StringComparer.Ordinal);
+        var mismatched = new List<string>();
+        foreach (var dict in ThemeDictionaries(LoadDesignTokens()))
+        {
+            var colors = dict.Elements(XamlNamespace + "Color")
+                .ToDictionary(e => (string)e.Attribute(XNamespace + "Key")!, e => e.Value.Trim(), StringComparer.Ordinal);
+            foreach (var brush in dict.Elements(XamlNamespace + "SolidColorBrush"))
+            {
+                string key = (string)brush.Attribute(XNamespace + "Key")!;
+                if (aliases.Contains(key) || !key.EndsWith("Brush", StringComparison.Ordinal)
+                    || !colors.TryGetValue(key[..^5] + "Color", out string? color))
+                {
+                    continue;
+                }
+                if (!string.Equals((string?)brush.Attribute("Color"), color, StringComparison.OrdinalIgnoreCase))
+                {
+                    mismatched.Add($"{dict.Attribute(XNamespace + "Key")?.Value}: {key}");
+                }
+            }
+        }
+
+        Assert.Empty(mismatched);
+    }
+
     [Fact]
     public void Every_Legacy_Alias_Key_Exists()
     {

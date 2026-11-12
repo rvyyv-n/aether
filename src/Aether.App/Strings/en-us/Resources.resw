@@ -313,6 +313,48 @@
   <data name="Transport_Seek" xml:space="preserve">
     <value>Seek</value>
   </data>
+  <data name="Settings_Accent_Title" xml:space="preserve">
+    <value>Accent colour</value>
+  </data>
+  <data name="Settings_Accent_Description" xml:space="preserve">
+    <value>Colours the switches, the selected chips and the play button. None keeps Aether black and white</value>
+  </data>
+  <data name="Settings_Accent_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Settings_Accent_Cyan" xml:space="preserve">
+    <value>Aether Cyan</value>
+  </data>
+  <data name="Settings_Accent_Ice" xml:space="preserve">
+    <value>Ice Blue</value>
+  </data>
+  <data name="Settings_Accent_Mint" xml:space="preserve">
+    <value>Mint</value>
+  </data>
+  <data name="Settings_Accent_Amethyst" xml:space="preserve">
+    <value>Amethyst</value>
+  </data>
+  <data name="Settings_Accent_Sunset" xml:space="preserve">
+    <value>Sunset</value>
+  </data>
+  <data name="Settings_Accent_Slate" xml:space="preserve">
+    <value>Slate</value>
+  </data>
+  <data name="Settings_Accent_Custom" xml:space="preserve">
+    <value>Custom colour, as hex</value>
+  </data>
+  <data name="Caption_Minimize" xml:space="preserve">
+    <value>Minimize</value>
+  </data>
+  <data name="Caption_Maximize" xml:space="preserve">
+    <value>Maximize</value>
+  </data>
+  <data name="Caption_Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="Caption_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
   <data name="Transport_MoreControls" xml:space="preserve">
     <value>More controls</value>
   </data>
@@ -347,6 +389,189 @@
   </data>
   <data name="Rail_Stream" xml:space="preserve">
     <value>Stream</value>
+  </data>
+  <data name="Rail_Queue" xml:space="preserve">
+    <value>Queue</value>
+  </data>
+  <data name="Menu_Queue" xml:space="preserve">
+    <value>Queue</value>
+  </data>
+  <data name="Menu_Transcript" xml:space="preserve">
+    <value>Transcript</value>
+  </data>
+  <data name="Toast_SubtitleDelay" xml:space="preserve">
+    <value>Subtitle delay: {0}</value>
+  </data>
+  <data name="Transport_Live" xml:space="preserve">
+    <value>LIVE</value>
+  </data>
+  <data name="Transport_LiveNow" xml:space="preserve">
+    <value>Watching live</value>
+  </data>
+  <data name="Transport_GoLive" xml:space="preserve">
+    <value>Go to live</value>
+  </data>
+  <data name="Settings_SponsorBlock_Title" xml:space="preserve">
+    <value>SponsorBlock</value>
+  </data>
+  <data name="Settings_SponsorBlock_Description" xml:space="preserve">
+    <value>Skips sponsors and other parts of YouTube videos that viewers have marked</value>
+  </data>
+  <data name="Settings_SponsorBlockPrivacy_Title" xml:space="preserve">
+    <value>What is sent</value>
+  </data>
+  <data name="Settings_SponsorBlockPrivacy_Description" xml:space="preserve">
+    <value>For each YouTube video, sponsor.ajay.app gets the first four characters of a hash of its id, shared by many videos, so it cannot tell which one you watch</value>
+  </data>
+  <data name="Settings_SponsorBlockAutoSkip_Title" xml:space="preserve">
+    <value>Skip automatically</value>
+  </data>
+  <data name="Settings_SponsorBlockAutoSkip_Description" xml:space="preserve">
+    <value>Off shows a Skip button instead</value>
+  </data>
+  <data name="SponsorBlock_Sponsor" xml:space="preserve">
+    <value>Sponsor</value>
+  </data>
+  <data name="SponsorBlock_SelfPromo" xml:space="preserve">
+    <value>Self-promotion</value>
+  </data>
+  <data name="SponsorBlock_Interaction" xml:space="preserve">
+    <value>Interaction reminder</value>
+  </data>
+  <data name="SponsorBlock_Intro" xml:space="preserve">
+    <value>Intro</value>
+  </data>
+  <data name="SponsorBlock_Outro" xml:space="preserve">
+    <value>Outro and credits</value>
+  </data>
+  <data name="Queue_Title" xml:space="preserve">
+    <value>Queue</value>
+  </data>
+  <data name="Queue_Count" xml:space="preserve">
+    <value>{0} videos</value>
+  </data>
+  <data name="Queue_CountOne" xml:space="preserve">
+    <value>1 video</value>
+  </data>
+  <data name="Queue_Empty" xml:space="preserve">
+    <value>Nothing is queued. Open a video to queue its folder, or drop several videos onto the player.</value>
+  </data>
+  <data name="Queue_NoMatch" xml:space="preserve">
+    <value>No video in the queue matches.</value>
+  </data>
+  <data name="Queue_Filter" xml:space="preserve">
+    <value>Filter the queue</value>
+  </data>
+  <data name="Queue_Shuffle" xml:space="preserve">
+    <value>Shuffle</value>
+  </data>
+  <data name="Queue_RepeatOff" xml:space="preserve">
+    <value>Repeat: off</value>
+  </data>
+  <data name="Queue_RepeatAll" xml:space="preserve">
+    <value>Repeat: all</value>
+  </data>
+  <data name="Queue_RepeatOne" xml:space="preserve">
+    <value>Repeat: this video</value>
+  </data>
+  <data name="Queue_Clear" xml:space="preserve">
+    <value>Clear the queue</value>
+  </data>
+  <data name="Queue_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Queue_Remove" xml:space="preserve">
+    <value>Remove from the queue</value>
+  </data>
+  <data name="Equalizer_Title" xml:space="preserve">
+    <value>Equalizer</value>
+  </data>
+  <data name="Equalizer_Description" xml:space="preserve">
+    <value>Shape the sound with a preamp and ten bands, or pick a preset</value>
+  </data>
+  <data name="Equalizer_Preset" xml:space="preserve">
+    <value>Equalizer preset</value>
+  </data>
+  <data name="Equalizer_Preset_flat" xml:space="preserve">
+    <value>Flat</value>
+  </data>
+  <data name="Equalizer_Preset_bass" xml:space="preserve">
+    <value>Bass boost</value>
+  </data>
+  <data name="Equalizer_Preset_vocal" xml:space="preserve">
+    <value>Vocal</value>
+  </data>
+  <data name="Equalizer_Preset_treble" xml:space="preserve">
+    <value>Treble boost</value>
+  </data>
+  <data name="Equalizer_Preset_rock" xml:space="preserve">
+    <value>Rock</value>
+  </data>
+  <data name="Equalizer_Preset_electronic" xml:space="preserve">
+    <value>Electronic</value>
+  </data>
+  <data name="Equalizer_Preset_cinema" xml:space="preserve">
+    <value>Cinema</value>
+  </data>
+  <data name="Equalizer_Preset_custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="Equalizer_Preamp" xml:space="preserve">
+    <value>Preamp</value>
+  </data>
+  <data name="Equalizer_PreampShort" xml:space="preserve">
+    <value>Pre</value>
+  </data>
+  <data name="Equalizer_Band" xml:space="preserve">
+    <value>{0} Hz</value>
+  </data>
+  <data name="Settings_NightMode_Title" xml:space="preserve">
+    <value>Night mode</value>
+  </data>
+  <data name="Tracks_Mix" xml:space="preserve">
+    <value>Mix tracks</value>
+  </data>
+  <data name="Tracks_SecondSubtitle" xml:space="preserve">
+    <value>Second subtitle, at the top</value>
+  </data>
+  <data name="Transcript_Title" xml:space="preserve">
+    <value>Transcript</value>
+  </data>
+  <data name="Transcript_Search" xml:space="preserve">
+    <value>Search what is said</value>
+  </data>
+  <data name="Transcript_Reading" xml:space="preserve">
+    <value>Reading the subtitles…</value>
+  </data>
+  <data name="Transcript_NoVideo" xml:space="preserve">
+    <value>Open a video to see what is said in it.</value>
+  </data>
+  <data name="Transcript_None" xml:space="preserve">
+    <value>This video has no text subtitles to show. Picture subtitles (Blu-ray, DVD) cannot be read as text.</value>
+  </data>
+  <data name="Transcript_Empty" xml:space="preserve">
+    <value>The subtitles have no lines.</value>
+  </data>
+  <data name="Transcript_NoMatch" xml:space="preserve">
+    <value>No line says that.</value>
+  </data>
+  <data name="Transcript_Unreadable" xml:space="preserve">
+    <value>The subtitles could not be read.</value>
+  </data>
+  <data name="Transcript_NeedsFfmpeg" xml:space="preserve">
+    <value>These subtitles are inside the video. Install ffmpeg to show them here, or turn on a subtitle file.</value>
+  </data>
+  <data name="Tracks_MixDescription" xml:space="preserve">
+    <value>Play every audio track at once, each at its own level, such as game, mic and chat from a recording</value>
+  </data>
+  <data name="Tracks_MixMute" xml:space="preserve">
+    <value>Mute {0}</value>
+  </data>
+  <data name="Tracks_MixLevel" xml:space="preserve">
+    <value>{0} level</value>
+  </data>
+  <data name="Settings_NightMode_Description" xml:space="preserve">
+    <value>Softens loud scenes and lifts quiet dialogue, for watching at low volume. Replaces volume normalisation while on</value>
   </data>
   <data name="Rail_Settings" xml:space="preserve">
     <value>Settings</value>
@@ -897,6 +1122,27 @@
   <data name="Settings_Shortcuts_PreviousChapter" xml:space="preserve">
     <value>Previous chapter</value>
   </data>
+  <data name="Settings_Shortcuts_NextFile" xml:space="preserve">
+    <value>Next video</value>
+  </data>
+  <data name="Settings_Shortcuts_PreviousFile" xml:space="preserve">
+    <value>Previous video</value>
+  </data>
+  <data name="Settings_Shortcuts_Queue" xml:space="preserve">
+    <value>Queue</value>
+  </data>
+  <data name="Settings_Shortcuts_Transcript" xml:space="preserve">
+    <value>Transcript</value>
+  </data>
+  <data name="Settings_Shortcuts_SubtitleEarlier" xml:space="preserve">
+    <value>Subtitles 50 ms earlier</value>
+  </data>
+  <data name="Settings_Shortcuts_SubtitleLater" xml:space="preserve">
+    <value>Subtitles 50 ms later</value>
+  </data>
+  <data name="Settings_Shortcuts_SubtitleDelayReset" xml:space="preserve">
+    <value>Reset the subtitle delay</value>
+  </data>
   <data name="Settings_Shortcuts_Diagnostics" xml:space="preserve">
     <value>Diagnostics</value>
   </data>
@@ -943,23 +1189,23 @@
   <data name="Settings_About_CopyDiagnostics" xml:space="preserve">
     <value>Copy diagnostics</value>
   </data>
-  <data name="Settings_About_CardTagline" xml:space="preserve">
-    <value>Everything stays on this device.</value>
-  </data>
-  <data name="Settings_About_CardLink" xml:space="preserve">
-    <value>GitHub · @rvyyv-n</value>
-  </data>
-  <data name="Settings_About_CreditVersion" xml:space="preserve">
-    <value>Version</value>
-  </data>
   <data name="Settings_About_CreditSource" xml:space="preserve">
     <value>Source code</value>
   </data>
-  <data name="Settings_About_CreditLicence" xml:space="preserve">
-    <value>Aether by rvyyv-n, licensed under GPL-3.0</value>
+  <data name="Settings_About_Credit" xml:space="preserve">
+    <value>By rvyyv-n · Licensed under GPL-3.0 · Everything stays on this device</value>
   </data>
-  <data name="Settings_About_CreditLicenceLink" xml:space="preserve">
-    <value>Read the licence</value>
+  <data name="Settings_About_ReleaseNotes" xml:space="preserve">
+    <value>Release notes</value>
+  </data>
+  <data name="Settings_AutoLabel" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Settings_About_Heading" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Settings_About_Help" xml:space="preserve">
+    <value>Help</value>
   </data>
   <data name="Settings_About_Licences" xml:space="preserve">
     <value>Licences</value>

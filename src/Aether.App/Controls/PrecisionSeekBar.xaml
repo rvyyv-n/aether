@@ -43,6 +43,11 @@
                 Visibility="Collapsed" />
             <!--  Track, buffered and played, one set per chapter piece (9.6); built in code  -->
             <Canvas x:Name="Pieces" Canvas.Top="14" />
+            <!--  SponsorBlock segments (16.2): a coloured strip over the track for each, by category; built in code  -->
+            <Canvas
+                x:Name="Marks"
+                Canvas.Top="14"
+                IsHitTestVisible="False" />
             <Rectangle
                 x:Name="KeyTick"
                 Canvas.Top="4"
@@ -84,7 +89,8 @@
         <!--
             Time bubble, with the chapter's name above the time when it has one, 16 above the pill
             (BubbleLift is measured from the bar's top). Solid dialog fallback: in-app Acrylic would not
-            sample the swap chain under it (ADR-0013). Padding 4,8 less the hairline.
+            sample the swap chain under it (ADR-0013). Padding 4,8 less the hairline. Follows the bar's theme
+            (set from code), so in light it is a near-white card with dark text.
         -->
         <Popup
             x:Name="BubblePopup"
@@ -95,7 +101,6 @@
             <Border
                 x:Name="Bubble"
                 Padding="7,3"
-                RequestedTheme="Dark"
                 Background="{ThemeResource AetherSurfaceDialogFallbackBrush}"
                 BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
                 BorderThickness="1"

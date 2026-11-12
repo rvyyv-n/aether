@@ -20,20 +20,23 @@
     mc:Ignorable="d">
 
     <Page.Resources>
+        <local:NoBackdrop x:Key="NoPopupBackdrop" />
         <!--
-            Tracks flyout (9.2): opened from Audio and Subtitles in the right-click menu, centred above the pill. A translucent
-            surface: the render thread blurs the video behind it (ADR-0013); the panel scrolls inside it (MainPage.Tracks.cs).
+            Tracks flyout (9.2): opened from Audio and Subtitles in the right-click menu, centred above the pill. The bar's
+            surface in the app's theme: the render thread blurs the video behind it (ADR-0013); the panel scrolls inside it
+            (MainPage.Tracks.cs).
         -->
         <Flyout
             x:Name="TracksFlyout"
+            AreOpenCloseAnimationsEnabled="False"
+            SystemBackdrop="{StaticResource NoPopupBackdrop}"
             Closed="OnTracksFlyoutClosed"
             Opened="OnTracksFlyoutOpened"
             Placement="Top">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
-                    <Setter Property="RequestedTheme" Value="Dark" />
-                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogBrush}" />
-                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceBarBrush}" />
+                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeBarBrush}" />
                     <Setter Property="BorderThickness" Value="1" />
                     <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
                     <Setter Property="Padding" Value="0" />
@@ -43,20 +46,21 @@
                     <Setter Property="MaxHeight" Value="2000" />
                 </Style>
             </Flyout.FlyoutPresenterStyle>
-            <controls:TracksPanel x:Name="TracksPanel" RequestedTheme="Dark" />
+            <controls:TracksPanel x:Name="TracksPanel" />
         </Flyout>
 
         <!--  Video flyout (9.3): right-aligned to the pill, on the same surface as the tracks flyout (MainPage.Video.cs).  -->
         <Flyout
             x:Name="VideoFlyout"
+            AreOpenCloseAnimationsEnabled="False"
+            SystemBackdrop="{StaticResource NoPopupBackdrop}"
             Closed="OnVideoFlyoutClosed"
             Opened="OnVideoFlyoutOpened"
             Placement="TopEdgeAlignedRight">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
-                    <Setter Property="RequestedTheme" Value="Dark" />
-                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogBrush}" />
-                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
+                    <Setter Property="Background" Value="{ThemeResource AetherSurfaceBarBrush}" />
+                    <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeBarBrush}" />
                     <Setter Property="BorderThickness" Value="1" />
                     <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
                     <Setter Property="Padding" Value="0" />
@@ -66,7 +70,7 @@
                     <Setter Property="MaxHeight" Value="2000" />
                 </Style>
             </Flyout.FlyoutPresenterStyle>
-            <controls:VideoPanel x:Name="VideoPanel" RequestedTheme="Dark" />
+            <controls:VideoPanel x:Name="VideoPanel" />
         </Flyout>
     </Page.Resources>
 
@@ -87,14 +91,17 @@
             SizeChanged="OnVideoHostSizeChanged">
             <FlyoutBase.AttachedFlyout>
                 <!--
-                    Right-click menu (9.1): solid like the transport menus and as wide as its longest label and shortcut
+                    Right-click menu (9.1): frosted like the transport menus and as wide as its longest label and shortcut
                     (the menu row styles in DesignTokens.xaml); the Recent submenu is 288. Labels, shortcuts and which
                     entries are enabled come from the code (MainPage.ContextMenu.cs).
                 -->
                 <MenuFlyout
                     x:Name="ContextMenu"
+                    AreOpenCloseAnimationsEnabled="False"
+                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                     Closed="OnContextMenuClosed"
                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                    ShouldConstrainToRootBounds="True"
                     Opened="OnContextMenuOpened"
                     Placement="BottomEdgeAlignedLeft">
                     <MenuFlyoutItem
@@ -150,6 +157,22 @@
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE714;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxQueue"
+                        Click="OnQueueMenuClick"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8FD;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxTranscript"
+                        Click="OnTranscriptMenuClick"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8A5;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
@@ -645,8 +668,8 @@
             Visibility="Collapsed" />
 
         <!--
-            Title bar: Back (settings only), name and release label (the drag region), the gear, then 138 px
-            left clear for the system caption buttons. The buttons sit outside the drag region so they take clicks.
+            Title bar: Back (settings only), name and release label (the drag region), the gear, then the caption
+            buttons. The buttons sit outside the drag region so they take clicks.
         -->
         <Grid
             x:Name="TitleBar"
@@ -717,11 +740,39 @@
                 Content="&#xEE47;"
                 Style="{StaticResource AetherTitleBarButtonStyle}"
                 Visibility="Collapsed" />
-            <!--  The window sets the width to the system's real caption-button inset; 138 is the 100% default.  -->
-            <Border
-                x:Name="CaptionReserve"
+            <!--  Aether's own caption buttons (12.10): the window registers them as its caption buttons, so Windows runs them.  -->
+            <StackPanel
+                x:Name="CaptionButtons"
                 Grid.Column="3"
-                Width="{StaticResource AetherSizeCaptionButtons}" />
+                Orientation="Horizontal">
+                <Button
+                    x:Name="CaptionMinimize"
+                    Click="OnCaptionMinimizeClick"
+                    Content="&#xE921;"
+                    FontSize="{StaticResource AetherSizeCaptionGlyph}"
+                    IsTabStop="False"
+                    Style="{StaticResource AetherTitleBarButtonStyle}" />
+                <Button
+                    x:Name="CaptionMaximize"
+                    Click="OnCaptionMaximizeClick"
+                    Content="&#xE922;"
+                    FontSize="{StaticResource AetherSizeCaptionGlyph}"
+                    IsTabStop="False"
+                    Style="{StaticResource AetherTitleBarButtonStyle}" />
+                <Button
+                    x:Name="CaptionClose"
+                    Click="OnCaptionCloseClick"
+                    Content="&#xE8BB;"
+                    FontSize="{StaticResource AetherSizeCaptionGlyph}"
+                    IsTabStop="False"
+                    Style="{StaticResource AetherTitleBarButtonStyle}">
+                    <Button.Resources>
+                        <StaticResource x:Key="AetherCaptionHoverBrush" ResourceKey="AetherCaptionCloseHoverBrush" />
+                        <StaticResource x:Key="AetherCaptionPressedBrush" ResourceKey="AetherCaptionClosePressedBrush" />
+                        <StaticResource x:Key="AetherTextPrimaryBrush" ResourceKey="AetherCaptionCloseGlyphBrush" />
+                    </Button.Resources>
+                </Button>
+            </StackPanel>
         </Grid>
 
         <!--  Diagnostics (Ctrl+I): top-left, 16 in from the edge and under the 32 px title bar.  -->
@@ -737,7 +788,8 @@
             Sidebar (P8.1). A 4 px hot zone on the left edge under the title bar wakes it: resting there shows the FillRange
             peek strip beside where the card will be and opens it after 150 ms, a click opens it at once. The card is a
             48 x 168 pill (padding 6 counting the stroke) on the bar's tint with the bar's blur behind it (the render
-            thread draws that, ADR-0013); the page places it (MainPage.Rail.cs) and slides it in from the left edge.
+            thread draws that, ADR-0013); the page places it (MainPage.Rail.cs) and slides it in from the left edge. Follows
+            the app's theme like the bar, so in light it is the same frosted near-white card with dark glyphs.
         -->
         <Border
             x:Name="RailHotZone"
@@ -751,7 +803,9 @@
             Tapped="OnRailHotZoneTapped">
             <Border
                 x:Name="RailPeek"
-                Height="168"
+                Width="4"
+                Height="208"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Background="{ThemeResource AetherFillRangeBrush}"
                 CornerRadius="0,2,2,0"
@@ -760,16 +814,15 @@
         </Border>
         <Border
             x:Name="Rail"
-            RequestedTheme="Dark"
             Width="{StaticResource AetherSizeSidebarWidth}"
-            Height="168"
+            Height="208"
             Margin="16,40,0,0"
             Padding="5"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             AutomationProperties.LandmarkType="Navigation"
-            Background="{ThemeResource AetherSurfaceOsdBrush}"
-            BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
+            Background="{ThemeResource AetherSurfaceBarBrush}"
+            BorderBrush="{ThemeResource AetherStrokeBarBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource AetherTransportCornerRadius}"
             PointerCanceled="OnRailPointerExited"
@@ -786,6 +839,11 @@
                     x:Name="RailClips"
                     Click="OnRailClipsClick"
                     Content="&#xE8F1;"
+                    Style="{StaticResource AetherSidebarItemStyle}" />
+                <Button
+                    x:Name="RailQueue"
+                    Click="OnRailQueueClick"
+                    Content="&#xE8FD;"
                     Style="{StaticResource AetherSidebarItemStyle}" />
                 <Button
                     x:Name="RailStream"
@@ -807,7 +865,6 @@
         -->
         <Grid
             x:Name="ClipLayer"
-            RequestedTheme="Dark"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
             Margin="16,0,16,120"
             VerticalAlignment="Bottom"
@@ -818,24 +875,36 @@
             <controls:ClipDrawer x:Name="ClipDrawer" />
         </Grid>
 
+        <!--  The card on the right edge, the queue drawer (13.3) or the transcript (15.3): between the title bar and the full transport card; MainPage.SidePanel.cs places and slides it.  -->
+        <Grid
+            x:Name="SideLayer"
+            HorizontalAlignment="Right"
+            Visibility="Collapsed">
+            <controls:PlaylistDrawer x:Name="QueueDrawer" VerticalAlignment="Top" />
+            <controls:TranscriptPane
+                x:Name="TranscriptPane"
+                VerticalAlignment="Top"
+                Visibility="Collapsed" />
+        </Grid>
+
         <!--
             Transport card: the seek row, then the buttons, 4 apart. min(520, window - 32) wide and 88 tall:
             padding 8 (7 here, the 1 px stroke is the eighth), a 32 px seek row and a 36 px button row.
-            A plain 62% ink tint with a hairline edge and radius 24. 24 above the bottom.
+            A plain 62% ink tint with a hairline edge and radius 24. 24 above the bottom. Follows the app's theme: in light it
+            is the menus' frosted near-white card with dark glyphs, so bar and menus match.
             While a video plays it shrinks to the 48 px slim pill (7.11, s5-08): padding 6, and the seek row slides down
             between Play and Mute while the other buttons fade (MainPage.Bar.cs). Both rows overlap in one grid for that.
             min(520, window - 32) fits every button at any width, so there is no narrow layout any more (5.7 retired).
         -->
         <Border
             x:Name="Osd"
-            RequestedTheme="Dark"
             Height="{StaticResource AetherSizeOsdHeight}"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
             Margin="16,0,16,24"
             Padding="7"
             VerticalAlignment="Bottom"
-            Background="{ThemeResource AetherSurfaceOsdBrush}"
-            BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
+            Background="{ThemeResource AetherSurfaceBarBrush}"
+            BorderBrush="{ThemeResource AetherStrokeBarBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource AetherTransportCornerRadius}"
             GettingFocus="OnOsdGettingFocus"
@@ -877,8 +946,11 @@
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="OpenMenu"
+                                    AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnOpenMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    ShouldConstrainToRootBounds="True"
                                     Opened="OnOpenMenuOpened"
                                     Placement="TopEdgeAlignedLeft">
                                     <MenuFlyoutItem
@@ -909,8 +981,11 @@
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="SpeedMenu"
+                                    AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnSpeedMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    ShouldConstrainToRootBounds="True"
                                     Opened="OnSpeedMenuOpened"
                                     Placement="TopEdgeAlignedLeft" />
                             </FlyoutBase.AttachedFlyout>
@@ -926,8 +1001,11 @@
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="QualityMenu"
+                                    AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnQualityMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    ShouldConstrainToRootBounds="True"
                                     Opened="OnQualityMenuOpened"
                                     Placement="TopEdgeAlignedLeft" />
                             </FlyoutBase.AttachedFlyout>
@@ -995,15 +1073,16 @@
                                 <Flyout
                                     x:Name="VolumeFlyout"
                                     AllowFocusOnInteraction="False"
+                                    AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnVolumeFlyoutClosed"
                                     Opened="OnVolumeFlyoutOpened"
                                     Placement="Top">
                                     <Flyout.FlyoutPresenterStyle>
-                                        <!--  The 62% dialog tint; the blur behind it is drawn by the render thread (ADR-0013).  -->
+                                        <!--  The bar's surface in the app's theme; the blur behind it is drawn by the render thread (ADR-0013).  -->
                                         <Style TargetType="FlyoutPresenter">
-                                            <Setter Property="RequestedTheme" Value="Dark" />
-                                            <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogBrush}" />
-                                            <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
+                                            <Setter Property="Background" Value="{ThemeResource AetherSurfaceBarBrush}" />
+                                            <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeBarBrush}" />
                                             <Setter Property="BorderThickness" Value="1" />
                                             <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
                                             <Setter Property="Padding" Value="12,0" />
@@ -1013,7 +1092,6 @@
                                     </Flyout.FlyoutPresenterStyle>
                                     <Grid
                                         x:Name="VolumeFlyoutContent"
-                                        RequestedTheme="Dark"
                                         Background="Transparent"
                                         PointerCanceled="OnVolumeFlyoutPointerExited"
                                         PointerEntered="OnVolumeFlyoutPointerEntered"
@@ -1059,8 +1137,11 @@
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout
                                     x:Name="MoreMenu"
+                                    AreOpenCloseAnimationsEnabled="False"
+                                    SystemBackdrop="{StaticResource NoPopupBackdrop}"
                                     Closed="OnMoreMenuClosed"
                                     MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+                                    ShouldConstrainToRootBounds="True"
                                     Opened="OnMoreMenuOpened"
                                     Placement="TopEdgeAlignedRight">
                                     <MenuFlyoutItem
@@ -1144,6 +1225,26 @@
                         VerticalAlignment="Center"
                         Style="{StaticResource AetherTimecodeSecondaryTextStyle}"
                         Text="00:00" />
+                    <!--  Live streams (16.4): in place of the length, a LIVE badge whose dot pulses at the live edge; a click goes back to it  -->
+                    <Button
+                        x:Name="LiveBadge"
+                        Grid.Column="2"
+                        Padding="8,0"
+                        Click="OnLiveBadgeClick"
+                        Style="{StaticResource AetherSpeedPillButtonStyle}"
+                        Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Ellipse
+                                x:Name="LiveDot"
+                                Width="8"
+                                Height="8"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                x:Name="LiveText"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource AetherCaptionStrongTextStyle}" />
+                        </StackPanel>
+                    </Button>
                 </Grid>
             </Grid>
         </Border>
@@ -1155,7 +1256,6 @@
         -->
         <Grid
             x:Name="SkipChapterLayer"
-            RequestedTheme="Dark"
             Margin="16,0,16,24"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
@@ -1167,8 +1267,8 @@
                 x:Name="SkipChapterButton"
                 Height="{StaticResource AetherSizeTransportButton}"
                 Padding="12,0,14,0"
-                Background="{ThemeResource AetherSurfaceOsdBrush}"
-                BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
+                Background="{ThemeResource AetherSurfaceBarBrush}"
+                BorderBrush="{ThemeResource AetherStrokeBarBrush}"
                 Click="OnSkipChapterClick"
                 Style="{StaticResource AetherOutlinePillButtonStyle}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -1193,7 +1293,6 @@
         -->
         <Grid
             x:Name="ToastLayer"
-            RequestedTheme="Dark"
             Margin="16,0,16,24"
             VerticalAlignment="Bottom"
             Visibility="Collapsed">

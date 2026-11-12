@@ -25,7 +25,7 @@ Applying four targeted additions and evaluating three trade-offs will resolve se
 ## 1. Add
 
 ### R1: Uncoalesced `relative+exact` seek commands on 5 s skip buttons and arrow keys cause GOP decode stalls
-- **Location:** [src/Aether.Core.Playback/TransportState.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Playback/TransportState.cs#L49-L55), [src/Aether.App/Playback/PlayerSession.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Playback/PlayerSession.cs#L190), [src/Aether.App/MainPage.Transport.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/MainPage.Transport.cs#L131-L145)
+- **Location:** [src/Aether.Core.Playback/TransportState.cs](../../src/Aether.Core.Playback/TransportState.cs#L49-L55), [src/Aether.App/Playback/PlayerSession.cs](../../src/Aether.App/Playback/PlayerSession.cs#L190), [src/Aether.App/MainPage.Transport.cs](../../src/Aether.App/MainPage.Transport.cs#L131-L145)
 - **Quoted code:**
   ```csharp
   // TransportState.cs
@@ -47,7 +47,7 @@ Applying four targeted additions and evaluating three trade-offs will resolve se
 ---
 
 ### R2: `video-latency-hacks` active during software decoding fallback under `auto-safe` causes dropped frames
-- **Location:** [src/Aether.Core.Playback/Settings/MpvSettingsMap.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Playback/Settings/MpvSettingsMap.cs#L54-L58), [src/Aether.Core.Playback/Settings/AetherSettings.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Playback/Settings/AetherSettings.cs#L25)
+- **Location:** [src/Aether.Core.Playback/Settings/MpvSettingsMap.cs](../../src/Aether.Core.Playback/Settings/MpvSettingsMap.cs#L54-L58), [src/Aether.Core.Playback/Settings/AetherSettings.cs](../../src/Aether.Core.Playback/Settings/AetherSettings.cs#L25)
 - **Quoted code:**
   ```csharp
   public static bool VideoLatencyHacks(AetherSettings settings)
@@ -66,7 +66,7 @@ Applying four targeted additions and evaluating three trade-offs will resolve se
 ---
 
 ### R3: Per-frame XAML layout passes and clock string allocations while OSD chrome is completely hidden
-- **Location:** [src/Aether.App/MainPage.xaml.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/MainPage.xaml.cs#L480-L485), [src/Aether.App/MainPage.xaml.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/MainPage.xaml.cs#L538-L549), [src/Aether.App/Controls/PrecisionSeekBar.xaml.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Controls/PrecisionSeekBar.xaml.cs#L125-L135)
+- **Location:** [src/Aether.App/MainPage.xaml.cs](../../src/Aether.App/MainPage.xaml.cs#L480-L485), [src/Aether.App/MainPage.xaml.cs](../../src/Aether.App/MainPage.xaml.cs#L538-L549), [src/Aether.App/Controls/PrecisionSeekBar.xaml.cs](../../src/Aether.App/Controls/PrecisionSeekBar.xaml.cs#L125-L135)
 - **Quoted code:**
   ```csharp
   // MainPage.xaml.cs
@@ -97,7 +97,7 @@ Applying four targeted additions and evaluating three trade-offs will resolve se
 ---
 
 ### R4: Hardcoded 512MiB `demuxer-max-back-bytes` overrides and nullifies `NetworkCacheMegabytes` setting
-- **Location:** [src/Aether.Core.Interop/Mpv/MpvContext.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/Mpv/MpvContext.cs#L16-L17), [src/Aether.Core.Interop/Mpv/MpvContext.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/Mpv/MpvContext.cs#L61), [src/Aether.Core.Playback/Settings/MpvSettingsMap.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Playback/Settings/MpvSettingsMap.cs#L26-L29)
+- **Location:** [src/Aether.Core.Interop/Mpv/MpvContext.cs](../../src/Aether.Core.Interop/Mpv/MpvContext.cs#L16-L17), [src/Aether.Core.Interop/Mpv/MpvContext.cs](../../src/Aether.Core.Interop/Mpv/MpvContext.cs#L61), [src/Aether.Core.Playback/Settings/MpvSettingsMap.cs](../../src/Aether.Core.Playback/Settings/MpvSettingsMap.cs#L26-L29)
 - **Quoted code:**
   ```csharp
   // MpvContext.cs
@@ -123,7 +123,7 @@ Applying four targeted additions and evaluating three trade-offs will resolve se
 ## 2. Maybe add
 
 ### R5: `BackdropSource.NeedsFrame` forces continuous redraws and `ReportSwap` at display refresh rate during UI fades
-- **Location:** [src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs#L244), [src/Aether.Core.Interop/Rendering/AngleMpvRenderBackend.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/Rendering/AngleMpvRenderBackend.cs#L64-L70)
+- **Location:** [src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs](../../src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs#L244), [src/Aether.Core.Interop/Rendering/AngleMpvRenderBackend.cs](../../src/Aether.Core.Interop/Rendering/AngleMpvRenderBackend.cs#L64-L70)
 - **Quoted code:**
   ```csharp
   // MpvRenderLoop.cs
@@ -144,7 +144,7 @@ Applying four targeted additions and evaluating three trade-offs will resolve se
 ---
 
 ### R6: Integer display refresh rate detection truncates fractional Hz (59.94 / 119.88 Hz), causing periodic frame drops
-- **Location:** [src/Aether.Core.Interop/Windowing/DisplayRefresh.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/Windowing/DisplayRefresh.cs#L40-L52), [src/Aether.App/Playback/DisplayRefreshSync.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Playback/DisplayRefreshSync.cs#L40-L45)
+- **Location:** [src/Aether.Core.Interop/Windowing/DisplayRefresh.cs](../../src/Aether.Core.Interop/Windowing/DisplayRefresh.cs#L40-L52), [src/Aether.App/Playback/DisplayRefreshSync.cs](../../src/Aether.App/Playback/DisplayRefreshSync.cs#L40-L45)
 - **Quoted code:**
   ```csharp
   if (User32.EnumDisplaySettings(info.DeviceName, User32.ENUM_CURRENT_SETTINGS, &mode) == 0)
@@ -163,7 +163,7 @@ Applying four targeted additions and evaluating three trade-offs will resolve se
 ---
 
 ### R7: Non-blocking loop disposal in `RestartLoop` triggers race conditions and 100 ms retry stalls on engine restarts
-- **Location:** [src/Aether.App/Controls/MpvVideoSurface.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Controls/MpvVideoSurface.cs#L111-L122), [src/Aether.App/Controls/MpvVideoSurface.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Controls/MpvVideoSurface.cs#L140-L150)
+- **Location:** [src/Aether.App/Controls/MpvVideoSurface.cs](../../src/Aether.App/Controls/MpvVideoSurface.cs#L111-L122), [src/Aether.App/Controls/MpvVideoSurface.cs](../../src/Aether.App/Controls/MpvVideoSurface.cs#L140-L150)
 - **Quoted code:**
   ```csharp
   private void RestartLoop()
@@ -190,7 +190,7 @@ Applying four targeted additions and evaluating three trade-offs will resolve se
 ---
 
 ### R8: WinRT `CompositionTarget.Rendering` event subscription churn on every UI flush request
-- **Location:** [src/Aether.App/Playback/DispatcherQueueFlushScheduler.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.App/Playback/DispatcherQueueFlushScheduler.cs#L45-L60)
+- **Location:** [src/Aether.App/Playback/DispatcherQueueFlushScheduler.cs](../../src/Aether.App/Playback/DispatcherQueueFlushScheduler.cs#L45-L60)
 - **Quoted code:**
   ```csharp
   private void Subscribe() => CompositionTarget.Rendering += _onRendering;
@@ -214,21 +214,21 @@ Applying four targeted additions and evaluating three trade-offs will resolve se
 ## 3. Leave out
 
 ### R9: Remove D3D11 immediate context multithread protection lock
-- **Location:** [src/Aether.Core.Interop/DirectX/D3D11DeviceManager.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/DirectX/D3D11DeviceManager.cs#L124)
+- **Location:** [src/Aether.Core.Interop/DirectX/D3D11DeviceManager.cs](../../src/Aether.Core.Interop/DirectX/D3D11DeviceManager.cs#L124)
 - **Reason:** Although the UI thread no longer touches the D3D11 immediate context directly (resizes are posted lock-free and applied on the render thread), mpv's hardware video decoder (`d3d11va`) operates on worker threads and shares the D3D11 device. Removing `SetMultithreadProtected(TRUE)` would risk driver race conditions and device loss during concurrent decode operations and ANGLE frame rendering. The synchronization overhead is negligible compared to GPU execution times.
 - **Confidence:** High.
 
 ---
 
 ### R10: Replace ANGLE with native D3D11 render API (`vo=gpu-next`)
-- **Location:** [docs/DECISIONS.md](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/docs/DECISIONS.md#ADR-0007)
+- **Location:** [docs/DECISIONS.md](../../docs/DECISIONS.md#ADR-0007)
 - **Reason:** Mainline libmpv (`v0.41.0`) only exposes `MPV_RENDER_API_TYPE_OPENGL` and `MPV_RENDER_API_TYPE_SW` in `include/mpv/render.h`; there is no native D3D11 render API exposed by the library. Embedding mpv via an external HWND (`--wid`) would reintroduce WinUI 3 airspace issues and prevent XAML overlays from compositing directly over video. ANGLE zero-copy pbuffer interop with DXGI composition remains the correct, optimal solution.
 - **Confidence:** High.
 
 ---
 
 ### R11: Reorder swap-chain frame-latency wait ahead of `PollFrame` in render loop
-- **Location:** [src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs#L225-L235), [docs/DECISIONS.md](file:///C:/Users/rayyan/.t3/worktrees/aether/pass-7-menus-toasts-diagnostics/docs/DECISIONS.md#ADR-0018)
+- **Location:** [src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs](../../src/Aether.Core.Interop/Rendering/MpvRenderLoop.cs#L225-L235), [docs/DECISIONS.md](../../docs/DECISIONS.md#ADR-0018)
 - **Reason:** Waiting on the frame latency object before polling mpv would cause the frame selected by mpv to sit waiting in the swap chain queue, allowing it to become stale before display presentation. Waiting on the latency object after mpv signals a frame update ensures mpv samples the exact presentation timestamp when rendering into the swap chain back buffer.
 - **Confidence:** High.
 

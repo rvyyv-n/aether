@@ -36,6 +36,7 @@ public sealed partial class MainPage
             SpeedMenu.Items.Add(item);
         }
         ShowSpeed(PlaybackSpeed.Normal);
+        Osd.ActualThemeChanged += (_, _) => ApplySpeedLook(); // the bar follows the app's theme, and the off-1x fill is set from code
         foreach (Button button in new[]
         {
             OpenButton, SpeedButton, QualityButton, BackButton, PlayPauseButton, ForwardButton,
@@ -62,31 +63,13 @@ public sealed partial class MainPage
         }
     }
 
-    /// <summary>Plays the next video in the folder when a local file ends and Play next in folder is on.</summary>
+    /// <summary>Plays the next video in the queue when a local file ends and Play next in folder is on.</summary>
     private async void OnFileEnded(object? sender, EventArgs e)
     {
-        if (!App.Settings.Current.PlayNextInFolder
-            || _currentPath is not { } finished
-            || !Path.IsPathFullyQualified(finished)
-            || Path.GetDirectoryName(finished) is not { Length: > 0 } folder)
+        if ((App.Settings.Current.PlayNextInFolder || _playlist.Repeat != RepeatMode.None)
+            && await StepQueue(queue => queue.Next(ended: true)) is { } next)
         {
-            return;
-        }
-        string? next = await Task.Run(() =>
-        {
-            try
-            {
-                return FolderPlaylist.NextAfter(finished, Directory.EnumerateFiles(folder));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                return null; // the folder went away or is unreadable: stay on the last frame
-            }
-        });
-        // The user may have opened something else, or closed the page, while the folder was read.
-        if (next is not null && _isLoaded && _session is not null && _currentPath == finished)
-        {
-            Open(next);
+            Open(next, fromQueue: true);
         }
     }
 
@@ -119,11 +102,13 @@ public sealed partial class MainPage
         {
             return;
         }
-        _chapterSkipper.OnUserSeek(seconds);
+        double target = FromSeekBar(seconds);
+        _chapterSkipper.OnUserSeek(target);
+        _segmentSkipper.OnUserSeek(target);
         _chrome.SetHold(ChromeHolds.Interaction, dragging);
         ApplyChrome();
-        PositionText.Text = Timecode.FormatClock(seconds, session.ViewModel.Duration);
-        TrySend(() => session.Seek(seconds, dragging));
+        PositionText.Text = SeekBarClock(target, session.ViewModel.Duration);
+        TrySend(() => session.Seek(target, dragging));
     }
 
     private void SkipBy(double seconds)
@@ -204,6 +189,7 @@ public sealed partial class MainPage
         _speedMenuOpen = true;
         ApplySpeedLook();
         HoldForMenu(true);
+        SetMenuSurface(sender, true);
     }
 
     private void OnSpeedMenuClosed(object sender, object e)
@@ -211,6 +197,7 @@ public sealed partial class MainPage
         _speedMenuOpen = false;
         ApplySpeedLook();
         HoldForMenu(false);
+        SetMenuSurface(sender, false);
     }
 
     // Filled while its menu is open; filled and outlined, like Loop when on, while the speed is not 1x.
@@ -246,12 +233,14 @@ public sealed partial class MainPage
         OpenMenuFileItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenFile);
         OpenMenuUrlItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenUrl);
         HoldForMenu(true);
+        SetMenuSurface(sender, true);
     }
 
     private void OnOpenMenuClosed(object sender, object e)
     {
         OpenButton.ClearValue(BackgroundProperty);
         HoldForMenu(false);
+        SetMenuSurface(sender, false);
     }
 
     private void OnMoreClick(object sender, RoutedEventArgs e) => FlyoutBase.ShowAttachedFlyout(MoreButton);
@@ -262,12 +251,14 @@ public sealed partial class MainPage
         // The tracks flyout has nothing to list without a file, as in the right-click menu.
         MoreAudioItem.IsEnabled = MoreSubtitlesItem.IsEnabled = HasVideo;
         HoldForMenu(true);
+        SetMenuSurface(sender, true);
     }
 
     private void OnMoreMenuClosed(object sender, object e)
     {
         MoreButton.ClearValue(BackgroundProperty);
         HoldForMenu(false);
+        SetMenuSurface(sender, false);
         ShowTracksIfRequested();
     }
 
@@ -334,11 +325,7 @@ public sealed partial class MainPage
         ClipDrawer.Update(range, _currentPath, _session?.ViewModel.Duration ?? 0);
     }
 
-    private void OnClipDrawerHoldChanged(object? sender, EventArgs e)
-    {
-        _chrome.SetHold(ChromeHolds.Drawer, ClipDrawer.IsOpen || ClipDrawer.IsDraggingOut);
-        ApplyChrome();
-    }
+    private void OnClipDrawerHoldChanged(object? sender, EventArgs e) => SyncDrawerHold();
 
     /// <summary>In and Out belong to one file: opening another clears them.</summary>
     private void SyncClipRange()

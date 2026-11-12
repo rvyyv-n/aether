@@ -16,6 +16,22 @@ public static class SeekBarMath
             : 0;
 
     /// <summary>
+    /// Where the part of the file from <paramref name="start"/> to <paramref name="end"/> is drawn on a bar
+    /// <paramref name="width"/> wide: at least <paramref name="minWidth"/> so a short one shows, cut at the end of the file.
+    /// Null before the length is known, or for a part that starts after the end.
+    /// </summary>
+    public static (double Left, double Width)? Span(double start, double end, double width, double duration, double minWidth)
+    {
+        if (width <= 0 || duration <= 0 || !double.IsFinite(duration) || start >= duration)
+        {
+            return null;
+        }
+        double left = OffsetOf(start, width, duration);
+        double size = Math.Max(OffsetOf(Math.Min(end, duration), width, duration) - left, minWidth);
+        return (Math.Min(left, width - size), size);
+    }
+
+    /// <summary>
     /// The left edge of something <paramref name="size"/> wide centred on <paramref name="centre"/>,
     /// pushed back inside [<paramref name="min"/>, <paramref name="max"/>] near the ends.
     /// </summary>

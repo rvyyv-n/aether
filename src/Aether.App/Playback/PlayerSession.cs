@@ -1,9 +1,11 @@
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
+using Aether.Core.Playback.Audio;
 using Aether.Core.Playback.Settings;
 using Aether.Core.Playback.Streams;
 using Aether_App.Controls;
 using Aether_App.Input;
+using Aether_App.Settings;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.System.Power;
@@ -32,6 +34,7 @@ public sealed class PlayerSession : IDisposable
     private readonly LoopRestart _loop = new();
     private readonly FileEnd _fileEnd = new();
     private readonly MpvSettingsSync _settingsSync;
+    private bool _mixing;
     private readonly DisplayRefreshSync? _display;
     private readonly DisplayWakeLock _wake = new();
     private double _subtitleClearance;
@@ -111,6 +114,8 @@ public sealed class PlayerSession : IDisposable
         }
         var s = settings ?? App.Settings.Current;
         IReadOnlyList<KeyValuePair<string, string>> startOptions = MpvSettingsMap.StartOptions(s);
+        // The fonts that ship with Aether, so a subtitle set in one of them renders without it being installed.
+        KeyValuePair<string, string> fontsDirectory = new("sub-fonts-dir", BundledFonts.Directory);
         try
         {
             return MpvContext.Create(new MpvContextOptions
@@ -118,7 +123,7 @@ public sealed class PlayerSession : IDisposable
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
                 BackBufferSize = MpvSettingsMap.BackBufferSize(s),
-                AdditionalOptions = startOptions,
+                AdditionalOptions = [.. startOptions, fontsDirectory],
             });
         }
         catch (MpvException) when (startOptions.Count > 0)
@@ -130,6 +135,7 @@ public sealed class PlayerSession : IDisposable
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
                 BackBufferSize = MpvSettingsMap.BackBufferSize(s),
+                AdditionalOptions = [fontsDirectory],
             });
         }
     }
@@ -170,9 +176,33 @@ public sealed class PlayerSession : IDisposable
             ? seconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
             : "none";
         _context.CommandAsync(new MpvCommand("set", "start", start));
+        // The mix names this file's tracks; the next file picks its own track again.
+        SetMix(null, restoreTrack: null);
+        _settingsSync.PrepareForAudioRestart();
         _context.CommandAsync(string.IsNullOrEmpty(fileOptions)
             ? new MpvCommand("loadfile", path, "replace")
             : new MpvCommand("loadfile", path, "replace", "-1", fileOptions)); // -1: the playlist index mpv 0.38+ expects before options
+    }
+
+    /// <summary>Call before switching the audio track or the mix, which rebuild the audio filters. Non-blocking.</summary>
+    public void PrepareForAudioRestart() => _settingsSync.PrepareForAudioRestart();
+
+    /// <summary>
+    /// Plays several audio tracks at once through <paramref name="graph"/> (<see cref="TrackMix.Graph"/>), or with null
+    /// ends the mix and goes back to <paramref name="restoreTrack"/> (mpv's choice when null). Non-blocking.
+    /// </summary>
+    public void SetMix(string? graph, int? restoreTrack)
+    {
+        IReadOnlyList<string[]> commands = TrackMix.Commands(graph, _mixing, restoreTrack);
+        if (commands.Count > 0)
+        {
+            _settingsSync.PrepareForAudioRestart();
+        }
+        foreach (string[] command in commands)
+        {
+            _context.CommandAsync(new MpvCommand(command));
+        }
+        _mixing = graph is not null;
     }
 
     /// <summary>Toggles pause; on an ended file restarts it from 0. Non-blocking.</summary>

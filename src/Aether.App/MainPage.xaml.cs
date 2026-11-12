@@ -70,6 +70,8 @@ public sealed partial class MainPage : Page
     private bool _windowSyncQueued;
     private bool _dragging;
     private string? _dragPath;
+    private string[] _dragFiles = [];
+    private string[] _dragFolders = [];
     private bool _dragSupported;
 
     private bool _windowActive = true;
@@ -119,6 +121,9 @@ public sealed partial class MainPage : Page
         InitializeTracks();
         InitializeVideo();
         InitializeLanStream();
+        InitializeQueue();
+        InitializeSponsorBlock();
+        InitializeLive();
         BuildShortcuts();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -177,6 +182,7 @@ public sealed partial class MainPage : Page
         AutomationProperties.SetName(VolumeButton, AppStrings.Get("Transport_Volume"));
         AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
         ApplyTransportStrings();
+        ApplyCaptionStrings();
         ApplyShortcutLabels();
         string backToFull = AppStrings.Get("Pip_BackToFullWindow");
         ToolTipService.SetToolTip(PipBackButton, backToFull);
@@ -217,15 +223,6 @@ public sealed partial class MainPage : Page
         }
     }
 
-    /// <summary>Keeps the gear flush with the system caption buttons, whatever their width at this display scale.</summary>
-    public void SetCaptionInset(double width)
-    {
-        if (width > 0)
-        {
-            CaptionReserve.Width = width;
-        }
-    }
-
     /// <summary>A key-up never arrives once the window loses activation; release held keys and the cursor.</summary>
     public void OnWindowActivationChanged(bool active)
     {
@@ -243,6 +240,9 @@ public sealed partial class MainPage : Page
         Brush glyph = ThemeTokens.Get<Brush>(TitleBar.ActualTheme, _windowActive ? "AetherCaptionGlyphBrush" : "AetherCaptionGlyphInactiveBrush");
         SettingsButton.Foreground = glyph;
         SettingsBackButton.Foreground = glyph;
+        CaptionMinimize.Foreground = glyph;
+        CaptionMaximize.Foreground = glyph;
+        CaptionClose.Foreground = glyph;
     }
 
     // ---- Lifecycle and engine startup (4.6) ----
@@ -322,7 +322,7 @@ public sealed partial class MainPage : Page
     /// <param name="Qualities">The sizes the quality picker lists; <paramref name="Quality"/> is the one playing.</param>
     private sealed record OpenedLink(
         string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl, IReadOnlyList<StreamChapter>? Chapters,
-        IReadOnlyList<StreamSubtitle>? Subtitles, IReadOnlyList<QualityOption> Qualities, QualityOption Quality);
+        IReadOnlyList<StreamSubtitle>? Subtitles, IReadOnlyList<QualityOption> Qualities, QualityOption Quality, bool IsLive = false);
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
     private sealed record PlaybackCarryOver(
@@ -489,7 +489,8 @@ public sealed partial class MainPage : Page
     // ---- Playback ----
 
     /// <param name="link">The link this stream was resolved from, or null for a file.</param>
-    private void Open(string path, PlaybackCarryOver? carry = null, OpenedLink? link = null)
+    /// <param name="fromQueue">Moving through the queue: the next file keeps the picked languages and the video adjustments.</param>
+    private void Open(string path, PlaybackCarryOver? carry = null, OpenedLink? link = null, bool fromQueue = false)
     {
         if (_session is not { } session)
         {
@@ -504,9 +505,12 @@ public sealed partial class MainPage : Page
         _currentWebLink = link?.WebLink;
         _streamTitle = link?.Title;
         SyncLanStreamSource(path);
-        RefreshNeighbours(path, isLink: link is not null);
+        RefreshQueue(path, isLink: link is not null);
         ResetChapters(link?.Chapters);
         ResetLinkSubtitles(link?.Subtitles, carry);
+        ResetSubtitleFiles(path, isLink: link is not null, carry);
+        LoadSponsorSegments(link?.WebLink);
+        ResetLive(link?.IsLive == true);
         ResetQuality(link);
         // A restart carries the position over by itself; only a saved position is worth announcing.
         ResetResumeOffer(carry is null ? startAt : null, resumeKey);
@@ -516,9 +520,18 @@ public sealed partial class MainPage : Page
         string fileOptions = MpvLoadOptions.ForStream(link?.AudioUrl);
         _fitWindowPending = carry is null; // after a restart the window keeps the size it has
         _durationRecorded = false;
+        TracksPanel.EndMix();
+        _transcriptKey = null;
+        _pendingMix = null;
+        _mixPending = false;
         _trackChoices = carry?.Tracks; // another file starts on mpv's own picks
         _restoreTracks = carry?.Tracks;
-        ApplyVideoForOpen(afterRestart: carry is not null);
+        if (!fromQueue && carry is null)
+        {
+            _trackPreference = null;
+        }
+        _followTracks = fromQueue ? _trackPreference : null;
+        ApplyVideoForOpen(afterRestart: carry is not null, keepAdjustments: fromQueue);
         TrySend(() =>
         {
             if (carry is { Paused: true })
@@ -589,8 +602,13 @@ public sealed partial class MainPage : Page
         switch (e.PropertyName)
         {
             case nameof(PlayerViewModel.Position):
+                OnSponsorPosition(vm);
                 OnChapterSkipPosition(vm);
                 UpdateClock(vm);
+                if (_sidePanel == SidePanel.Transcript)
+                {
+                    TranscriptPane.SetPosition(vm.Position);
+                }
                 break;
             case nameof(PlayerViewModel.Duration):
                 UpdateClock(vm);
@@ -614,8 +632,11 @@ public sealed partial class MainPage : Page
                 UpdateClock(vm); // an ended file reads its full duration
                 RecordDuration(vm);
                 RestoreTracksOnceLoaded();
+                FollowTracksOnceLoaded();
                 LoadChaptersOnceLoaded();
                 AddLinkSubtitlesOnceLoaded();
+                AddSubtitleFilesOnceLoaded();
+                LoadTranscriptOnceLoaded();
                 ShowResumeOfferOnceLoaded();
                 EndQualitySwitchOnceLoaded();
                 Render();
@@ -659,6 +680,10 @@ public sealed partial class MainPage : Page
         DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
         SyncClipRange();
         UpdatePipSeek(vm);
+        if (UpdateLiveClock(vm))
+        {
+            return;
+        }
         SeekBar.Duration = vm.Duration;
         double position = TransportState.DisplayPosition(vm.State);
         SeekBar.Position = position;
@@ -992,7 +1017,7 @@ public sealed partial class MainPage : Page
 
     private void OnEscapeAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (EndTour() || CloseRail() || CloseLanStream())
+        if (EndTour() || CloseRail() || CloseSidePanel() || CloseLanStream())
         {
             args.Handled = true;
         }
@@ -1022,10 +1047,17 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void OnAnyKeyDown(object sender, KeyRoutedEventArgs e) => NotifyActivity();
+    private void OnAnyKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        NotifyActivity();
+        if (!e.Handled && NudgeFromKey(e.Key))
+        {
+            e.Handled = true;
+        }
+    }
 
     /// <summary>Player keys stand down while the Open URL field, the phone card, settings or the tour has the keyboard.</summary>
-    private bool ArePlayerKeysPaused => IsOpenUrlShown || _lanShown || _settingsShown || _tour.IsActive;
+    private bool ArePlayerKeysPaused => IsOpenUrlShown || _lanShown || _settingsShown || _tour.IsActive || IsTextInputFocused();
 
     // ---- Settings (6.1) ----
 
@@ -1254,7 +1286,7 @@ public sealed partial class MainPage : Page
             IReadOnlyList<QualityOption> qualities = QualityOptions.From(resolved.Formats);
             Open(resolved.StreamUrl, carry, new OpenedLink(
                 link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters, resolved.Subtitles,
-                qualities, QualityOptions.Resolve(savedQuality, qualities)));
+                qualities, QualityOptions.Resolve(savedQuality, qualities), resolved.IsLive));
 
             _ = Task.Run(() =>
             {
@@ -1535,6 +1567,7 @@ public sealed partial class MainPage : Page
         }
         _dragging = true;
         _dragPath = null;
+        _dragFiles = _dragFolders = [];
         _dragSupported = false;
         _chrome.SetHold(ChromeHolds.Interaction, true);
         ApplyChrome();
@@ -1548,9 +1581,10 @@ public sealed partial class MainPage : Page
         try
         {
             IReadOnlyList<IStorageItem> items = await e.DataView.GetStorageItemsAsync();
-            IStorageItem? item = items.FirstOrDefault();
-            _dragPath = item?.Path;
-            _dragSupported = item is IStorageFile && MediaFormats.IsSupported(_dragPath) && _session is not null;
+            _dragPath = items.FirstOrDefault()?.Path;
+            _dragFiles = items.OfType<IStorageFile>().Select(f => f.Path).Where(MediaFormats.IsSupported).ToArray();
+            _dragFolders = items.OfType<IStorageFolder>().Select(f => f.Path).Where(p => p.Length > 0).ToArray();
+            _dragSupported = (_dragFiles.Length > 0 || _dragFolders.Length > 0) && _session is not null;
             e.AcceptedOperation = _dragSupported ? DataPackageOperation.Copy : DataPackageOperation.None;
         }
         catch (Exception)
@@ -1579,11 +1613,19 @@ public sealed partial class MainPage : Page
 
     private void OnDrop(object sender, DragEventArgs e)
     {
-        string? path = _dragSupported ? _dragPath : null;
+        (bool supported, string[] files, string[] folders) = (_dragSupported, _dragFiles, _dragFolders);
         EndDrag();
-        if (path is not null)
+        if (!supported)
         {
-            Open(path);
+            return;
+        }
+        if (files is [string file] && folders.Length == 0)
+        {
+            Open(file);
+        }
+        else
+        {
+            OpenDropped(files, folders);
         }
     }
 
@@ -1658,8 +1700,9 @@ public sealed partial class MainPage : Page
                 UpdateClock(clockVm);
             }
             _fader.Fade(TopScrim, visible);
-            // The gear, Back and the system caption buttons stay put; only the name fades.
             _fader.Fade(TitleText, visible);
+            _fader.Fade(SettingsButton, visible);
+            _fader.Fade(CaptionButtons, visible);
             _fader.Fade(PipChrome, visible);
             PipChrome.IsHitTestVisible = visible;
             _fader.Fade(Osd, visible);
@@ -1807,16 +1850,20 @@ public sealed partial class MainPage : Page
         // ADR-0013: no blur in picture in picture; there is no card to blur behind.
         VideoSurface.SetBackdropActive(BackdropSlot.Bar, hasVideo && !pip);
         VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, hasVideo && !pip);
+        VideoSurface.SetBackdropActive(BackdropSlot.SidePanel, hasVideo && !pip);
         _backdropAllowed = hasVideo && !pip;
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         PlaceRail();
+        PlaceSidePanel();
+        RefreshSidePanel();
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         string? fileName = _streamTitle ?? (HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null);
         TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");
         TitleText.Visibility = pip ? Visibility.Collapsed : Visibility.Visible;
         SettingsButton.Visibility = pip || _settingsShown ? Visibility.Collapsed : Visibility.Visible;
         PipBackButton.Visibility = pip ? Visibility.Visible : Visibility.Collapsed;
+        CaptionMinimize.Visibility = CaptionMaximize.Visibility = pip ? Visibility.Collapsed : Visibility.Visible;
         // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
         TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
         TitleBadgeText.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
@@ -1876,7 +1923,7 @@ public sealed partial class MainPage : Page
             {
                 SetHome(AppStrings.Get("Shell_DropToPlay"), AppStrings.Get("Shell_DropFormats"), null, engine);
             }
-            else if (_session is null && MediaFormats.IsSupported(_dragPath))
+            else if (_session is null && (_dragFiles.Length > 0 || _dragFolders.Length > 0))
             {
                 SetHome(AppStrings.Get("Shell_EngineNotReadyTitle"), Path.GetFileName(_dragPath) ?? string.Empty, Tone.Warning, engine);
             }

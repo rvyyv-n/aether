@@ -85,8 +85,9 @@
     </UserControl.Resources>
 
     <!--
-        Settings (6.1): a section list on the left and the section's page in a Frame on the right. Below
-        640 px wide the list becomes a picker above the page, so the page holds down to 405 px.
+        Settings (6.1): the section list sits straight on the Mica Alt backdrop and the section's page sits on a
+        lighter layer with a rounded top-left corner and a 1 px edge, as in Wintoys. Below 640 px wide the list
+        becomes a picker above the layer, which then runs edge to edge, so the page holds down to 405 px.
     -->
     <Grid>
         <VisualStateManager.VisualStateGroups>
@@ -100,7 +101,9 @@
                         <Setter Target="SectionList.Visibility" Value="Visible" />
                         <Setter Target="SectionPicker.Visibility" Value="Collapsed" />
                         <Setter Target="NavColumn.Width" Value="{StaticResource AetherSizeSettingsNav}" />
-                        <Setter Target="ContentPanel.Padding" Value="24,8,24,24" />
+                        <Setter Target="ContentPane.BorderThickness" Value="1,1,0,0" />
+                        <Setter Target="ContentPane.CornerRadius" Value="8,0,0,0" />
+                        <Setter Target="ContentPanel.Padding" Value="32,24,32,32" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -109,9 +112,14 @@
             <ColumnDefinition x:Name="NavColumn" Width="0" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
         <ListView
             x:Name="SectionList"
+            Grid.RowSpan="2"
             HorizontalAlignment="Stretch"
             Padding="8,8,8,8"
             IsItemClickEnabled="False"
@@ -121,23 +129,24 @@
             SelectionMode="Single"
             Visibility="Collapsed" />
 
+        <ComboBox
+            x:Name="SectionPicker"
+            Grid.Column="1"
+            Margin="16,8,16,8"
+            HorizontalAlignment="Stretch"
+            ItemTemplate="{StaticResource SectionTemplate}"
+            SelectionChanged="OnSectionChanged"
+            Style="{StaticResource AetherSettingsComboStyle}" />
+
         <Grid
             x:Name="ContentPane"
-            Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <ComboBox
-                x:Name="SectionPicker"
-                Margin="16,8,16,0"
-                HorizontalAlignment="Stretch"
-                ItemTemplate="{StaticResource SectionTemplate}"
-                SelectionChanged="OnSectionChanged"
-                Style="{StaticResource AetherSettingsComboStyle}" />
+            Grid.Row="1"
+            Grid.Column="1"
+            Background="{ThemeResource AetherSurfaceLayerBrush}"
+            BorderBrush="{ThemeResource AetherStrokeLayerBrush}"
+            BorderThickness="0,1,0,0">
             <ScrollViewer
                 x:Name="ContentScroller"
-                Grid.Row="1"
                 HorizontalScrollBarVisibility="Disabled"
                 HorizontalScrollMode="Disabled"
                 VerticalScrollBarVisibility="Auto">
@@ -148,7 +157,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel
                         x:Name="ContentPanel"
-                        Padding="16,8,16,16"
+                        Padding="16,16,16,16"
                         Spacing="16">
                         <TextBlock
                             x:Name="PageTitle"

@@ -1,9 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <!--
     Aether design tokens v2.1, generated from aether.tokens.json (the single source of truth).
-    Dark and Light theme dictionaries, over the Mica Alt backdrop. Colour in the UI itself is reserved for status dots; there is no accent colour.
+    Dark and Light theme dictionaries, over the Mica Alt backdrop. Colour in the UI itself is reserved for status dots, unless the user picks an accent (12.9, AccentTheme).
     Merge into App.xaml after XamlControlsResources; the theme is chosen in Settings.
     Keys: Aether + role. Colours have a *Color and a *Brush key. Sizes are effective pixels (x:Double).
+    SurfaceLayer, SurfaceCard and StrokeLayer are tuned for Mica Alt. A later backdrop choice (Acrylic) is meant to
+    retune only those three roles, so nothing that uses them has to change.
 -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -65,9 +67,14 @@
             <Color x:Key="AetherSurfaceScrimColor">#4D000000</Color>  <!-- [screen 2] Behind dialogs. = Fluent SmokeFillDefault -->
             <Color x:Key="AetherSurfaceDialogColor">#9E0E1014</Color>  <!-- [decided] In-app Acrylic, tint ink at 62%, blur behind. Fallback when Acrylic is off (battery saver, transpare -->
             <Color x:Key="AetherSurfaceDialogFallbackColor">#F20E1014</Color>  <!-- [decided] Solid fallback for surface.dialog -->
+            <Color x:Key="AetherSurfaceMenuColor">#E3202226</Color>  <!-- Player menus over a blurring video: lifted charcoal at 89%, dense enough that the bar and its timecode never read through, with the blur showing only faintly at the edges -->
+            <Color x:Key="AetherSurfaceMenuFallbackColor">#FF202226</Color>  <!-- Player menus with no blur behind them (no video, picture in picture) -->
+            <Color x:Key="AetherStrokeMenuColor">#33000000</Color>  <!-- Edge of a player menu: dark, so it crisps the card on bright video without the pale ring a white edge drew -->
             <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>  <!-- [screen 3] Over video only: black 50% under the 32 px title bar, linear fade to 0 by 72 px. Keeps 'Aether' and -->
             <Color x:Key="AetherSurfaceOverlayStrongColor">#F20E1014</Color>  <!-- [screens 6-10] Same value as surface.dialogFallback. Diagnostics overlay: solid enough that TextSecondary hold -->
             <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>  <!-- [11.3] Behind the phone pairing QR code: white in every theme, the background phone cameras read best -->
+            <Color x:Key="AetherSurfaceLayerColor">#4C3A3A3A</Color>  <!-- Settings content pane, a rounded layer over the backdrop with the section list left on it (Wintoys layering). = Fluent LayerFillColorDefault -->
+            <Color x:Key="AetherSurfaceCardColor">#0DFFFFFF</Color>  <!-- Settings cards on the layer. = Fluent CardBackgroundFillColorDefault -->
             <Color x:Key="AetherFillEmphasisRestColor">#24FFFFFF</Color>  <!-- 14%. Primary pill, play button, selected rail item. Was Active -->
             <Color x:Key="AetherFillEmphasisHoverColor">#2EFFFFFF</Color>  <!-- 18% -->
             <Color x:Key="AetherFillEmphasisPressedColor">#1AFFFFFF</Color>  <!-- 10% -->
@@ -85,51 +92,67 @@
             <Color x:Key="AetherStrokeDividerColor">#14FFFFFF</Color>  <!-- 8%. Dividers inside a surface -->
             <Color x:Key="AetherStrokeDropTargetColor">#33FFFFFF</Color>  <!-- 20%. Inner window border while dragging -->
             <Color x:Key="AetherStrokeInputFocusColor">#FFFFFFFF</Color>  <!-- [screen 2] 2 px bottom edge of a focused text field. White, since there is no accent -->
-            <Color x:Key="AetherCaptionGlyphColor">#D9FFFFFF</Color>  <!-- 85%. Glyphs of the system caption buttons and the title-bar gear and Back; MainWindow reads the same value -->
+            <Color x:Key="AetherStrokeLayerColor">#19000000</Color>  <!-- 1 px top and left edge of the settings layer. = Fluent CardStrokeColorDefault -->
+            <Color x:Key="AetherCaptionGlyphColor">#D9FFFFFF</Color>  <!-- 85%. Glyphs of the caption buttons and the title-bar gear and Back -->
             <Color x:Key="AetherCaptionGlyphInactiveColor">#73FFFFFF</Color>  <!-- 45%. Same glyphs while the window is inactive -->
             <Color x:Key="AetherCaptionHoverColor">#14FFFFFF</Color>  <!-- 8%. Hover fill of a caption button; the glyph turns white -->
             <Color x:Key="AetherCaptionPressedColor">#0AFFFFFF</Color>  <!-- 4%. Pressed fill of a caption button; the glyph stays white -->
+            <Color x:Key="AetherCaptionCloseHoverColor">#FFC42B1C</Color>
+            <Color x:Key="AetherCaptionClosePressedColor">#E6C42B1C</Color>
+            <Color x:Key="AetherCaptionCloseGlyphColor">#FFFFFFFF</Color>
             <Color x:Key="AetherStatusReadyColor">#FF4ADE80</Color>  <!-- Dots only, always beside a word -->
             <Color x:Key="AetherStatusWarningColor">#FFF2A35E</Color>  <!-- Failed, unsupported -->
             <Color x:Key="AetherStatusNeutralColor">#80FFFFFF</Color>  <!-- Starting, idle -->
 
-            <SolidColorBrush x:Key="AetherTextPrimaryBrush" Color="{StaticResource AetherTextPrimaryColor}" />
-            <SolidColorBrush x:Key="AetherTextSecondaryBrush" Color="{StaticResource AetherTextSecondaryColor}" />
-            <SolidColorBrush x:Key="AetherTextTertiaryBrush" Color="{StaticResource AetherTextTertiaryColor}" />
-            <SolidColorBrush x:Key="AetherTextDisabledBrush" Color="{StaticResource AetherTextDisabledColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceGlassBrush" Color="{StaticResource AetherSurfaceGlassColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceOsdBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceLetterboxBrush" Color="{StaticResource AetherSurfaceLetterboxColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="{StaticResource AetherSurfaceScrimColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="{StaticResource AetherSurfaceDialogColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="{StaticResource AetherSurfaceDialogFallbackColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />
-            <SolidColorBrush x:Key="AetherFillEmphasisRestBrush" Color="{StaticResource AetherFillEmphasisRestColor}" />
-            <SolidColorBrush x:Key="AetherFillEmphasisHoverBrush" Color="{StaticResource AetherFillEmphasisHoverColor}" />
-            <SolidColorBrush x:Key="AetherFillEmphasisPressedBrush" Color="{StaticResource AetherFillEmphasisPressedColor}" />
-            <SolidColorBrush x:Key="AetherFillSubtleHoverBrush" Color="{StaticResource AetherFillSubtleHoverColor}" />
-            <SolidColorBrush x:Key="AetherFillSubtlePressedBrush" Color="{StaticResource AetherFillSubtlePressedColor}" />
-            <SolidColorBrush x:Key="AetherFillDisabledBrush" Color="{StaticResource AetherFillDisabledColor}" />
-            <SolidColorBrush x:Key="AetherFillDropTargetBrush" Color="{StaticResource AetherFillDropTargetColor}" />
-            <SolidColorBrush x:Key="AetherFillRangeBrush" Color="{StaticResource AetherFillRangeColor}" />
-            <SolidColorBrush x:Key="AetherFillInputBrush" Color="{StaticResource AetherFillInputColor}" />
-            <SolidColorBrush x:Key="AetherFillSelectionBrush" Color="{StaticResource AetherFillSelectionColor}" />
-            <SolidColorBrush x:Key="AetherFillProgressTrackBrush" Color="{StaticResource AetherFillProgressTrackColor}" />
-            <SolidColorBrush x:Key="AetherFillProgressValueBrush" Color="{StaticResource AetherFillProgressValueColor}" />
-            <SolidColorBrush x:Key="AetherStrokeSurfaceBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
-            <SolidColorBrush x:Key="AetherStrokeControlBrush" Color="{StaticResource AetherStrokeControlColor}" />
-            <SolidColorBrush x:Key="AetherStrokeDividerBrush" Color="{StaticResource AetherStrokeDividerColor}" />
-            <SolidColorBrush x:Key="AetherStrokeDropTargetBrush" Color="{StaticResource AetherStrokeDropTargetColor}" />
-            <SolidColorBrush x:Key="AetherStrokeInputFocusBrush" Color="{StaticResource AetherStrokeInputFocusColor}" />
-            <SolidColorBrush x:Key="AetherCaptionGlyphBrush" Color="{StaticResource AetherCaptionGlyphColor}" />
-            <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="{StaticResource AetherCaptionGlyphInactiveColor}" />
-            <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="{StaticResource AetherCaptionHoverColor}" />
-            <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="{StaticResource AetherCaptionPressedColor}" />
-            <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="{StaticResource AetherStatusReadyColor}" />
-            <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="{StaticResource AetherStatusWarningColor}" />
-            <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="{StaticResource AetherStatusNeutralColor}" />
+            <SolidColorBrush x:Key="AetherTextPrimaryBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherTextSecondaryBrush" Color="#9EFFFFFF" />
+            <SolidColorBrush x:Key="AetherTextTertiaryBrush" Color="#73FFFFFF" />
+            <SolidColorBrush x:Key="AetherTextDisabledBrush" Color="#5CFFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceGlassBrush" Color="#730E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceOsdBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceLetterboxBrush" Color="#FF000000" />
+            <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="#4D000000" />
+            <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="#F20E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="#E3202226" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="#FF202226" />
+            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="#33000000" />
+            <!--  Player bar, sidebar and the volume, Now Playing and Video pop-ups: the 62% ink glass in dark; light takes the menus' frosted card and faint edge, so they and the menus read as one family  -->
+            <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="#80000000" />
+            <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="#F20E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceLayerBrush" Color="#4C3A3A3A" />
+            <SolidColorBrush x:Key="AetherSurfaceCardBrush" Color="#0DFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillEmphasisRestBrush" Color="#24FFFFFF" />
+            <SolidColorBrush x:Key="AetherFillEmphasisHoverBrush" Color="#2EFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillEmphasisPressedBrush" Color="#1AFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillSubtleHoverBrush" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillSubtlePressedBrush" Color="#0AFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillDisabledBrush" Color="#0BFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillDropTargetBrush" Color="#0AFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillRangeBrush" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="AetherFillInputBrush" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillSelectionBrush" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="AetherFillProgressTrackBrush" Color="#1FFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillProgressValueBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeSurfaceBrush" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeControlBrush" Color="#1FFFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeDividerBrush" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeDropTargetBrush" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeInputFocusBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeLayerBrush" Color="#19000000" />
+            <SolidColorBrush x:Key="AetherCaptionGlyphBrush" Color="#D9FFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="#73FFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="#0AFFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionCloseHoverBrush" Color="#FFC42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionClosePressedBrush" Color="#E6C42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionCloseGlyphBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="#FF4ADE80" />
+            <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="#FFF2A35E" />
+            <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="#80FFFFFF" />
 
             <!-- ========================================================================= -->
             <!--  Compatibility aliases for existing screens and code                      -->
@@ -137,40 +160,40 @@
 
             <!--  Colors and Brushes  -->
             <Color x:Key="AetherPanelColor">#730E1014</Color>
-            <SolidColorBrush x:Key="AetherPanelBrush" Color="{StaticResource AetherSurfaceGlassColor}" />
+            <SolidColorBrush x:Key="AetherPanelBrush" Color="#730E1014" />
 
             <Color x:Key="AetherOsdColor">#9E0E1014</Color>
-            <SolidColorBrush x:Key="AetherOsdBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
+            <SolidColorBrush x:Key="AetherOsdBrush" Color="#9E0E1014" />
 
             <Color x:Key="AetherStrokeColor">#0FFFFFFF</Color>
-            <SolidColorBrush x:Key="AetherStrokeBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
+            <SolidColorBrush x:Key="AetherStrokeBrush" Color="#0FFFFFFF" />
 
             <Color x:Key="AetherStrokeStrongColor">#1FFFFFFF</Color>
-            <SolidColorBrush x:Key="AetherStrokeStrongBrush" Color="{StaticResource AetherStrokeControlColor}" />
+            <SolidColorBrush x:Key="AetherStrokeStrongBrush" Color="#1FFFFFFF" />
 
             <Color x:Key="AetherSelectedColor">#FF0B0C0E</Color>
-            <SolidColorBrush x:Key="AetherSelectedBrush" Color="{StaticResource AetherSelectedColor}" />
+            <SolidColorBrush x:Key="AetherSelectedBrush" Color="#FF0B0C0E" />
 
             <Color x:Key="AetherActiveColor">#24FFFFFF</Color>
-            <SolidColorBrush x:Key="AetherActiveBrush" Color="{StaticResource AetherFillEmphasisRestColor}" />
+            <SolidColorBrush x:Key="AetherActiveBrush" Color="#24FFFFFF" />
 
             <Color x:Key="AetherHoverColor">#0FFFFFFF</Color>
-            <SolidColorBrush x:Key="AetherHoverBrush" Color="{StaticResource AetherFillSubtleHoverColor}" />
+            <SolidColorBrush x:Key="AetherHoverBrush" Color="#0FFFFFFF" />
 
             <Color x:Key="AetherPressedColor">#08FFFFFF</Color>
-            <SolidColorBrush x:Key="AetherPressedBrush" Color="{StaticResource AetherFillSubtlePressedColor}" />
+            <SolidColorBrush x:Key="AetherPressedBrush" Color="#0AFFFFFF" />
 
             <Color x:Key="AetherSuccessColor">#FF4ADE80</Color>
-            <SolidColorBrush x:Key="AetherSuccessBrush" Color="{StaticResource AetherStatusReadyColor}" />
+            <SolidColorBrush x:Key="AetherSuccessBrush" Color="#FF4ADE80" />
 
             <Color x:Key="AetherWarningColor">#FFF2A35E</Color>
-            <SolidColorBrush x:Key="AetherWarningBrush" Color="{StaticResource AetherStatusWarningColor}" />
+            <SolidColorBrush x:Key="AetherWarningBrush" Color="#FFF2A35E" />
 
             <Color x:Key="AetherNeutralDotColor">#80FFFFFF</Color>
-            <SolidColorBrush x:Key="AetherNeutralDotBrush" Color="{StaticResource AetherStatusNeutralColor}" />
+            <SolidColorBrush x:Key="AetherNeutralDotBrush" Color="#80FFFFFF" />
 
             <Color x:Key="AetherLetterboxFullScreenColor">#FF000000</Color>
-            <SolidColorBrush x:Key="AetherLetterboxFullScreenBrush" Color="{StaticResource AetherSurfaceLetterboxColor}" />
+            <SolidColorBrush x:Key="AetherLetterboxFullScreenBrush" Color="#FF000000" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#FFFFFFFF" />
@@ -227,9 +250,14 @@
             <Color x:Key="AetherSurfaceScrimColor">#4D000000</Color>  <!-- [screen 2] Behind dialogs. = Fluent SmokeFillDefault -->
             <Color x:Key="AetherSurfaceDialogColor">#9E0E1014</Color>  <!-- [decided] In-app Acrylic, tint ink at 62%, blur behind. Fallback when Acrylic is off (battery saver, transpare -->
             <Color x:Key="AetherSurfaceDialogFallbackColor">#F20E1014</Color>  <!-- [decided] Solid fallback for surface.dialog -->
+            <Color x:Key="AetherSurfaceMenuColor">#E3202226</Color>  <!-- Player menus over a blurring video: lifted charcoal at 89%, dense enough that the bar and its timecode never read through, with the blur showing only faintly at the edges -->
+            <Color x:Key="AetherSurfaceMenuFallbackColor">#FF202226</Color>  <!-- Player menus with no blur behind them (no video, picture in picture) -->
+            <Color x:Key="AetherStrokeMenuColor">#33000000</Color>  <!-- Edge of a player menu: dark, so it crisps the card on bright video without the pale ring a white edge drew -->
             <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>  <!-- [screen 3] Over video only: black 50% under the 32 px title bar, linear fade to 0 by 72 px. Keeps 'Aether' and -->
             <Color x:Key="AetherSurfaceOverlayStrongColor">#F20E1014</Color>  <!-- [screens 6-10] Same value as surface.dialogFallback. Diagnostics overlay: solid enough that TextSecondary hold -->
             <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>  <!-- [11.3] Behind the phone pairing QR code: white in every theme, the background phone cameras read best -->
+            <Color x:Key="AetherSurfaceLayerColor">#4C3A3A3A</Color>  <!-- Settings content pane, a rounded layer over the backdrop with the section list left on it (Wintoys layering). = Fluent LayerFillColorDefault -->
+            <Color x:Key="AetherSurfaceCardColor">#0DFFFFFF</Color>  <!-- Settings cards on the layer. = Fluent CardBackgroundFillColorDefault -->
             <Color x:Key="AetherFillEmphasisRestColor">#24FFFFFF</Color>  <!-- 14%. Primary pill, play button, selected rail item. Was Active -->
             <Color x:Key="AetherFillEmphasisHoverColor">#2EFFFFFF</Color>  <!-- 18% -->
             <Color x:Key="AetherFillEmphasisPressedColor">#1AFFFFFF</Color>  <!-- 10% -->
@@ -247,51 +275,66 @@
             <Color x:Key="AetherStrokeDividerColor">#14FFFFFF</Color>  <!-- 8%. Dividers inside a surface -->
             <Color x:Key="AetherStrokeDropTargetColor">#33FFFFFF</Color>  <!-- 20%. Inner window border while dragging -->
             <Color x:Key="AetherStrokeInputFocusColor">#FFFFFFFF</Color>  <!-- [screen 2] 2 px bottom edge of a focused text field. White, since there is no accent -->
-            <Color x:Key="AetherCaptionGlyphColor">#D9FFFFFF</Color>  <!-- 85%. Glyphs of the system caption buttons and the title-bar gear and Back; MainWindow reads the same value -->
+            <Color x:Key="AetherStrokeLayerColor">#19000000</Color>  <!-- 1 px top and left edge of the settings layer. = Fluent CardStrokeColorDefault -->
+            <Color x:Key="AetherCaptionGlyphColor">#D9FFFFFF</Color>  <!-- 85%. Glyphs of the caption buttons and the title-bar gear and Back -->
             <Color x:Key="AetherCaptionGlyphInactiveColor">#73FFFFFF</Color>  <!-- 45%. Same glyphs while the window is inactive -->
             <Color x:Key="AetherCaptionHoverColor">#14FFFFFF</Color>  <!-- 8%. Hover fill of a caption button; the glyph turns white -->
             <Color x:Key="AetherCaptionPressedColor">#0AFFFFFF</Color>  <!-- 4%. Pressed fill of a caption button; the glyph stays white -->
+            <Color x:Key="AetherCaptionCloseHoverColor">#FFC42B1C</Color>
+            <Color x:Key="AetherCaptionClosePressedColor">#E6C42B1C</Color>
+            <Color x:Key="AetherCaptionCloseGlyphColor">#FFFFFFFF</Color>
             <Color x:Key="AetherStatusReadyColor">#FF4ADE80</Color>  <!-- Dots only, always beside a word -->
             <Color x:Key="AetherStatusWarningColor">#FFF2A35E</Color>  <!-- Failed, unsupported -->
             <Color x:Key="AetherStatusNeutralColor">#80FFFFFF</Color>  <!-- Starting, idle -->
 
-            <SolidColorBrush x:Key="AetherTextPrimaryBrush" Color="{StaticResource AetherTextPrimaryColor}" />
-            <SolidColorBrush x:Key="AetherTextSecondaryBrush" Color="{StaticResource AetherTextSecondaryColor}" />
-            <SolidColorBrush x:Key="AetherTextTertiaryBrush" Color="{StaticResource AetherTextTertiaryColor}" />
-            <SolidColorBrush x:Key="AetherTextDisabledBrush" Color="{StaticResource AetherTextDisabledColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceGlassBrush" Color="{StaticResource AetherSurfaceGlassColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceOsdBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceLetterboxBrush" Color="{StaticResource AetherSurfaceLetterboxColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="{StaticResource AetherSurfaceScrimColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="{StaticResource AetherSurfaceDialogColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="{StaticResource AetherSurfaceDialogFallbackColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />
-            <SolidColorBrush x:Key="AetherFillEmphasisRestBrush" Color="{StaticResource AetherFillEmphasisRestColor}" />
-            <SolidColorBrush x:Key="AetherFillEmphasisHoverBrush" Color="{StaticResource AetherFillEmphasisHoverColor}" />
-            <SolidColorBrush x:Key="AetherFillEmphasisPressedBrush" Color="{StaticResource AetherFillEmphasisPressedColor}" />
-            <SolidColorBrush x:Key="AetherFillSubtleHoverBrush" Color="{StaticResource AetherFillSubtleHoverColor}" />
-            <SolidColorBrush x:Key="AetherFillSubtlePressedBrush" Color="{StaticResource AetherFillSubtlePressedColor}" />
-            <SolidColorBrush x:Key="AetherFillDisabledBrush" Color="{StaticResource AetherFillDisabledColor}" />
-            <SolidColorBrush x:Key="AetherFillDropTargetBrush" Color="{StaticResource AetherFillDropTargetColor}" />
-            <SolidColorBrush x:Key="AetherFillRangeBrush" Color="{StaticResource AetherFillRangeColor}" />
-            <SolidColorBrush x:Key="AetherFillInputBrush" Color="{StaticResource AetherFillInputColor}" />
-            <SolidColorBrush x:Key="AetherFillSelectionBrush" Color="{StaticResource AetherFillSelectionColor}" />
-            <SolidColorBrush x:Key="AetherFillProgressTrackBrush" Color="{StaticResource AetherFillProgressTrackColor}" />
-            <SolidColorBrush x:Key="AetherFillProgressValueBrush" Color="{StaticResource AetherFillProgressValueColor}" />
-            <SolidColorBrush x:Key="AetherStrokeSurfaceBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
-            <SolidColorBrush x:Key="AetherStrokeControlBrush" Color="{StaticResource AetherStrokeControlColor}" />
-            <SolidColorBrush x:Key="AetherStrokeDividerBrush" Color="{StaticResource AetherStrokeDividerColor}" />
-            <SolidColorBrush x:Key="AetherStrokeDropTargetBrush" Color="{StaticResource AetherStrokeDropTargetColor}" />
-            <SolidColorBrush x:Key="AetherStrokeInputFocusBrush" Color="{StaticResource AetherStrokeInputFocusColor}" />
-            <SolidColorBrush x:Key="AetherCaptionGlyphBrush" Color="{StaticResource AetherCaptionGlyphColor}" />
-            <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="{StaticResource AetherCaptionGlyphInactiveColor}" />
-            <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="{StaticResource AetherCaptionHoverColor}" />
-            <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="{StaticResource AetherCaptionPressedColor}" />
-            <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="{StaticResource AetherStatusReadyColor}" />
-            <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="{StaticResource AetherStatusWarningColor}" />
-            <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="{StaticResource AetherStatusNeutralColor}" />
+            <SolidColorBrush x:Key="AetherTextPrimaryBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherTextSecondaryBrush" Color="#9EFFFFFF" />
+            <SolidColorBrush x:Key="AetherTextTertiaryBrush" Color="#73FFFFFF" />
+            <SolidColorBrush x:Key="AetherTextDisabledBrush" Color="#5CFFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceGlassBrush" Color="#730E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceOsdBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceLetterboxBrush" Color="#FF000000" />
+            <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="#4D000000" />
+            <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="#F20E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="#E3202226" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="#FF202226" />
+            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="#33000000" />
+            <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="#80000000" />
+            <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="#F20E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceLayerBrush" Color="#4C3A3A3A" />
+            <SolidColorBrush x:Key="AetherSurfaceCardBrush" Color="#0DFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillEmphasisRestBrush" Color="#24FFFFFF" />
+            <SolidColorBrush x:Key="AetherFillEmphasisHoverBrush" Color="#2EFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillEmphasisPressedBrush" Color="#1AFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillSubtleHoverBrush" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillSubtlePressedBrush" Color="#0AFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillDisabledBrush" Color="#0BFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillDropTargetBrush" Color="#0AFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillRangeBrush" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="AetherFillInputBrush" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillSelectionBrush" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="AetherFillProgressTrackBrush" Color="#1FFFFFFF" />
+            <SolidColorBrush x:Key="AetherFillProgressValueBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeSurfaceBrush" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeControlBrush" Color="#1FFFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeDividerBrush" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeDropTargetBrush" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeInputFocusBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherStrokeLayerBrush" Color="#19000000" />
+            <SolidColorBrush x:Key="AetherCaptionGlyphBrush" Color="#D9FFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="#73FFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="#0AFFFFFF" />
+            <SolidColorBrush x:Key="AetherCaptionCloseHoverBrush" Color="#FFC42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionClosePressedBrush" Color="#E6C42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionCloseGlyphBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="#FF4ADE80" />
+            <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="#FFF2A35E" />
+            <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="#80FFFFFF" />
 
             <!-- ========================================================================= -->
             <!--  Compatibility aliases for existing screens and code                      -->
@@ -299,40 +342,40 @@
 
             <!--  Colors and Brushes  -->
             <Color x:Key="AetherPanelColor">#730E1014</Color>
-            <SolidColorBrush x:Key="AetherPanelBrush" Color="{StaticResource AetherSurfaceGlassColor}" />
+            <SolidColorBrush x:Key="AetherPanelBrush" Color="#730E1014" />
 
             <Color x:Key="AetherOsdColor">#9E0E1014</Color>
-            <SolidColorBrush x:Key="AetherOsdBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
+            <SolidColorBrush x:Key="AetherOsdBrush" Color="#9E0E1014" />
 
             <Color x:Key="AetherStrokeColor">#0FFFFFFF</Color>
-            <SolidColorBrush x:Key="AetherStrokeBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
+            <SolidColorBrush x:Key="AetherStrokeBrush" Color="#0FFFFFFF" />
 
             <Color x:Key="AetherStrokeStrongColor">#1FFFFFFF</Color>
-            <SolidColorBrush x:Key="AetherStrokeStrongBrush" Color="{StaticResource AetherStrokeControlColor}" />
+            <SolidColorBrush x:Key="AetherStrokeStrongBrush" Color="#1FFFFFFF" />
 
             <Color x:Key="AetherSelectedColor">#FF0B0C0E</Color>
-            <SolidColorBrush x:Key="AetherSelectedBrush" Color="{StaticResource AetherSelectedColor}" />
+            <SolidColorBrush x:Key="AetherSelectedBrush" Color="#FF0B0C0E" />
 
             <Color x:Key="AetherActiveColor">#24FFFFFF</Color>
-            <SolidColorBrush x:Key="AetherActiveBrush" Color="{StaticResource AetherFillEmphasisRestColor}" />
+            <SolidColorBrush x:Key="AetherActiveBrush" Color="#24FFFFFF" />
 
             <Color x:Key="AetherHoverColor">#0FFFFFFF</Color>
-            <SolidColorBrush x:Key="AetherHoverBrush" Color="{StaticResource AetherFillSubtleHoverColor}" />
+            <SolidColorBrush x:Key="AetherHoverBrush" Color="#0FFFFFFF" />
 
             <Color x:Key="AetherPressedColor">#08FFFFFF</Color>
-            <SolidColorBrush x:Key="AetherPressedBrush" Color="{StaticResource AetherFillSubtlePressedColor}" />
+            <SolidColorBrush x:Key="AetherPressedBrush" Color="#0AFFFFFF" />
 
             <Color x:Key="AetherSuccessColor">#FF4ADE80</Color>
-            <SolidColorBrush x:Key="AetherSuccessBrush" Color="{StaticResource AetherStatusReadyColor}" />
+            <SolidColorBrush x:Key="AetherSuccessBrush" Color="#FF4ADE80" />
 
             <Color x:Key="AetherWarningColor">#FFF2A35E</Color>
-            <SolidColorBrush x:Key="AetherWarningBrush" Color="{StaticResource AetherStatusWarningColor}" />
+            <SolidColorBrush x:Key="AetherWarningBrush" Color="#FFF2A35E" />
 
             <Color x:Key="AetherNeutralDotColor">#80FFFFFF</Color>
-            <SolidColorBrush x:Key="AetherNeutralDotBrush" Color="{StaticResource AetherStatusNeutralColor}" />
+            <SolidColorBrush x:Key="AetherNeutralDotBrush" Color="#80FFFFFF" />
 
             <Color x:Key="AetherLetterboxFullScreenColor">#FF000000</Color>
-            <SolidColorBrush x:Key="AetherLetterboxFullScreenBrush" Color="{StaticResource AetherSurfaceLetterboxColor}" />
+            <SolidColorBrush x:Key="AetherLetterboxFullScreenBrush" Color="#FF000000" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Light">
             <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#FF0E1014" />
@@ -390,9 +433,14 @@
             <Color x:Key="AetherSurfaceScrimColor">#4D000000</Color>
             <Color x:Key="AetherSurfaceDialogColor">#E6FFFFFF</Color>
             <Color x:Key="AetherSurfaceDialogFallbackColor">#FFF9F9F9</Color>
+            <Color x:Key="AetherSurfaceMenuColor">#E6FCFCFC</Color>
+            <Color x:Key="AetherSurfaceMenuFallbackColor">#FFFAFAFA</Color>
+            <Color x:Key="AetherStrokeMenuColor">#12000000</Color>
             <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>
             <Color x:Key="AetherSurfaceOverlayStrongColor">#F20E1014</Color>
             <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>
+            <Color x:Key="AetherSurfaceLayerColor">#80FFFFFF</Color>
+            <Color x:Key="AetherSurfaceCardColor">#B3FFFFFF</Color>
             <Color x:Key="AetherFillEmphasisRestColor">#14000000</Color>
             <Color x:Key="AetherFillEmphasisHoverColor">#1F000000</Color>
             <Color x:Key="AetherFillEmphasisPressedColor">#0F000000</Color>
@@ -410,79 +458,102 @@
             <Color x:Key="AetherStrokeDividerColor">#14000000</Color>
             <Color x:Key="AetherStrokeDropTargetColor">#33000000</Color>
             <Color x:Key="AetherStrokeInputFocusColor">#FF0E1014</Color>
+            <Color x:Key="AetherStrokeLayerColor">#0F000000</Color>
             <Color x:Key="AetherCaptionGlyphColor">#D9000000</Color>
             <Color x:Key="AetherCaptionGlyphInactiveColor">#73000000</Color>
             <Color x:Key="AetherCaptionHoverColor">#14000000</Color>
             <Color x:Key="AetherCaptionPressedColor">#0A000000</Color>
+            <Color x:Key="AetherCaptionCloseHoverColor">#FFC42B1C</Color>
+            <Color x:Key="AetherCaptionClosePressedColor">#E6C42B1C</Color>
+            <Color x:Key="AetherCaptionCloseGlyphColor">#FFFFFFFF</Color>
             <Color x:Key="AetherStatusReadyColor">#FF15803D</Color>
             <Color x:Key="AetherStatusWarningColor">#FFC2410C</Color>
             <Color x:Key="AetherStatusNeutralColor">#80000000</Color>
 
-            <SolidColorBrush x:Key="AetherTextPrimaryBrush" Color="{StaticResource AetherTextPrimaryColor}" />
-            <SolidColorBrush x:Key="AetherTextSecondaryBrush" Color="{StaticResource AetherTextSecondaryColor}" />
-            <SolidColorBrush x:Key="AetherTextTertiaryBrush" Color="{StaticResource AetherTextTertiaryColor}" />
-            <SolidColorBrush x:Key="AetherTextDisabledBrush" Color="{StaticResource AetherTextDisabledColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceGlassBrush" Color="{StaticResource AetherSurfaceGlassColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceOsdBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceLetterboxBrush" Color="{StaticResource AetherSurfaceLetterboxColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="{StaticResource AetherSurfaceScrimColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="{StaticResource AetherSurfaceDialogColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="{StaticResource AetherSurfaceDialogFallbackColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="{StaticResource AetherSurfaceTopScrimColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="{StaticResource AetherSurfaceOverlayStrongColor}" />
-            <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="{StaticResource AetherSurfaceCodeColor}" />
-            <SolidColorBrush x:Key="AetherFillEmphasisRestBrush" Color="{StaticResource AetherFillEmphasisRestColor}" />
-            <SolidColorBrush x:Key="AetherFillEmphasisHoverBrush" Color="{StaticResource AetherFillEmphasisHoverColor}" />
-            <SolidColorBrush x:Key="AetherFillEmphasisPressedBrush" Color="{StaticResource AetherFillEmphasisPressedColor}" />
-            <SolidColorBrush x:Key="AetherFillSubtleHoverBrush" Color="{StaticResource AetherFillSubtleHoverColor}" />
-            <SolidColorBrush x:Key="AetherFillSubtlePressedBrush" Color="{StaticResource AetherFillSubtlePressedColor}" />
-            <SolidColorBrush x:Key="AetherFillDisabledBrush" Color="{StaticResource AetherFillDisabledColor}" />
-            <SolidColorBrush x:Key="AetherFillDropTargetBrush" Color="{StaticResource AetherFillDropTargetColor}" />
-            <SolidColorBrush x:Key="AetherFillRangeBrush" Color="{StaticResource AetherFillRangeColor}" />
-            <SolidColorBrush x:Key="AetherFillInputBrush" Color="{StaticResource AetherFillInputColor}" />
-            <SolidColorBrush x:Key="AetherFillSelectionBrush" Color="{StaticResource AetherFillSelectionColor}" />
-            <SolidColorBrush x:Key="AetherFillProgressTrackBrush" Color="{StaticResource AetherFillProgressTrackColor}" />
-            <SolidColorBrush x:Key="AetherFillProgressValueBrush" Color="{StaticResource AetherFillProgressValueColor}" />
-            <SolidColorBrush x:Key="AetherStrokeSurfaceBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
-            <SolidColorBrush x:Key="AetherStrokeControlBrush" Color="{StaticResource AetherStrokeControlColor}" />
-            <SolidColorBrush x:Key="AetherStrokeDividerBrush" Color="{StaticResource AetherStrokeDividerColor}" />
-            <SolidColorBrush x:Key="AetherStrokeDropTargetBrush" Color="{StaticResource AetherStrokeDropTargetColor}" />
-            <SolidColorBrush x:Key="AetherStrokeInputFocusBrush" Color="{StaticResource AetherStrokeInputFocusColor}" />
-            <SolidColorBrush x:Key="AetherCaptionGlyphBrush" Color="{StaticResource AetherCaptionGlyphColor}" />
-            <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="{StaticResource AetherCaptionGlyphInactiveColor}" />
-            <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="{StaticResource AetherCaptionHoverColor}" />
-            <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="{StaticResource AetherCaptionPressedColor}" />
-            <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="{StaticResource AetherStatusReadyColor}" />
-            <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="{StaticResource AetherStatusWarningColor}" />
-            <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="{StaticResource AetherStatusNeutralColor}" />
+            <SolidColorBrush x:Key="AetherTextPrimaryBrush" Color="#FF0E1014" />
+            <SolidColorBrush x:Key="AetherTextSecondaryBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherTextTertiaryBrush" Color="#730E1014" />
+            <SolidColorBrush x:Key="AetherTextDisabledBrush" Color="#5C0E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceGlassBrush" Color="#CCFFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceOsdBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceLetterboxBrush" Color="#FF000000" />
+            <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="#4D000000" />
+            <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="#E6FFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="#FFF9F9F9" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="#E6FCFCFC" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="#FFFAFAFA" />
+            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="#12000000" />
+            <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="#E6FCFCFC" />
+            <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="#12000000" />
+            <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="#80000000" />
+            <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="#F20E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceLayerBrush" Color="#80FFFFFF" />
+            <SolidColorBrush x:Key="AetherSurfaceCardBrush" Color="#B3FFFFFF" />
+            <SolidColorBrush x:Key="AetherFillEmphasisRestBrush" Color="#14000000" />
+            <SolidColorBrush x:Key="AetherFillEmphasisHoverBrush" Color="#1F000000" />
+            <SolidColorBrush x:Key="AetherFillEmphasisPressedBrush" Color="#0F000000" />
+            <SolidColorBrush x:Key="AetherFillSubtleHoverBrush" Color="#0F000000" />
+            <SolidColorBrush x:Key="AetherFillSubtlePressedBrush" Color="#0A000000" />
+            <SolidColorBrush x:Key="AetherFillDisabledBrush" Color="#0B000000" />
+            <SolidColorBrush x:Key="AetherFillDropTargetBrush" Color="#0A000000" />
+            <SolidColorBrush x:Key="AetherFillRangeBrush" Color="#26000000" />
+            <SolidColorBrush x:Key="AetherFillInputBrush" Color="#0F000000" />
+            <SolidColorBrush x:Key="AetherFillSelectionBrush" Color="#33000000" />
+            <SolidColorBrush x:Key="AetherFillProgressTrackBrush" Color="#1F000000" />
+            <SolidColorBrush x:Key="AetherFillProgressValueBrush" Color="#FF0E1014" />
+            <SolidColorBrush x:Key="AetherStrokeSurfaceBrush" Color="#14000000" />
+            <SolidColorBrush x:Key="AetherStrokeControlBrush" Color="#1F000000" />
+            <SolidColorBrush x:Key="AetherStrokeDividerBrush" Color="#14000000" />
+            <SolidColorBrush x:Key="AetherStrokeDropTargetBrush" Color="#33000000" />
+            <SolidColorBrush x:Key="AetherStrokeInputFocusBrush" Color="#FF0E1014" />
+            <SolidColorBrush x:Key="AetherStrokeLayerBrush" Color="#0F000000" />
+            <SolidColorBrush x:Key="AetherCaptionGlyphBrush" Color="#D9000000" />
+            <SolidColorBrush x:Key="AetherCaptionGlyphInactiveBrush" Color="#73000000" />
+            <SolidColorBrush x:Key="AetherCaptionHoverBrush" Color="#14000000" />
+            <SolidColorBrush x:Key="AetherCaptionPressedBrush" Color="#0A000000" />
+            <SolidColorBrush x:Key="AetherCaptionCloseHoverBrush" Color="#FFC42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionClosePressedBrush" Color="#E6C42B1C" />
+            <SolidColorBrush x:Key="AetherCaptionCloseGlyphBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AetherStatusReadyBrush" Color="#FF15803D" />
+            <SolidColorBrush x:Key="AetherStatusWarningBrush" Color="#FFC2410C" />
+            <SolidColorBrush x:Key="AetherStatusNeutralBrush" Color="#80000000" />
 
             <!--  Compatibility aliases (Light)  -->
             <Color x:Key="AetherPanelColor">#CCFFFFFF</Color>
-            <SolidColorBrush x:Key="AetherPanelBrush" Color="{StaticResource AetherSurfaceGlassColor}" />
+            <SolidColorBrush x:Key="AetherPanelBrush" Color="#CCFFFFFF" />
             <Color x:Key="AetherOsdColor">#9E0E1014</Color>
-            <SolidColorBrush x:Key="AetherOsdBrush" Color="{StaticResource AetherSurfaceOsdColor}" />
+            <SolidColorBrush x:Key="AetherOsdBrush" Color="#9E0E1014" />
             <Color x:Key="AetherStrokeColor">#14000000</Color>
-            <SolidColorBrush x:Key="AetherStrokeBrush" Color="{StaticResource AetherStrokeSurfaceColor}" />
+            <SolidColorBrush x:Key="AetherStrokeBrush" Color="#14000000" />
             <Color x:Key="AetherStrokeStrongColor">#1F000000</Color>
-            <SolidColorBrush x:Key="AetherStrokeStrongBrush" Color="{StaticResource AetherStrokeControlColor}" />
+            <SolidColorBrush x:Key="AetherStrokeStrongBrush" Color="#1F000000" />
             <Color x:Key="AetherSelectedColor">#FFFFFFFF</Color>
-            <SolidColorBrush x:Key="AetherSelectedBrush" Color="{StaticResource AetherSelectedColor}" />
+            <SolidColorBrush x:Key="AetherSelectedBrush" Color="#FFFFFFFF" />
             <Color x:Key="AetherActiveColor">#14000000</Color>
-            <SolidColorBrush x:Key="AetherActiveBrush" Color="{StaticResource AetherFillEmphasisRestColor}" />
+            <SolidColorBrush x:Key="AetherActiveBrush" Color="#14000000" />
             <Color x:Key="AetherHoverColor">#0F000000</Color>
-            <SolidColorBrush x:Key="AetherHoverBrush" Color="{StaticResource AetherFillSubtleHoverColor}" />
+            <SolidColorBrush x:Key="AetherHoverBrush" Color="#0F000000" />
             <Color x:Key="AetherPressedColor">#0A000000</Color>
-            <SolidColorBrush x:Key="AetherPressedBrush" Color="{StaticResource AetherFillSubtlePressedColor}" />
+            <SolidColorBrush x:Key="AetherPressedBrush" Color="#0A000000" />
             <Color x:Key="AetherSuccessColor">#FF15803D</Color>
-            <SolidColorBrush x:Key="AetherSuccessBrush" Color="{StaticResource AetherStatusReadyColor}" />
+            <SolidColorBrush x:Key="AetherSuccessBrush" Color="#FF15803D" />
             <Color x:Key="AetherWarningColor">#FFC2410C</Color>
-            <SolidColorBrush x:Key="AetherWarningBrush" Color="{StaticResource AetherStatusWarningColor}" />
+            <SolidColorBrush x:Key="AetherWarningBrush" Color="#FFC2410C" />
             <Color x:Key="AetherNeutralDotColor">#80000000</Color>
-            <SolidColorBrush x:Key="AetherNeutralDotBrush" Color="{StaticResource AetherStatusNeutralColor}" />
+            <SolidColorBrush x:Key="AetherNeutralDotBrush" Color="#80000000" />
             <Color x:Key="AetherLetterboxFullScreenColor">#FF000000</Color>
-            <SolidColorBrush x:Key="AetherLetterboxFullScreenBrush" Color="{StaticResource AetherSurfaceLetterboxColor}" />
+            <SolidColorBrush x:Key="AetherLetterboxFullScreenBrush" Color="#FF000000" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
+
+    <!--  SponsorBlock segments on the seek bar (16.2): SponsorBlock's own colours, so they read the same as on YouTube; the same in both themes  -->
+    <SolidColorBrush x:Key="AetherMarkSponsorBrush" Color="#FF00D400" />
+    <SolidColorBrush x:Key="AetherMarkSelfPromoBrush" Color="#FFFFFF00" />
+    <SolidColorBrush x:Key="AetherMarkInteractionBrush" Color="#FFCC00FF" />
+    <SolidColorBrush x:Key="AetherMarkIntroOutroBrush" Color="#FF0202ED" />
+    <!--  The live edge dot (16.4): broadcast red, the same in both themes  -->
+    <SolidColorBrush x:Key="AetherLiveBrush" Color="#FFE81123" />
 
     
 
@@ -525,7 +596,7 @@
 
     <!--  Sizes  -->
     <x:Double x:Key="AetherSizeTitleBar">32</x:Double>
-    <x:Double x:Key="AetherSizeCaptionButtons">138</x:Double>  <!-- Width kept clear at top right (3 x 46) -->
+    <x:Double x:Key="AetherSizeCaptionGlyph">10</x:Double>  <!-- Minimise, maximise and close glyphs, as Windows draws them -->
     <x:Double x:Key="AetherSizeControl">32</x:Double>  <!-- Minimum height of every button and icon button. Icon button was 30 -->
     <x:Double x:Key="AetherSizeRow">52</x:Double>  <!-- Row cards -->
     <x:Double x:Key="AetherSizeIcon">16</x:Double>
@@ -566,10 +637,10 @@
     <x:Double x:Key="AetherSizeClipThumbHeight">36</x:Double>
     <x:Double x:Key="AetherSizeMenuItem">32</x:Double>  <!-- Menu items: 4 px inset, padding 12, icon/check column 16, gap 12, shortcut gap 24, radius 4, hover fill.subtle.hover; menus on surface -->
     <x:Double x:Key="AetherSizeSpeedPill">40</x:Double>  <!-- Min width of the speed button: 36 tall like the transport buttons, Caption 12 semibold tabular -->
-    <x:Double x:Key="AetherSizeSidebarWidth">48</x:Double>  <!-- Sidebar: a floating pill 16 from the left edge, centred vertically; padding 6 around four 36 px items 4 apart (168 tall), the surface.osd tint with the bar's blur -->
+    <x:Double x:Key="AetherSizeSidebarWidth">48</x:Double>  <!-- Sidebar: a floating pill 16 from the left edge, centred vertically; padding 6 around five 36 px items 4 apart (208 tall), the bar's surface and blur -->
     <x:Double x:Key="AetherSizeSidebarItem">36</x:Double>  <!-- Sidebar items: 36 circles, 14 px glyphs; active = FillEmphasisRest + StrokeControl -->
     <x:Double x:Key="AetherSizeSidebarPadding">6</x:Double>  <!-- Outside the 1 px stroke; 6 + 18 = 24 is concentric with the pill's radius -->
-    <x:Double x:Key="AetherSizeRailHotZone">4</x:Double>  <!-- Left-edge strip that wakes the sidebar; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
+    <x:Double x:Key="AetherSizeRailHotZone">14</x:Double>  <!-- Left-edge strip that wakes the sidebar; the peek state draws it as a 4 px fill.range bar (no glow). Ope -->
     <x:Double x:Key="AetherSizeSettingsNav">220</x:Double>  <!-- Settings section list width; items 36 tall (navItem), radius 4, gap 2, 16 px icons -->
     <x:Double x:Key="AetherSizeNavItem">36</x:Double>  <!-- Settings section list item height -->
     <x:Double x:Key="AetherSizeSettingsRow">60</x:Double>  <!-- Settings row card min height: padding 12,16, 20 px icon, title Body + description Caption TextSecond -->
@@ -583,6 +654,7 @@
     <x:Double x:Key="AetherSizeContextMenu">276</x:Double>  <!-- Room the tour leaves for the right-click menu, which fits its content (about 220 in English); submenu 288; items 32 with 16 px icon column and right-aligned shortcut (Caption) -->
     <x:Double x:Key="AetherSizeMenuMaxWidth">320</x:Double>  <!-- Any menu: labels trim past this -->
     <x:Double x:Key="AetherSizeTracksFlyout">536</x:Double>  <!-- Tracks flyout: 2 columns, padding 12, delay steppers with 32 px buttons and a 56 px tabular value -->
+    <x:Double x:Key="AetherSizeSidePanelWidth">340</x:Double>  <!-- The queue or transcript card, 16 from the right edge between the title bar and the bar; padding 8 -->
     <x:Double x:Key="AetherSizeVideoFlyout">340</x:Double>  <!-- Video flyout: padding 12,16, 32 px rows -->
     <x:Double x:Key="AetherSizeDiagnosticsWidth">300</x:Double>  <!-- Diagnostics overlay: top-left, 16 in (48 when the title bar shows), padding 8,8,12,16, rows 76 / *,  -->
     <x:Double x:Key="AetherSizePipBackButton">32</x:Double>  <!-- "Back to full window": 32×32 in the title strip, left of the system Close -->
@@ -966,19 +1038,39 @@
         <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
     </Style>
     <!--
-        Transport menus (5.4, 5.7): solid dialog fallback over video (ADR-0013), radius 8, StrokeSurface,
+        Transport menus (5.4, 5.7): frosted cards in the app's theme. Solid menu fallback until the page swaps in the frosted fill
+        and theme while a video is blurring behind it (MainPage.Backdrop.cs, ADR-0013), radius 8, StrokeMenu,
         4 above and below the items. Items are 32 tall, inset 4, radius 4; hover is FillSubtleHover.
     -->
     <Style x:Key="AetherMenuFlyoutPresenterStyle" TargetType="MenuFlyoutPresenter">
-        <Setter Property="RequestedTheme" Value="Dark" />
-        <Setter Property="Background" Value="{ThemeResource AetherSurfaceDialogFallbackBrush}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
+        <Setter Property="Background" Value="{ThemeResource AetherSurfaceMenuFallbackBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeMenuBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <!-- Dark under the translucent edge, so a light window behind the menu does not show through it as a pale outline. -->
         <Setter Property="BackgroundSizing" Value="OuterBorderEdge" />
         <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
         <Setter Property="Padding" Value="0,3" />
         <Setter Property="MaxWidth" Value="{StaticResource AetherSizeMenuMaxWidth}" />
+        <!-- The stock template draws its own border and shadow around the fill, which showed as a pale ring over bright video; this one is the fill and its faint edge. -->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuFlyoutPresenter">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BackgroundSizing="OuterBorderEdge"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <ScrollViewer
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto"
+                            VerticalScrollMode="Auto">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <!--
         Menu rows (Pre-Pass 8): one column layout for every row, so the menu is as wide as its longest label and

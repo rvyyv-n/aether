@@ -146,6 +146,8 @@ public sealed class YtDlpStreamResolver : IYtDlpStreamResolver
                 : fallbackUrl;
 
             Dictionary<string, string>? headers = ParseHeaders(root);
+            bool live = (root.TryGetProperty("is_live", out JsonElement isLive) && isLive.ValueKind == JsonValueKind.True)
+                || GetString(root, "live_status") == "is_live";
 
             return new ResolvedStream(
                 StreamUrl: streamUrl ?? fallbackUrl,
@@ -158,7 +160,8 @@ public sealed class YtDlpStreamResolver : IYtDlpStreamResolver
                 Formats: ParseFormats(root),
                 Subtitles: ParseSubtitles(root),
                 VideoFormatId: videoFormatId,
-                AudioFormatId: audioFormatId);
+                AudioFormatId: audioFormatId,
+                IsLive: live);
         }
         catch (JsonException ex)
         {

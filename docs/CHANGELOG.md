@@ -6,6 +6,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0-preview.2] - 2026-11-12
+### Changed
+- Live streams get a LIVE badge in place of the length. Scrub back through what has been loaded, see how far behind live you are, and click LIVE to catch up.
+- With SponsorBlock on, a marked part is skipped as it starts and a toast offers Back to watch it after all. Turn off Skip automatically to get a Skip button instead.
+- SponsorBlock for YouTube, off until you turn it on in Settings › Streaming: the parts viewers marked as sponsors, self-promotion or reminders to subscribe (and, if you choose, intros and outros) show as coloured strips on the seek bar. Aether sends the service only a short hash prefix, never which video you watch.
+- Subtitles out of sync? Press ] to show them 50 ms later or [ for 50 ms earlier, and Shift+[ to put them back; a toast shows the delay. The keys can be changed in Settings › Shortcuts.
+- A transcript of what is said: press Ctrl+T, or pick Transcript in the right-click menu, to see every subtitle line with its time. Search for a word to find the scene and click a line to jump there. Subtitles inside the video need ffmpeg installed.
+- Two subtitles at once, for learning a language: pick a second subtitle in the Audio and Subtitles pop-up and it shows at the top while the first stays at the bottom.
+- Subtitle files beside a video, or in a Subs folder next to it, are found even when their names differ a little (`show.s01e02.en.srt` for `Show S01E02 1080p.mkv`), labelled by language, and the one in your preferred language is turned on.
+- Recordings with several audio tracks (game, mic, chat, music) can play them all at once: turn on Mix tracks in the Audio and Subtitles pop-up and set each track's level or mute it. Picking a single track goes back to normal.
+- Night mode softens explosions and lifts quiet dialogue, so a film can be watched at low volume. Turn it on in Settings › Audio or in the Audio and Subtitles pop-up.
+- A 10-band equalizer with a preamp, in Settings › Audio and in the Audio and Subtitles pop-up. Pick Flat, Bass boost, Vocal, Treble boost, Rock, Electronic or Cinema, or set the bands yourself; changes are heard at once, without a break in the sound.
+- A queue drawer on the right shows what plays next: press Q, or pick Queue in the sidebar or the right-click menu. Click a video to play it, drag to reorder, remove one or clear them all, filter by name, and turn on shuffle or repeat (all, or this video).
+- Menus and pop-ups work on the first click again. Since they started fading in with their blur, a click on a menu item went through it to the player underneath and only closed the menu.
+- Moving on to the next video of a folder or drop keeps your choices: the audio and subtitle language you picked (or subtitles off), and the zoom, rotation and aspect ratio. Volume and speed carry over as before. Opening a video any other way starts fresh.
+- N plays the next video and Shift+N the previous one, and the keyboard's media keys (play/pause, next and previous track) work while Aether is in front. All of them can be changed in Settings › Shortcuts.
+- Dropping several videos, or a folder, onto the player now plays them in turn: the videos first in name order, then each folder's videos. Previous and next, on the taskbar and with Play next in folder, step through what you dropped. Dropping one video works as before.
+- Settings › General has an accent colour: None keeps Aether black and white as before, or pick Aether Cyan, Ice Blue, Mint, Amethyst, Sunset, Slate or type any hex colour. It colours the switches, the selected chips and side list item, the primary buttons and the play button, in light and dark, and changes at once.
+- Over a video, the minimise, maximise and close buttons and the gear now fade out with the player controls and come back when you move the mouse, instead of staying on top of the picture. They work as before, including Snap Layouts when you hover over maximise.
+- Previous and next, on the taskbar preview and with Play next in folder, now go through a play queue built from the video's folder, ready for the coming playlist drawer, repeat and shuffle. They behave as before.
+- The blur behind the captions, Now Playing, Video and volume pop-ups, and the player menus, now fades in with the pop-up and leaves with it, instead of appearing and leaving a split second before it. Pop-ups and menus now fade in rather than slide, and close at once.
+- In light theme the toasts (such as "Resumed at..."), the Skip chapter button, the export chip and the clip drawer are now the same bright frosted card as the bar and menus, with dark text and icons; dark theme is unchanged.
+- Settings now looks layered, like Wintoys and Windows 11's own Settings: the section list sits on the window's Mica backdrop and each page sits on a lighter rounded pane with a thin edge, with its cards a step lighter again, in both light and dark themes. On a narrow window the pane runs edge to edge under the section picker. The player, its menus and dialogs are unchanged.
+- Settings › About is tidier: Updates and Help come first, then a card at the bottom shows Aether's version and credit, with Release notes, Source code, Licences and Report an issue as a row of buttons under it. Licences now opens the third-party notices instead of the project's front page.
+- Player menus (speed, quality, Open, the overflow menu and the right-click menu) now blur the video behind them, like the bar and the Now Playing and caption menus, so subtitles no longer show through. They are now frosted cards that follow the app's theme (bright in light theme, charcoal in dark) with a faint edge, and dense enough that the bar's timecode and seek line no longer read through the Open menu. With no video on, they stay solid in the same theme.
+- In light theme the player bar now matches the menus: a bright frosted card with a faint edge and dark icons, timecodes and seek line, over the blurred video. Dark theme keeps the dark glass bar as before.
+- In light theme the sidebar on the left, the volume slider pop-up and the time bubble over the seek line now match the bar too: bright cards with dark icons and text, including their hover, pressed and selected looks. Dark theme is unchanged.
+- In light theme the Now Playing pop-up (audio and subtitle tracks with their delay steppers) and the Video pop-up (zoom, rotation, aspect ratio, colours and look) are now bright frosted cards like the bar and menus, with dark headings, rows, check marks, buttons, sliders and dividers, so a dark pop-up no longer sits over a light bar. Dark theme is unchanged.
+- Four modern subtitle fonts now ship with Aether and show up in Settings › Subtitles: Inter, Lexend, Atkinson Hyperlegible Next and Source Sans 3 (all free under the SIL Open Font License, listed in the third-party notices).
+- Fixed: after choosing Dark (or Light) in Settings while Windows is set to the other, the Settings cards and other surfaces Aether colours itself came out in the other theme's colours, light grey cards with white text in Dark. Each theme's colours are now fixed values that no longer depend on which theme Windows is using, so they follow the Appearance choice, and Windows' own theme when it is on Auto.
+- Settings rows that were split in two are now one: yt-dlp's version, update button and automatic-update switch; the update status with its Check now button and the automatic-check switch; Deinterlace with its mode picker (shown while it is on); and Auto-skip chapters with the names to skip (shown while it is on).
+
+### Fixed
+- Checking for updates works again. 1.1.0-preview.1 looked for new versions in a GitHub repository that does not exist, so it never found one; install this version by hand once and updates arrive on their own again. The About credit and the links in the README and notices point at the real repository again too.
+
 ## [1.0.0] - 2026-10-21
 ### Added
 - A way to measure speed on your own PC: `tools\measure-performance.ps1` opens Aether a few times and reports how long the window takes to appear, and with `-Video` plays a clip and reports dropped frames and memory clean-up pauses. Aether only records these timings when the script asks it to.

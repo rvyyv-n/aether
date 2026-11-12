@@ -10,6 +10,7 @@ public static class SettingKeys
     public const string OpenInRunningWindow = "general.openInRunningWindow";
     public const string TourSeen = "general.tourSeen";
     public const string Theme = "general.theme";
+    public const string Accent = "general.accent";
     public const string PreciseSeeking = "playback.preciseSeeking";
     public const string ResumePlayback = "playback.resume";
     public const string LoopByDefault = "playback.loop";
@@ -42,6 +43,9 @@ public static class SettingKeys
     public const string VolumeNormalisation = "audio.normalise";
     public const string PitchCorrection = "audio.pitchCorrection";
     public const string StereoDownmix = "audio.stereoDownmix";
+    public const string EqualizerEnabled = "audio.equalizer";
+    public const string EqualizerCurve = "audio.equalizerCurve";
+    public const string NightMode = "audio.nightMode";
     public const string ShowSubtitles = "subtitles.show";
     public const string PreferredAudioLanguage = "subtitles.audioLanguage";
     public const string PreferredSubtitleLanguage = "subtitles.language";
@@ -62,6 +66,9 @@ public static class SettingKeys
     public const string NetworkCacheMegabytes = "streaming.cacheMegabytes";
     public const string HttpProxy = "streaming.httpProxy";
     public const string RtspTransport = "streaming.rtspTransport";
+    public const string SponsorBlock = "streaming.sponsorBlock";
+    public const string SponsorBlockCategories = "streaming.sponsorBlockCategories";
+    public const string SponsorBlockAutoSkip = "streaming.sponsorBlockAutoSkip";
     public const string RepairAviIndex = "advanced.repairAviIndex";
     public const string SkipDeblocking = "advanced.skipDeblocking";
     public const string CustomMpvOptions = "advanced.customMpvOptions";
@@ -96,6 +103,13 @@ public static class SettingKeys
     public const string ShortcutExportClip = "shortcuts.exportClip";
     public const string ShortcutNextChapter = "shortcuts.nextChapter";
     public const string ShortcutPreviousChapter = "shortcuts.previousChapter";
+    public const string ShortcutNextFile = "shortcuts.nextFile";
+    public const string ShortcutPreviousFile = "shortcuts.previousFile";
+    public const string ShortcutQueue = "shortcuts.queue";
+    public const string ShortcutTranscript = "shortcuts.transcript";
+    public const string ShortcutSubtitleEarlier = "shortcuts.subtitleEarlier";
+    public const string ShortcutSubtitleLater = "shortcuts.subtitleLater";
+    public const string ShortcutSubtitleDelayReset = "shortcuts.subtitleDelayReset";
     public const string ShortcutSidebar = "shortcuts.sidebar";
     public const string ShortcutLanStream = "shortcuts.lanStream";
 }
@@ -187,6 +201,7 @@ public static class SettingDefinitions
         Flag(SettingKeys.OpenInRunningWindow, s => s.OpenInRunningWindow, (s, v) => s with { OpenInRunningWindow = v }),
         Flag(SettingKeys.TourSeen, s => s.TourSeen, (s, v) => s with { TourSeen = v }),
         Choice(SettingKeys.Theme, s => s.Theme, (s, v) => s with { Theme = v }, false, "auto", "light", "dark"),
+        new SettingDefinition<string> { Key = SettingKeys.Accent, Get = s => s.Accent, With = (s, v) => s with { Accent = v }, IsValid = AccentPalette.IsValid },
 
         Flag(SettingKeys.PreciseSeeking, s => s.PreciseSeeking, (s, v) => s with { PreciseSeeking = v }),
         Flag(SettingKeys.ResumePlayback, s => s.ResumePlayback, (s, v) => s with { ResumePlayback = v }),
@@ -222,6 +237,9 @@ public static class SettingDefinitions
         Flag(SettingKeys.VolumeNormalisation, s => s.VolumeNormalisation, (s, v) => s with { VolumeNormalisation = v }),
         Flag(SettingKeys.PitchCorrection, s => s.PitchCorrection, (s, v) => s with { PitchCorrection = v }),
         Flag(SettingKeys.StereoDownmix, s => s.StereoDownmix, (s, v) => s with { StereoDownmix = v }),
+        Flag(SettingKeys.EqualizerEnabled, s => s.EqualizerEnabled, (s, v) => s with { EqualizerEnabled = v }),
+        Flag(SettingKeys.NightMode, s => s.NightMode, (s, v) => s with { NightMode = v }),
+        new SettingDefinition<string> { Key = SettingKeys.EqualizerCurve, Get = s => s.EqualizerCurve, With = (s, v) => s with { EqualizerCurve = v }, IsValid = v => Audio.EqualizerCurve.TryParse(v, out _) },
 
         Flag(SettingKeys.ShowSubtitles, s => s.ShowSubtitles, (s, v) => s with { ShowSubtitles = v }),
         Text(SettingKeys.PreferredAudioLanguage, s => s.PreferredAudioLanguage, (s, v) => s with { PreferredAudioLanguage = v }),
@@ -244,6 +262,15 @@ public static class SettingDefinitions
         Range(SettingKeys.NetworkCacheMegabytes, s => s.NetworkCacheMegabytes, (s, v) => s with { NetworkCacheMegabytes = v }, 16, 2048, restart: true),
         Text(SettingKeys.HttpProxy, s => s.HttpProxy, (s, v) => s with { HttpProxy = v }),
         Choice(SettingKeys.RtspTransport, s => s.RtspTransport, (s, v) => s with { RtspTransport = v }, false, "tcp", "udp", "http", "udp_multicast"),
+        Flag(SettingKeys.SponsorBlock, s => s.SponsorBlock, (s, v) => s with { SponsorBlock = v }),
+        new SettingDefinition<string>
+        {
+            Key = SettingKeys.SponsorBlockCategories,
+            Get = s => s.SponsorBlockCategories,
+            With = (s, v) => s with { SponsorBlockCategories = v },
+            IsValid = v => v.Length <= MaxText && Streams.SponsorBlock.FormatCategories(Streams.SponsorBlock.ParseCategories(v)) == v,
+        },
+        Flag(SettingKeys.SponsorBlockAutoSkip, s => s.SponsorBlockAutoSkip, (s, v) => s with { SponsorBlockAutoSkip = v }),
 
         Flag(SettingKeys.RepairAviIndex, s => s.RepairAviIndex, (s, v) => s with { RepairAviIndex = v }, restart: true),
         Choice(SettingKeys.SkipDeblocking, s => s.SkipDeblocking, (s, v) => s with { SkipDeblocking = v }, true, "default", "nonref", "nonkey", "all"),
@@ -282,6 +309,13 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutExportClip, s => s.ShortcutExportClip, (s, v) => s with { ShortcutExportClip = v }),
         Shortcut(SettingKeys.ShortcutNextChapter, s => s.ShortcutNextChapter, (s, v) => s with { ShortcutNextChapter = v }),
         Shortcut(SettingKeys.ShortcutPreviousChapter, s => s.ShortcutPreviousChapter, (s, v) => s with { ShortcutPreviousChapter = v }),
+        Shortcut(SettingKeys.ShortcutNextFile, s => s.ShortcutNextFile, (s, v) => s with { ShortcutNextFile = v }),
+        Shortcut(SettingKeys.ShortcutPreviousFile, s => s.ShortcutPreviousFile, (s, v) => s with { ShortcutPreviousFile = v }),
+        Shortcut(SettingKeys.ShortcutQueue, s => s.ShortcutQueue, (s, v) => s with { ShortcutQueue = v }),
+        Shortcut(SettingKeys.ShortcutTranscript, s => s.ShortcutTranscript, (s, v) => s with { ShortcutTranscript = v }),
+        Shortcut(SettingKeys.ShortcutSubtitleEarlier, s => s.ShortcutSubtitleEarlier, (s, v) => s with { ShortcutSubtitleEarlier = v }),
+        Shortcut(SettingKeys.ShortcutSubtitleLater, s => s.ShortcutSubtitleLater, (s, v) => s with { ShortcutSubtitleLater = v }),
+        Shortcut(SettingKeys.ShortcutSubtitleDelayReset, s => s.ShortcutSubtitleDelayReset, (s, v) => s with { ShortcutSubtitleDelayReset = v }),
         Shortcut(SettingKeys.ShortcutSidebar, s => s.ShortcutSidebar, (s, v) => s with { ShortcutSidebar = v }),
         Shortcut(SettingKeys.ShortcutLanStream, s => s.ShortcutLanStream, (s, v) => s with { ShortcutLanStream = v }),
     ];

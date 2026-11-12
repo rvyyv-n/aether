@@ -28,6 +28,8 @@ public sealed partial class MainPage
         CtxSubtitles.Text = AppStrings.Get("Menu_Subtitles");
         CtxSpeed.Text = AppStrings.Get("Menu_Speed");
         CtxVideo.Text = AppStrings.Get("Menu_Video");
+        CtxQueue.Text = AppStrings.Get("Menu_Queue");
+        CtxTranscript.Text = AppStrings.Get("Menu_Transcript");
         CtxCopyFrame.Text = AppStrings.Get("Menu_CopyFrame");
         CtxSaveFrame.Text = AppStrings.Get("Menu_SaveFrame");
         CtxPictureInPicture.Text = AppStrings.Get("Menu_PictureInPicture");
@@ -155,11 +157,16 @@ public sealed partial class MainPage
         }
     }
 
-    private void OnContextMenuOpened(object? sender, object e) => HoldForMenu(true);
+    private void OnContextMenuOpened(object? sender, object e)
+    {
+        HoldForMenu(true);
+        SetMenuSurface(sender, true);
+    }
 
     private void OnContextMenuClosed(object? sender, object e)
     {
         HoldForMenu(false);
+        SetMenuSurface(sender, false);
         if (_tour.IsActive)
         {
             TourNextButton.Focus(FocusState.Programmatic);

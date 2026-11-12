@@ -8,12 +8,15 @@ namespace Aether_App;
 /// </summary>
 public sealed partial class MainPage
 {
-    // The files either side of the open one; empty for a link or while the folder is still being read.
-    private FolderNeighbours _neighbours;
+    // The open file's folder, in play order; empty for a link.
+    private readonly PlaylistStore _playlist = new();
+    // False while the queue is a drop of several files or folders, which is kept rather than read from a folder.
+    private bool _queueIsFolder = true;
 
     private void UpdateTaskbar(string? fileName)
     {
-        TaskbarControls controls = TaskbarControls.From(_session?.ViewModel.Status ?? PlaybackStatus.Idle, _neighbours);
+        TaskbarControls controls = TaskbarControls.From(
+            _session?.ViewModel.Status ?? PlaybackStatus.Idle, _playlist.CanGoPrevious, _playlist.CanGoNext);
         _host?.SetTaskbar(fileName, controls);
     }
 
@@ -33,51 +36,88 @@ public sealed partial class MainPage
         }
     }
 
-    /// <summary>Reads the folder of a newly opened local file to learn which of the buttons have somewhere to go.</summary>
-    private async void RefreshNeighbours(string path, bool isLink)
+    /// <summary>Queues up the folder of a newly opened local file, so the buttons know where they can go.</summary>
+    private async void RefreshQueue(string path, bool isLink)
     {
-        _neighbours = default;
+        // A file the queue moved to keeps the queue's order; any other file starts a new one.
+        if (!string.Equals(_playlist.Current, path, StringComparison.OrdinalIgnoreCase))
+        {
+            _playlist.Clear();
+            _queueIsFolder = true;
+        }
+        else if (!_queueIsFolder)
+        {
+            return;
+        }
         if (isLink || !Path.IsPathFullyQualified(path))
         {
             return;
         }
-        FolderNeighbours found = await Task.Run(() => NeighboursOnDisk(path));
+        string[]? videos = await Task.Run(() => VideosBeside(path));
         // The user may have opened something else, or closed the page, while the folder was read.
-        if (_isLoaded && _currentPath == path)
+        if (videos is not null && _isLoaded && _currentPath == path)
         {
-            _neighbours = found;
+            _playlist.Load(videos, path);
             Render();
         }
     }
 
     private async void OpenNeighbour(bool forward)
     {
-        if (_currentPath is not { } current || _currentWebLink is not null || !Path.IsPathFullyQualified(current))
+        if (await StepQueue(queue => forward ? queue.Next(ended: false) : queue.Previous()) is { } target)
         {
-            return;
-        }
-        // Read again rather than trusting the earlier listing: files may have come and gone since.
-        FolderNeighbours found = await Task.Run(() => NeighboursOnDisk(current));
-        string? target = forward ? found.Next : found.Previous;
-        if (target is not null && _isLoaded && _session is not null && _currentPath == current)
-        {
-            Open(target);
+            Open(target, fromQueue: true);
         }
     }
 
-    private static FolderNeighbours NeighboursOnDisk(string path)
+    /// <summary>
+    /// Reads the open file's folder again rather than trusting the queue, since files may have come and gone, then
+    /// moves the queue with <paramref name="step"/>. Null for a link, an unreadable folder, or nowhere to go.
+    /// </summary>
+    private async Task<string?> StepQueue(Func<PlaylistStore, string?> step)
     {
-        if (Path.GetDirectoryName(path) is not { Length: > 0 } folder)
+        if (_currentPath is not { } current || _currentWebLink is not null || !Path.IsPathFullyQualified(current))
         {
-            return default;
+            return null;
         }
+        if (!_queueIsFolder)
+        {
+            return step(_playlist);
+        }
+        string[]? videos = await Task.Run(() => VideosBeside(current));
+        if (videos is null || !_isLoaded || _session is null || _currentPath != current)
+        {
+            return null;
+        }
+        _playlist.Load(videos, current);
+        return step(_playlist);
+    }
+
+    /// <summary>Plays a drop of several files or folders (13.2) as a queue of its own, from its first video.</summary>
+    private async void OpenDropped(string[] files, string[] folders)
+    {
+        string[] queue = await Task.Run(() => FolderPlaylist.Dropped(files, folders, ListFolder));
+        if (queue.Length == 0 || !_isLoaded || _session is null)
+        {
+            return;
+        }
+        _playlist.Load(queue, queue[0]);
+        _queueIsFolder = false;
+        Open(queue[0]);
+    }
+
+    private static string[]? VideosBeside(string path) =>
+        Path.GetDirectoryName(path) is { Length: > 0 } folder ? FolderPlaylist.Videos(ListFolder(folder)) : null;
+
+    private static string[] ListFolder(string folder)
+    {
         try
         {
-            return FolderPlaylist.NeighboursOf(path, Directory.EnumerateFiles(folder));
+            return Directory.EnumerateFiles(folder).ToArray();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return default; // the folder went away or is unreadable: no buttons
+            return []; // the folder went away or is unreadable: nothing from it
         }
     }
 }

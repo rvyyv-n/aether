@@ -235,3 +235,25 @@
 - **Consequences:** No LGPL libmpv swap is needed (roadmap 11.15 cancelled). The full GPL text lives in `LICENSE`, and `THIRD_PARTY.md` points to it (11.16 done). The written source offer for libmpv and FFmpeg stays. Official releases, the signing certificate and the update channel remain the project's own.
 - **Fallback if Aether ever goes proprietary or closed:** swap in an LGPL libmpv and accept the losses below. Scouted 2026-10-19 (unverified by us): the prebuilt `mpv-dev-lgpl-x86_64` builds from zhongfly/mpv-winbuild (daily, LGPL stated, checksums but not code-signed, no ANGLE needed); or our own GitHub Actions build of `shinchiro/mpv-winbuild-cmake` with `-Dgpl=false` and an FFmpeg without `--enable-gpl` (first build about 3 hours, later about 20 to 35 minutes). What an LGPL build loses: live denoise (`hqdn3d`, GPL-only; replace with `atadenoise`, `nlmeans` or our own GPU shader), the rubberband pitch-correcting stretch, DVD menus, audio CD, AviSynth, teletext, digital TV input, AVS2, and the x264/x265 encoders (playback does not use them; clip export runs the separate `ffmpeg.exe`).
 - **Status:** Accepted. A lawyer has not reviewed the section 7 wording.
+
+## ADR-0026: One Play Queue, Read From the Folder on Every Jump (13.1, 2026-10-29)
+- **Context:** Previous and next (taskbar buttons, Play next in folder) each looked up the open file's neighbours on disk. Pass 13 adds repeat, shuffle and an editable queue, which need one place that knows the play order.
+- **Decision:**
+  - `PlaylistStore` in `Aether.Core.Playback` holds the queue, the playing entry and the play order behind one lock. Entries are objects, so a file queued twice is two entries. Shuffle is a Fisher-Yates order that plays each item once; a new round with Repeat All reshuffles and never starts with the item that just played.
+  - The app still re-reads the folder before every jump, since files come and go, and loads the listing into the store. A listing equal to the queue (ignoring case) keeps the play order, so shuffle survives the re-read. Opening a file the queue did not move to starts a new queue.
+  - `FolderPlaylist` only lists and sorts a folder's videos now; its neighbour lookups are gone.
+- **Consequences:** Repeat and shuffle work in the store but have no controls until the playlist drawer (13.3). A queue from a drop of several files or folders (13.2) is kept as dropped: it skips the folder re-read until a file outside it is opened.
+- **Status:** Accepted.
+
+## ADR-0027: Aether Draws Its Own Caption Buttons (12.10, 2026-10-29)
+- **Context:** Over a video the system caption buttons stayed fully opaque while the rest of the chrome faded. `AppWindowTitleBar` ignores alpha in the buttons' glyph colours, so they cannot be faded.
+- **Decision:** The system buttons are hidden (`TitleBarHeightOption.Collapsed`) and the page draws minimise, maximise and close in the title bar, fading them with the chrome. The window registers their rectangles as `NonClientRegionKind.Minimize`, `Maximize` and `Close` through `InputNonClientPointerSource`, so Windows keeps Snap Layouts over maximise and runs minimise and maximise itself. Windows does not run the Close region, so the window closes itself when a press and release both land on it. The regions take the pointer, so the window passes hover and press on to the buttons' visual states. The buttons' Click handlers serve UI Automation.
+- **Consequences:** Picture in picture shows only Close. Full screen hides the title bar and with it the buttons. The close-hover red is a design token.
+- **Status:** Accepted. Checked on screen: fade, Snap Layouts, maximise, restore, minimise, close, and waking after a restore.
+
+## ADR-0028: An Optional Accent Colour, Off by Default (12.9, 2026-10-29)
+- **Context:** The design reserved colour for status dots; roadmap 12.9 asks for accent presets and a custom hex colour.
+- **Decision:** The default stays `none`, which keeps the black-and-white look. A chosen accent recolours the existing theme brushes in place (`AccentTheme`, from `AccentPalette.Overrides`): the WinUI accent fills and the switch fills solid, the emphasis fills a translucent tint, and the switch knob and text on the accent dark or white by contrast. Light and dark both take it; `none` restores the colours the brushes were built with. The setting is `general.accent`: `none`, a preset id, or `#RRGGBB`.
+- **Consequences:** Nothing restarts or reloads; every surface using those brushes changes at once. A new accent-coloured surface must use one of the overridden keys to follow the choice.
+- **Status:** Accepted.
+

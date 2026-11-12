@@ -3,6 +3,7 @@
     x:Class="Aether_App.Settings.Pages.AudioPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Aether_App.Controls"
     xmlns:settings="using:Aether_App.Settings">
     <settings:SettingsGroup>
         <settings:SettingsRow x:Name="AudioOutputDeviceRow" Glyph="&#xE7F6;">
@@ -26,5 +27,19 @@
         <settings:SettingsRow x:Name="VolumeNormalisationRow" Glyph="&#xE9E9;">
             <ToggleSwitch x:Name="VolumeNormalisationToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
         </settings:SettingsRow>
+        <settings:SettingsRow x:Name="NightModeRow" Glyph="&#xE708;">
+            <ToggleSwitch x:Name="NightModeToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+        </settings:SettingsRow>
+        <settings:SettingsExpander x:Name="EqualizerExpander" Glyph="&#xE9E9;">
+            <settings:SettingsExpander.HeaderContent>
+                <ToggleSwitch x:Name="EqualizerToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
+            </settings:SettingsExpander.HeaderContent>
+            <controls:EqualizerPanel
+                x:Name="EqualizerPanel"
+                MaxWidth="560"
+                Margin="0,12,16,12"
+                HorizontalAlignment="Stretch"
+                ShowsToggle="False" />
+        </settings:SettingsExpander>
     </settings:SettingsGroup>
 </Page>

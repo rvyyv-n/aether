@@ -1,3 +1,5 @@
+using Aether.Core.Playback.Audio;
+
 namespace Aether.Core.Playback.Settings;
 
 /// <summary>
@@ -11,7 +13,12 @@ public sealed class MpvSettingsSync(Action<string[]> send)
     private readonly object _gate = new();
     private readonly Dictionary<string, string> _sent = new(StringComparer.Ordinal);
     private bool _normalising;
+    private bool _night;
     private string? _deinterlacer;
+    // The curve the running equalizer has, and the one its entry in mpv's filter list was added with: slider moves
+    // reach the running filter only, so the two part until PrepareForAudioRestart.
+    private EqualizerCurve? _equalizer;
+    private EqualizerCurve? _equalizerEntry;
 
     /// <summary>Sends the properties of <see cref="MpvSettingsMap.RuntimePlan"/> that changed since the last call.</summary>
     /// <exception cref="Aether.Core.Interop.Mpv.MpvException">The core rejected a command outright, e.g. while shutting down.</exception>
@@ -39,6 +46,15 @@ public sealed class MpvSettingsSync(Action<string[]> send)
                 _normalising = plan.NormaliseVolume;
             }
 
+            if (plan.NightMode != _night)
+            {
+                foreach (string[] command in NightMode.Commands(plan.NightMode))
+                {
+                    _send(command);
+                }
+                _night = plan.NightMode;
+            }
+
             if (plan.DeinterlaceFilter != _deinterlacer)
             {
                 foreach (string[] command in MpvSettingsMap.DeinterlaceCommands(plan.DeinterlaceFilter))
@@ -46,6 +62,38 @@ public sealed class MpvSettingsSync(Action<string[]> send)
                     _send(command);
                 }
                 _deinterlacer = plan.DeinterlaceFilter;
+            }
+
+            if (!Equals(plan.Equalizer, _equalizer))
+            {
+                foreach (string[] command in Equalizer.Commands(_equalizer, plan.Equalizer))
+                {
+                    _send(command);
+                }
+                if (_equalizer is null || plan.Equalizer is null)
+                {
+                    _equalizerEntry = plan.Equalizer;
+                }
+                _equalizer = plan.Equalizer;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Before mpv restarts the audio (a new file, another audio track, a new mix): it builds the filters again from their
+    /// entries, so an equalizer moved live since it was added is added again with where the sliders are now.
+    /// </summary>
+    public void PrepareForAudioRestart()
+    {
+        lock (_gate)
+        {
+            if (_equalizer is not null && !_equalizer.Equals(_equalizerEntry))
+            {
+                foreach (string[] command in Equalizer.Commands(null, _equalizer))
+                {
+                    _send(command);
+                }
+                _equalizerEntry = _equalizer;
             }
         }
     }

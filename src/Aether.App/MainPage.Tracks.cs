@@ -1,8 +1,12 @@
 using System.Globalization;
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback;
+using Aether.Core.Playback.Audio;
+using Aether.Core.Playback.Input;
 using Aether.Core.Playback.Tracks;
 using Aether_App.Controls;
+using Aether_App.Input;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -29,6 +33,14 @@ public sealed partial class MainPage
     // reports after each change, so a subtitle file added with "select" is recorded under the id it was given.
     private TrackChoices? _trackChoices;
     private TrackChoices? _restoreTracks; // waiting for the restarted engine to finish loading the file
+    // The audio and subtitle the user last picked, by language, for the next files of the queue (13.4).
+    private TrackPreference? _trackPreference;
+    private TrackPreference? _followTracks; // waiting for the next file of the queue to finish loading
+    // The mix waiting to be sent: a fader sends many changes a second, and each one restarts mpv's audio.
+    private IReadOnlyList<MixLevel>? _pendingMix;
+    private bool _mixPending;
+    private int? _trackBeforeMix;
+    private DispatcherQueueTimer? _mixTimer;
 
     private void InitializeTracks()
     {
@@ -37,6 +49,45 @@ public sealed partial class MainPage
         TracksPanel.TrackChosen += OnTrackChosen;
         TracksPanel.AddSubtitleRequested += OnAddSubtitleRequested;
         TracksPanel.DelayStepped += OnDelayStepped;
+        TracksPanel.MixChanged += OnMixChanged;
+        _mixTimer = DispatcherQueue.CreateTimer();
+        _mixTimer.Interval = TimeSpan.FromMilliseconds(120);
+        _mixTimer.IsRepeating = false;
+        _mixTimer.Tick += (_, _) => SendMix();
+    }
+
+    private void OnMixChanged(object? sender, IReadOnlyList<MixLevel>? levels)
+    {
+        if (levels is not null && _pendingMix is null)
+        {
+            _trackBeforeMix = _tracks.Tracks.Audio.FirstOrDefault(t => t.Selected)?.Id;
+        }
+        _pendingMix = levels;
+        _mixPending = true;
+        if (levels is null)
+        {
+            SendMix(); // ending the mix is one change; no reason to wait
+        }
+        else if (_mixTimer is { IsRunning: false } timer)
+        {
+            timer.Start();
+        }
+    }
+
+    private void SendMix()
+    {
+        _mixTimer?.Stop();
+        if (!_mixPending || _session is not { } session)
+        {
+            return;
+        }
+        _mixPending = false;
+        IReadOnlyList<MixLevel>? levels = _pendingMix;
+        TrySend(() => session.SetMix(levels is null ? null : TrackMix.Graph(levels), _trackBeforeMix));
+        if (levels is null)
+        {
+            _trackBeforeMix = null;
+        }
     }
 
     /// <summary>The menu closes after this click, and its Closed handler opens the flyout, so the two holds do not cross.</summary>
@@ -72,6 +123,7 @@ public sealed partial class MainPage
     private void ApplyTracks(TrackSnapshot snapshot)
     {
         _tracks = snapshot;
+        TracksPanel.RequestedTheme = ThemeTokens.AppTheme; // rows built here must match the theme the flyout opens in
         TracksPanel.LinkTitle = _streamTitle;
         TracksPanel.Show(snapshot);
     }
@@ -91,9 +143,21 @@ public sealed partial class MainPage
 
     private void OnTrackChosen(object? sender, TrackChoice choice)
     {
-        string property = choice.Kind == TrackKind.Audio ? "aid" : "sid";
+        string property = choice.Kind == TrackKind.Audio ? "aid" : choice.Secondary ? "secondary-sid" : "sid";
+        if (choice.Kind == TrackKind.Audio)
+        {
+            _session?.PrepareForAudioRestart();
+            if (_pendingMix is not null && _session is { } session)
+            {
+                _mixTimer?.Stop();
+                _pendingMix = null;
+                _mixPending = false;
+                _trackBeforeMix = null;
+                TrySend(() => session.SetMix(null, choice.Id));
+            }
+        }
         string value = choice.Id is { } id ? id.ToString(CultureInfo.InvariantCulture) : "no";
-        _ = ChangeTracks(context => context.SetProperty(property, value));
+        _ = ChangeTracks(context => context.SetProperty(property, value), userChoice: true);
     }
 
     private void OnDelayStepped(object? sender, DelayStep step)
@@ -105,8 +169,45 @@ public sealed partial class MainPage
         _ = ChangeTracks(context => context.SetProperty(audio ? "audio-delay" : "sub-delay", TrackDelay.ForMpv(next)));
     }
 
+    /// <summary>
+    /// [ and ] move the subtitles 50 ms earlier or later, Shift+[ (<paramref name="direction"/> 0) puts them back, and a
+    /// toast says where they are now. Read from mpv, so the flyout's stepper and the keys build on each other.
+    /// </summary>
+    private async void NudgeSubtitles(int direction)
+    {
+        double now = 0;
+        await ChangeTracks(context =>
+        {
+            double current = TrackSnapshot.Read(context).SubtitleDelay;
+            now = direction == 0 ? 0 : TrackDelay.Nudged(current, direction);
+            context.SetProperty("sub-delay", TrackDelay.ForMpv(now));
+        });
+        _toasts?.Show(new ToastRequest("subtitle-delay", AppStrings.Format("Toast_SubtitleDelay", TrackDelay.Milliseconds(now))));
+    }
+
+    /// <summary>
+    /// WinUI fires no accelerator for a plain punctuation key such as [ or ], so a key no accelerator took is matched
+    /// against the subtitle nudges here. One an accelerator handled arrives handled, so nothing runs twice.
+    /// </summary>
+    private bool NudgeFromKey(Windows.System.VirtualKey key)
+    {
+        int? direction = App.Shortcuts.Map.Find(new KeyCombination((int)key, KeyboardModifiers.Current())) switch
+        {
+            ShortcutAction.SubtitleEarlier => -1,
+            ShortcutAction.SubtitleLater => +1,
+            ShortcutAction.SubtitleDelayReset => 0,
+            _ => null,
+        };
+        if (direction is not { } d || !HasVideo || ArePlayerKeysPaused)
+        {
+            return false;
+        }
+        NudgeSubtitles(d);
+        return true;
+    }
+
     /// <summary>Applies the change on a pool thread, then redraws from what mpv now says.</summary>
-    private async Task ChangeTracks(Action<MpvContext> change)
+    private async Task ChangeTracks(Action<MpvContext> change, bool userChoice = false)
     {
         if (_session is not { } session)
         {
@@ -138,6 +239,11 @@ public sealed partial class MainPage
         if (_isLoaded && _session == session)
         {
             _trackChoices = TrackChoices.From(snapshot);
+            FollowTranscript(snapshot);
+            if (userChoice)
+            {
+                _trackPreference = TrackPreference.From(snapshot.Tracks);
+            }
             if (version == _tracksVersion && TracksFlyout.IsOpen)
             {
                 ApplyTracks(snapshot);
@@ -169,6 +275,23 @@ public sealed partial class MainPage
                 current = TrackSnapshot.Read(context);
             }
             foreach (string[] command in choices.Select(current))
+            {
+                Send(context, command);
+            }
+        });
+    }
+
+    /// <summary>Once the next file of the queue has loaded, picks the tracks matching what the user chose before it.</summary>
+    private void FollowTracksOnceLoaded()
+    {
+        if (_followTracks is not { } preference || !HasVideo || _session is null)
+        {
+            return;
+        }
+        _followTracks = null;
+        _ = ChangeTracks(context =>
+        {
+            foreach (string[] command in preference.Select(TrackSnapshot.Read(context).Tracks))
             {
                 Send(context, command);
             }

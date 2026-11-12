@@ -13,6 +13,9 @@ public enum TrackKind
 /// <param name="ChannelLayout"><c>demux-channels</c> (stereo, 5.1(side)) for audio, or null.</param>
 /// <param name="ChannelCount"><c>demux-channel-count</c>, used when the layout name is missing or unfamiliar.</param>
 /// <param name="ExternalFile">The path of a loaded subtitle file, or null for a track inside the video file.</param>
+/// <param name="Secondary">The subtitle shown as the second one (<c>secondary-sid</c>); <paramref name="Selected"/> is then false.</param>
+/// <param name="Codec">mpv's <c>codec</c> (subrip, ass, hdmv_pgs_subtitle), or null.</param>
+/// <param name="StreamIndex">The stream's index in the file (<c>ff-index</c>), which ffmpeg's <c>-map</c> takes, or null.</param>
 public sealed record MediaTrack(
     int Id,
     TrackKind Kind,
@@ -23,4 +26,7 @@ public sealed record MediaTrack(
     bool HearingImpaired,
     bool Forced,
     bool Selected,
-    string? ExternalFile);
+    string? ExternalFile,
+    bool Secondary = false,
+    string? Codec = null,
+    int? StreamIndex = null);

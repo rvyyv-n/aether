@@ -1,10 +1,14 @@
 using System.Globalization;
+using Aether.Core.Playback.Audio;
 
 namespace Aether.Core.Playback.Settings;
 
-/// <summary>What to change on a running core: mpv properties in order, whether the volume-normalising filter is on, and the deinterlacing filter.</summary>
+/// <summary>What to change on a running core: mpv properties in order, whether the volume-normalising filter is on, the deinterlacing filter and the equalizer.</summary>
 /// <param name="DeinterlaceFilter">Software filter to add for the chosen deinterlacer (<c>yadif</c> or <c>bwdif</c>), or null for none.</param>
-public sealed record MpvRuntimePlan(IReadOnlyList<KeyValuePair<string, string>> Properties, bool NormaliseVolume, string? DeinterlaceFilter = null);
+/// <param name="Equalizer">The equalizer's curve, or null when it is off.</param>
+/// <param name="NightMode">Whether the night mode filter is on.</param>
+public sealed record MpvRuntimePlan(
+    IReadOnlyList<KeyValuePair<string, string>> Properties, bool NormaliseVolume, string? DeinterlaceFilter = null, EqualizerCurve? Equalizer = null, bool NightMode = false);
 
 /// <summary>
 /// Turns an <see cref="AetherSettings"/> snapshot into mpv options. Pure, so it is tested without libmpv.
@@ -160,6 +164,7 @@ public static class MpvSettingsMap
             new("sub-back-color", SubtitleBackColor(settings.SubtitleBackground)),
             // Without this, a subtitle file that carries its own styling keeps its own font, colour and size.
             new("sub-ass-override", settings.SubtitleOverrideStyled ? "force" : "scale"),
+            new("sub-auto", "no"),
             new("ytdl-format", YtdlFormat(settings.StreamingQuality, settings.PreferGpuDecodableFormats)),
             new("deinterlace", YesNo(settings.Deinterlace && settings.DeinterlaceMode == "auto")),
             new("video-aspect-override", settings.AspectRatio == "auto" ? "-1" : settings.AspectRatio),
@@ -182,7 +187,12 @@ public static class MpvSettingsMap
             properties.RemoveAll(p => custom.Contains(p.Key));
         }
         string? deinterlacer = settings.Deinterlace && settings.DeinterlaceMode != "auto" && !custom.Contains("vf") ? settings.DeinterlaceMode : null;
-        return new MpvRuntimePlan(properties, settings.VolumeNormalisation && !custom.Contains("af"), deinterlacer);
+        bool ownAudioFilters = !custom.Contains("af");
+        EqualizerCurve? equalizer = settings.EqualizerEnabled && ownAudioFilters && EqualizerCurve.TryParse(settings.EqualizerCurve, out EqualizerCurve? curve)
+            ? curve
+            : null;
+        bool night = settings.NightMode && ownAudioFilters;
+        return new MpvRuntimePlan(properties, settings.VolumeNormalisation && ownAudioFilters && !night, deinterlacer, equalizer, night);
     }
 
     /// <summary>

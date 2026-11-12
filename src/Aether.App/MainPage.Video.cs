@@ -69,6 +69,7 @@ public sealed partial class MainPage
             return;
         }
         VideoAdjustments baseline = VideoAdjustments.FromSettings(App.Settings.Current);
+        VideoPanel.RequestedTheme = ThemeTokens.AppTheme; // the grade list's dividers take their colour from the panel's theme as they are built
         VideoPanel.Baseline = baseline;
         VideoPanel.Show(_video ?? baseline);
         VideoPanel.ShowLook(FallBackFromMissingGrade(CurrentLook));
@@ -108,7 +109,7 @@ public sealed partial class MainPage
     }
 
     /// <summary>A new file starts from Settings → Video; after an engine restart the new engine gets the choices back.</summary>
-    private void ApplyVideoForOpen(bool afterRestart)
+    private void ApplyVideoForOpen(bool afterRestart, bool keepAdjustments)
     {
         PushLook();
         if (_video is null)
@@ -117,8 +118,11 @@ public sealed partial class MainPage
         }
         if (!afterRestart)
         {
-            _video = null;
-            FitVideo(); // the new file starts unrotated
+            if (!keepAdjustments)
+            {
+                _video = null; // another file starts unrotated and unzoomed
+            }
+            FitVideo();
             QueueWindowSync();
         }
         PushVideo();

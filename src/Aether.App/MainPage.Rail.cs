@@ -67,9 +67,10 @@ public sealed partial class MainPage
         AutomationProperties.SetName(Rail, AppStrings.Get("Rail_Name"));
         LabelRailItem(RailPlayer, AppStrings.Get("Rail_Player"));
         LabelRailItem(RailClips, AppStrings.Get("Rail_Clips"));
+        LabelRailItem(RailQueue, AppStrings.Get("Rail_Queue"));
         LabelRailItem(RailStream, AppStrings.Get("Rail_Stream"));
         LabelRailItem(RailSettings, AppStrings.Get("Rail_Settings"));
-        foreach (UIElement item in new UIElement[] { RailPlayer, RailClips, RailStream, RailSettings })
+        foreach (UIElement item in new UIElement[] { RailPlayer, RailClips, RailQueue, RailStream, RailSettings })
         {
             PressFeedback.Attach(item);
         }

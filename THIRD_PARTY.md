@@ -21,6 +21,7 @@ Aether incorporates or interfaces with several open-source and third-party softw
 | **QRCoder** | `1.6.0` | MIT | https://github.com/codebude/QRCoder | Managed library dependency in `Aether.Server.LanHost` (LAN streaming QR code generation) |
 | **ASP.NET Core (Kestrel)** | `9.0` (.NET 9 BCL) | MIT | https://github.com/dotnet/aspnetcore | Managed framework reference in `Aether.Server.LanHost` (LAN HTTP 206 streaming server) |
 | **Cascadia Mono** | System / Windows 11 | SIL Open Font License 1.1 | https://github.com/microsoft/cascadia-code | Referenced typography (timecodes and configuration editor) |
+| **Inter**, **Lexend**, **Atkinson Hyperlegible Next**, **Source Sans 3** (`Assets\Fonts\*.ttf`) | Google Fonts release files, unmodified | SIL Open Font License 1.1 | https://github.com/rsms/inter, https://github.com/googlefonts/lexend, https://github.com/googlefonts/atkinson-hyperlegible-next, https://github.com/adobe-fonts/source-sans | Bundled subtitle fonts; mpv loads them from the app folder (`sub-fonts-dir`) |
 | **Segoe UI Variable & Fluent Icons** | System / Windows 11 | Microsoft Software License | https://learn.microsoft.com/windows/apps/design/style/segoe-ui-symbol-font | System-provided typography and iconography (`SymbolThemeFontFamily`) |
 
 ### Development, Test, and Build-Time Components (Not Redistributed in Release Packages)
@@ -264,10 +265,14 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 ---
 
 ### 6. SIL Open Font License 1.1 (OFL-1.1)
-*Applies to: **Cascadia Mono / Cascadia Code***
+*Applies to: **Cascadia Mono / Cascadia Code**, **Inter**, **Lexend**, **Atkinson Hyperlegible Next**, **Source Sans 3***
 
 ```text
 Copyright (c) Microsoft Corporation.
+Copyright 2020 The Inter Project Authors (https://github.com/rsms/inter)
+Copyright 2018 The Lexend Project Authors (https://github.com/googlefonts/lexend), with Reserved Font Name "RevReading Lexend"
+Copyright 2020-2024 The Atkinson Hyperlegible Next Project Authors (https://github.com/googlefonts/atkinson-hyperlegible-next)
+Copyright 2010-2020 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. All Rights Reserved. Source is a trademark of Adobe in the United States and/or other countries.
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

@@ -8,8 +8,22 @@ namespace Aether_App;
 /// </summary>
 public static class ThemeTokens
 {
-    private static ResourceDictionary? _light;
-    private static ResourceDictionary? _dark;
+    private static readonly Dictionary<(string Theme, string Key), object> Cache = [];
+    private static readonly Windows.UI.ViewManagement.UISettings System = new();
+
+    /// <summary>
+    /// The theme the user's Appearance choice gives right now: Light or Dark as picked, or Windows' own when on Auto. Read
+    /// from the setting rather than from an element's ActualTheme, which can still show the old theme just after the
+    /// choice changes, and Application.RequestedTheme, which stays at what Windows was at launch.
+    /// </summary>
+    public static ElementTheme AppTheme => App.Settings.Current.Theme switch
+    {
+        "light" => ElementTheme.Light,
+        "dark" => ElementTheme.Dark,
+        _ => IsLight(System.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background)) ? ElementTheme.Light : ElementTheme.Dark,
+    };
+
+    private static bool IsLight(Windows.UI.Color background) => background.R + background.G + background.B > 382;
 
     public static T Get<T>(FrameworkElement element, string key) => Get<T>(element.ActualTheme, key);
 
@@ -19,30 +33,38 @@ public static class ThemeTokens
         {
             theme = Application.Current.RequestedTheme == ApplicationTheme.Light ? ElementTheme.Light : ElementTheme.Dark;
         }
-        Find();
-        ResourceDictionary? dictionary = theme == ElementTheme.Light ? _light : _dark;
-        if (dictionary is not null && dictionary.TryGetValue(key, out object? value))
+        string name = theme == ElementTheme.Light ? "Light" : "Dark";
+        if (Cache.TryGetValue((name, key), out object? cached))
         {
-            return (T)value;
+            return (T)cached;
+        }
+        if (TryFind(Application.Current.Resources, name, key, out object? value))
+        {
+            Cache[(name, key)] = value!;
+            return (T)value!;
         }
         return (T)Application.Current.Resources[key];
     }
 
-    private static void Find()
+    // Searches every merged dictionary, since the Windows App SDK's own controls resources have Light and Dark
+    // dictionaries too and must not be mistaken for Aether's; a token missing from the one that was found would fall
+    // back to Windows' theme and come out in the wrong colours.
+    private static bool TryFind(ResourceDictionary dictionary, string theme, string key, out object? value)
     {
-        if (_light is not null && _dark is not null)
+        if (dictionary.ThemeDictionaries.TryGetValue(theme, out object? themed)
+            && themed is ResourceDictionary themeDictionary
+            && themeDictionary.TryGetValue(key, out value))
         {
-            return;
+            return true;
         }
-        foreach (ResourceDictionary merged in Application.Current.Resources.MergedDictionaries)
+        foreach (ResourceDictionary merged in dictionary.MergedDictionaries)
         {
-            if (merged.ThemeDictionaries.TryGetValue("Light", out object? light)
-                && merged.ThemeDictionaries.TryGetValue("Dark", out object? dark))
+            if (TryFind(merged, theme, key, out value))
             {
-                _light = (ResourceDictionary)light;
-                _dark = (ResourceDictionary)dark;
-                return;
+                return true;
             }
         }
+        value = null;
+        return false;
     }
 }

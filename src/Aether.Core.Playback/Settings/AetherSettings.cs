@@ -13,6 +13,8 @@ public sealed record AetherSettings
     public bool TourSeen { get; init; }
     /// <summary><c>auto</c> (follows Windows), <c>light</c> or <c>dark</c>.</summary>
     public string Theme { get; init; } = "auto";
+    /// <summary><c>none</c>, an <see cref="AccentPalette"/> preset id or <c>#RRGGBB</c> (12.9).</summary>
+    public string Accent { get; init; } = AccentPalette.None;
 
     // Playback
     public bool PreciseSeeking { get; init; }
@@ -68,6 +70,11 @@ public sealed record AetherSettings
     public bool PitchCorrection { get; init; } = true;
     /// <summary>Mixes multi-channel tracks down to stereo.</summary>
     public bool StereoDownmix { get; init; }
+    public bool EqualizerEnabled { get; init; }
+    /// <summary>The equalizer's preamp and ten bands, as <see cref="Audio.EqualizerCurve"/> writes them.</summary>
+    public string EqualizerCurve { get; init; } = "0;0,0,0,0,0,0,0,0,0,0";
+    /// <summary>Compresses loud scenes and lifts quiet dialogue (14.3).</summary>
+    public bool NightMode { get; init; }
 
     // Subtitles
     public bool ShowSubtitles { get; init; } = true;
@@ -106,6 +113,12 @@ public sealed record AetherSettings
     public string HttpProxy { get; init; } = "";
     /// <summary>mpv <c>rtsp-transport</c>: <c>tcp</c>, <c>udp</c>, <c>http</c> or <c>udp_multicast</c>.</summary>
     public string RtspTransport { get; init; } = "tcp";
+    /// <summary>Asks SponsorBlock for the parts of YouTube videos to skip (16.1); off until the user turns it on.</summary>
+    public bool SponsorBlock { get; init; }
+    /// <summary>The SponsorBlock categories to skip, by their SponsorBlock names.</summary>
+    public string SponsorBlockCategories { get; init; } = "sponsor,selfpromo,interaction";
+    /// <summary>True skips a segment as it starts; false offers a Skip button instead.</summary>
+    public bool SponsorBlockAutoSkip { get; init; } = true;
 
     // Advanced
     /// <summary>Multi-line text, one <c>key=value</c> mpv option per line (see <see cref="MpvOptionsValidator"/>).</summary>
@@ -159,6 +172,13 @@ public sealed record AetherSettings
     public string ShortcutExportClip { get; init; } = "";
     public string ShortcutNextChapter { get; init; } = "";
     public string ShortcutPreviousChapter { get; init; } = "";
+    public string ShortcutNextFile { get; init; } = "";
+    public string ShortcutPreviousFile { get; init; } = "";
+    public string ShortcutQueue { get; init; } = "";
+    public string ShortcutTranscript { get; init; } = "";
+    public string ShortcutSubtitleEarlier { get; init; } = "";
+    public string ShortcutSubtitleLater { get; init; } = "";
+    public string ShortcutSubtitleDelayReset { get; init; } = "";
     public string ShortcutSidebar { get; init; } = "";
     public string ShortcutLanStream { get; init; } = "";
 }

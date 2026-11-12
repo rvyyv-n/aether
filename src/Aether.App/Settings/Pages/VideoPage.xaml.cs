@@ -26,15 +26,16 @@ public sealed partial class VideoPage : Page
 
         binder.Toggle(SmoothMotionRow, SmoothMotionToggle, SettingKeys.SmoothMotion, "Settings_SmoothMotion_Title", "Settings_SmoothMotion_Description");
 
-        binder.Toggle(DeinterlaceRow, DeinterlaceToggle, SettingKeys.Deinterlace, "Settings_Deinterlace_Title", "Settings_Deinterlace_Description");
-        binder.Choose(DeinterlaceModeRow, DeinterlaceModeCombo, SettingKeys.DeinterlaceMode,
+        SettingsPageBinder.Describe(DeinterlaceRow, "Settings_Deinterlace_Title", "Settings_Deinterlace_Description");
+        binder.Toggle(null, DeinterlaceToggle, SettingKeys.Deinterlace, "Settings_Deinterlace_Title", "Settings_Deinterlace_Description");
+        binder.Choose(null, DeinterlaceModeCombo, SettingKeys.DeinterlaceMode,
             [
                 new("auto", AppStrings.Get("Settings_DeinterlaceMode_Auto")),
                 new("yadif", AppStrings.Get("Settings_DeinterlaceMode_Yadif")),
                 new("bwdif", AppStrings.Get("Settings_DeinterlaceMode_Bwdif")),
             ],
             "Settings_DeinterlaceMode_Title");
-        binder.Track(() => DeinterlaceModeRow.Visibility = App.Settings.Get(SettingKeys.Deinterlace) is true ? Visibility.Visible : Visibility.Collapsed);
+        binder.Track(() => DeinterlaceModeCombo.Visibility = App.Settings.Get(SettingKeys.Deinterlace) is true ? Visibility.Visible : Visibility.Collapsed);
 
         binder.Choose(AspectRatioRow, AspectRatioCombo, SettingKeys.AspectRatio,
             [
