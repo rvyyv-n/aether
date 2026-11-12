@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.1.0-preview.2] - 2026-11-12
 ### Changed
 - Live streams get a LIVE badge in place of the length. Scrub back through what has been loaded, see how far behind live you are, and click LIVE to catch up.
 - With SponsorBlock on, a marked part is skipped as it starts and a toast offers Back to watch it after all. Turn off Skip automatically to get a Skip button instead.
