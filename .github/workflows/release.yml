@@ -60,7 +60,7 @@ jobs:
       - name: Pack the update
         shell: pwsh
         run: >
-          vpk pack --packId $env:PACK_ID --packVersion $env:VERSION --packTitle Aether --packAuthors "Aether Contributors"
+          vpk pack --packId $env:PACK_ID --packVersion $env:VERSION --packTitle Aether --packAuthors rvyyv-n
           --packDir dist/Aether-portable --mainExe Aether.App.exe --icon src/Aether.App/Assets/AppIcon.ico -o releases
           --exclude ".*(Aether\.cmd|run-portable\.cmd|\.pdb)$"
 

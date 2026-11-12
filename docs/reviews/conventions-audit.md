@@ -5,7 +5,7 @@
 Recent development across the last 25 commits on `pass-7-menus-toasts-diagnostics` adheres exceptionally well to the project's written conventions, architectural invariants, and workflow requirements. 
 
 ### Followed Correctly
-- **Author Identity & Clean Commits:** All 25 commits are authored and committed exclusively by `Aether Contributors <contributors@aether-player.org>`. There are zero AI, assistant, model, or co-authorship attributions in commit messages, metadata, diffs, or code.
+- **Author Identity & Clean Commits:** All 25 commits are authored and committed exclusively by `rvyyv-n <296653698+rvyyv-n@users.noreply.github.com>`. There are zero AI, assistant, model, or co-authorship attributions in commit messages, metadata, diffs, or code.
 - **Commit Titles:** Commit titles are concise, plain-English sentences in the imperative mood explaining what changed and why it matters (for example, "Match mpv's display sync to the refresh rate of the monitor Aether is on, so 120 fps clips stop dropping frames").
 - **Quality Gates & Clean Build:** The full solution builds cleanly with zero warnings under `-warnaserror` (`dotnet build AetherPlayer.sln --no-incremental -warnaserror`). All 1,067 unit tests pass across `Aether.Core.Tests` (1,029), `Aether.PvP.Tests` (36), and `Aether.Server.Tests` (2).
 - **Zero Stray Debug Output:** No `Console.WriteLine`, `Debug.WriteLine`, or tracing statements exist in `src/`. `Console.WriteLine` is restricted solely to the standalone console installer (`tools/installer/Aether.Installer/Program.cs`).
@@ -33,7 +33,7 @@ Recent development across the last 25 commits on `pass-7-menus-toasts-diagnostic
 
 | Rule | Where Written | Evidence | Status | Commit / File |
 | :--- | :--- | :--- | :--- | :--- |
-| **Commit author and committer identity** | `docs/AGENTS.md`, `pre-commit`, `commit-msg` | All 25 commits have author and committer `Aether Contributors <contributors@aether-player.org>`. Zero bot, helper, or AI identities. | **Followed** | All 25 commits (`1fcecc7` through `326bce9`) |
+| **Commit author and committer identity** | `docs/AGENTS.md`, `pre-commit`, `commit-msg` | All 25 commits have author and committer `rvyyv-n <296653698+rvyyv-n@users.noreply.github.com>`. Zero bot, helper, or AI identities. | **Followed** | All 25 commits (`1fcecc7` through `326bce9`) |
 | **No AI or model attribution** | `docs/AGENTS.md`, `~/.claude/CLAUDE.md`, global hooks | Verified via git log and commit-msg regex; no mentions of Claude, Gemini, Copilot, Antigravity, or co-authorship. | **Followed** | All 25 commits |
 | **Plain-English commit titles** | `~/.claude/CLAUDE.md` | All 25 commit messages are clear, human-readable sentences describing what changed and why without jargon or raw code excerpts. | **Followed** | All 25 commits |
 | **Roadmap tick & CHANGELOG per feature commit** | User brief, `docs/CHANGELOG.md` | Feature commits `caaf864`, `058fd2c`, `cc49be0`, `197edfd`, `22daa28`, `c2c59ff` updated both files in the same commit. | **Followed** | `c2c59ff`, `22daa28`, `197edfd`, `cc49be0`, `058fd2c`, `caaf864` |

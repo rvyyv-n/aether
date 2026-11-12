@@ -13,14 +13,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/aether-player/aether/releases/latest"><img src="https://img.shields.io/github/v/release/aether-player/aether?include_prereleases&label=download&style=flat-square&color=6b5bff" alt="Latest release" /></a>
-  <a href="https://github.com/aether-player/aether/actions/workflows/build-aot.yml"><img src="https://img.shields.io/github/actions/workflow/status/aether-player/aether/build-aot.yml?branch=master&style=flat-square&label=build" alt="Build status" /></a>
+  <a href="https://github.com/rvyyv-n/aether/releases/latest"><img src="https://img.shields.io/github/v/release/rvyyv-n/aether?include_prereleases&label=download&style=flat-square&color=6b5bff" alt="Latest release" /></a>
+  <a href="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml"><img src="https://img.shields.io/github/actions/workflow/status/rvyyv-n/aether/build-aot.yml?branch=master&style=flat-square&label=build" alt="Build status" /></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows11&logoColor=white" alt="Windows 10 and 11" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-lightgrey?style=flat-square" alt="GPL-3.0 licence" /></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/aether-player/aether/releases/latest"><b>Download</b></a> &nbsp;·&nbsp;
+  <a href="https://github.com/rvyyv-n/aether/releases/latest"><b>Download</b></a> &nbsp;·&nbsp;
   <a href="#features">Features</a> &nbsp;·&nbsp;
   <a href="#keyboard-shortcuts">Shortcuts</a> &nbsp;·&nbsp;
   <a href="docs/CHANGELOG.md">Changelog</a> &nbsp;·&nbsp;
@@ -79,7 +79,7 @@ Mica backdrop, borderless window, light and dark themes, and controls that fade 
 
 ## Install
 
-**[Download `AetherPlayer-win-Setup.exe`](https://github.com/aether-player/aether/releases/latest)** and run it.
+**[Download `AetherPlayer-win-Setup.exe`](https://github.com/rvyyv-n/aether/releases/latest)** and run it.
 
 - Installs for your account only. No admin rights, certificates or Developer Mode.
 - Adds Start menu and desktop shortcuts, **Play with Aether** in the right-click menu, and a clean uninstall in Settings › Installed apps.
@@ -165,7 +165,7 @@ Aether is one of a family of native Windows 11 apps that share the same design l
 
 ## License
 
-Aether is by [Aether Contributors](https://github.com/aether-player) and licensed under the **GNU General Public License v3.0 only**. See [LICENSE](LICENSE).
+Aether is by [rvyyv-n](https://github.com/rvyyv-n) and licensed under the **GNU General Public License v3.0 only**. See [LICENSE](LICENSE).
 
 - [NOTICE.md](NOTICE.md): attribution terms. The icon, logo and brand artwork are not covered by the GPL and remain all rights reserved.
 - [TRADEMARKS.md](TRADEMARKS.md): what forks may do with the name and logo.

@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: after choosing Dark (or Light) in Settings while Windows is set to the other, the Settings cards and other surfaces Aether colours itself came out in the other theme's colours, light grey cards with white text in Dark. Each theme's colours are now fixed values that no longer depend on which theme Windows is using, so they follow the Appearance choice, and Windows' own theme when it is on Auto.
 - Settings rows that were split in two are now one: yt-dlp's version, update button and automatic-update switch; the update status with its Check now button and the automatic-check switch; Deinterlace with its mode picker (shown while it is on); and Auto-skip chapters with the names to skip (shown while it is on).
 
+### Fixed
+- Checking for updates works again. 1.1.0-preview.1 looked for new versions in a GitHub repository that does not exist, so it never found one; install this version by hand once and updates arrive on their own again. The About credit and the links in the README and notices point at the real repository again too.
+
 ## [1.0.0] - 2026-10-21
 ### Added
 - A way to measure speed on your own PC: `tools\measure-performance.ps1` opens Aether a few times and reports how long the window takes to appear, and with `-Video` plays a clip and reports dropped frames and memory clean-up pauses. Aether only records these timings when the script asks it to.

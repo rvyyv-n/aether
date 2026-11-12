@@ -48,7 +48,7 @@ For components distributed in binary form under the GNU General Public License (
 > - **FFmpeg Gyan.dev Build Scripts & Patches:** https://www.gyan.dev/ffmpeg/builds/  
 > - **mpv Source Code:** https://github.com/mpv-player/mpv  
 > - **mpv-winbuild-cmake Toolchain:** https://github.com/shinchiro/mpv-winbuild-cmake  
-> - **Aether Project Source Inquiries:** https://github.com/aether-player/aether/issues
+> - **Aether Project Source Inquiries:** https://github.com/rvyyv-n/aether/issues
 
 ---
 
