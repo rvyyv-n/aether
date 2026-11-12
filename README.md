@@ -39,37 +39,80 @@
 
 Most players are either heavy and slow to respond, or fast but dated. Aether is a small, native Windows 11 player with no web layer in between. Seeking, scrubbing and frame stepping feel immediate, even on 144–360 Hz game recordings.
 
-### Play anything, instantly
+It's made for people who review footage, cut clips, and want a player that stays out of the way.
 
-- **Plays almost every container and codec** through an embedded [libmpv](https://mpv.io) engine: MKV, MP4, WebM, AVI, TS, ProRes, AV1, HEVC, H.264, VP9 and more.
-- **Hardware-accelerated decode** via Direct3D 11 (`d3d11va`) with graceful fallback to software decode.
-- **Zero-drop presentation loop**: frames flow from the decoder straight to a DirectX 11 swap chain; no managed copies in the presentation path.
-- **High-refresh sync**: reads the monitor's native refresh rate (60, 120, 144, 240, 360 Hz) and paces frames smoothly with no micro-judder.
-- **Web links**: paste a YouTube or other web video link (<kbd>Ctrl</kbd>+<kbd>V</kbd> or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd>) to stream directly at full resolution with chapter marks, subtitles, quality selection and resume. Ships with [yt-dlp](https://github.com/yt-dlp/yt-dlp) and updates it automatically.
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>🎯 Look closely</h3>
+      Step one frame at a time in either direction, scrub smoothly, and jump between chapters.
+    </td>
+    <td width="33%" valign="top">
+      <h3>✂️ Cut fast</h3>
+      Mark In and Out, then export. Fast cuts take a fraction of a second; Precise cuts land on the exact frame.
+    </td>
+    <td width="33%" valign="top">
+      <h3>📱 Watch anywhere</h3>
+      Press <kbd>S</kbd>, switch streaming on and scan the code to carry on watching on your phone.
+    </td>
+  </tr>
+</table>
 
-### Lossless clips & frame-accurate cuts
+<br />
 
-- Mark In (<kbd>I</kbd>) and Out (<kbd>O</kbd>) directly on the seek bar.
-- **Fast mode**: saves a lossless clip in under 300 ms with stream copy (`-c copy`) via FFmpeg, with keyframe start indicators showing exact boundary landings.
-- **Precise mode**: frame-accurate re-encode using your graphics card's hardware encoder (NVIDIA NVENC, Intel Quick Sync, AMD AMF, or CPU x264), with optional target file size limits (10 MB, 25 MB, 50 MB, or custom) and progress tracking.
-- Drag finished clips directly from the drawer into Discord, File Explorer, or a web browser.
-- Instant frame copy (<kbd>Ctrl</kbd>+<kbd>C</kbd>) and snapshot save (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>) at native source resolution.
+## Features
 
-### Watch on your phone
+### Playback that keeps up
 
-- Press <kbd>S</kbd> to open the phone streaming card.
-- Aether starts a lightweight local streaming server and displays a QR code.
-- Scan it with your phone's camera to watch the video on your phone over Wi-Fi with instant seeking and no transcoding delay.
-- The server stops as soon as you close the card, file, or app.
+Hardware decoding straight to the screen, paced to your monitor's real refresh rate, so 120 and 144 fps clips play every frame. Aether remembers where you left off in every file and link.
 
-### Picture in picture
+<!-- SCREENSHOT: slim bar over a playing video, or the Diagnostics panel (Ctrl+I) showing frame rate and refresh.
+<img src="docs/screenshots/playback.png" width="820" alt="Aether's slim controls over a playing video" />
+-->
 
-- Press <kbd>P</kbd> or right-click to float the video in a compact, always-on-top window.
-- The playback engine and swap chain transition smoothly with no restart or frame stutter.
+### Clips without the wait
+
+Press <kbd>I</kbd> and <kbd>O</kbd>, then <kbd>Ctrl</kbd>+<kbd>E</kbd>. **Fast** copies the stream as-is with no quality loss. **Precise** re-encodes on your graphics card (NVIDIA, Intel or AMD, with a software fallback) so the clip starts and ends on the exact frame, and can fit a size limit like 10 or 25 MB for Discord.
+
+<!-- SCREENSHOT: clip drawer open, showing Fast/Precise, size limit and a clip row exporting.
+<img src="docs/screenshots/clips.png" width="820" alt="The clip drawer with Fast and Precise export" />
+-->
+
+### Your phone as a second screen
+
+Press <kbd>S</kbd> (or pick Stream in the right-click menu), switch streaming on and scan the QR code. The open file plays in your phone's browser over your home network. Nothing leaves your network, and it stops when you switch it off, close the file or quit.
+
+<!-- SCREENSHOT: the streaming card with QR code, ideally beside a phone photo playing the same video.
+<img src="docs/screenshots/stream.png" width="820" alt="The phone streaming card with its QR code" />
+-->
+
+### A queue that follows you
+
+Open a video and the rest of its folder lines up behind it. Drop several videos or a whole folder and they play in turn. Press <kbd>Q</kbd> for the queue: drag to reorder, filter by name, shuffle or repeat. <kbd>N</kbd> and <kbd>Shift</kbd>+<kbd>N</kbd> (or your keyboard's media keys) move through it, and your audio language, subtitles, zoom and rotation carry over to the next video.
+
+### Sound you can shape
+
+A 10-band equalizer with presets like Bass boost, Vocal and Cinema. Night mode softens explosions and lifts quiet dialogue for late-night watching. Game recordings with separate game, mic and chat tracks can play them all at once, each at its own level.
+
+### Subtitles that work for you
+
+Subtitle files next to the video are found even when their names don't quite match, and the one in your language turns on by itself. Show two at once to learn a language, nudge them into sync with <kbd>[</kbd> and <kbd>]</kbd>, or press <kbd>Ctrl</kbd>+<kbd>T</kbd> for a searchable transcript and click any line to jump there.
+
+### Links too
+
+Paste a YouTube link (or one from 1,000+ other sites) with <kbd>Ctrl</kbd>+<kbd>V</kbd> and it plays, with a quality picker, subtitles and chapter marks. Turn on SponsorBlock and sponsor segments show as coloured strips on the seek bar and are skipped as they play, with a Back button if you wanted to see one after all. Live streams get a LIVE badge: scrub back through what has loaded, and click LIVE to catch up. The link helper (yt-dlp) comes built in and keeps itself up to date.
+
+### Make it look right
+
+Grades, sharpen, grain and denoise in the Video panel, with your own `.cube` looks if you have them. Zoom, rotate and adjust colour per file. Pop the video into a small always-on-top window with <kbd>P</kbd>.
+
+<!-- SCREENSHOT: Video panel open with a Grade applied.
+<img src="docs/screenshots/look.png" width="820" alt="The Video panel with a colour grade applied" />
+-->
 
 ### Feels like Windows
 
-Mica backdrop, borderless window, light and dark themes, and controls that fade away while you watch. Every shortcut can be changed, and settings are laid out like the Windows Settings app.
+Mica backdrop, borderless window, and controls that fade away while you watch. Light and dark themes are both complete, down to the frosted menus and pop-ups, and you can pick an accent colour or keep it black and white. Every shortcut can be changed, and settings are laid out like the Windows Settings app.
 
 <!-- SCREENSHOT: Settings page (Shortcuts or Video), light and dark side by side if possible.
 <img src="docs/screenshots/settings.png" width="820" alt="Aether's settings" />
@@ -106,6 +149,9 @@ Requires Windows 10 version 1809 or newer, 64-bit.
 | <kbd>Ctrl</kbd>+<kbd>O</kbd> | Open file | | <kbd>B</kbd> | Side rail |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> | Open link | | <kbd>Ctrl</kbd>+<kbd>I</kbd> | Diagnostics |
 | <kbd>Ctrl</kbd>+<kbd>V</kbd> | Play a copied link (home screen) | | <kbd>Ctrl</kbd>+<kbd>,</kbd> | Settings |
+| <kbd>N</kbd> / <kbd>Shift</kbd>+<kbd>N</kbd> | Next / previous video | | <kbd>Q</kbd> | Queue |
+| <kbd>[</kbd> / <kbd>]</kbd> | Subtitles 50 ms earlier / later | | <kbd>Ctrl</kbd>+<kbd>T</kbd> | Transcript |
+| <kbd>Shift</kbd>+<kbd>[</kbd> | Reset subtitle timing | | | |
 
 Change any of them in **Settings › Shortcuts**; Aether warns you if two actions clash.
 
@@ -149,8 +195,9 @@ You need Windows 10 1809+ with the [.NET 10 and .NET 9 SDKs](https://dotnet.micr
 Build and test the way CI does:
 
 ```powershell
-dotnet build AetherPlayer.sln -c Debug -p:Platform=x64 -warnaserror
-dotnet test  AetherPlayer.sln -c Debug -p:Platform=x64 --no-build
+.\tools\fetch-native-deps.ps1   # libmpv and ANGLE, once
+dotnet build AetherPlayer.sln -c Release -p:Platform=x64 -warnaserror
+dotnet test  AetherPlayer.sln -c Release -p:Platform=x64 --no-build
 ```
 
 `.\tools\package-standalone.ps1` builds the portable folder and zip into `dist/`. Tagged releases are built by GitHub Actions, which also makes the installer and update packages.
