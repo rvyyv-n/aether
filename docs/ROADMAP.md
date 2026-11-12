@@ -1,8 +1,14 @@
 # Aether Media Player — Roadmap
 
+## Where things stand
+
+- Latest release: **1.1.0-preview.2** (pre-release, 2026-11-12), with Passes 13 to 16. Pass 12 is partly done; Passes 17 to 19 are next.
+- Work happens on `dev`. `master` moves only through a PR from `dev` that the owner merges.
+- 1.1.0-preview.1 looked for updates in a repository that doesn't exist, so anyone on it installs preview.2 by hand once.
+
 ## Gates
 
-`dotnet build AetherPlayer.sln --no-incremental -warnaserror --no-restore -p:NuGetAudit=false` and `dotnet test AetherPlayer.sln --no-restore -p:NuGetAudit=false` must pass before a task is marked done.
+`dotnet build AetherPlayer.sln -c Release -p:Platform=x64 -warnaserror` and `dotnet test AetherPlayer.sln -c Release -p:Platform=x64 --no-build` must pass, with zero warnings and zero skipped tests, before a task is marked done.
 
 ### Pass 1: DirectX 11 Pipeline & SwapChain Interop [Completed]
 
@@ -307,7 +313,7 @@ SponsorBlock and other online skip lists are parked (see Parked): they need an o
 
 ---
 
-### v1.1: Themes & Customisation (Active Sprint)
+### Pass 12: Themes & Customisation (rest of 1.1)
 
 Design work: Opus plans architecture and tokens, Sonnet / Opus builds. Check blur over live video for stutter before shipping (ADR-0013).
 
@@ -324,11 +330,11 @@ Design work: Opus plans architecture and tokens, Sonnet / Opus builds. Check blu
 | 12.9 | Accent colour customization: Add an Accent Colour selector in Settings > Appearance with curated presets (Aether Cyan, Ice Blue, Mint, Amethyst, Sunset, Slate) and custom HEX support, dynamically binding into `AetherFillEmphasisRest` and active toggle indicators. | M | **Done** (ADR-0028: off by default; six presets and any hex colour, set live on the theme brushes. Checked on screen) |
 | 12.10 | Title bar custom caption buttons: Replace native OS caption buttons with custom WinUI Fluent caption buttons (Min, Max, Close) that smoothly fade in/out together with the player chrome during video playback instead of staying permanently 100% opaque. | M | **Done** (ADR-0027: the system buttons are hidden and the page's own fade with the chrome; they are registered as the window's caption regions, so Snap Layouts, maximise and minimise stay Windows'. Checked on screen) |
 
-**v1.1 means:** Aether can follow Windows or be set to light, dark, native Fluent, or custom accent themes with flawless blur synchronization and zero dropped frames.
+**Pass 12 means:** Aether can follow Windows or be set to light, dark, native Fluent, or custom accent themes with flawless blur synchronization and zero dropped frames.
 
 ---
 
-### Pass 13: Playlist, Queue & Folder Playback Engine (v1.2)
+### Pass 13: Playlist, Queue & Folder Playback Engine (shipped in 1.1.0-preview.2)
 
 One-shot target for Opus: UI-agnostic queue store, folder auto-discovery, smooth auto-advance, and sliding playlist drawer.
 
@@ -345,7 +351,7 @@ One-shot target for Opus: UI-agnostic queue store, folder auto-discovery, smooth
 
 ---
 
-### Pass 14: Advanced Audio Suite — Equalizer, Compressor & Multi-Track Mixer (v1.3)
+### Pass 14: Advanced Audio Suite — Equalizer, Compressor & Multi-Track Mixer (shipped in 1.1.0-preview.2)
 
 One-shot target for Opus: Real-time libmpv audio filter graphs (`lavfi`), 10-band graphic EQ, loudness normalization, and OBS multi-track VoD mixing.
 
@@ -361,7 +367,7 @@ One-shot target for Opus: Real-time libmpv audio filter graphs (`lavfi`), 10-ban
 
 ---
 
-### Pass 15: Subtitle Intelligence & Dual Subtitles (v1.4)
+### Pass 15: Subtitle Intelligence & Dual Subtitles (shipped in 1.1.0-preview.2)
 
 One-shot target for Opus: Automatic loose-matching of external subtitle files, dual simultaneous subtitles (`secondary-sid`), and interactive searchable transcript timeline.
 
@@ -377,7 +383,7 @@ One-shot target for Opus: Automatic loose-matching of external subtitle files, d
 
 ---
 
-### Pass 16: SponsorBlock & Web Streaming Enhancements (v1.5)
+### Pass 16: SponsorBlock & Web Streaming Enhancements (shipped in 1.1.0-preview.2)
 
 One-shot target for Opus: Opt-in SponsorBlock skip engine, visual segment markers on `PrecisionSeekBar`, and live stream DVR buffer.
 
@@ -393,7 +399,7 @@ One-shot target for Opus: Opt-in SponsorBlock skip engine, visual segment marker
 
 ---
 
-### Pass 17: DirectX 11 10-bit HDR Pipeline & GPU Diagnostics (v1.6)
+### Pass 17: DirectX 11 10-bit HDR Pipeline & GPU Diagnostics
 
 One-shot target for Opus: `Aether.Core.Interop` DirectX 11 swap chain upgrade, HDR10 wide color gamut metadata pass-through, and real-time GPU frame render time queries.
 
@@ -409,7 +415,7 @@ One-shot target for Opus: `Aether.Core.Interop` DirectX 11 swap chain upgrade, H
 
 ---
 
-### Pass 18: PvP Frame Analysis & Side-by-Side Dual Clip Comparison (v1.7)
+### Pass 18: PvP Frame Analysis & Side-by-Side Dual Clip Comparison
 
 One-shot target for Opus: Multi-surface synchronization in `Aether.PvP.Review`, synchronized dual-video playback, and paused frame drawing annotations.
 
@@ -425,7 +431,7 @@ One-shot target for Opus: Multi-surface synchronization in `Aether.PvP.Review`, 
 
 ---
 
-### Pass 19: End-to-End UI Automation Test Suite with FlaUI (v1.8)
+### Pass 19: End-to-End UI Automation Test Suite with FlaUI
 
 One-shot target for Opus: Automated integration test harness verifying the unpackaged WinUI 3 app, window lifecycle, and controls.
 
