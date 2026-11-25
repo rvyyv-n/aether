@@ -61,6 +61,18 @@ public sealed partial class MainPage
         TranscriptPane.CloseRequested += (_, _) => CloseSidePanel();
         TranscriptPane.SeekRequested += (_, seconds) => OnSeekRequested(seconds, dragging: false);
         SideLayer.RenderTransform = _sideOffset;
+        ApplySideLookMode();
+    }
+
+    private void ApplySideLookMode()
+    {
+        if (SideLayer is null)
+        {
+            return;
+        }
+        var radius = new CornerRadius(LookCornerRadii.For(_nativeLook ? LookModes.Native : LookModes.Aether).SidePanel);
+        QueueDrawer.SetCardCornerRadius(radius);
+        TranscriptPane.SetCardCornerRadius(radius);
     }
 
     private bool IsSidePanelAvailable => !_settingsShown && !_tour.IsActive && !IsPictureInPicture && _openUrl.Stage != OpenUrlStage.Editing;

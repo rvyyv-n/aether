@@ -11,6 +11,7 @@ internal static unsafe partial class User32
     public const uint WM_COMMAND = 0x0111;
     public const uint WM_SIZING = 0x0214;
     public const uint WM_DISPLAYCHANGE = 0x007E;
+    public const uint WM_DPICHANGED = 0x02E0;
 
     public const uint MONITOR_DEFAULTTONEAREST = 2;
     public const uint ENUM_CURRENT_SETTINGS = 0xFFFFFFFF;

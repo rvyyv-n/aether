@@ -13,6 +13,8 @@ public sealed record AetherSettings
     public bool TourSeen { get; init; }
     /// <summary><c>auto</c> (follows Windows), <c>light</c> or <c>dark</c>.</summary>
     public string Theme { get; init; } = "auto";
+    /// <summary><c>aether</c> (custom glass and Mica Alt) or <c>native</c> (Windows Acrylic, system accent fallback, 8 px corners) (12.2).</summary>
+    public string LookMode { get; init; } = LookModes.Aether;
     /// <summary><c>none</c>, an <see cref="AccentPalette"/> preset id or <c>#RRGGBB</c> (12.9).</summary>
     public string Accent { get; init; } = AccentPalette.None;
 
@@ -29,6 +31,8 @@ public sealed record AetherSettings
     public bool AlwaysOnTop { get; init; }
     /// <summary>Keep the display awake while a file plays.</summary>
     public bool PreventSleep { get; init; } = true;
+    /// <summary>Serialised visibility and order of optional player-bar controls (<see cref="TransportBarLayout"/>) (12.3).</summary>
+    public string TransportBarControls { get; init; } = TransportBarLayout.DefaultValue;
 
     // Video
     /// <summary><c>efficient</c>, <c>balanced</c> or <c>high</c>.</summary>

@@ -24,6 +24,10 @@ public sealed partial class MainPage
         {
             PipChrome.IsHitTestVisible = _chromeShown;
             _fader?.Fade(PipChrome, _chromeShown);
+            if (_nativeLook && PipPlayPauseButton is not null)
+            {
+                PipPlayPauseButton.CornerRadius = new CornerRadius(LookCornerRadii.Native.PlayButton);
+            }
         }
     }
 

@@ -42,6 +42,19 @@ public static class AccentPalette
         return value.StartsWith('#') && TryParseHex(value, out AccentColor color) ? color : null;
     }
 
+    /// <summary>
+    /// The accent colour to actually apply: an explicit preset or custom hex always wins; otherwise Native look mode
+    /// uses Windows' <paramref name="systemAccent"/> while Aether mode stays monochrome (<c>null</c>).
+    /// </summary>
+    public static AccentColor? ResolveEffective(string? accentSetting, bool nativeLook, AccentColor? systemAccent)
+    {
+        if (!string.IsNullOrWhiteSpace(accentSetting) && Resolve(accentSetting) is { } explicitAccent)
+        {
+            return explicitAccent;
+        }
+        return nativeLook ? systemAccent : null;
+    }
+
     /// <summary>What to store for what the user typed or picked: <c>none</c>, a preset id or <c>#RRGGBB</c>; null when it is neither.</summary>
     public static string? Normalize(string text)
     {

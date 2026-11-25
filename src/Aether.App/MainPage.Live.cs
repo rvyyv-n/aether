@@ -22,6 +22,7 @@ public sealed partial class MainPage
     private DispatcherQueueTimer? _liveTimer;
     private Storyboard? _livePulse;
     private bool _livePulsing;
+    private bool _liveAtEdge;
 
     private void InitializeLive() => LiveText.Text = AppStrings.Get("Transport_Live");
 
@@ -120,11 +121,20 @@ public sealed partial class MainPage
 
     private void ShowLiveEdge(bool atEdge)
     {
-        LiveDot.Fill = ThemeTokens.Get<Brush>(LiveDot, atEdge ? "AetherLiveBrush" : "AetherTextTertiaryBrush");
+        _liveAtEdge = atEdge;
+        RefreshLiveEdgeAppearance();
         string label = AppStrings.Get(atEdge ? "Transport_LiveNow" : "Transport_GoLive");
         ToolTipService.SetToolTip(LiveBadge, label);
         AutomationProperties.SetName(LiveBadge, label);
         SetLivePulse(atEdge && Motion.AnimationsEnabled);
+    }
+
+    private void RefreshLiveEdgeAppearance()
+    {
+        if (_isLive)
+        {
+            LiveDot.Fill = ThemeTokens.Get<Brush>(LiveDot, _liveAtEdge ? "AetherLiveBrush" : "AetherTextTertiaryBrush");
+        }
     }
 
     private void SetLivePulse(bool on)

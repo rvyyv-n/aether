@@ -17,6 +17,9 @@
             <settings:SettingsRow x:Name="ThemeRow" Glyph="&#xE790;">
                 <ListBox x:Name="ThemeSegmented" Style="{StaticResource AetherSegmentedStyle}" />
             </settings:SettingsRow>
+            <settings:SettingsRow x:Name="LookModeRow" Glyph="&#xE7F4;">
+                <ListBox x:Name="LookModeSegmented" Style="{StaticResource AetherSegmentedStyle}" />
+            </settings:SettingsRow>
             <settings:SettingsRow x:Name="AccentRow" Glyph="&#xE771;">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <ListBox x:Name="AccentSwatches" Style="{StaticResource AetherSegmentedStyle}">
@@ -28,7 +31,13 @@
                         <ListBoxItem Tag="sunset"><Ellipse Style="{StaticResource AccentSwatchStyle}" /></ListBoxItem>
                         <ListBoxItem Tag="slate"><Ellipse Style="{StaticResource AccentSwatchStyle}" /></ListBoxItem>
                     </ListBox>
-                    <TextBox x:Name="AccentHex" Width="96" VerticalAlignment="Center" PlaceholderText="#RRGGBB" />
+                    <TextBox
+                        x:Name="AccentHex"
+                        Width="96"
+                        VerticalAlignment="Center"
+                        IsSpellCheckEnabled="False"
+                        PlaceholderText="#RRGGBB"
+                        Style="{StaticResource AetherSettingsTextBoxStyle}" />
                 </StackPanel>
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="BatterySaverRow" Glyph="&#xE850;">

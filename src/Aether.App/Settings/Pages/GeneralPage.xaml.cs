@@ -21,6 +21,10 @@ public sealed partial class GeneralPage : Page
              new("light", AppStrings.Get("Settings_Theme_Light")),
              new("dark", AppStrings.Get("Settings_Theme_Dark"))],
             "Settings_Theme_Title", "Settings_Theme_Description");
+        binder.Choose(LookModeRow, LookModeSegmented, SettingKeys.LookMode,
+            [new(LookModes.Aether, AppStrings.Get("Settings_LookMode_Aether")),
+             new(LookModes.Native, AppStrings.Get("Settings_LookMode_Native"))],
+            "Settings_LookMode_Title", "Settings_LookMode_Description");
         BindAccent(binder);
         binder.Toggle(BatterySaverRow, BatterySaverToggle, SettingKeys.BatterySaver, "Settings_BatterySaver_Title", "Settings_BatterySaver_Description");
         binder.Toggle(OpenInRunningWindowRow, OpenInRunningWindowToggle, SettingKeys.OpenInRunningWindow, "Settings_SingleInstance_Title", "Settings_SingleInstance_Description");

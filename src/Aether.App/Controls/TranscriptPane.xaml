@@ -123,6 +123,8 @@
             <TextBox
                 x:Name="SearchBox"
                 Grid.Row="1"
+                Width="NaN"
+                HorizontalAlignment="Stretch"
                 Style="{StaticResource AetherSettingsTextBoxStyle}"
                 TextChanged="OnSearchChanged" />
 

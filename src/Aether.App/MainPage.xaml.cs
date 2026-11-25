@@ -103,11 +103,20 @@ public sealed partial class MainPage : Page
     private string? _lastDurationText;
     private bool _openUrlOverlayWired;
     private bool _toastLayerWired;
+    private bool _nativeLook;
 
     public MainPage()
     {
         InitializeComponent();
-        ActualThemeChanged += (_, _) => Render();
+        ActualThemeChanged += (_, _) =>
+        {
+            Render();
+            if (IsOpenUrlShown)
+            {
+                RenderOpenUrl();
+            }
+        };
+        TitleBar.ActualThemeChanged += (_, _) => ApplyTitleBarButtonBrushes();
         IsTabStop = true; // receives the frame-step and playback keys
         ApplyStaticStrings();
         // Light dismiss would otherwise swallow the first click on the pill, e.g. Mute under the flyout.
@@ -311,6 +320,23 @@ public sealed partial class MainPage : Page
                 Render();
             }
         });
+
+    /// <summary>Updates surface corner radii between Aether glass and Native 8 px mode (12.2).</summary>
+    internal void ApplyLookMode(bool native)
+    {
+        _nativeLook = native;
+        LookCornerRadii radii = LookCornerRadii.For(native ? LookModes.Native : LookModes.Aether);
+        HeroTile.CornerRadius = new CornerRadius(radii.Tile);
+        ApplyBarLookMode(radii);
+        ApplyRailLookMode(radii);
+        ApplySideLookMode();
+        ApplyClipLookMode();
+        if (PipPlayPauseButton is not null)
+        {
+            PipPlayPauseButton.CornerRadius = new CornerRadius(native ? radii.PlayButton : 24);
+        }
+        PostBackdropRegion();
+    }
 
     public PlayerSession? Session => _session;
 
@@ -1305,7 +1331,7 @@ public sealed partial class MainPage : Page
         {
             return;
         }
-        OpenUrlOverlay.RequestedTheme = HasVideo ? ElementTheme.Dark : ElementTheme.Default;
+        OpenUrlOverlay.RequestedTheme = ElementTheme.Default;
         OpenUrlBox.Text = _openUrl.Text;
         if (_fader is null)
         {
@@ -2028,6 +2054,9 @@ public sealed partial class MainPage : Page
         VideoHost.Background = (fullScreen || pip) && hasVideo
             ? ThemeTokens.Get<Brush>(VideoHost, "AetherSurfaceLetterboxBrush")
             : null;
+        ElementTheme dropTheme = hasVideo && _dragging ? ElementTheme.Dark : ElementTheme.Default;
+        HomeView.RequestedTheme = dropTheme;
+        DropOutline.RequestedTheme = dropTheme;
         HomeView.Visibility = !_settingsShown && (!hasVideo || _dragging) ? Visibility.Visible : Visibility.Collapsed;
         DropScrim.Visibility = hasVideo && _dragging ? Visibility.Visible : Visibility.Collapsed;
         DropOutline.Visibility = _dragging ? Visibility.Visible : Visibility.Collapsed;
@@ -2089,6 +2118,7 @@ public sealed partial class MainPage : Page
         ToolTipService.SetToolTip(FullScreenButton, fullScreen ? AppStrings.Get("Transport_ExitFullScreen") : Tip("Transport_FullScreen", ShortcutAction.FullScreen));
 
         UpdateTaskbar(fileName);
+        UpdateChapterButtons();
         RenderHome(vm);
         RenderLanStream();
 

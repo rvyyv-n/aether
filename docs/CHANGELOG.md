@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Live GPU frame render time (ms) in the Diagnostics overlay (`Ctrl+I`) via non-blocking Direct3D 11 timestamp queries (`D3D11GpuTimer`).
 - Expanded performance benchmarking (`tools/measure-performance.ps1` & `PerfLog`) with working-set/private memory footprint, GPU frame time, backdrop blur pass duration, and display refresh rate.
 - Global Windows media controls (SMTC): hardware media keys (Play/Pause, Next, Previous, Stop) now work even when Aether is in the background, and Windows 11 Quick Settings and the lock screen show the live title, source, playback state and a seekable timeline.
+- **Native look mode** (`Settings > General`): switch between Aether's frosted glass palette and standard Windows 11 Desktop Acrylic backdrops, automatic Windows `SystemAccentColor` resolution, and 8 px system corner radii across surfaces and GPU backdrop blur.
+- **Player bar customisation** (`Settings > Playback`): show/hide and reorder optional transport buttons (Speed, Quality, ±10 s Skip, Frame Step, Tracks, A-B Loop, Always on Top, and Chapter Skip) while preserving centered Play/Pause geometry.
+- **Phone streaming v2** (`/watch`): full-bleed mobile player shell with auto-hiding chrome, horizontal seek & vertical volume touch HUDs, custom 44 px scrubber bar, playback speed/mute/fullscreen/keyboard controls, lock-screen MediaSession integration, `/ping` connection quality indicator, and security hardening headers.
+
+### Changed
+- **Light mode & UI surface polish sweep**: updated bright frosted overlay tokens (`#F2FCFCFC`), removed hardcoded dark theme overrides from Diagnostics and LAN Stream overlays, unified caption close hover glyph contrast and About card borders, made card corners track the active look mode, added dark drag-over scrim clarity when dragging onto playing video, refreshed card/drawer/toast/pill indicator brushes dynamically on theme changes, and made Playlist/Transcript filter boxes fill available width cleanly.
+
+### Fixed
+- Windows taskbar thumbnail toolbar icons now rescale cleanly when moving across monitors or DPI settings (`WM_DPICHANGED`).
 
 ### Changed
 - **Faster startup & leaner UI:** Deferred 12 non-initial overlays, drawers, flyouts, tour UI, and `SettingsControls.xaml` styles until first opened, preloaded settings/window bounds earlier at launch, and removed idle clock and seek-bar layout allocations—cutting warm ReadyToRun startup from 629 ms to 347 ms (and JIT Release from 629 ms to 514 ms).

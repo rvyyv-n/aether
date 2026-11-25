@@ -55,6 +55,9 @@ public sealed partial class PlaylistDrawer : UserControl
     private readonly ObservableCollection<PlaylistDrawerRow> _rows = [];
     private PlaylistDrawerRow[] _dragStart = [];
 
+    /// <summary>Updates the card's corner radius to match Aether glass or Native look (12.2).</summary>
+    public void SetCardCornerRadius(CornerRadius radius) => Panel.CornerRadius = radius;
+
     public PlaylistDrawer()
     {
         InitializeComponent();

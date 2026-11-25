@@ -437,7 +437,7 @@
             <Color x:Key="AetherSurfaceMenuFallbackColor">#FFFAFAFA</Color>
             <Color x:Key="AetherStrokeMenuColor">#12000000</Color>
             <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>
-            <Color x:Key="AetherSurfaceOverlayStrongColor">#F20E1014</Color>
+            <Color x:Key="AetherSurfaceOverlayStrongColor">#F2FCFCFC</Color>
             <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>
             <Color x:Key="AetherSurfaceLayerColor">#80FFFFFF</Color>
             <Color x:Key="AetherSurfaceCardColor">#B3FFFFFF</Color>
@@ -486,7 +486,7 @@
             <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="#E6FCFCFC" />
             <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="#12000000" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="#80000000" />
-            <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="#F20E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceOverlayStrongBrush" Color="#F2FCFCFC" />
             <SolidColorBrush x:Key="AetherSurfaceCodeBrush" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="AetherSurfaceLayerBrush" Color="#80FFFFFF" />
             <SolidColorBrush x:Key="AetherSurfaceCardBrush" Color="#B3FFFFFF" />
@@ -1379,6 +1379,35 @@
                                     <VisualState.Setters>
                                         <Setter Target="Root.Background" Value="{ThemeResource AetherCaptionPressedBrush}" />
                                         <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource AetherTextPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="AetherCaptionCloseButtonStyle" BasedOn="{StaticResource AetherTitleBarButtonStyle}" TargetType="Button">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="Root" Background="{TemplateBinding Background}">
+                        <Grid.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Grid.BackgroundTransition>
+                        <ContentPresenter x:Name="ContentPresenter" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{ThemeResource AetherCaptionCloseHoverBrush}" />
+                                        <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource AetherCaptionCloseGlyphBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{ThemeResource AetherCaptionClosePressedBrush}" />
+                                        <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource AetherCaptionCloseGlyphBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

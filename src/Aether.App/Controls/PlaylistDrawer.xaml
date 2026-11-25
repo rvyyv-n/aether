@@ -156,6 +156,8 @@
             <TextBox
                 x:Name="FilterBox"
                 Grid.Row="1"
+                Width="NaN"
+                HorizontalAlignment="Stretch"
                 Style="{StaticResource AetherSettingsTextBoxStyle}"
                 TextChanged="OnFilterChanged" />
 

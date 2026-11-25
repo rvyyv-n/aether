@@ -44,6 +44,9 @@ public sealed partial class TranscriptPane : UserControl
     /// <summary>The card, for the blur behind it.</summary>
     public FrameworkElement Surface => Panel;
 
+    /// <summary>Updates the card's corner radius to match Aether glass or Native look (12.2).</summary>
+    public void SetCardCornerRadius(CornerRadius radius) => Panel.CornerRadius = radius;
+
     /// <summary>A line was clicked: seek to its start, in seconds.</summary>
     public event EventHandler<double>? SeekRequested;
 

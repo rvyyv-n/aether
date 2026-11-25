@@ -2026,4 +2026,70 @@
   <data name="LanStream_NotePublicNetwork" xml:space="preserve">
     <value>Windows lists this as a public network, like café or hotel Wi-Fi. Others on it could watch too, so stream only on a network you trust.</value>
   </data>
+  <data name="Settings_LookMode_Title" xml:space="preserve">
+    <value>Appearance style</value>
+  </data>
+  <data name="Settings_LookMode_Description" xml:space="preserve">
+    <value>Aether glass uses custom frosted cards and Mica Alt; Native uses Windows Acrylic, your system accent colour when Accent is None, and standard 8 px corners.</value>
+  </data>
+  <data name="Settings_LookMode_Aether" xml:space="preserve">
+    <value>Aether glass</value>
+  </data>
+  <data name="Settings_LookMode_Native" xml:space="preserve">
+    <value>Native</value>
+  </data>
+  <data name="Settings_BarControls_Title" xml:space="preserve">
+    <value>Player bar controls</value>
+  </data>
+  <data name="Settings_BarControls_Description" xml:space="preserve">
+    <value>Choose which optional controls appear on the expanded player bar and set their order. Open, Play/Pause, Volume and Full screen stay pinned for the slim bar.</value>
+  </data>
+  <data name="Settings_BarControls_Reset" xml:space="preserve">
+    <value>Reset default</value>
+  </data>
+  <data name="Settings_BarControl_Speed" xml:space="preserve">
+    <value>Playback speed</value>
+  </data>
+  <data name="Settings_BarControl_Quality" xml:space="preserve">
+    <value>Stream quality</value>
+  </data>
+  <data name="Settings_BarControl_Skip" xml:space="preserve">
+    <value>Skip back and forward (5 s)</value>
+  </data>
+  <data name="Settings_BarControl_FrameStep" xml:space="preserve">
+    <value>Frame steppers</value>
+  </data>
+  <data name="Settings_BarControl_Tracks" xml:space="preserve">
+    <value>Audio and subtitles</value>
+  </data>
+  <data name="Settings_BarControl_Loop" xml:space="preserve">
+    <value>Loop playback</value>
+  </data>
+  <data name="Settings_BarControl_AlwaysOnTop" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="Settings_BarControl_Chapters" xml:space="preserve">
+    <value>Previous and next chapter</value>
+  </data>
+  <data name="Settings_BarControl_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Settings_BarControl_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Transport_StepBack" xml:space="preserve">
+    <value>Previous frame (,)</value>
+  </data>
+  <data name="Transport_StepForward" xml:space="preserve">
+    <value>Next frame (.)</value>
+  </data>
+  <data name="Transport_Tracks" xml:space="preserve">
+    <value>Audio and subtitles</value>
+  </data>
+  <data name="Transport_PreviousChapter" xml:space="preserve">
+    <value>Previous chapter</value>
+  </data>
+  <data name="Transport_NextChapter" xml:space="preserve">
+    <value>Next chapter</value>
+  </data>
 </root>

@@ -28,5 +28,17 @@
                 <ToggleSwitch x:Name="PreventSleepToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
         </settings:SettingsGroup>
+
+        <TextBlock
+            x:Name="BarControlsHeading"
+            Margin="0,8,0,0"
+            AutomationProperties.HeadingLevel="Level2"
+            Style="{StaticResource AetherCaptionStrongTextStyle}" />
+        <settings:SettingsGroup>
+            <settings:SettingsRow x:Name="BarControlsHeaderRow" Glyph="&#xE8FD;">
+                <Button x:Name="BarControlsResetButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />
+            </settings:SettingsRow>
+        </settings:SettingsGroup>
+        <settings:SettingsGroup x:Name="BarControlsListGroup" Divided="True" />
     </StackPanel>
 </Page>

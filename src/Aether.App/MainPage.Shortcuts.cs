@@ -79,6 +79,12 @@ public sealed partial class MainPage
         ToolTipService.SetToolTip(OpenButton, Tip("Transport_OpenFile", ShortcutAction.OpenFile));
         Label(BackButton, "Transport_Back5s", ShortcutAction.SkipBack);
         Label(ForwardButton, "Transport_Forward5s", ShortcutAction.SkipForward);
+        Label(StepBackButton, "Transport_StepBack");
+        Label(StepForwardButton, "Transport_StepForward");
+        Label(LoopButton, "Menu_Loop", ShortcutAction.Loop);
+        Label(AlwaysOnTopButton, "Menu_AlwaysOnTop", ShortcutAction.AlwaysOnTop);
+        Label(PrevChapterButton, "Transport_PreviousChapter", ShortcutAction.PreviousChapter);
+        Label(NextChapterButton, "Transport_NextChapter", ShortcutAction.NextChapter);
         MoreLoopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Loop);
         MoreAlwaysOnTopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
         MoreSettingsItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Settings);

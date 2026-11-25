@@ -77,12 +77,31 @@ public sealed class KestrelStreamServer : IAsyncDisposable
         _app.MapGet("/favicon.svg", () =>
             Results.Stream(typeof(KestrelStreamServer).Assembly.GetManifestResourceStream("favicon.svg")!, "image/svg+xml"));
 
-        // Mobile Video Viewer Shell
-        _app.MapGet("/watch", (string? t) =>
+        // Lightweight connectivity probe for the phone player's connection badge; excluded from watcher counting.
+        _app.MapGet("/ping", (HttpContext context, string? t) =>
         {
             if (!IsValidToken(t)) return Results.Unauthorized();
-            string mime = _currentlyHostedFilePath is null ? "video/mp4" : ContentTypeFor(_currentlyHostedFilePath);
-            return Results.Content(WatchPage.Build(t!, mime), "text/html");
+            context.Response.Headers.CacheControl = "no-store";
+            return Results.NoContent();
+        });
+
+        // Mobile Video Viewer Shell
+        _app.MapGet("/watch", (HttpContext context, string? t) =>
+        {
+            if (!IsValidToken(t)) return Results.Unauthorized();
+            string? activePath = _currentlyHostedFilePath;
+            string mime = activePath is null ? "video/mp4" : ContentTypeFor(activePath);
+            string? fileTitle = activePath is null ? null : Path.GetFileNameWithoutExtension(activePath);
+            string title = string.IsNullOrWhiteSpace(fileTitle) ? "Aether" : fileTitle;
+
+            IHeaderDictionary headers = context.Response.Headers;
+            headers.CacheControl = "no-store";
+            headers.XContentTypeOptions = "nosniff";
+            headers["Referrer-Policy"] = "no-referrer";
+            headers.ContentSecurityPolicy =
+                "default-src 'self'; media-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'";
+
+            return Results.Content(WatchPage.Build(t!, mime, title), "text/html; charset=utf-8");
         });
 
         try

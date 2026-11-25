@@ -35,11 +35,20 @@ public sealed partial class MainPage
             SpeedMenu.Items.Add(item);
         }
         ShowSpeed(PlaybackSpeed.Normal);
-        Osd.ActualThemeChanged += (_, _) => ApplySpeedLook(); // the bar follows the app's theme, and the off-1x fill is set from code
+        Osd.ActualThemeChanged += (_, _) =>
+        {
+            // The bar follows the app's theme, so custom fills/brushes refresh on theme flips.
+            ApplySpeedLook();
+            ApplyQualityLook();
+            SyncLoop();
+            SyncAlwaysOnTop();
+            RefreshLiveEdgeAppearance();
+        };
         foreach (Button button in new[]
         {
-            OpenButton, SpeedButton, QualityButton, BackButton, PlayPauseButton, ForwardButton,
-            VolumeButton, MoreButton, FullScreenButton,
+            OpenButton, SpeedButton, QualityButton, BackButton, StepBackButton, PlayPauseButton,
+            StepForwardButton, ForwardButton, TracksButton, LoopButton, AlwaysOnTopButton,
+            PrevChapterButton, NextChapterButton, VolumeButton, MoreButton, FullScreenButton,
         })
         {
             button.PointerExited += OnTipOwnerPointerExited;
@@ -83,6 +92,7 @@ public sealed partial class MainPage
         MoreSettingsItem.Text = AppStrings.Get("Menu_Settings");
         MoreLoopItem.Text = AppStrings.Get("Menu_Loop");
         MoreAlwaysOnTopItem.Text = AppStrings.Get("Menu_AlwaysOnTop");
+        Label(TracksButton, "Transport_Tracks");
     }
 
     private static void Label(UIElement button, string key, ShortcutAction? action = null)
@@ -122,6 +132,24 @@ public sealed partial class MainPage
     private void OnBackClick(object sender, RoutedEventArgs e) => SkipBy(-TransportState.SkipSeconds);
 
     private void OnForwardClick(object sender, RoutedEventArgs e) => SkipBy(TransportState.SkipSeconds);
+
+    private void OnStepBackClick(object sender, RoutedEventArgs e)
+    {
+        if (HasVideo)
+        {
+            _session?.StepFrame(FrameStepDirection.Backward);
+        }
+    }
+
+    private void OnStepForwardClick(object sender, RoutedEventArgs e)
+    {
+        if (HasVideo)
+        {
+            _session?.StepFrame(FrameStepDirection.Forward);
+        }
+    }
+
+    private void OnTracksButtonClick(object sender, RoutedEventArgs e) => ShowTracks();
 
     private void OnBackAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
         OnTransportKey(args, () => SkipBy(-TransportState.SkipSeconds));
@@ -285,6 +313,7 @@ public sealed partial class MainPage
     {
         bool looping = _session?.ViewModel.IsLooping ?? false;
         MoreLoopItem.IsChecked = looping;
+        ApplyToggleButtonLook(LoopButton, looping);
     }
 
     private void OnAlwaysOnTopClick(object sender, RoutedEventArgs e)
@@ -300,6 +329,21 @@ public sealed partial class MainPage
         bool onTop = _host?.IsAlwaysOnTop ?? false;
         MoreAlwaysOnTopItem.IsChecked = onTop;
         CtxAlwaysOnTop.IsChecked = onTop;
+        ApplyToggleButtonLook(AlwaysOnTopButton, onTop);
+    }
+
+    private static void ApplyToggleButtonLook(Button button, bool active)
+    {
+        if (active)
+        {
+            button.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(button, "AetherFillEmphasisRestBrush");
+            button.BorderBrush = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(button, "AetherStrokeControlBrush");
+        }
+        else
+        {
+            button.ClearValue(BackgroundProperty);
+            button.ClearValue(BorderBrushProperty);
+        }
     }
 
     // In (I) and Out (O): the band on the seek bar and the export chip above the pill.
@@ -334,6 +378,15 @@ public sealed partial class MainPage
         ClipLayer.Visibility = Osd.Visibility;
         ClipLayer.IsHitTestVisible = _chromeShown;
         _fader?.Fade(ClipLayer, _chromeShown);
+        ApplyClipLookMode();
+    }
+
+    private void ApplyClipLookMode()
+    {
+        if (ClipDrawer is not null)
+        {
+            ClipDrawer.SetCardCornerRadius(new CornerRadius(LookCornerRadii.For(_nativeLook ? LookModes.Native : LookModes.Aether).ClipCard));
+        }
     }
 
     private void OnExportClipAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>

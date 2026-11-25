@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Text.Encodings.Web;
 using Aether.Server.LanHost;
 using Xunit;
 
@@ -97,6 +98,7 @@ public class ServerTests
     [Theory]
     [InlineData("/watch")]
     [InlineData("/stream/video")]
+    [InlineData("/ping")]
     public async Task MissingOrWrongToken_IsRejected(string path)
     {
         await using var s = await RunningServer.StartAsync();
@@ -227,5 +229,109 @@ public class ServerTests
         Assert.Equal(0, pixels % modules);
         Assert.True(pixels <= Math.Max(maxPixels, modules));
         Assert.True(pixels + modules > maxPixels || pixels == modules);
+    }
+
+    [Fact]
+    public async Task Ping_ValidToken_ReturnsNoContentAndDoesNotCountWatcher()
+    {
+        await using var s = await RunningServer.StartAsync();
+        Assert.Equal(0, s.Server.WatcherCount);
+
+        var res = await s.Http.GetAsync(s.Url($"/ping?t={s.Token}"));
+        Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+        Assert.True(res.Headers.CacheControl?.NoStore);
+        Assert.Equal(0, s.Server.WatcherCount);
+    }
+
+    [Fact]
+    public async Task WatchPageV2_IncludesSecurityHeadersAndMobilePlayerHooks()
+    {
+        await using var s = await RunningServer.StartAsync();
+        var res = await s.Http.GetAsync(s.Url($"/watch?t={s.Token}"));
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        Assert.True(res.Headers.CacheControl?.NoStore);
+        Assert.Equal("nosniff", Assert.Single(res.Headers.GetValues("X-Content-Type-Options")));
+        Assert.Equal("no-referrer", Assert.Single(res.Headers.GetValues("Referrer-Policy")));
+        string csp = Assert.Single(res.Headers.GetValues("Content-Security-Policy"));
+        Assert.Contains("default-src 'self'", csp);
+        Assert.Contains("media-src 'self'", csp);
+        Assert.Contains("img-src 'self' data:", csp);
+        Assert.Contains("style-src 'unsafe-inline'", csp);
+        Assert.Contains("script-src 'unsafe-inline'", csp);
+
+        string html = await res.Content.ReadAsStringAsync();
+        Assert.Contains("mediaSession", html);
+        Assert.Contains("MediaMetadata", html);
+        Assert.Contains("canPlayType", html);
+        Assert.Contains("/ping?t=", html);
+        Assert.Contains("conn-badge", html);
+        Assert.Contains("scrubber", html);
+        Assert.Contains("gesture-layer", html);
+        Assert.Contains("webkitEnterFullscreen", html);
+        Assert.Contains("role=\"alert\"", html);
+        Assert.DoesNotContain("http://", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("https://", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task WatchPage_NoActiveFile_DefaultsTitleToAether()
+    {
+        await using var s = await RunningServer.StartAsync(withFile: false);
+        string html = await s.Http.GetStringAsync(s.Url($"/watch?t={s.Token}"));
+        Assert.Contains("<title>Aether</title>", html);
+    }
+
+    [Fact]
+    public async Task WatchPage_Http_ExtractsAndEscapesValidWindowsFilenameTitle()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"aether-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        const string expectedTitle = "clip & 'quote' (1)";
+        string tempFile = Path.Combine(tempDir, $"{expectedTitle}.mp4");
+
+        try
+        {
+            await File.WriteAllBytesAsync(tempFile, [0, 1, 2, 3]);
+            await using var server = new KestrelStreamServer(0, IPAddress.Loopback);
+            server.SetActiveFile(tempFile);
+            await server.StartAsync();
+
+            using var http = new HttpClient();
+            string html = await http.GetStringAsync($"http://127.0.0.1:{server.ActivePort}/watch?t={server.SessionToken}");
+
+            string htmlEncoded = WebUtility.HtmlEncode(expectedTitle);
+            string jsEncoded = JavaScriptEncoder.Default.Encode(expectedTitle);
+            Assert.Contains($"<title>{htmlEncoded}</title>", html);
+            Assert.Contains($">{htmlEncoded}<", html);
+            Assert.Contains($"'{jsEncoded}'", html);
+            Assert.DoesNotContain(expectedTitle, html);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void WatchPage_Build_EscapesScriptBreakoutAndHtmlTags()
+    {
+        const string payload = "bad'</script><img src=x onerror=alert(1)>";
+        string html = WatchPage.Build("0123456789ABCDEF", "video/mp4", payload);
+
+        string htmlEncoded = WebUtility.HtmlEncode(payload);
+        string jsEncoded = JavaScriptEncoder.Default.Encode(payload);
+
+        Assert.Contains($"<title>{htmlEncoded}</title>", html);
+        Assert.Contains($">{htmlEncoded}<", html);
+        Assert.Contains($"'{jsEncoded}'", html);
+        Assert.DoesNotContain("<img", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("bad'</script>", html, StringComparison.OrdinalIgnoreCase);
+
+        int scriptCloseCount = html.Split("</script>", StringSplitOptions.None).Length - 1;
+        Assert.Equal(1, scriptCloseCount);
+
+        string fallbackHtml = WatchPage.Build("0123456789ABCDEF", "video/mp4");
+        Assert.Contains("<title>Aether</title>", fallbackHtml);
     }
 }

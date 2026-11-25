@@ -351,4 +351,42 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
             Assert.InRange(reds[i], 245, 255);
         }
     }
+
+    [Fact]
+    public void Draw_Native8PxAndAether24PxRadiusTransitions_KeepZeroAllocations()
+    {
+        if (!AngleTestEnvironment.IsAvailable)
+        {
+            return;
+        }
+
+        using Rig rig = Rig.Create();
+        BackdropFrame[] frames =
+        [
+            new(new BackdropRegion(220, 250, 200, 88, 24, 1f, Width, Height), 1f, (int)BackdropSlot.Bar),
+            new(new BackdropRegion(16, 150, 48, 168, 24, 1f, Width, Height), 1f, (int)BackdropSlot.Sidebar),
+        ];
+
+        for (int i = 0; i < 4; i++)
+        {
+            rig.FillSplit(320);
+            rig.Pass.Draw(frames, Width, Height);
+            rig.Bridge.Flush();
+        }
+        rig.Finish();
+
+        long allocated = GC.GetAllocatedBytesForCurrentThread();
+        for (int i = 0; i < 40; i++)
+        {
+            float radius = (i & 1) == 0 ? 8f : 24f;
+            frames[0] = new(new BackdropRegion(220, 250, 200, 88, radius, 1f, Width, Height), 1f, (int)BackdropSlot.Bar);
+            frames[1] = new(new BackdropRegion(16, 150, 48, 168, radius, 1f, Width, Height), 1f, (int)BackdropSlot.Sidebar);
+            rig.Pass.Draw(frames, Width, Height);
+            rig.Bridge.Flush();
+        }
+        rig.Finish();
+        long allocatedAfter = GC.GetAllocatedBytesForCurrentThread();
+
+        Assert.Equal(0, allocatedAfter - allocated);
+    }
 }

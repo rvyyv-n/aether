@@ -6,16 +6,16 @@ using Windows.UI;
 namespace Aether_App;
 
 /// <summary>
-/// Recolours the light and dark theme brushes for the accent setting (12.9). The brushes are changed in place, so
-/// everything drawn with them follows at once; none puts back the colours they were built with. UI thread only.
+/// Recolours the light and dark theme brushes for the accent setting (12.9) and Native look system accent fallback (12.2).
+/// The brushes are changed in place, so everything drawn with them follows at once; none puts back the colours they were built with. UI thread only.
 /// </summary>
 public static class AccentTheme
 {
     private static readonly Dictionary<SolidColorBrush, Color> Originals = [];
 
-    public static void Apply(string setting)
+    public static void Apply(string setting, AccentColor? systemAccent = null)
     {
-        AccentColor? accent = AccentPalette.Resolve(setting);
+        AccentColor? accent = AccentPalette.ResolveEffective(setting, systemAccent is not null, systemAccent);
         if (accent is null && Originals.Count == 0)
         {
             return;

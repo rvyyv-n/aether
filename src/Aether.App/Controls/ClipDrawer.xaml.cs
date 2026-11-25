@@ -52,11 +52,15 @@ public sealed partial class ClipDrawer : UserControl
     private readonly CutStartTracker _cutStartTracker = new(new KeyframeProbe(new SystemProcessRunner()));
     private double? _cutStart;
 
+    /// <summary>Updates the card's corner radius to match Aether glass or Native look (12.2).</summary>
+    public void SetCardCornerRadius(CornerRadius radius) => Panel.CornerRadius = radius;
+
     public ClipDrawer()
     {
         InitializeComponent();
         _cutStartTracker.Changed += OnCutStartFound;
         SetUpOptions();
+        ActualThemeChanged += (_, _) => RenderOptions();
         ExportButton.Content = AppStrings.Get("Transport_ExportClip");
         ShowAllButton.Content = AppStrings.Get("Clips_ShowAllInFolder");
         ClipsText.Text = AppStrings.Get("Clips_Clips");

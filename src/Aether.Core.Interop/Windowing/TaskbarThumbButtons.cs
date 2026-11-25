@@ -70,6 +70,7 @@ public sealed unsafe class TaskbarThumbButtons : IDisposable
     private nint _taskbar;
     private bool _added;
     private bool _lightTheme;
+    private uint _iconDpi;
     private bool _disposed;
 
     private bool _previousEnabled;
@@ -236,13 +237,33 @@ public sealed unsafe class TaskbarThumbButtons : IDisposable
 
     private nint IconFor(TaskbarGlyph glyph)
     {
+        uint dpi = User32.GetDpiForWindow(_hwnd);
+        if (dpi == 0)
+        {
+            dpi = 96;
+        }
+        if (_iconDpi != 0 && _iconDpi != dpi)
+        {
+            DestroyIcons();
+        }
+        _iconDpi = dpi;
+
         ref nint icon = ref _icons[(int)glyph];
         if (icon == 0)
         {
-            icon = CreateGlyphIcon(GlyphChars[(int)glyph], _lightTheme, (int)(16 * User32.GetDpiForWindow(_hwnd) / 96));
+            icon = CreateGlyphIcon(GlyphChars[(int)glyph], _lightTheme, IconSizeForDpi(dpi));
         }
         return icon;
     }
+
+    internal static int IconSizeForDpi(uint dpi)
+    {
+        uint effectiveDpi = dpi == 0 ? 96u : dpi;
+        return Math.Max(16, (int)Math.Round(16.0 * effectiveDpi / 96.0));
+    }
+
+    internal static int GlyphFontHeightForIcon(int iconSize) =>
+        Math.Max(12, (int)Math.Round(iconSize * 0.80));
 
     private void DestroyIcons()
     {
@@ -263,6 +284,7 @@ public sealed unsafe class TaskbarThumbButtons : IDisposable
     private static nint CreateGlyphIcon(char glyph, bool darkGlyph, int size)
     {
         size = Math.Max(16, size);
+        int fontHeight = GlyphFontHeightForIcon(size);
         nint dc = Gdi32.CreateCompatibleDC(0);
         if (dc == 0)
         {
@@ -279,7 +301,7 @@ public sealed unsafe class TaskbarThumbButtons : IDisposable
         byte* pixels = null;
         nint color = Gdi32.CreateDIBSection(dc, &header, 0, &pixels, 0, 0);
         nint font = Gdi32.CreateFont(
-            -size, 0, 0, 0, Gdi32.FW_NORMAL, 0, 0, 0, Gdi32.DEFAULT_CHARSET, 0, 0, Gdi32.ANTIALIASED_QUALITY, 0, "Segoe MDL2 Assets");
+            -fontHeight, 0, 0, 0, Gdi32.FW_NORMAL, 0, 0, 0, Gdi32.DEFAULT_CHARSET, 0, 0, Gdi32.ANTIALIASED_QUALITY, 0, "Segoe MDL2 Assets");
         nint mask = 0;
         nint icon = 0;
         try
@@ -333,6 +355,20 @@ public sealed unsafe class TaskbarThumbButtons : IDisposable
         return icon;
     }
 
+    private void OnDpiChanged(uint dpi)
+    {
+        if (dpi == 0 || dpi == _iconDpi)
+        {
+            return;
+        }
+        _iconDpi = dpi;
+        if (_added)
+        {
+            DestroyIcons();
+            PushButtons();
+        }
+    }
+
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     private static nint WindowProcedure(nint hwnd, uint message, nint wParam, nint lParam)
     {
@@ -363,6 +399,17 @@ public sealed unsafe class TaskbarThumbButtons : IDisposable
                 catch
                 {
                     // The window works without the buttons.
+                }
+            }
+            else if (message == User32.WM_DPICHANGED && s_instance is { } dpiOwner)
+            {
+                try
+                {
+                    dpiOwner.OnDpiChanged((uint)((uint)wParam & 0xFFFF));
+                }
+                catch
+                {
+                    // Existing icons stay valid if DPI recreation fails.
                 }
             }
             else if (message == User32.WM_NCDESTROY)

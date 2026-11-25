@@ -23,6 +23,8 @@ public sealed partial class MainPage
     private MotionTween? _bar;
     private MotionTween? _subtitleLift; // 0 with the bar hidden, 1 with it showing
     private UIElement[]? _barExtras;
+    private TransportBarControl[] _enabledBarControls = [];
+    private double _baseOsdMaxWidth;
     private double _osdSlimHeight;
     private double _osdFullHeight;
     private double _osdGap;
@@ -34,7 +36,7 @@ public sealed partial class MainPage
 
     private void InitializeBar()
     {
-        _barExtras = [SpeedButton, QualityButton, BackButton, ForwardButton, MoreButton];
+        _baseOsdMaxWidth = Osd.MaxWidth;
         _osdSlimHeight = Motion.Token("AetherSizeOsdSlimHeight");
         _osdFullHeight = Motion.Token("AetherSizeOsdHeight");
         _osdGap = Motion.Token("AetherSizeOsdGap");
@@ -50,10 +52,170 @@ public sealed partial class MainPage
         }
         foreach (UIElement button in new UIElement[]
         {
-            OpenButton, SpeedButton, QualityButton, BackButton, PlayPauseButton, ForwardButton, VolumeButton, MoreButton, FullScreenButton,
+            OpenButton, SpeedButton, QualityButton, BackButton, StepBackButton, PlayPauseButton,
+            StepForwardButton, ForwardButton, TracksButton, LoopButton, AlwaysOnTopButton,
+            PrevChapterButton, NextChapterButton, VolumeButton, MoreButton, FullScreenButton,
         })
         {
             PressFeedback.Attach(button);
+        }
+        ApplyTransportBarLayout();
+    }
+
+    /// <summary>Applies user-configured optional bar control visibility and order (12.3) while keeping slim-pill anchors fixed.</summary>
+    internal void ApplyTransportBarLayout()
+    {
+        IReadOnlyList<TransportBarItem> items = TransportBarLayout.Parse(App.Settings.Current.TransportBarControls);
+        var enabled = new List<TransportBarControl>(items.Count);
+        bool skipVisible = false;
+        bool frameStepVisible = false;
+        int skipOrder = int.MaxValue;
+        int frameStepOrder = int.MaxValue;
+        var sideItems = new List<(TransportBarControl Control, UIElement[] Buttons)>(6);
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            TransportBarItem item = items[i];
+            if (item.Visible)
+            {
+                enabled.Add(item.Control);
+            }
+            switch (item.Control)
+            {
+                case TransportBarControl.Skip:
+                    skipVisible = item.Visible;
+                    skipOrder = i;
+                    break;
+                case TransportBarControl.FrameStep:
+                    frameStepVisible = item.Visible;
+                    frameStepOrder = i;
+                    break;
+                case TransportBarControl.Speed:
+                    SpeedButton.Visibility = item.Visible ? Visibility.Visible : Visibility.Collapsed;
+                    if (item.Visible) sideItems.Add((item.Control, [SpeedButton]));
+                    break;
+                case TransportBarControl.Quality:
+                    UpdateQualityButtonVisibility(item.Visible);
+                    if (item.Visible) sideItems.Add((item.Control, [QualityButton]));
+                    break;
+                case TransportBarControl.Tracks:
+                    TracksButton.Visibility = item.Visible ? Visibility.Visible : Visibility.Collapsed;
+                    if (item.Visible) sideItems.Add((item.Control, [TracksButton]));
+                    break;
+                case TransportBarControl.Loop:
+                    LoopButton.Visibility = item.Visible ? Visibility.Visible : Visibility.Collapsed;
+                    if (item.Visible) sideItems.Add((item.Control, [LoopButton]));
+                    break;
+                case TransportBarControl.AlwaysOnTop:
+                    AlwaysOnTopButton.Visibility = item.Visible ? Visibility.Visible : Visibility.Collapsed;
+                    if (item.Visible) sideItems.Add((item.Control, [AlwaysOnTopButton]));
+                    break;
+                case TransportBarControl.Chapters:
+                    Visibility chapVis = item.Visible ? Visibility.Visible : Visibility.Collapsed;
+                    PrevChapterButton.Visibility = chapVis;
+                    NextChapterButton.Visibility = chapVis;
+                    if (item.Visible) sideItems.Add((item.Control, [PrevChapterButton, NextChapterButton]));
+                    break;
+            }
+        }
+        _enabledBarControls = [.. enabled];
+
+        Visibility skipVis = skipVisible ? Visibility.Visible : Visibility.Collapsed;
+        BackButton.Visibility = skipVis;
+        ForwardButton.Visibility = skipVis;
+        Visibility stepVis = frameStepVisible ? Visibility.Visible : Visibility.Collapsed;
+        StepBackButton.Visibility = stepVis;
+        StepForwardButton.Visibility = stepVis;
+
+        // Keep OpenButton pinned first in LeftGroup and Volume/More/FullScreen pinned last in RightGroup for slim-pill geometry.
+        int leftSideCount = sideItems.Count <= 2 ? sideItems.Count : (sideItems.Count + 1) / 2;
+        LeftGroup.Children.Clear();
+        LeftGroup.Children.Add(OpenButton);
+        for (int i = 0; i < leftSideCount; i++)
+        {
+            foreach (UIElement button in sideItems[i].Buttons)
+            {
+                LeftGroup.Children.Add(button);
+            }
+        }
+
+        CentreGroup.Children.Clear();
+        if (skipOrder <= frameStepOrder)
+        {
+            CentreGroup.Children.Add(BackButton);
+            CentreGroup.Children.Add(StepBackButton);
+            CentreGroup.Children.Add(PlayPauseButton);
+            CentreGroup.Children.Add(StepForwardButton);
+            CentreGroup.Children.Add(ForwardButton);
+        }
+        else
+        {
+            CentreGroup.Children.Add(StepBackButton);
+            CentreGroup.Children.Add(BackButton);
+            CentreGroup.Children.Add(PlayPauseButton);
+            CentreGroup.Children.Add(ForwardButton);
+            CentreGroup.Children.Add(StepForwardButton);
+        }
+
+        RightGroup.Children.Clear();
+        for (int i = leftSideCount; i < sideItems.Count; i++)
+        {
+            foreach (UIElement button in sideItems[i].Buttons)
+            {
+                RightGroup.Children.Add(button);
+            }
+        }
+        RightGroup.Children.Add(VolumeButton);
+        RightGroup.Children.Add(MoreButton);
+        RightGroup.Children.Add(FullScreenButton);
+
+        _barExtras =
+        [
+            SpeedButton, QualityButton, BackButton, StepBackButton, StepForwardButton, ForwardButton,
+            TracksButton, LoopButton, AlwaysOnTopButton, PrevChapterButton, NextChapterButton, MoreButton,
+        ];
+
+        int visibleCount = 5; // Open, Play/Pause, Volume, More, FullScreen
+        if (skipVisible) visibleCount += 2;
+        if (frameStepVisible) visibleCount += 2;
+        foreach ((TransportBarControl ctrl, UIElement[] btns) in sideItems)
+        {
+            if (ctrl == TransportBarControl.Quality && _currentWebLink is null)
+            {
+                continue;
+            }
+            visibleCount += btns.Length;
+        }
+        Osd.MaxWidth = Math.Min(760, _baseOsdMaxWidth + Math.Max(0, visibleCount - 8) * 40);
+
+        double extrasOpacity = _bar is { Value: var progress } ? Math.Clamp((progress - 0.4) / 0.6, 0, 1) : 1;
+        foreach (UIElement extra in _barExtras)
+        {
+            extra.IsHitTestVisible = _barExpanded;
+            extra.Opacity = extrasOpacity;
+        }
+
+        SyncLoop();
+        SyncAlwaysOnTop();
+        UpdateChapterButtons();
+        DispatcherQueue.TryEnqueue(MeasureBarSlides);
+    }
+
+    private bool IsBarControlEnabled(TransportBarControl control) =>
+        Array.IndexOf(_enabledBarControls, control) >= 0;
+
+    private void ApplyBarLookMode(LookCornerRadii radii)
+    {
+        Osd.CornerRadius = new CornerRadius(radii.Transport);
+        PlayPauseButton.CornerRadius = new CornerRadius(radii.PlayButton);
+        var btnRadius = new CornerRadius(radii.TransportButton);
+        foreach (Button button in new[]
+        {
+            OpenButton, SpeedButton, QualityButton, BackButton, StepBackButton, StepForwardButton, ForwardButton,
+            TracksButton, LoopButton, AlwaysOnTopButton, PrevChapterButton, NextChapterButton, VolumeButton, MoreButton, FullScreenButton,
+        })
+        {
+            button.CornerRadius = btnRadius;
         }
     }
 

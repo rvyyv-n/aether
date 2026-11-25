@@ -24,6 +24,17 @@ public sealed partial class Toast : UserControl
         ToolTipService.SetToolTip(DismissButton, dismiss);
         GotFocus += (_, _) => FocusChanged?.Invoke(this, true);
         LosingFocus += OnLosingFocus;
+        ActualThemeChanged += (_, _) => ApplyToneBrush();
+    }
+
+    private void ApplyToneBrush()
+    {
+        if (_request is null)
+        {
+            return;
+        }
+        Dot.Fill = ThemeTokens.Get<Brush>(
+            this, _request.Tone == ToastTone.Failure ? "AetherStatusWarningBrush" : "AetherStatusReadyBrush");
     }
 
     public event EventHandler? ActionInvoked;
@@ -41,8 +52,7 @@ public sealed partial class Toast : UserControl
         MessageText.Text = request.Text;
         AutomationProperties.SetName(this, request.Text);
         Dot.Visibility = request.Tone == ToastTone.Neutral ? Visibility.Collapsed : Visibility.Visible;
-        Dot.Fill = ThemeTokens.Get<Brush>(
-            this, request.Tone == ToastTone.Failure ? "AetherStatusWarningBrush" : "AetherStatusReadyBrush");
+        ApplyToneBrush();
         ActionButton.Content = request.ActionLabel;
         ActionButton.Visibility = request.HasAction ? Visibility.Visible : Visibility.Collapsed;
         if (request.ActionLabel is { } label)

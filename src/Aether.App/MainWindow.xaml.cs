@@ -10,6 +10,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.Win32;
 using Windows.Graphics;
 using Windows.UI.ViewManagement;
@@ -127,6 +128,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     private WindowRect? _pipBounds; // where the overlay was last, for the next time it opens
     private double _videoAspect;
     private bool _overVideo;
+    private bool? _nativeLookApplied;
 
     public MainWindow()
     {
@@ -449,13 +451,17 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     private void OnSettingsChanged(object? sender, SettingChangedEventArgs e)
     {
-        if (e.Key is SettingKeys.Theme or SettingKeys.Accent)
+        if (e.Key is SettingKeys.Theme or SettingKeys.LookMode or SettingKeys.Accent)
         {
             DispatcherQueue.TryEnqueue(ApplyTheme);
         }
         else if (e.Key == SettingKeys.AlwaysOnTop)
         {
             DispatcherQueue.TryEnqueue(ApplyAlwaysOnTop);
+        }
+        else if (e.Key == SettingKeys.TransportBarControls)
+        {
+            DispatcherQueue.TryEnqueue(Shell.ApplyTransportBarLayout);
         }
     }
 
@@ -561,7 +567,29 @@ public sealed partial class MainWindow : Window, IShellWindow
             "dark" => ElementTheme.Dark,
             _ => ElementTheme.Default,
         };
-        AccentTheme.Apply(App.Settings.Current.Accent);
+        bool native = LookModes.IsNative(App.Settings.Current.LookMode);
+        if (_nativeLookApplied != native)
+        {
+            _nativeLookApplied = native;
+            SystemBackdrop = native
+                ? new DesktopAcrylicBackdrop()
+                : new MicaBackdrop { Kind = Microsoft.UI.Composition.SystemBackdrops.MicaKind.BaseAlt };
+        }
+        AccentColor? systemAccent = null;
+        if (native)
+        {
+            try
+            {
+                Windows.UI.Color c = _uiSettings.GetColorValue(UIColorType.Accent);
+                systemAccent = new AccentColor(c.R, c.G, c.B);
+            }
+            catch (Exception)
+            {
+                systemAccent = null;
+            }
+        }
+        AccentTheme.Apply(App.Settings.Current.Accent, systemAccent);
+        Shell.ApplyLookMode(native);
         ApplyTaskbarIcon();
         ApplyBorder();
     }

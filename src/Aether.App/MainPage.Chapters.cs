@@ -1,6 +1,7 @@
 using Aether.Core.Interop.Mpv;
 using Aether.Core.Playback.Chapters;
 using Aether.Core.Playback.Streams;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 
 namespace Aether_App;
@@ -63,6 +64,30 @@ public sealed partial class MainPage
     {
         _chapters = chapters;
         SeekBar.Chapters = chapters;
+        UpdateChapterButtons();
+    }
+
+    private void UpdateChapterButtons()
+    {
+        bool enabled = _chapters.Count > 0 && HasVideo;
+        PrevChapterButton.IsEnabled = enabled;
+        NextChapterButton.IsEnabled = enabled;
+    }
+
+    private void OnPreviousChapterClick(object sender, RoutedEventArgs e)
+    {
+        if (_chapters.Count > 0 && _session?.ViewModel.Position is { } position)
+        {
+            UserSeekToChapter(_chapters.PreviousStart(position));
+        }
+    }
+
+    private void OnNextChapterClick(object sender, RoutedEventArgs e)
+    {
+        if (_chapters.Count > 0 && _session?.ViewModel.Position is { } position && _chapters.NextStart(position) is { } target)
+        {
+            UserSeekToChapter(target);
+        }
     }
 
     private void OnNextChapterAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)

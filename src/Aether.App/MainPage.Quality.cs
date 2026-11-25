@@ -50,9 +50,14 @@ public sealed partial class MainPage
         CancelQualitySwitch();
         _qualitySwitching = false;
         _qualityOptions = link?.Qualities ?? [];
-        QualityButton.Visibility = link is null ? Visibility.Collapsed : Visibility.Visible;
+        QualityButton.Visibility = link is not null && IsBarControlEnabled(TransportBarControl.Quality)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         ShowQuality(link?.Quality ?? QualityOptions.Auto);
     }
+
+    private void UpdateQualityButtonVisibility(bool controlEnabled) =>
+        QualityButton.Visibility = controlEnabled && _currentWebLink is not null ? Visibility.Visible : Visibility.Collapsed;
 
     private void CancelQualitySwitch()
     {

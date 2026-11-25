@@ -271,6 +271,7 @@
             <!--  Hero: tile, 16, title, 4, subtitle, 24, details (failures), 24, actions.  -->
             <StackPanel x:Name="HomeHero" Margin="16,32,16,16" VerticalAlignment="Center">
                 <Border
+                    x:Name="HeroTile"
                     Width="{StaticResource AetherSizeHeroTile}"
                     Height="{StaticResource AetherSizeHeroTile}"
                     HorizontalAlignment="Center"
@@ -767,13 +768,7 @@
                     Content="&#xE8BB;"
                     FontSize="{StaticResource AetherSizeCaptionGlyph}"
                     IsTabStop="False"
-                    Style="{StaticResource AetherTitleBarButtonStyle}">
-                    <Button.Resources>
-                        <StaticResource x:Key="AetherCaptionHoverBrush" ResourceKey="AetherCaptionCloseHoverBrush" />
-                        <StaticResource x:Key="AetherCaptionPressedBrush" ResourceKey="AetherCaptionClosePressedBrush" />
-                        <StaticResource x:Key="AetherTextPrimaryBrush" ResourceKey="AetherCaptionCloseGlyphBrush" />
-                    </Button.Resources>
-                </Button>
+                    Style="{StaticResource AetherCaptionCloseButtonStyle}" />
             </StackPanel>
         </Grid>
 
@@ -781,7 +776,6 @@
         <controls:DiagnosticsPanel
             x:Name="Diagnostics"
             x:Load="False"
-            RequestedTheme="Dark"
             Margin="16,48,0,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
@@ -1034,12 +1028,26 @@
                             </Grid>
                         </Button>
                         <Button
+                            x:Name="StepBackButton"
+                            Click="OnStepBackClick"
+                            Content="&#xE76B;"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed" />
+                        <Button
                             x:Name="PlayPauseButton"
                             Click="OnPlayPauseClick"
                             Content="&#xF5B0;"
                             Style="{StaticResource AetherPlayButtonStyle}"
                             ToolTipService.Placement="Top"
                             ToolTipService.ToolTip="Play (Space)" />
+                        <Button
+                            x:Name="StepForwardButton"
+                            Click="OnStepForwardClick"
+                            Content="&#xE76C;"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed" />
                         <Button
                             x:Name="ForwardButton"
                             Click="OnForwardClick"
@@ -1059,6 +1067,41 @@
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Spacing="4">
+                        <Button
+                            x:Name="TracksButton"
+                            Click="OnTracksButtonClick"
+                            Content="&#xE7F0;"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed" />
+                        <Button
+                            x:Name="LoopButton"
+                            Click="OnLoopClick"
+                            Content="&#xE8EE;"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed" />
+                        <Button
+                            x:Name="AlwaysOnTopButton"
+                            Click="OnAlwaysOnTopClick"
+                            Content="&#xE718;"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed" />
+                        <Button
+                            x:Name="PrevChapterButton"
+                            Click="OnPreviousChapterClick"
+                            Content="&#xE892;"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed" />
+                        <Button
+                            x:Name="NextChapterButton"
+                            Click="OnNextChapterClick"
+                            Content="&#xE893;"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed" />
                         <!--
                             Volume lives in a flyout (5.8): 72 px slider, thumb 12 white. Clicking mutes; the
                             flyout opens on hover, or pinned from right-click or Shift+F10 so the keyboard can
@@ -1112,15 +1155,6 @@
                                             ValueChanged="OnVolumeChanged"
                                             Value="100">
                                             <Slider.Resources>
-                                                <SolidColorBrush x:Key="SliderTrackFill" Color="{ThemeResource AetherFillRangeColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="{ThemeResource AetherFillRangeColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackFillPressed" Color="{ThemeResource AetherFillRangeColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackValueFill" Color="{ThemeResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="{ThemeResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="{ThemeResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderThumbBackground" Color="{ThemeResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="{ThemeResource AetherTextPrimaryColor}" />
-                                                <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="{ThemeResource AetherTextPrimaryColor}" />
                                                 <SolidColorBrush x:Key="SliderOuterThumbBackground" Color="Transparent" />
                                                 <SolidColorBrush x:Key="SliderThumbBorderBrush" Color="Transparent" />
                                                 <x:Double x:Key="SliderHorizontalThumbWidth">12</x:Double>
@@ -1323,7 +1357,7 @@
                 Padding="24"
                 VerticalAlignment="Center"
                 Background="{ThemeResource AetherSurfaceDialogBrush}"
-                BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
+                BorderBrush="{ThemeResource AetherStrokeBarBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherOverlayCornerRadius}">
                 <StackPanel TabFocusNavigation="Cycle">
@@ -1397,7 +1431,6 @@
         <Grid
             x:Name="LanStreamOverlay"
             x:Load="False"
-            RequestedTheme="Dark"
             Background="{ThemeResource AetherSurfaceScrimBrush}"
             PointerPressed="OnLanStreamOverlayPointerPressed"
             Visibility="Collapsed">
@@ -1408,7 +1441,7 @@
                 Padding="24"
                 VerticalAlignment="Center"
                 Background="{ThemeResource AetherSurfaceDialogBrush}"
-                BorderBrush="{ThemeResource AetherStrokeSurfaceBrush}"
+                BorderBrush="{ThemeResource AetherStrokeBarBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource AetherOverlayCornerRadius}">
                 <StackPanel TabFocusNavigation="Cycle">

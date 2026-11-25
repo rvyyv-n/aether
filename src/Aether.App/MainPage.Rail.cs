@@ -88,6 +88,16 @@ public sealed partial class MainPage
     private void ApplyRailShortcutLabels() =>
         ToolTipService.SetToolTip(RailSettings, Tip("Rail_Settings", ShortcutAction.Settings));
 
+    private void ApplyRailLookMode(LookCornerRadii radii)
+    {
+        Rail.CornerRadius = new CornerRadius(radii.Transport);
+        var itemRadius = new CornerRadius(radii.SidebarItem);
+        foreach (Button item in new[] { RailPlayer, RailClips, RailQueue, RailStream, RailSettings })
+        {
+            item.CornerRadius = itemRadius;
+        }
+    }
+
     private void SetPointerHeld(bool held)
     {
         if (_pointerHeld == held)

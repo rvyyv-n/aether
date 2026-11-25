@@ -10,6 +10,7 @@ public static class SettingKeys
     public const string OpenInRunningWindow = "general.openInRunningWindow";
     public const string TourSeen = "general.tourSeen";
     public const string Theme = "general.theme";
+    public const string LookMode = "general.look_mode";
     public const string Accent = "general.accent";
     public const string PreciseSeeking = "playback.preciseSeeking";
     public const string ResumePlayback = "playback.resume";
@@ -20,6 +21,7 @@ public static class SettingKeys
     public const string RememberWindowSize = "playback.rememberWindowSize";
     public const string AlwaysOnTop = "playback.alwaysOnTop";
     public const string PreventSleep = "playback.preventSleep";
+    public const string TransportBarControls = "playback.bar_controls";
     public const string QualityPreset = "video.qualityPreset";
     public const string HardwareDecoding = "video.hwdec";
     public const string SmoothMotion = "video.smoothMotion";
@@ -201,6 +203,7 @@ public static class SettingDefinitions
         Flag(SettingKeys.OpenInRunningWindow, s => s.OpenInRunningWindow, (s, v) => s with { OpenInRunningWindow = v }),
         Flag(SettingKeys.TourSeen, s => s.TourSeen, (s, v) => s with { TourSeen = v }),
         Choice(SettingKeys.Theme, s => s.Theme, (s, v) => s with { Theme = v }, false, "auto", "light", "dark"),
+        Choice(SettingKeys.LookMode, s => s.LookMode, (s, v) => s with { LookMode = v }, false, LookModes.Aether, LookModes.Native),
         new SettingDefinition<string> { Key = SettingKeys.Accent, Get = s => s.Accent, With = (s, v) => s with { Accent = v }, IsValid = AccentPalette.IsValid },
 
         Flag(SettingKeys.PreciseSeeking, s => s.PreciseSeeking, (s, v) => s with { PreciseSeeking = v }),
@@ -212,6 +215,7 @@ public static class SettingDefinitions
         Flag(SettingKeys.RememberWindowSize, s => s.RememberWindowSize, (s, v) => s with { RememberWindowSize = v }),
         Flag(SettingKeys.AlwaysOnTop, s => s.AlwaysOnTop, (s, v) => s with { AlwaysOnTop = v }),
         Flag(SettingKeys.PreventSleep, s => s.PreventSleep, (s, v) => s with { PreventSleep = v }),
+        new SettingDefinition<string> { Key = SettingKeys.TransportBarControls, Get = s => s.TransportBarControls, With = (s, v) => s with { TransportBarControls = v }, IsValid = TransportBarLayout.IsValid },
 
         Choice(SettingKeys.QualityPreset, s => s.QualityPreset, (s, v) => s with { QualityPreset = v }, false, "efficient", "balanced", "high"),
         Choice(SettingKeys.HardwareDecoding, s => s.HardwareDecoding, (s, v) => s with { HardwareDecoding = v }, true, "auto-safe", "no", "d3d11va", "d3d11va-copy"),
