@@ -84,7 +84,9 @@ public sealed partial class MainPage
         Label(LoopButton, "Menu_Loop", ShortcutAction.Loop);
         Label(AlwaysOnTopButton, "Menu_AlwaysOnTop", ShortcutAction.AlwaysOnTop);
         Label(PrevChapterButton, "Transport_PreviousChapter", ShortcutAction.PreviousChapter);
+        Label(ChaptersButton, "Transport_ChaptersList", ShortcutAction.Chapters);
         Label(NextChapterButton, "Transport_NextChapter", ShortcutAction.NextChapter);
+        MoreChaptersItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Chapters);
         MoreLoopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Loop);
         MoreAlwaysOnTopItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
         MoreSettingsItem.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Settings);
@@ -160,6 +162,7 @@ public sealed partial class MainPage
         ShortcutAction.ExportClip => OnExportClipAccelerator,
         ShortcutAction.NextChapter => OnNextChapterAccelerator,
         ShortcutAction.PreviousChapter => OnPreviousChapterAccelerator,
+        ShortcutAction.Chapters => (_, args) => OnTransportKey(args, () => ShowChaptersMenu(showEmptyToast: true)),
         ShortcutAction.NextFile => (_, args) => OnTransportKey(args, () => OpenNeighbour(forward: true)),
         ShortcutAction.PreviousFile => (_, args) => OnTransportKey(args, () => OpenNeighbour(forward: false)),
         ShortcutAction.Queue => OnQueueAccelerator,

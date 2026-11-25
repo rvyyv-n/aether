@@ -129,6 +129,7 @@ public sealed class ShortcutMap
         ShortcutAction.ExportClip => settings.ShortcutExportClip,
         ShortcutAction.NextChapter => settings.ShortcutNextChapter,
         ShortcutAction.PreviousChapter => settings.ShortcutPreviousChapter,
+        ShortcutAction.Chapters => settings.ShortcutChapters,
         ShortcutAction.NextFile => settings.ShortcutNextFile,
         ShortcutAction.PreviousFile => settings.ShortcutPreviousFile,
         ShortcutAction.Queue => settings.ShortcutQueue,

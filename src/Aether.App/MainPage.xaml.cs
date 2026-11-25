@@ -1,4 +1,5 @@
 using Aether.Core.Playback.Streams;
+using Aether.Core.Playback.Thumbnails;
 ﻿using System.ComponentModel;
 using Aether.Core.Interop;
 using Aether.Core.Interop.Mpv;
@@ -104,6 +105,7 @@ public sealed partial class MainPage : Page
     private bool _openUrlOverlayWired;
     private bool _toastLayerWired;
     private bool _nativeLook;
+    private SeekThumbnailService? _thumbnails;
 
     public MainPage()
     {
@@ -424,6 +426,7 @@ public sealed partial class MainPage : Page
             _copiedTimer.IsRepeating = false;
             _copiedTimer.Tick += OnCopiedTimerTick;
             _toasts = new ToastService(EnsureToastLayer, _fader, DispatcherQueue, () => Focus(FocusState.Programmatic));
+            _thumbnails = new SeekThumbnailService(DispatcherQueue, OnThumbnailReady);
         }
         AppToasts.Requested += OnToastRequested;
         App.Clips.Changed += OnClipsShelfChanged;
@@ -463,6 +466,8 @@ public sealed partial class MainPage : Page
         App.Shortcuts.Changed -= OnShortcutsChanged;
         AppToasts.Requested -= OnToastRequested;
         SaveResumePosition(background: false);
+        _thumbnails?.Dispose();
+        _thumbnails = null;
         ShutDownLanStream();
         CursorVisibility.Show();
         if (_session is { } session)
@@ -478,7 +483,8 @@ public sealed partial class MainPage : Page
     /// <param name="Qualities">The sizes the quality picker lists; <paramref name="Quality"/> is the one playing.</param>
     private sealed record OpenedLink(
         string WebLink, string Title, IReadOnlyDictionary<string, string>? HttpHeaders, string? AudioUrl, IReadOnlyList<StreamChapter>? Chapters,
-        IReadOnlyList<StreamSubtitle>? Subtitles, IReadOnlyList<QualityOption> Qualities, QualityOption Quality, bool IsLive = false);
+        IReadOnlyList<StreamSubtitle>? Subtitles, IReadOnlyList<QualityOption> Qualities, QualityOption Quality, bool IsLive = false,
+        IReadOnlyList<StreamStoryboard>? Storyboards = null);
 
     /// <summary>Where playback was when the engine restarted. <see cref="Position"/> is null while the file was still loading.</summary>
     private sealed record PlaybackCarryOver(
@@ -680,6 +686,7 @@ public sealed partial class MainPage : Page
         ResetSubtitleFiles(path, isLink: link is not null, carry);
         LoadSponsorSegments(link?.WebLink);
         ResetLive(link?.IsLive == true);
+        ResetThumbnails(path, link);
         ResetQuality(link);
         // A restart carries the position over by itself; only a saved position is worth announcing.
         ResetResumeOffer(carry is null ? startAt : null, resumeKey);
@@ -1473,7 +1480,7 @@ public sealed partial class MainPage : Page
             IReadOnlyList<QualityOption> qualities = QualityOptions.From(resolved.Formats);
             Open(resolved.StreamUrl, carry, new OpenedLink(
                 link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters, resolved.Subtitles,
-                qualities, QualityOptions.Resolve(savedQuality, qualities), resolved.IsLive));
+                qualities, QualityOptions.Resolve(savedQuality, qualities), resolved.IsLive, resolved.Storyboards));
 
             _ = Task.Run(() =>
             {

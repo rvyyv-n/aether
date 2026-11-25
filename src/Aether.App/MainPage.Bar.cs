@@ -54,7 +54,7 @@ public sealed partial class MainPage
         {
             OpenButton, SpeedButton, QualityButton, BackButton, StepBackButton, PlayPauseButton,
             StepForwardButton, ForwardButton, TracksButton, LoopButton, AlwaysOnTopButton,
-            PrevChapterButton, NextChapterButton, VolumeButton, MoreButton, FullScreenButton,
+            PrevChapterButton, ChaptersButton, NextChapterButton, VolumeButton, MoreButton, FullScreenButton,
         })
         {
             PressFeedback.Attach(button);
@@ -113,8 +113,9 @@ public sealed partial class MainPage
                 case TransportBarControl.Chapters:
                     Visibility chapVis = item.Visible ? Visibility.Visible : Visibility.Collapsed;
                     PrevChapterButton.Visibility = chapVis;
+                    ChaptersButton.Visibility = chapVis;
                     NextChapterButton.Visibility = chapVis;
-                    if (item.Visible) sideItems.Add((item.Control, [PrevChapterButton, NextChapterButton]));
+                    if (item.Visible) sideItems.Add((item.Control, [PrevChapterButton, ChaptersButton, NextChapterButton]));
                     break;
             }
         }
@@ -172,7 +173,7 @@ public sealed partial class MainPage
         _barExtras =
         [
             SpeedButton, QualityButton, BackButton, StepBackButton, StepForwardButton, ForwardButton,
-            TracksButton, LoopButton, AlwaysOnTopButton, PrevChapterButton, NextChapterButton, MoreButton,
+            TracksButton, LoopButton, AlwaysOnTopButton, PrevChapterButton, ChaptersButton, NextChapterButton, MoreButton,
         ];
 
         int visibleCount = 5; // Open, Play/Pause, Volume, More, FullScreen
@@ -212,7 +213,7 @@ public sealed partial class MainPage
         foreach (Button button in new[]
         {
             OpenButton, SpeedButton, QualityButton, BackButton, StepBackButton, StepForwardButton, ForwardButton,
-            TracksButton, LoopButton, AlwaysOnTopButton, PrevChapterButton, NextChapterButton, VolumeButton, MoreButton, FullScreenButton,
+            TracksButton, LoopButton, AlwaysOnTopButton, PrevChapterButton, ChaptersButton, NextChapterButton, VolumeButton, MoreButton, FullScreenButton,
         })
         {
             button.CornerRadius = btnRadius;

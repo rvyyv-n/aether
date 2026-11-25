@@ -50,6 +50,8 @@ public sealed partial class MainPage
         DurationText.Visibility = isLive ? Visibility.Collapsed : Visibility.Visible;
         if (isLive)
         {
+            SeekBar.PreviewsEnabled = false;
+            SeekBar.ClearPreview();
             EnsureLiveInitialized();
             _liveTimer!.Start();
         }

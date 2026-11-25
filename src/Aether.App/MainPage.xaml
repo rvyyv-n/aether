@@ -70,6 +70,17 @@
                 </Style>
             </Flyout.FlyoutPresenterStyle>
         </Flyout>
+
+        <!--  Chapters quick-jump menu (22.3): opened from the bar, More menu, ContextMenu or shortcut (MainPage.Chapters.cs).  -->
+        <MenuFlyout
+            x:Name="ChaptersMenu"
+            AreOpenCloseAnimationsEnabled="False"
+            SystemBackdrop="{StaticResource NoPopupBackdrop}"
+            Closed="OnChaptersMenuClosed"
+            MenuFlyoutPresenterStyle="{StaticResource AetherMenuFlyoutPresenterStyle}"
+            Opened="OnChaptersMenuOpened"
+            Placement="Top"
+            ShouldConstrainToRootBounds="True" />
     </Page.Resources>
 
     <!--  Escape is fixed. Every other shortcut is added from the shortcut settings (MainPage.Shortcuts.cs).  -->
@@ -155,6 +166,14 @@
                         Style="{StaticResource AetherMenuItemStyle}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE714;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        x:Name="CtxChapters"
+                        Click="OnChaptersMenuClick"
+                        Style="{StaticResource AetherMenuItemStyle}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8FD;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -1096,6 +1115,13 @@
                             ToolTipService.Placement="Top"
                             Visibility="Collapsed" />
                         <Button
+                            x:Name="ChaptersButton"
+                            Click="OnChaptersButtonClick"
+                            Content="&#xE8FD;"
+                            Style="{StaticResource AetherTransportIconButtonStyle}"
+                            ToolTipService.Placement="Top"
+                            Visibility="Collapsed" />
+                        <Button
                             x:Name="NextChapterButton"
                             Click="OnNextChapterClick"
                             Content="&#xE893;"
@@ -1197,6 +1223,14 @@
                                         Style="{StaticResource AetherMenuItemStyle}">
                                         <MenuFlyoutItem.Icon>
                                             <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE7F0;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutItem
+                                        x:Name="MoreChaptersItem"
+                                        Click="OnChaptersMenuClick"
+                                        Style="{StaticResource AetherMenuItemStyle}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontSize="{StaticResource AetherSizeIcon}" Glyph="&#xE8FD;" />
                                         </MenuFlyoutItem.Icon>
                                     </MenuFlyoutItem>
                                     <ToggleMenuFlyoutItem

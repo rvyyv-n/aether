@@ -12,20 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Native look mode** (`Settings > General`): switch between Aether's frosted glass palette and standard Windows 11 Desktop Acrylic backdrops, automatic Windows `SystemAccentColor` resolution, and 8 px system corner radii across surfaces and GPU backdrop blur.
 - **Player bar customisation** (`Settings > Playback`): show/hide and reorder optional transport buttons (Speed, Quality, ±10 s Skip, Frame Step, Tracks, A-B Loop, Always on Top, and Chapter Skip) while preserving centered Play/Pause geometry.
 - **Phone streaming v2** (`/watch`): full-bleed mobile player shell with auto-hiding chrome, horizontal seek & vertical volume touch HUDs, custom 44 px scrubber bar, playback speed/mute/fullscreen/keyboard controls, lock-screen MediaSession integration, `/ping` connection quality indicator, and security hardening headers.
+- **Seek-bar hover thumbnail previews**: preview frames render cleanly above `PrecisionSeekBar` on hover/drag for local videos (lazy background software decoder with LRU cache, zero main-decoder or startup impact) and YouTube links via storyboard sprite sheets, automatically disabled on live streams.
+- **Audio output device switcher**: choose any live Windows audio endpoint directly in the Audio & Subtitles flyout (`TracksPanel`) or `Settings > Audio` without changing Windows' system default, preserved across engine restarts and active audio filters.
+- **Chapter list quick-jump menu**: open a scrollable chapter list with timestamps and active-chapter checkmark from the right-click menu, transport `More` menu, optional Chapters bar button, or shortcut `C`.
 
 ### Changed
 - **Light mode & UI surface polish sweep**: updated bright frosted overlay tokens (`#F2FCFCFC`), removed hardcoded dark theme overrides from Diagnostics and LAN Stream overlays, unified caption close hover glyph contrast and About card borders, made card corners track the active look mode, added dark drag-over scrim clarity when dragging onto playing video, refreshed card/drawer/toast/pill indicator brushes dynamically on theme changes, and made Playlist/Transcript filter boxes fill available width cleanly.
-
-### Fixed
-- Windows taskbar thumbnail toolbar icons now rescale cleanly when moving across monitors or DPI settings (`WM_DPICHANGED`).
-
-### Changed
 - **Faster startup & leaner UI:** Deferred 12 non-initial overlays, drawers, flyouts, tour UI, and `SettingsControls.xaml` styles until first opened, preloaded settings/window bounds earlier at launch, and removed idle clock and seek-bar layout allocations—cutting warm ReadyToRun startup from 629 ms to 347 ms (and JIT Release from 629 ms to 514 ms).
 - **Direct-to-backbuffer video & batched backdrop blur:** Bypassed the offscreen `VideoFrameCache` render-target copy whenever no blurred overlay or fade is visible, and updated `BackdropBlurPass` with capacity-stepped targets, UV bounds clamping, and 3-phase multi-card draw batching (averaging ~0.08 ms per blur pass at 1080p).
 - **Snappier stream switching & clip export:** Cached resolved yt-dlp metadata/formats in-session (Tier 1 & Tier 2 LRU) for instant quality switches without re-running `yt-dlp`, persisted hardware encoder probes across sessions keyed by GPU driver + `ffmpeg` binary fingerprint, and switched keyframe lookup (`CutStartTracker`) to zero-decode compressed packet-header probing with an 8-file LRU interval cache.
 - Unified every project in the solution onto `.NET 10` (`net10.0`), dropping the mixed `.NET 9` library targets.
 
 ### Fixed
+- Windows taskbar thumbnail toolbar icons now rescale cleanly when moving across monitors or DPI settings (`WM_DPICHANGED`).
 - Diagnostics (`Ctrl+I`) and performance logs now accurately report fractional display refresh rates (e.g. `59.94 Hz`) and high-refresh monitor rates (`SmoothMotion` off) instead of falling back to `0 Hz`.
 
 ## [1.1.0-preview.2] - 2026-11-12

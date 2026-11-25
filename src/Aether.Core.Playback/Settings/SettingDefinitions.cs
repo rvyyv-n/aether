@@ -105,6 +105,7 @@ public static class SettingKeys
     public const string ShortcutExportClip = "shortcuts.exportClip";
     public const string ShortcutNextChapter = "shortcuts.nextChapter";
     public const string ShortcutPreviousChapter = "shortcuts.previousChapter";
+    public const string ShortcutChapters = "shortcuts.chapters";
     public const string ShortcutNextFile = "shortcuts.nextFile";
     public const string ShortcutPreviousFile = "shortcuts.previousFile";
     public const string ShortcutQueue = "shortcuts.queue";
@@ -313,6 +314,7 @@ public static class SettingDefinitions
         Shortcut(SettingKeys.ShortcutExportClip, s => s.ShortcutExportClip, (s, v) => s with { ShortcutExportClip = v }),
         Shortcut(SettingKeys.ShortcutNextChapter, s => s.ShortcutNextChapter, (s, v) => s with { ShortcutNextChapter = v }),
         Shortcut(SettingKeys.ShortcutPreviousChapter, s => s.ShortcutPreviousChapter, (s, v) => s with { ShortcutPreviousChapter = v }),
+        Shortcut(SettingKeys.ShortcutChapters, s => s.ShortcutChapters, (s, v) => s with { ShortcutChapters = v }),
         Shortcut(SettingKeys.ShortcutNextFile, s => s.ShortcutNextFile, (s, v) => s with { ShortcutNextFile = v }),
         Shortcut(SettingKeys.ShortcutPreviousFile, s => s.ShortcutPreviousFile, (s, v) => s with { ShortcutPreviousFile = v }),
         Shortcut(SettingKeys.ShortcutQueue, s => s.ShortcutQueue, (s, v) => s with { ShortcutQueue = v }),

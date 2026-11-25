@@ -49,6 +49,9 @@ public partial class App : Application
     /// <summary>The main window's display refresh rate for the playback engine; null before the window exists.</summary>
     internal static DisplayRefreshSync? DisplaySync => s_window?.DisplaySync;
 
+    /// <summary>The active playback session on the main window, or null before the engine starts.</summary>
+    internal static Aether_App.Playback.PlayerSession? Session => s_window?.Session;
+
     /// <summary>The single settings instance. Loaded on the thread pool at launch; it holds defaults until then.</summary>
     public static SettingsStore Settings { get; } = new(new FileSettingsStorage(FileSettingsStorage.DefaultPath()));
 

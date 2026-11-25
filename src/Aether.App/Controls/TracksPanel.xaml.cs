@@ -20,6 +20,9 @@ public sealed partial class TracksPanel : UserControl
     private Dictionary<int, string> _mixLabels = [];
     private bool _settingMix;
     private IReadOnlyList<MediaTrack> _audio = [];
+    private AudioDeviceList _audioDevices = AudioDeviceList.Empty;
+    private IReadOnlyList<AudioDeviceOption> _outputDeviceOptions = [];
+    private bool _updatingOutputDevice;
 
     private const string CheckGlyph = ""; // CheckMark
 
@@ -48,10 +51,14 @@ public sealed partial class TracksPanel : UserControl
         NightLabel.Text = AppStrings.Get("Settings_NightMode_Title");
         ToolTipService.SetToolTip(NightToggle, AppStrings.Get("Settings_NightMode_Description"));
         AutomationProperties.SetName(NightToggle, NightLabel.Text);
+        OutputDeviceLabel.Text = AppStrings.Get("Tracks_OutputDevice");
+        ToolTipService.SetToolTip(OutputDeviceCombo, AppStrings.Get("Settings_OutputDevice_Description"));
+        AutomationProperties.SetName(OutputDeviceCombo, OutputDeviceLabel.Text);
         Loaded += (_, _) =>
         {
             App.Settings.Changed += OnSettingsChanged;
             NightToggle.IsOn = App.Settings.Current.NightMode;
+            FillOutputDevices();
         };
         Unloaded += (_, _) => App.Settings.Changed -= OnSettingsChanged;
     }
@@ -61,6 +68,10 @@ public sealed partial class TracksPanel : UserControl
         if (e.Key == SettingKeys.NightMode)
         {
             DispatcherQueue.TryEnqueue(() => NightToggle.IsOn = App.Settings.Current.NightMode);
+        }
+        else if (e.Key == SettingKeys.AudioOutputDevice)
+        {
+            DispatcherQueue.TryEnqueue(FillOutputDevices);
         }
     }
 
@@ -105,12 +116,35 @@ public sealed partial class TracksPanel : UserControl
         MixToggleRow.Visibility = audioIds.Length >= 2 ? Visibility.Visible : Visibility.Collapsed;
         _mixLabels = tracks.Audio.ToDictionary(t => t.Id, Label);
         _audio = tracks.Audio;
+        _audioDevices = snapshot.AudioDevices ?? AudioDeviceList.Empty;
         FillMix();
         Fill(AudioRows, tracks.Audio, offRow: false);
         Fill(SubtitleRows, tracks.Subtitles, offRow: true);
         FillSecondary(tracks.Subtitles);
+        FillOutputDevices();
         AudioDelayValue.Text = TrackDelay.Format(snapshot.AudioDelay);
         SubtitleDelayValue.Text = TrackDelay.Format(snapshot.SubtitleDelay);
+    }
+
+    private void FillOutputDevices()
+    {
+        _updatingOutputDevice = true;
+        try
+        {
+            _outputDeviceOptions = AudioDevicePicker.Sync(OutputDeviceCombo, _audioDevices, _outputDeviceOptions);
+        }
+        finally
+        {
+            _updatingOutputDevice = false;
+        }
+    }
+
+    private void OnOutputDeviceChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_updatingOutputDevice)
+        {
+            AudioDevicePicker.ApplySelection(OutputDeviceCombo, _outputDeviceOptions);
+        }
     }
 
     private void Fill(StackPanel rows, IReadOnlyList<MediaTrack> tracks, bool offRow)

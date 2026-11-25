@@ -1,13 +1,17 @@
 using Aether.Core.Playback;
 using Aether.Core.Playback.Chapters;
 using Aether.Core.Playback.Streams;
+using Aether.Core.Playback.Thumbnails;
 using Aether.PvP.Review.Clipping;
 using System.Globalization;
+using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Foundation;
 
 namespace Aether_App.Controls;
@@ -46,6 +50,9 @@ public sealed partial class PrecisionSeekBar : UserControl
     private Size _bubbleSize;
     private double _barLeft;
     private bool _barLeftValid;
+    private int _lastPreviewBucket = -1;
+    private bool _inShowBubble;
+    private WriteableBitmap? _previewBitmap;
 
     public PrecisionSeekBar()
     {
@@ -67,6 +74,15 @@ public sealed partial class PrecisionSeekBar : UserControl
     /// then once more on release with <c>dragging</c> false (exact seek).
     /// </summary>
     public event Action<double, bool>? SeekRequested;
+
+    /// <summary>Raised when hover enters a new preview time bucket (<c>seconds</c>, <c>bucket</c>, <c>duration</c>).</summary>
+    public event Action<double, int, double>? PreviewRequested;
+
+    /// <summary>Raised when the hover bubble closes.</summary>
+    public event Action? PreviewClosed;
+
+    /// <summary>Enables seek-bar preview frames when a seekable video source is loaded.</summary>
+    public bool PreviewsEnabled { get; set; }
 
     /// <summary>The thumb is held: the bar and the clock follow the pointer, not playback.</summary>
     public bool IsDragging { get; private set; }
@@ -373,6 +389,63 @@ public sealed partial class PrecisionSeekBar : UserControl
         }
     }
 
+    /// <summary>Displays a decoded or storyboard preview frame inside the hover bubble.</summary>
+    public void SetPreviewFrame(int bucket, int width, int height, byte[] bgraPixels)
+    {
+        if (width <= 0 || height <= 0 || bgraPixels.Length < width * height * 4)
+        {
+            return;
+        }
+        if (!_hovering && !IsDragging)
+        {
+            return;
+        }
+        if (_lastPreviewBucket >= 0 && bucket != _lastPreviewBucket)
+        {
+            return;
+        }
+
+        if (_previewBitmap is null || _previewBitmap.PixelWidth != width || _previewBitmap.PixelHeight != height)
+        {
+            _previewBitmap = new WriteableBitmap(width, height);
+        }
+
+        using (Stream pixelStream = _previewBitmap.PixelBuffer.AsStream())
+        {
+            pixelStream.Position = 0;
+            pixelStream.Write(bgraPixels, 0, width * height * 4);
+        }
+        _previewBitmap.Invalidate();
+
+        (int displayWidth, int displayHeight) = ThumbnailTiming.FitThumbnailSize(width, height);
+        PreviewImage.Width = displayWidth;
+        PreviewImage.Height = displayHeight;
+        PreviewImage.Source = _previewBitmap;
+        PreviewFrame.Visibility = Visibility.Visible;
+        Bubble.Padding = new Thickness(4, 4, 4, 6);
+        Bubble.CornerRadius = (CornerRadius)Application.Current.Resources["AetherOverlayCornerRadius"];
+        _bubbleSize = default;
+
+        if (BubblePopup.IsOpen && !_inShowBubble)
+        {
+            ShowBubble();
+        }
+    }
+
+    /// <summary>Collapses the thumbnail preview inside the hover bubble and restores compact text padding.</summary>
+    public void ClearPreview()
+    {
+        _lastPreviewBucket = -1;
+        if (PreviewFrame.Visibility != Visibility.Collapsed)
+        {
+            PreviewFrame.Visibility = Visibility.Collapsed;
+            PreviewImage.Source = null;
+            Bubble.Padding = new Thickness(7, 3, 7, 3);
+            Bubble.CornerRadius = (CornerRadius)Application.Current.Resources["AetherControlCornerRadius"];
+            _bubbleSize = default;
+        }
+    }
+
     private void ArrangeHover()
     {
         bool line = _hovering && !IsDragging && _duration > 0 && double.IsFinite(_pointerX);
@@ -386,55 +459,87 @@ public sealed partial class PrecisionSeekBar : UserControl
 
     private void ShowBubble()
     {
-        bool show = (_hovering || IsDragging) && _duration > 0 && double.IsFinite(_pointerX) && XamlRoot is not null;
-        if (!show)
+        if (_inShowBubble)
         {
-            BubblePopup.IsOpen = false;
-            _barLeftValid = false;
             return;
         }
-        bool opening = !BubblePopup.IsOpen;
-        if (opening || _bubbleThemeDirty)
+        _inShowBubble = true;
+        try
         {
-            Bubble.RequestedTheme = ThemeTokens.AppTheme; // popup content does not inherit the bar's theme
-            _bubbleThemeDirty = false;
-        }
+            bool show = (_hovering || IsDragging) && _duration > 0 && double.IsFinite(_pointerX) && XamlRoot is not null;
+            if (!show)
+            {
+                bool wasOpen = BubblePopup.IsOpen || _lastPreviewBucket != -1;
+                BubblePopup.IsOpen = false;
+                if (wasOpen)
+                {
+                    ClearPreview();
+                    PreviewClosed?.Invoke();
+                }
+                _barLeftValid = false;
+                return;
+            }
+            bool opening = !BubblePopup.IsOpen;
+            if (opening || _bubbleThemeDirty)
+            {
+                Bubble.RequestedTheme = ThemeTokens.AppTheme; // popup content does not inherit the bar's theme
+                _bubbleThemeDirty = false;
+            }
 
-        double seconds = IsDragging ? _dragTime : SeekBarMath.TimeAt(_pointerX, BarWidth, _duration);
-        string timeText = Timecode.FormatClock(seconds, _duration);
-        int chapter = _chapters.IndexAt(seconds);
-        string title = chapter >= 0 ? _chapters[chapter].Title.Trim() : "";
-        bool textChanged = timeText != _lastBubbleTime || title != _lastBubbleChapter;
-        if (textChanged)
+            double seconds = IsDragging ? _dragTime : SeekBarMath.TimeAt(_pointerX, BarWidth, _duration);
+            string timeText = Timecode.FormatClock(seconds, _duration);
+            int chapter = _chapters.IndexAt(seconds);
+            string title = chapter >= 0 ? _chapters[chapter].Title.Trim() : "";
+            bool textChanged = timeText != _lastBubbleTime || title != _lastBubbleChapter;
+            if (textChanged)
+            {
+                _lastBubbleTime = timeText;
+                _lastBubbleChapter = title;
+                BubbleText.Text = timeText;
+                ChapterText.Text = title;
+                ChapterText.Visibility = title.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            if (PreviewsEnabled)
+            {
+                int bucket = ThumbnailTiming.QuantizeBucket(seconds, _duration).BucketIndex;
+                if (bucket != _lastPreviewBucket)
+                {
+                    _lastPreviewBucket = bucket;
+                    PreviewRequested?.Invoke(seconds, bucket, _duration);
+                }
+            }
+            else if (PreviewFrame.Visibility == Visibility.Visible)
+            {
+                ClearPreview();
+            }
+
+            if (opening)
+            {
+                BubblePopup.IsOpen = true;
+            }
+
+            if (textChanged || opening || _bubbleSize.Width <= 0)
+            {
+                Bubble.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                _bubbleSize = Bubble.DesiredSize;
+            }
+
+            if (!_barLeftValid)
+            {
+                _barLeft = Root.TransformToVisual(null).TransformPoint(default).X;
+                _barLeftValid = true;
+            }
+
+            double windowWidth = XamlRoot!.Size.Width;
+            double centre = _barLeft + X(seconds);
+            BubblePopup.HorizontalOffset = SeekBarMath.CentreWithin(centre, _bubbleSize.Width, WindowInset, windowWidth - WindowInset) - _barLeft;
+            BubblePopup.VerticalOffset = -BubbleLift - _bubbleSize.Height;
+        }
+        finally
         {
-            _lastBubbleTime = timeText;
-            _lastBubbleChapter = title;
-            BubbleText.Text = timeText;
-            ChapterText.Text = title;
-            ChapterText.Visibility = title.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            _inShowBubble = false;
         }
-
-        if (opening)
-        {
-            BubblePopup.IsOpen = true;
-        }
-
-        if (textChanged || opening || _bubbleSize.Width <= 0)
-        {
-            Bubble.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            _bubbleSize = Bubble.DesiredSize;
-        }
-
-        if (!_barLeftValid)
-        {
-            _barLeft = Root.TransformToVisual(null).TransformPoint(default).X;
-            _barLeftValid = true;
-        }
-
-        double windowWidth = XamlRoot!.Size.Width;
-        double centre = _barLeft + X(seconds);
-        BubblePopup.HorizontalOffset = SeekBarMath.CentreWithin(centre, _bubbleSize.Width, WindowInset, windowWidth - WindowInset) - _barLeft;
-        BubblePopup.VerticalOffset = -BubbleLift - _bubbleSize.Height;
     }
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)

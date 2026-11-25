@@ -29,6 +29,7 @@ public enum ShortcutAction
     ExportClip,
     NextChapter,
     PreviousChapter,
+    Chapters,
     NextFile,
     PreviousFile,
     Queue,

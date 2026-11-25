@@ -50,7 +50,17 @@ public sealed unsafe class MpvRenderContext : IDisposable
     private readonly MpvRenderParamBlock _renderParams;
     private readonly MpvOpenGLFbo* _fbo;
     private readonly int* _flipY;
+    private readonly MpvSwSize* _swSize;
+    private readonly nuint* _swStride;
+    private readonly int _swPointerIndex;
     private nint _ctx;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MpvSwSize
+    {
+        public int Width;
+        public int Height;
+    }
 
     private MpvRenderContext(MpvRenderContextHandle handle, string apiType)
     {
@@ -58,10 +68,24 @@ public sealed unsafe class MpvRenderContext : IDisposable
         _ctx = handle.DangerousGetHandle();
         ApiType = apiType;
 
-        // Preallocated once: each frame only rewrites the FBO size and flip flag in place.
-        _renderParams = new MpvRenderParamBlock(paramCapacity: 2, payloadCapacity: 64);
-        _fbo = _renderParams.Add(MpvRenderParamType.OpenGLFbo, default(MpvOpenGLFbo));
-        _flipY = _renderParams.Add(MpvRenderParamType.FlipY, 0);
+        if (string.Equals(apiType, "sw", StringComparison.Ordinal))
+        {
+            // Preallocated once for software BGRA frame extraction: width/height, stride and pixel pointer swap in place.
+            _renderParams = new MpvRenderParamBlock(paramCapacity: 4, payloadCapacity: 64);
+            _swSize = _renderParams.Add(MpvRenderParamType.SwSize, default(MpvSwSize));
+            _renderParams.AddString(MpvRenderParamType.SwFormat, "bgra"u8);
+            _swStride = _renderParams.Add<nuint>(MpvRenderParamType.SwStride, 0);
+            _swPointerIndex = _renderParams.Count;
+            _renderParams.AddExternal(MpvRenderParamType.SwPointer, null);
+        }
+        else
+        {
+            // Preallocated once: each frame only rewrites the FBO size and flip flag in place.
+            _renderParams = new MpvRenderParamBlock(paramCapacity: 2, payloadCapacity: 64);
+            _fbo = _renderParams.Add(MpvRenderParamType.OpenGLFbo, default(MpvOpenGLFbo));
+            _flipY = _renderParams.Add(MpvRenderParamType.FlipY, 0);
+            _swPointerIndex = -1;
+        }
     }
 
     /// <summary><c>MPV_RENDER_API_TYPE_*</c> this context was created with.</summary>
@@ -141,6 +165,16 @@ public sealed unsafe class MpvRenderContext : IDisposable
         return Create(mpv, create, "opengl", updateEvent);
     }
 
+    /// <summary>
+    /// Creates a <c>sw</c> software render context for CPU-backed BGRA frame decoding.
+    /// </summary>
+    public static MpvRenderContext CreateSoftware(MpvContext mpv, nint updateEvent = 0)
+    {
+        using var create = new MpvRenderParamBlock(paramCapacity: 1, payloadCapacity: 32);
+        create.AddString(MpvRenderParamType.ApiType, "sw"u8);
+        return Create(mpv, create, "sw", updateEvent);
+    }
+
     /// <summary><c>mpv_render_context_update</c>: call after the update event fires; render when <see cref="MpvRenderUpdateFlags.Frame"/> is set.</summary>
     public MpvRenderUpdateFlags Update() => (MpvRenderUpdateFlags)MpvApi.RenderContextUpdate(Ctx);
 
@@ -151,11 +185,37 @@ public sealed unsafe class MpvRenderContext : IDisposable
     public int RenderOpenGL(int fbo, int width, int height, bool flipY)
     {
         nint ctx = Ctx;
+        if (_fbo == null || _flipY == null)
+        {
+            throw new InvalidOperationException("RenderOpenGL requires an 'opengl' render context.");
+        }
         _fbo->Fbo = fbo;
         _fbo->Width = width;
         _fbo->Height = height;
         _fbo->InternalFormat = 0;
         *_flipY = flipY ? 1 : 0;
+        return MpvApi.RenderContextRender(ctx, _renderParams.Parameters);
+    }
+
+    /// <summary>
+    /// Renders the current frame in <c>bgra</c> pixel format into caller-owned memory. No allocation;
+    /// returns the mpv error code (negative on failure).
+    /// </summary>
+    public int RenderSoftware(int width, int height, nuint stride, byte* pixels)
+    {
+        nint ctx = Ctx;
+        if (_swSize == null || _swStride == null || _swPointerIndex < 0)
+        {
+            throw new InvalidOperationException("RenderSoftware requires a 'sw' render context.");
+        }
+        if (width <= 0 || height <= 0 || pixels == null)
+        {
+            return (int)MpvError.InvalidParameter;
+        }
+        _swSize->Width = width;
+        _swSize->Height = height;
+        *_swStride = stride;
+        _renderParams.Parameters[_swPointerIndex].Data = (nint)pixels;
         return MpvApi.RenderContextRender(ctx, _renderParams.Parameters);
     }
 

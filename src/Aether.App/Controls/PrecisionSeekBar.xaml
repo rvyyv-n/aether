@@ -107,6 +107,15 @@
                 CornerRadius="{StaticResource AetherControlCornerRadius}"
                 IsHitTestVisible="False">
                 <StackPanel>
+                    <Border
+                        x:Name="PreviewFrame"
+                        Margin="0,0,0,4"
+                        HorizontalAlignment="Center"
+                        Background="{ThemeResource AetherSurfaceLetterboxBrush}"
+                        CornerRadius="{StaticResource AetherControlCornerRadius}"
+                        Visibility="Collapsed">
+                        <Image x:Name="PreviewImage" Stretch="UniformToFill" />
+                    </Border>
                     <TextBlock
                         x:Name="ChapterText"
                         MaxWidth="240"

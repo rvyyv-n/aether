@@ -68,6 +68,14 @@ public class ContextMenuStateTests
         Assert.False((Playing with { HasWindow = false }).AlwaysOnTop);
     }
 
+    [Fact]
+    public void Chapters_Requires_Open_Video_And_Chapters()
+    {
+        Assert.False(Playing.Chapters);
+        Assert.True((Playing with { ChapterCount = 3 }).Chapters);
+        Assert.False((Playing with { HasVideo = false, ChapterCount = 3 }).Chapters);
+    }
+
     [Theory]
     [InlineData("holiday.mp4", @"D:\Videos\holiday.mp4", "holiday.mp4")]
     [InlineData("", @"D:\Videos\holiday.mp4", @"D:\Videos\holiday.mp4")]

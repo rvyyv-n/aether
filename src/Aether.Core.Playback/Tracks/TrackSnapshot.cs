@@ -1,12 +1,17 @@
 using System.Globalization;
 using Aether.Core.Interop.Mpv;
+using Aether.Core.Playback.Audio;
 
 namespace Aether.Core.Playback.Tracks;
 
-/// <summary>The tracks of the open file and the two delays, as mpv has them right now.</summary>
-public sealed record TrackSnapshot(TrackList Tracks, double AudioDelay, double SubtitleDelay)
+/// <summary>The tracks of the open file, output devices and the two delays, as mpv has them right now.</summary>
+public sealed record TrackSnapshot(
+    TrackList Tracks,
+    double AudioDelay,
+    double SubtitleDelay,
+    AudioDeviceList? AudioDevices = null)
 {
-    public static TrackSnapshot Empty { get; } = new(TrackList.Empty, 0, 0);
+    public static TrackSnapshot Empty { get; } = new(TrackList.Empty, 0, 0, AudioDeviceList.Empty);
 
     /// <summary>
     /// Reads the properties from the calling thread, so it must not be the event thread or the UI thread of a busy
@@ -20,7 +25,8 @@ public sealed record TrackSnapshot(TrackList Tracks, double AudioDelay, double S
             return new TrackSnapshot(
                 TrackList.Parse(context.GetPropertyString("track-list")),
                 Seconds(context.GetPropertyString("audio-delay")),
-                Seconds(context.GetPropertyString("sub-delay")));
+                Seconds(context.GetPropertyString("sub-delay")),
+                AudioDeviceList.Read(context));
         }
         catch (Exception exception) when (exception is MpvException or ObjectDisposedException)
         {

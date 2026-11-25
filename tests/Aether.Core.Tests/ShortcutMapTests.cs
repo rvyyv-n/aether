@@ -45,6 +45,7 @@ public class ShortcutMapTests
     [InlineData(ShortcutAction.ExportClip, "Ctrl+E")]
     [InlineData(ShortcutAction.NextChapter, "PageDown")]
     [InlineData(ShortcutAction.PreviousChapter, "PageUp")]
+    [InlineData(ShortcutAction.Chapters, "C")]
     [InlineData(ShortcutAction.Sidebar, "B")]
     [InlineData(ShortcutAction.Queue, "Q")]
     [InlineData(ShortcutAction.Transcript, "Ctrl+T")]

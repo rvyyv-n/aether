@@ -307,6 +307,10 @@ public sealed class PlayerSession : IDisposable
 
     private void OnSettingChanged(object? sender, SettingChangedEventArgs e)
     {
+        if (e.Key == SettingKeys.AudioOutputDevice)
+        {
+            _settingsSync.PrepareForAudioRestart();
+        }
         ApplySettings();
         SendSubtitleMargin();
         if (e.Key == SettingKeys.SmoothMotion)

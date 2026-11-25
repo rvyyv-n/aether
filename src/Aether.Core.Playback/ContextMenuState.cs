@@ -8,7 +8,8 @@ namespace Aether.Core.Playback;
 /// <param name="RecentCount">How many files and links the recents list holds.</param>
 /// <param name="ClipCount">How many saved clips the drawer would list.</param>
 /// <param name="HasWindow">The window host is attached, so Always on top has something to toggle.</param>
-public sealed record ContextMenuState(bool EngineReady, bool HasVideo, int RecentCount, int ClipCount, bool HasWindow)
+/// <param name="ChapterCount">How many chapters the open video carries.</param>
+public sealed record ContextMenuState(bool EngineReady, bool HasVideo, int RecentCount, int ClipCount, bool HasWindow, int ChapterCount = 0)
 {
     public bool OpenFile => EngineReady;
 
@@ -25,6 +26,8 @@ public sealed record ContextMenuState(bool EngineReady, bool HasVideo, int Recen
 
     /// <summary>The video flyout and the frame grabs all need a picture to work on.</summary>
     public bool Video => HasVideo;
+
+    public bool Chapters => HasVideo && ChapterCount > 0;
 
     public bool CopyFrame => HasVideo;
 

@@ -28,6 +28,7 @@ public sealed partial class MainPage
         CtxSubtitles.Text = AppStrings.Get("Menu_Subtitles");
         CtxSpeed.Text = AppStrings.Get("Menu_Speed");
         CtxVideo.Text = AppStrings.Get("Menu_Video");
+        CtxChapters.Text = AppStrings.Get("Menu_Chapters");
         CtxQueue.Text = AppStrings.Get("Menu_Queue");
         CtxTranscript.Text = AppStrings.Get("Menu_Transcript");
         CtxCopyFrame.Text = AppStrings.Get("Menu_CopyFrame");
@@ -57,6 +58,7 @@ public sealed partial class MainPage
     {
         CtxOpenFile.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenFile);
         CtxOpenUrl.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.OpenUrl);
+        CtxChapters.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Chapters);
         CtxPictureInPicture.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.PictureInPicture);
         CtxAlwaysOnTop.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.AlwaysOnTop);
         CtxDiagnostics.KeyboardAcceleratorTextOverride = App.Shortcuts.Describe(ShortcutAction.Diagnostics);
@@ -99,7 +101,8 @@ public sealed partial class MainPage
             HasVideo: HasVideo,
             RecentCount: recents.Count,
             ClipCount: App.Clips.Items.Count,
-            HasWindow: _host is not null);
+            HasWindow: _host is not null,
+            ChapterCount: _chapters.Count);
         CtxOpenFile.IsEnabled = state.OpenFile;
         CtxOpenUrl.IsEnabled = state.OpenUrl;
         CtxRecent.IsEnabled = state.Recent;
@@ -107,6 +110,7 @@ public sealed partial class MainPage
         CtxSubtitles.IsEnabled = state.Subtitles;
         CtxSpeed.IsEnabled = state.Speed;
         CtxVideo.IsEnabled = state.Video;
+        CtxChapters.IsEnabled = state.Chapters;
         CtxCopyFrame.IsEnabled = state.CopyFrame;
         CtxSaveFrame.IsEnabled = state.SaveFrame;
         CtxPictureInPicture.IsEnabled = state.PictureInPicture;
@@ -181,6 +185,7 @@ public sealed partial class MainPage
         }
         ShowTracksIfRequested();
         ShowVideoIfRequested();
+        ShowChaptersIfRequested();
     }
 
     private void OnDiagnosticsMenuClick(object sender, RoutedEventArgs e) => ToggleDiagnostics();

@@ -145,6 +145,7 @@ public sealed class ShortcutSettings
         ShortcutAction.ExportClip => "Settings_Shortcuts_ExportClip",
         ShortcutAction.NextChapter => "Settings_Shortcuts_NextChapter",
         ShortcutAction.PreviousChapter => "Settings_Shortcuts_PreviousChapter",
+        ShortcutAction.Chapters => "Settings_Shortcuts_Chapters",
         ShortcutAction.NextFile => "Settings_Shortcuts_NextFile",
         ShortcutAction.PreviousFile => "Settings_Shortcuts_PreviousFile",
         ShortcutAction.Queue => "Settings_Shortcuts_Queue",

@@ -220,6 +220,8 @@ public sealed partial class MainWindow : Window, IShellWindow
     /// <summary>The refresh rate of the monitor this window is on, for the playback engine.</summary>
     internal DisplayRefreshSync DisplaySync { get; }
 
+    internal Aether_App.Playback.PlayerSession? Session => Shell.Session;
+
     /// <summary>Opens this file as soon as the engine is ready (launch from a file or the command line).</summary>
     public void OpenWhenReady(string path) => Shell.OpenWhenReady(path);
 

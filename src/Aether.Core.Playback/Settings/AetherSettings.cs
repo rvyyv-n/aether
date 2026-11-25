@@ -176,6 +176,7 @@ public sealed record AetherSettings
     public string ShortcutExportClip { get; init; } = "";
     public string ShortcutNextChapter { get; init; } = "";
     public string ShortcutPreviousChapter { get; init; } = "";
+    public string ShortcutChapters { get; init; } = "";
     public string ShortcutNextFile { get; init; } = "";
     public string ShortcutPreviousFile { get; init; } = "";
     public string ShortcutQueue { get; init; } = "";

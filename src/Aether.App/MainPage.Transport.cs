@@ -1,5 +1,6 @@
 ﻿using Aether.Core.Playback;
 using Aether.Core.Playback.Input;
+using Aether.Core.Playback.Thumbnails;
 using Aether_App.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -23,6 +24,7 @@ public sealed partial class MainPage
     private void InitializeTransport()
     {
         SeekBar.SeekRequested += OnSeekRequested;
+        SeekBar.PreviewRequested += OnSeekPreviewRequested;
         foreach (double option in PlaybackSpeed.Options)
         {
             var item = new ToggleMenuFlyoutItem
@@ -48,7 +50,7 @@ public sealed partial class MainPage
         {
             OpenButton, SpeedButton, QualityButton, BackButton, StepBackButton, PlayPauseButton,
             StepForwardButton, ForwardButton, TracksButton, LoopButton, AlwaysOnTopButton,
-            PrevChapterButton, NextChapterButton, VolumeButton, MoreButton, FullScreenButton,
+            PrevChapterButton, ChaptersButton, NextChapterButton, VolumeButton, MoreButton, FullScreenButton,
         })
         {
             button.PointerExited += OnTipOwnerPointerExited;
@@ -89,6 +91,7 @@ public sealed partial class MainPage
         ToolTipService.SetToolTip(QualityButton, AppStrings.Get("Transport_Quality"));
         MoreAudioItem.Text = AppStrings.Get("Menu_Audio");
         MoreSubtitlesItem.Text = AppStrings.Get("Menu_Subtitles");
+        MoreChaptersItem.Text = AppStrings.Get("Menu_Chapters");
         MoreSettingsItem.Text = AppStrings.Get("Menu_Settings");
         MoreLoopItem.Text = AppStrings.Get("Menu_Loop");
         MoreAlwaysOnTopItem.Text = AppStrings.Get("Menu_AlwaysOnTop");
@@ -118,6 +121,53 @@ public sealed partial class MainPage
         ApplyChrome();
         SetPositionText(SeekBarClock(target, session.ViewModel.Duration));
         TrySend(() => session.Seek(target, dragging));
+    }
+
+    private void ResetThumbnails(string path, OpenedLink? link)
+    {
+        SeekBar.ClearPreview();
+        if (_thumbnails is null)
+        {
+            SeekBar.PreviewsEnabled = false;
+            return;
+        }
+
+        if (_isLive)
+        {
+            _thumbnails.ClearSource();
+            SeekBar.PreviewsEnabled = false;
+        }
+        else if (link is not null)
+        {
+            _thumbnails.SetStreamSource(link.Storyboards);
+            SeekBar.PreviewsEnabled = StoryboardIndex.SelectBest(link.Storyboards) is not null;
+        }
+        else
+        {
+            _thumbnails.SetLocalSource(path);
+            SeekBar.PreviewsEnabled = !string.IsNullOrEmpty(path);
+        }
+    }
+
+    private void OnSeekPreviewRequested(double seconds, int bucket, double duration)
+    {
+        if (_thumbnails is null || !HasVideo || _isLive)
+        {
+            return;
+        }
+
+        if (_thumbnails.RequestPreview(seconds, bucket, duration) is { } frame)
+        {
+            SeekBar.SetPreviewFrame(bucket, frame.Width, frame.Height, frame.BgraPixels);
+        }
+    }
+
+    private void OnThumbnailReady(int generation, int bucket, ThumbnailFrame frame)
+    {
+        if (_thumbnails is { } service && generation == service.CurrentGeneration && HasVideo && !_isLive)
+        {
+            SeekBar.SetPreviewFrame(bucket, frame.Width, frame.Height, frame.BgraPixels);
+        }
     }
 
     private void SkipBy(double seconds)
@@ -277,6 +327,7 @@ public sealed partial class MainPage
         MoreButton.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(MoreButton, "AetherFillEmphasisRestBrush");
         // The tracks flyout has nothing to list without a file, as in the right-click menu.
         MoreAudioItem.IsEnabled = MoreSubtitlesItem.IsEnabled = HasVideo;
+        MoreChaptersItem.IsEnabled = _chapters.Count > 0 && HasVideo;
         HoldForMenu(true);
         SetMenuSurface(sender, true);
     }
@@ -287,6 +338,7 @@ public sealed partial class MainPage
         HoldForMenu(false);
         SetMenuSurface(sender, false);
         ShowTracksIfRequested();
+        ShowChaptersIfRequested();
     }
 
     private void HoldForMenu(bool open)

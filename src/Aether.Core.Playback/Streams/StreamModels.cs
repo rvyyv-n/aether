@@ -41,8 +41,20 @@ public sealed record StreamFormat(
 
 public sealed record StreamSubtitle(string Language, string? Name, string Url, string Ext, bool IsAutomatic);
 
+public sealed record StoryboardFragment(string Url, double Duration);
+
+public sealed record StreamStoryboard(
+    string FormatId,
+    int TileWidth,
+    int TileHeight,
+    int Rows,
+    int Columns,
+    double? Fps,
+    IReadOnlyList<StoryboardFragment> Fragments,
+    IReadOnlyDictionary<string, string>? HttpHeaders = null);
+
 /// <summary>
-/// The list members (Chapters, Formats, Subtitles) are null when yt-dlp's JSON lacks the key
+/// The list members (Chapters, Formats, Subtitles, Storyboards) are null when yt-dlp's JSON lacks the key
 /// and empty when the key is present but holds nothing usable.
 /// </summary>
 public sealed record ResolvedStream(
@@ -57,7 +69,8 @@ public sealed record ResolvedStream(
     IReadOnlyList<StreamSubtitle>? Subtitles = null,
     string? VideoFormatId = null,
     string? AudioFormatId = null,
-    bool IsLive = false);
+    bool IsLive = false,
+    IReadOnlyList<StreamStoryboard>? Storyboards = null);
 
 public sealed class StreamResolutionException : Exception
 {

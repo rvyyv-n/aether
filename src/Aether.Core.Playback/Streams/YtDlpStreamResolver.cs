@@ -252,7 +252,8 @@ public sealed class YtDlpStreamResolver : IYtDlpStreamResolver
                 Subtitles: ParseSubtitles(root),
                 VideoFormatId: videoFormatId,
                 AudioFormatId: audioFormatId,
-                IsLive: live);
+                IsLive: live,
+                Storyboards: ParseStoryboards(root));
         }
         catch (JsonException ex)
         {
@@ -452,6 +453,91 @@ public sealed class YtDlpStreamResolver : IYtDlpStreamResolver
                 GetString(fmt, "protocol"),
                 GetBool(fmt, "has_drm")));
         }
+        return result;
+    }
+
+    private static IReadOnlyList<StreamStoryboard>? ParseStoryboards(JsonElement root)
+    {
+        if (!root.TryGetProperty("formats", out JsonElement formats))
+        {
+            return null;
+        }
+
+        var result = new List<StreamStoryboard>();
+        if (formats.ValueKind != JsonValueKind.Array)
+        {
+            return result;
+        }
+
+        foreach (JsonElement fmt in formats.EnumerateArray())
+        {
+            if (fmt.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            string? formatNote = GetString(fmt, "format_note");
+            string? ext = GetString(fmt, "ext");
+            string? protocol = GetString(fmt, "protocol");
+            if (!string.Equals(formatNote, "storyboard", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(ext, "mhtml", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(protocol, "mhtml", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string? formatId = GetString(fmt, "format_id");
+            int? width = GetInt(fmt, "width");
+            int? height = GetInt(fmt, "height");
+            int? rows = GetInt(fmt, "rows");
+            int? columns = GetInt(fmt, "columns");
+            if (string.IsNullOrEmpty(formatId)
+                || width is not > 0
+                || height is not > 0
+                || rows is not > 0
+                || columns is not > 0
+                || !fmt.TryGetProperty("fragments", out JsonElement fragments)
+                || fragments.ValueKind != JsonValueKind.Array)
+            {
+                continue;
+            }
+
+            var parsedFragments = new List<StoryboardFragment>();
+            foreach (JsonElement fragment in fragments.EnumerateArray())
+            {
+                string? fragUrl = GetString(fragment, "url");
+                double? fragDur = GetDouble(fragment, "duration");
+                if (fragUrl is { Length: > 0 }
+                    && Uri.TryCreate(fragUrl, UriKind.Absolute, out Uri? uri)
+                    && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                    && fragDur is > 0 && double.IsFinite(fragDur.Value))
+                {
+                    parsedFragments.Add(new StoryboardFragment(fragUrl, fragDur.Value));
+                }
+            }
+
+            if (parsedFragments.Count == 0)
+            {
+                continue;
+            }
+
+            double? fps = GetDouble(fmt, "fps");
+            if (fps is not > 0 || !double.IsFinite(fps.Value))
+            {
+                fps = null;
+            }
+
+            result.Add(new StreamStoryboard(
+                FormatId: formatId,
+                TileWidth: width.Value,
+                TileHeight: height.Value,
+                Rows: rows.Value,
+                Columns: columns.Value,
+                Fps: fps,
+                Fragments: parsedFragments,
+                HttpHeaders: ParseHeaders(fmt)));
+        }
+
         return result;
     }
 

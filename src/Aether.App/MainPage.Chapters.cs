@@ -1,7 +1,10 @@
 using Aether.Core.Interop.Mpv;
+using Aether.Core.Playback;
 using Aether.Core.Playback.Chapters;
 using Aether.Core.Playback.Streams;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 
 namespace Aether_App;
@@ -15,6 +18,8 @@ public sealed partial class MainPage
     private ChapterList _chapters = ChapterList.Empty;
     private IReadOnlyList<StreamChapter>? _linkChapters;
     private bool _chaptersPending;
+    private bool _showChaptersAfterMenu;
+    private FrameworkElement? _chaptersAnchor;
 
     /// <summary>Forgets the last file's chapters; the new ones load once the file plays.</summary>
     private void ResetChapters(IReadOnlyList<StreamChapter>? linkChapters)
@@ -71,7 +76,91 @@ public sealed partial class MainPage
     {
         bool enabled = _chapters.Count > 0 && HasVideo;
         PrevChapterButton.IsEnabled = enabled;
+        ChaptersButton.IsEnabled = enabled;
         NextChapterButton.IsEnabled = enabled;
+        MoreChaptersItem.IsEnabled = enabled;
+    }
+
+    private void OnChaptersMenuClick(object sender, RoutedEventArgs e)
+    {
+        _showChaptersAfterMenu = true;
+        _chaptersAnchor = MoreButton;
+    }
+
+    private void OnChaptersButtonClick(object sender, RoutedEventArgs e) =>
+        ShowChaptersMenu(showEmptyToast: true, anchor: ChaptersButton);
+
+    private void ShowChaptersIfRequested()
+    {
+        if (_showChaptersAfterMenu)
+        {
+            _showChaptersAfterMenu = false;
+            ShowChaptersMenu(showEmptyToast: false, anchor: _chaptersAnchor);
+        }
+    }
+
+    private void ShowChaptersMenu(bool showEmptyToast = false, FrameworkElement? anchor = null)
+    {
+        if (_session is null || !HasVideo || _chapters.Count == 0)
+        {
+            if (showEmptyToast && _session is not null)
+            {
+                _toasts?.Show("chapters-none", AppStrings.Get("Chapters_None"));
+            }
+            return;
+        }
+
+        double position = _session.ViewModel.Position;
+        double duration = _session.ViewModel.Duration;
+        int activeIndex = _chapters.IndexAt(position);
+        string untitled = AppStrings.Get("Chapters_Untitled");
+        var itemStyle = (Style)Application.Current.Resources["AetherToggleMenuItemStyle"];
+
+        ChaptersMenu.Items.Clear();
+        for (int i = 0; i < _chapters.Count; i++)
+        {
+            Chapter chapter = _chapters[i];
+            var item = new ToggleMenuFlyoutItem
+            {
+                Text = _chapters.DisplayTitle(i, untitled),
+                KeyboardAcceleratorTextOverride = Timecode.FormatClock(chapter.Start, duration),
+                IsChecked = i == activeIndex,
+                Tag = chapter.Start,
+                Style = itemStyle,
+            };
+            item.Click += OnChapterMenuItemClick;
+            ChaptersMenu.Items.Add(item);
+        }
+
+        FrameworkElement target = anchor is { Visibility: Visibility.Visible }
+            ? anchor
+            : (ChaptersButton.Visibility == Visibility.Visible ? ChaptersButton : MoreButton);
+        ChaptersMenu.ShowAt(target, new FlyoutShowOptions
+        {
+            Placement = FlyoutPlacementMode.Top,
+            ShowMode = FlyoutShowMode.Standard,
+        });
+    }
+
+    private void OnChapterMenuItemClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleMenuFlyoutItem { Tag: double target })
+        {
+            UserSeekToChapter(target);
+        }
+    }
+
+    private void OnChaptersMenuOpened(object? sender, object e)
+    {
+        HoldForMenu(true);
+        SetMenuSurface(sender, true);
+    }
+
+    private void OnChaptersMenuClosed(object? sender, object e)
+    {
+        HoldForMenu(false);
+        SetMenuSurface(sender, false);
+        Focus(FocusState.Programmatic);
     }
 
     private void OnPreviousChapterClick(object sender, RoutedEventArgs e)

@@ -978,8 +978,14 @@
   <data name="Settings_OutputDevice_Title" xml:space="preserve">
     <value>Output device</value>
   </data>
+  <data name="Settings_OutputDevice_Description" xml:space="preserve">
+    <value>Plays Aether's sound on this device without changing Windows' default.</value>
+  </data>
   <data name="Settings_OutputDevice_SystemDefault" xml:space="preserve">
     <value>System default</value>
+  </data>
+  <data name="Settings_OutputDevice_Unavailable" xml:space="preserve">
+    <value>{0} (unavailable)</value>
   </data>
   <data name="Settings_ExclusiveMode_Title" xml:space="preserve">
     <value>Exclusive mode</value>
@@ -2086,10 +2092,28 @@
   <data name="Transport_Tracks" xml:space="preserve">
     <value>Audio and subtitles</value>
   </data>
+  <data name="Tracks_OutputDevice" xml:space="preserve">
+    <value>Output device</value>
+  </data>
   <data name="Transport_PreviousChapter" xml:space="preserve">
     <value>Previous chapter</value>
   </data>
   <data name="Transport_NextChapter" xml:space="preserve">
     <value>Next chapter</value>
+  </data>
+  <data name="Transport_ChaptersList" xml:space="preserve">
+    <value>Chapters</value>
+  </data>
+  <data name="Menu_Chapters" xml:space="preserve">
+    <value>Chapters</value>
+  </data>
+  <data name="Chapters_Untitled" xml:space="preserve">
+    <value>Chapter {0}</value>
+  </data>
+  <data name="Chapters_None" xml:space="preserve">
+    <value>No chapters in this video</value>
+  </data>
+  <data name="Settings_Shortcuts_Chapters" xml:space="preserve">
+    <value>Chapter list</value>
   </data>
 </root>
