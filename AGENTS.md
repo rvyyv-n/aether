@@ -11,6 +11,8 @@ Aether.App is unpackaged (ADR-0017): no MSIX, Developer Mode or certificate is n
 - `.\run.ps1` (or `.\run.ps1 "path\to\video.mp4"`): incrementally builds `Aether.App` (Debug x64, warnings as errors) and starts its exe straight from the build folder.
 - `.\run.ps1 -NoBuild`: launches the existing build instantly without rebuilding.
 - `.\run.ps1 -Host "path\to\video.mp4"` (or `.\tools\host.ps1`): spins up the Kestrel LAN server on `http://localhost:8443/watch` for web browser preview testing.
+- `Aether.App.exe --visual-audit <outDir> [--video <path>] [--shots a,b]`: captures deterministic PNGs (D3D11 video + backdrop blur composited with WinUI shell and popups) plus layout/overlap telemetry into `<outDir>\manifest.json` using isolated in-memory storage.
+- On-demand visual audit workflow (`aether-visual-audit`): kept strictly on-demand (no background schedule). Trigger it during testing when warranted—such as after completing a UI, theme, blur, or rendering build pass (`t3 workflow start aether-visual-audit --input '{"reason":"Post-pass visual check"}'`). By default it checks for UI changes, a clean working tree, AC power, PC idle state, and low CPU/GPU load before running; pass `"ignoreIdle":true` only when explicitly requested during active use.
 Always terminate any launched test app or dev server before ending your turn (`Get-Process Aether.App, Aether.DevHost -ErrorAction SilentlyContinue | Stop-Process`).
 
 ## Verify
