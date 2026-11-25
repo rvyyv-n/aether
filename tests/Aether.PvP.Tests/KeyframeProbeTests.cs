@@ -1,10 +1,23 @@
 using System.Globalization;
+using System.Text;
 using Aether.PvP.Review.Clipping;
 
 namespace Aether.PvP.Tests;
 
-public sealed class KeyframeProbeTests
+public sealed class KeyframeProbeTests : IDisposable
 {
+    private readonly string _dir = Path.Combine(Path.GetTempPath(), "aether-kfprobe-" + Guid.NewGuid().ToString("N"));
+
+    public KeyframeProbeTests()
+    {
+        Directory.CreateDirectory(_dir);
+    }
+
+    public void Dispose()
+    {
+        try { Directory.Delete(_dir, recursive: true); } catch { }
+    }
+
     private sealed class FakeRunner(Func<string, IReadOnlyList<string>, Task<(int Exit, string Out, string Err)>> behaviour)
         : IProcessRunner
     {
@@ -23,37 +36,80 @@ public sealed class KeyframeProbeTests
 
     private static string IntervalOf(IReadOnlyList<string> args) => args[args.ToList().IndexOf("-read_intervals") + 1];
 
-    [Fact]
-    public async Task Ffprobe_TakesLastKeyframeAtOrBeforeIn()
+    private static string Packets(params (double? Pts, double? Dts, string Flags)[] packets)
     {
-        var runner = new FakeRunner((_, _) => Task.FromResult((0, "88.5\n91.25\n95.0\n", "")));
+        var sb = new StringBuilder();
+        foreach (var (pts, dts, flags) in packets)
+        {
+            sb.Append("pts_time=").AppendLine(pts is { } p ? p.ToString(CultureInfo.InvariantCulture) : "N/A");
+            sb.Append("dts_time=").AppendLine(dts is { } d ? d.ToString(CultureInfo.InvariantCulture) : "N/A");
+            sb.Append("flags=").AppendLine(flags);
+        }
+        return sb.ToString();
+    }
+
+    [Fact]
+    public async Task Ffprobe_UsesPacketHeadersAndTakesLastKeyframeAtOrBeforeIn()
+    {
+        string output = Packets(
+            (88.5, 88.5, "K__"),
+            (91.25, 91.25, "K__"),
+            (93.5, 93.5, "___"),
+            (95.0, 95.0, "K__"));
+        var runner = new FakeRunner((_, _) => Task.FromResult((0, output, "")));
         var probe = new KeyframeProbe(runner);
 
         double? found = await probe.FindAtOrBeforeAsync("v.mp4", 94.0, CancellationToken.None);
 
         Assert.Equal(91.25, found);
-        Assert.Equal("84%94.05", IntervalOf(runner.Calls[0].Args));
+        IReadOnlyList<string> args = runner.Calls[0].Args;
+        Assert.Equal("84%99.05", IntervalOf(args));
+        Assert.DoesNotContain("-skip_frame", args);
+        Assert.Contains("packet=pts_time,dts_time,flags", args);
+        Assert.Contains("default=noprint_wrappers=1", args);
     }
 
     [Fact]
     public async Task Ffprobe_KeyframeExactlyOnIn_IsUsed()
     {
-        var runner = new FakeRunner((_, _) => Task.FromResult((0, "90\n94.0\n", "")));
+        var runner = new FakeRunner((_, _) => Task.FromResult((0, Packets((90.0, 90.0, "K_"), (94.0, 94.0, "K_")), "")));
 
         Assert.Equal(94.0, await new KeyframeProbe(runner).FindAtOrBeforeAsync("v.mp4", 94.0, CancellationToken.None));
     }
 
     [Fact]
-    public async Task EmptyFirstWindow_WidensOnceTo30Seconds()
+    public async Task Ffprobe_FallsBackToDtsTimeWhenPtsIsNA_AndParsesBracketedBlocks()
+    {
+        string output = """
+            [PACKET]
+            flags=K__
+            pts_time=N/A
+            dts_time=91.75
+            [/PACKET]
+            [PACKET]
+            pts_time=93.0
+            dts_time=93.0
+            flags=___
+            [/PACKET]
+            """;
+        var runner = new FakeRunner((_, _) => Task.FromResult((0, output, "")));
+
+        Assert.Equal(91.75, await new KeyframeProbe(runner).FindAtOrBeforeAsync("v.mp4", 94.0, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task EmptyFirstWindow_WidensOnceTo30SecondsUsingIncrementalGap()
     {
         var runner = new FakeRunner((_, args) =>
-            Task.FromResult(IntervalOf(args).StartsWith("70%", StringComparison.Ordinal) ? (0, "75.5\n", "") : (0, "", "")));
+            Task.FromResult(IntervalOf(args).StartsWith("70%", StringComparison.Ordinal)
+                ? (0, Packets((75.5, 75.5, "K_")), "")
+                : (0, "", "")));
         var probe = new KeyframeProbe(runner);
 
         double? found = await probe.FindAtOrBeforeAsync("v.mp4", 100.0, CancellationToken.None);
 
         Assert.Equal(75.5, found);
-        Assert.Equal(["90%100.05", "70%100.05"], runner.Calls.Select(c => IntervalOf(c.Args)));
+        Assert.Equal(["90%105.05", "70%90.05"], runner.Calls.Select(c => IntervalOf(c.Args)));
     }
 
     [Fact]
@@ -72,7 +128,7 @@ public sealed class KeyframeProbeTests
 
         Assert.Null(await new KeyframeProbe(runner).FindAtOrBeforeAsync("v.mp4", 4.0, CancellationToken.None));
         Assert.Single(runner.Calls);
-        Assert.Equal("0%4.05", IntervalOf(runner.Calls[0].Args));
+        Assert.Equal("0%9.05", IntervalOf(runner.Calls[0].Args));
     }
 
     [Fact]
@@ -100,15 +156,71 @@ public sealed class KeyframeProbeTests
     }
 
     [Fact]
-    public async Task SameQuestion_IsAnsweredFromCache()
+    public async Task SameQuestionAndNearbyNudges_AreAnsweredFromIntervalCache()
     {
-        var runner = new FakeRunner((_, _) => Task.FromResult((0, "91.0\n", "")));
+        string output = Packets((88.5, 88.5, "K_"), (91.25, 91.25, "K_"), (96.0, 96.0, "K_"));
+        var runner = new FakeRunner((_, _) => Task.FromResult((0, output, "")));
         var probe = new KeyframeProbe(runner);
 
-        await probe.FindAtOrBeforeAsync("v.mp4", 94.0, CancellationToken.None);
-        await probe.FindAtOrBeforeAsync("v.mp4", 94.0, CancellationToken.None);
+        Assert.Equal(91.25, await probe.FindAtOrBeforeAsync("v.mp4", 94.0, CancellationToken.None));
+        Assert.Equal(91.25, await probe.FindAtOrBeforeAsync("v.mp4", 94.0, CancellationToken.None));
+
+        // Backward nudge within covered range hits cache
+        Assert.True(probe.TryGetCached("v.mp4", 90.0, out double? backCached));
+        Assert.Equal(88.5, backCached);
+        Assert.Equal(88.5, await probe.FindAtOrBeforeAsync("v.mp4", 90.0, CancellationToken.None));
+
+        // Forward nudge inside +5s lookahead hits cache (including keyframe at 96.0)
+        Assert.True(probe.TryGetCached("v.mp4", 98.0, out double? fwdCached));
+        Assert.Equal(96.0, fwdCached);
+        Assert.Equal(96.0, await probe.FindAtOrBeforeAsync("v.mp4", 98.0, CancellationToken.None));
 
         Assert.Single(runner.Calls);
+
+        // Stepping past covered end (99.0) probes only the uncovered tail [99.0, 107.0]
+        await probe.FindAtOrBeforeAsync("v.mp4", 102.0, CancellationToken.None);
+        Assert.Equal(2, runner.Calls.Count);
+        Assert.Equal("99%107.05", IntervalOf(runner.Calls[1].Args));
+    }
+
+    [Fact]
+    public async Task FileModification_InvalidatesCachedEntry()
+    {
+        string file = Path.Combine(_dir, "clip.mp4");
+        File.WriteAllText(file, "first");
+        string output = Packets((91.0, 91.0, "K_"));
+        var runner = new FakeRunner((_, _) => Task.FromResult((0, output, "")));
+        var probe = new KeyframeProbe(runner);
+
+        Assert.Equal(91.0, await probe.FindAtOrBeforeAsync(file, 94.0, CancellationToken.None));
+        Assert.True(probe.TryGetCached(file, 94.0, out _));
+
+        File.WriteAllText(file, "modified-content-longer");
+        Assert.False(probe.TryGetCached(file, 94.0, out _));
+
+        await probe.FindAtOrBeforeAsync(file, 94.0, CancellationToken.None);
+        Assert.Equal(2, runner.Calls.Count);
+    }
+
+    [Fact]
+    public async Task IntervalCache_EvictsLeastRecentlyUsedPast8Files()
+    {
+        var runner = new FakeRunner((_, _) => Task.FromResult((0, Packets((10.0, 10.0, "K_")), "")));
+        var probe = new KeyframeProbe(runner);
+
+        for (int i = 0; i < 8; i++)
+        {
+            await probe.FindAtOrBeforeAsync($"file{i}.mp4", 12.0, CancellationToken.None);
+        }
+
+        // Touch file0 so file1 becomes LRU
+        Assert.True(probe.TryGetCached("file0.mp4", 12.0, out _));
+
+        // Add 9th file -> evicts file1, keeps file0
+        await probe.FindAtOrBeforeAsync("file8.mp4", 12.0, CancellationToken.None);
+
+        Assert.True(probe.TryGetCached("file0.mp4", 12.0, out _));
+        Assert.False(probe.TryGetCached("file1.mp4", 12.0, out _));
     }
 
     [Fact]
@@ -218,6 +330,25 @@ public sealed class KeyframeProbeTests
         await Task.Delay(100);
 
         Assert.Single(probe.Started);
+    }
+
+    [Fact]
+    public async Task Tracker_CachedHit_EmitsImmediatelyWithZeroDebounceAndZeroNullFlicker()
+    {
+        string output = Packets((88.5, 88.5, "K_"), (91.25, 91.25, "K_"), (96.0, 96.0, "K_"));
+        var runner = new FakeRunner((_, _) => Task.FromResult((0, output, "")));
+        var probe = new KeyframeProbe(runner);
+        await probe.FindAtOrBeforeAsync("v.mp4", 94.0, CancellationToken.None);
+
+        // Long debounce proves cached path bypasses timer completely.
+        using var tracker = new CutStartTracker(probe, TimeSpan.FromSeconds(30));
+        var results = new List<double?>();
+        tracker.Changed += r => { lock (results) results.Add(r); };
+
+        tracker.Track("v.mp4", 97.0);
+
+        Assert.Equal([96.0], results);
+        Assert.Single(runner.Calls);
     }
 
     private static async Task WaitUntil(Func<bool> condition)

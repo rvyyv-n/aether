@@ -96,6 +96,20 @@ public sealed partial class MainPage
         return end > position ? new ChapterSkipOffer(end, _chapters[index].Title) : null;
     }
 
+    private void EnsureSkipChapterLayer()
+    {
+        if (SkipChapterLayer is not null)
+        {
+            return;
+        }
+        FindName(nameof(SkipChapterLayer));
+        if (SkipChapterLayer is not null)
+        {
+            SkipChapterLayer.SizeChanged += (_, _) => UpdateToastPlacement();
+            UpdateToastPlacement();
+        }
+    }
+
     /// <summary>
     /// Shows or hides the Skip button for <see cref="CurrentSkipOffer"/>. It is a prompt, so it does not need the
     /// controls up: it shows for the first seconds of the chapter and again with the controls (<see cref="ChapterSkipPrompt"/>).
@@ -109,7 +123,15 @@ public sealed partial class MainPage
         bool blocked = IsPictureInPicture || _settingsShown || Osd.Visibility != Visibility.Visible
             || (_chrome.Holds & (ChromeHolds.Flyout | ChromeHolds.Dialog | ChromeHolds.Tour | ChromeHolds.Drawer)) != 0;
         bool show = wanted && !blocked && offer is not null;
-        if (offer is { } current)
+        if (!show && SkipChapterLayer is null)
+        {
+            return;
+        }
+        if (show)
+        {
+            EnsureSkipChapterLayer();
+        }
+        if (offer is { } current && SkipChapterText is not null && SkipChapterButton is not null)
         {
             string label = AppStrings.Format("Transport_SkipChapter", current.Title);
             if (SkipChapterText.Text != label)
@@ -118,12 +140,12 @@ public sealed partial class MainPage
                 AutomationProperties.SetName(SkipChapterButton, label);
             }
         }
-        if (show == _skipChapterShown)
+        if (show == _skipChapterShown || SkipChapterLayer is null)
         {
             return;
         }
         _skipChapterShown = show;
-        if (!show && SkipChapterButton.FocusState != FocusState.Unfocused)
+        if (!show && SkipChapterButton is { FocusState: not FocusState.Unfocused })
         {
             Focus(FocusState.Programmatic); // the playback keys stay with the page when the button goes
         }
@@ -148,16 +170,20 @@ public sealed partial class MainPage
     /// </summary>
     private void PlaceSkipChapter(bool controls, double chip)
     {
-        const double BottomMargin = 24;
-        double gap = Motion.Token("AetherSizeOsdGap");
-        double bottom = controls ? BottomMargin + Osd.Height + gap + (chip > 0 ? chip + gap : 0) : BottomMargin;
-        if (ToastLayer.Visibility == Visibility.Visible)
+        if (SkipChapterLayer is null)
         {
-            double toastHalf = Math.Min(ToastLayer.ActualWidth, Motion.Token("AetherSizeToastMaxWidth")) / 2;
+            return;
+        }
+        const double BottomMargin = 24;
+        double gap = _osdGap > 0 ? _osdGap : Motion.Token("AetherSizeOsdGap");
+        double bottom = controls ? BottomMargin + Osd.Height + gap + (chip > 0 ? chip + gap : 0) : BottomMargin;
+        if (ToastLayer is { Visibility: Visibility.Visible } toastLayer)
+        {
+            double toastHalf = Math.Min(toastLayer.ActualWidth, Motion.Token("AetherSizeToastMaxWidth")) / 2;
             double skipLeft = ActualWidth - SkipChapterLayer.Margin.Right - SkipChapterLayer.ActualWidth;
             if (skipLeft < (ActualWidth / 2) + toastHalf + gap)
             {
-                bottom += ToastLayer.ActualHeight + gap;
+                bottom += toastLayer.ActualHeight + gap;
             }
         }
         Thickness margin = SkipChapterLayer.Margin;

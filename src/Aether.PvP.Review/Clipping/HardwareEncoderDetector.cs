@@ -14,16 +14,25 @@ public sealed class FfmpegEncoderDetector : IHardwareEncoderDetector
     private readonly IProcessRunner _runner;
     private readonly string _ffmpegPath;
     private readonly TimeSpan? _probeTimeout;
+    private readonly IEncoderCache? _cache;
+    private readonly Func<string> _fingerprintProvider;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly HashSet<VideoEncoder> _failed = [];
     private List<VideoEncoder>? _detected;
     private bool _probedBefore;
 
-    public FfmpegEncoderDetector(IProcessRunner runner, string ffmpegPath, TimeSpan? probeTimeout = null)
+    public FfmpegEncoderDetector(
+        IProcessRunner runner,
+        string ffmpegPath,
+        TimeSpan? probeTimeout = null,
+        IEncoderCache? cache = null,
+        Func<string>? fingerprintProvider = null)
     {
         _runner = runner;
         _ffmpegPath = ffmpegPath;
         _probeTimeout = probeTimeout;
+        _cache = cache;
+        _fingerprintProvider = fingerprintProvider ?? (() => HardwareFingerprint.Compute(_ffmpegPath));
     }
 
     public async Task<IReadOnlyList<VideoEncoder>> GetAvailableEncodersAsync(CancellationToken ct = default)
@@ -50,10 +59,17 @@ public sealed class FfmpegEncoderDetector : IHardwareEncoderDetector
     public void ReportFailure(VideoEncoder encoder)
     {
         lock (_failed) _failed.Add(encoder);
+        _cache?.Invalidate();
     }
 
     private async Task<(List<VideoEncoder> Encoders, bool Cacheable)> DetectAsync(CancellationToken ct)
     {
+        string? fingerprint = _cache is not null ? _fingerprintProvider() : null;
+        if (_cache is not null && fingerprint is not null && _cache.TryRead(fingerprint) is { } cached && cached.Count > 0)
+        {
+            return ([.. cached], true);
+        }
+
         // The first probe may be the first time the driver or ffmpeg is loaded, which can be slow.
         var timeout = _probeTimeout ?? (_probedBefore ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30));
         _probedBefore = true;
@@ -77,16 +93,28 @@ public sealed class FfmpegEncoderDetector : IHardwareEncoderDetector
         var result = new List<VideoEncoder>();
         if (outcome.ExitCode != 0) return (result, false);
 
+        // A driver can list an encoder it can't open, so each one must encode a frame to count.
+        var candidates = Enum.GetValues<VideoEncoder>()
+            .Where(e => listed.Contains(e.FfmpegName()))
+            .ToArray();
+
+        bool?[] outcomes = await Task.WhenAll(
+            candidates.Select(e => CanEncodeAsync(e, timeout, ct))).ConfigureAwait(false);
+
         bool timedOut = false;
-        foreach (var encoder in Enum.GetValues<VideoEncoder>())
+        for (int i = 0; i < candidates.Length; i++)
         {
-            // A driver can list an encoder it can't open, so each one must encode a frame to count.
-            if (!listed.Contains(encoder.FfmpegName())) continue;
-            var probe = await CanEncodeAsync(encoder, timeout, ct).ConfigureAwait(false);
-            if (probe is null) timedOut = true;
-            else if (probe.Value) result.Add(encoder);
+            if (outcomes[i] is null) timedOut = true;
+            else if (outcomes[i]!.Value) result.Add(candidates[i]);
         }
-        return (result, !timedOut && result.Count > 0);
+
+        bool cacheable = !timedOut && result.Count > 0;
+        if (cacheable && _cache is not null && fingerprint is not null)
+        {
+            _cache.Write(fingerprint, result);
+        }
+
+        return (result, cacheable);
     }
 
     // null means the probe timed out, which says nothing about whether the encoder works.

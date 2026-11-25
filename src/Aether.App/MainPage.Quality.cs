@@ -31,7 +31,7 @@ public sealed partial class MainPage
             settings.StreamQualityChoice, MpvSettingsMap.YtdlFormat(settings.StreamingQuality, settings.PreferGpuDecodableFormats));
     }
 
-    private static StreamResolutionOptions StreamOptions(string? formatSelector)
+    private static StreamResolutionOptions StreamOptions(string? formatSelector, QualityOption? requestedQuality = null)
     {
         AetherSettings settings = App.Settings.Current;
         return new StreamResolutionOptions(
@@ -40,7 +40,8 @@ public sealed partial class MainPage
             PreferGpuDecodableFormats: settings.PreferGpuDecodableFormats,
             HttpProxy: string.IsNullOrWhiteSpace(settings.HttpProxy) ? null : settings.HttpProxy,
             Timeout: TimeSpan.FromSeconds(30),
-            FormatSelectorOverride: formatSelector);
+            FormatSelectorOverride: formatSelector,
+            RequestedQuality: requestedQuality);
     }
 
     /// <summary>A new file or link replaces the list, and any switch still resolving for the last one.</summary>
@@ -177,7 +178,7 @@ public sealed partial class MainPage
 
         try
         {
-            ResolvedStream resolved = await _streamResolver.ResolveAsync(link, StreamOptions(option.FormatSelector()), cts.Token);
+            ResolvedStream resolved = await _streamResolver.ResolveAsync(link, StreamOptions(option.FormatSelector(), option), cts.Token);
             if (cts.IsCancellationRequested || !_isLoaded || _session != session || _currentWebLink != link)
             {
                 return;

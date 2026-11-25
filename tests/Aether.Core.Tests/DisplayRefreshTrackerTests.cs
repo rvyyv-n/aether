@@ -167,4 +167,29 @@ public class DisplayRefreshTrackerTests
 
         Assert.InRange(hertz, 0, 1000);
     }
+
+    [Fact]
+    public void CurrentHertz_TracksAcceptedMonitorRate()
+    {
+        var tracker = new DisplayRefreshTracker();
+        Assert.Equal(0, tracker.CurrentHertz);
+
+        tracker.Accept(MonitorA, 59.94);
+        Assert.Equal(59.94, tracker.CurrentHertz, 2);
+
+        tracker.Accept(MonitorB, 0);
+        Assert.Equal(0, tracker.CurrentHertz);
+    }
+
+    [Theory]
+    [InlineData(59.94, true, "59.94")]
+    [InlineData(60.0, true, "60")]
+    [InlineData(120.0, true, "0")]
+    [InlineData(180.0, true, "0")]
+    [InlineData(59.94, false, "0")]
+    [InlineData(0.0, true, "0")]
+    public void EffectiveOverride_HandlesFractionalRatesAndHighRefreshCap(double hz, bool smoothMotion, string expected)
+    {
+        Assert.Equal(expected, DisplayRefreshTracker.EffectiveOverride(hz, smoothMotion));
+    }
 }

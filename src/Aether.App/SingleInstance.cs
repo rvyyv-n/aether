@@ -36,16 +36,14 @@ internal static partial class SingleInstance
     {
         try
         {
-            bool running = AppInstance.GetInstances().Any(instance => instance.Key == MainKey);
-            if (running && !ReadOpenInRunningWindow())
-            {
-                return false;
-            }
-
             AppInstance main = AppInstance.FindOrRegisterForKey(MainKey);
             if (main.IsCurrent)
             {
                 main.Activated += (_, arguments) => App.OnRedirectedActivation(arguments);
+                return false;
+            }
+            if (!ReadOpenInRunningWindow())
+            {
                 return false;
             }
             return Redirect(main);

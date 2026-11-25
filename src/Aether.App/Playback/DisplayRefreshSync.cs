@@ -31,6 +31,9 @@ internal sealed class DisplayRefreshSync : IDisposable
     /// <summary>The <c>display-fps-override</c> value for the window's monitor: hertz such as "120" or "59.94", or "0" when unknown.</summary>
     public string Current => _tracker.Current;
 
+    /// <summary>The measured monitor refresh rate in hertz, or 0 when unknown.</summary>
+    public double CurrentHertz => _tracker.CurrentHertz;
+
     /// <summary>Raised when <see cref="Current"/> changes.</summary>
     public event EventHandler? Changed;
 

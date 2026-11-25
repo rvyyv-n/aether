@@ -33,13 +33,16 @@ namespace Aether_App;
 public partial class App : Application
 {
     // The longest the first window waits for the settings and window files before using the default size.
-    private static readonly TimeSpan RestoreWait = TimeSpan.FromMilliseconds(250);
+    private static readonly TimeSpan RestoreWait = TimeSpan.FromMilliseconds(150);
 
     private static readonly object RedirectGate = new();
     private static MainWindow? s_window;
     private static DispatcherQueue? s_queue;
     private static string? s_earlyPath; // a file handed over before the window existed
     private static bool s_earlyActivation;
+    private static Task s_windowLoaded = Task.CompletedTask;
+    private static int s_startupPreloaded;
+    private static bool s_settingsControlsLoaded;
 
     private Window? _window;
 
@@ -68,7 +71,7 @@ public partial class App : Application
     public static WindowStateStore WindowState { get; } = new(new FileSettingsStorage(WindowStateStore.DefaultPath()));
 
     /// <summary>Lossless clip export through FFmpeg on the PATH, pre-warmed by the clip drawer once the page is idle.</summary>
-    public static ClipExportService ClipExport { get; } = new();
+    public static ClipExportService ClipExport { get; } = new(encoderCache: new FileEncoderCache(FileEncoderCache.DefaultPath()));
 
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
@@ -79,20 +82,39 @@ public partial class App : Application
         InitializeComponent();
     }
 
+    /// <summary>Starts loading settings and saved window bounds on the thread pool before XAML initializes.</summary>
+    internal static void PreloadStartupState()
+    {
+        if (Interlocked.Exchange(ref s_startupPreloaded, 1) == 0)
+        {
+            SettingsLoaded = Task.Run(Settings.Load);
+            s_windowLoaded = Task.Run(WindowState.Load);
+        }
+    }
+
+    /// <summary>Lazily merges <c>SettingsControls.xaml</c> before any control or deferred overlay that uses its styles is realized.</summary>
+    internal static void EnsureSettingsControlsLoaded()
+    {
+        if (s_settingsControlsLoaded)
+        {
+            return;
+        }
+        s_settingsControlsLoaded = true;
+        Current.Resources.MergedDictionaries.Add(
+            new ResourceDictionary { Source = new Uri("ms-appx:///Theme/SettingsControls.xaml") });
+    }
+
     /// <summary>
     /// Invoked when the application is launched.
     /// </summary>
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
-        SettingsLoaded = Task.Run(Settings.Load);
-        _ = Task.Run(Recents.Load);
-        _ = Task.Run(Resume.Load);
-        _ = Task.Run(Clips.Load);
-        Task windowLoaded = Task.Run(WindowState.Load);
+        PreloadStartupState();
         var window = new MainWindow();
+        PerfLog.Mark("window_created_ms");
         _window = window;
-        RestorePlacement(window, windowLoaded);
+        RestorePlacement(window, s_windowLoaded);
 
         string? launchPath = LaunchPath(args);
         lock (RedirectGate)
@@ -111,6 +133,11 @@ public partial class App : Application
             window.OpenWhenReady(path);
         }
         window.Activate();
+
+        // Defer non-critical state loads until after first activation so they don't compete for disk/thread-pool before first frame.
+        _ = Task.Run(Recents.Load);
+        _ = Task.Run(Resume.Load);
+        _ = Task.Run(Clips.Load);
     }
 
     // Both files are a few bytes and normally read by now; if not, the default size beats a slow start.

@@ -309,6 +309,10 @@ public sealed class PlayerSession : IDisposable
     {
         ApplySettings();
         SendSubtitleMargin();
+        if (e.Key == SettingKeys.SmoothMotion)
+        {
+            SendDisplayRefresh();
+        }
         UpdateWake();
     }
 
@@ -360,11 +364,7 @@ public sealed class PlayerSession : IDisposable
         }
         try
         {
-            string targetFps = "0";
-            if (App.Settings.Current.SmoothMotion && int.TryParse(_display.Current, out int hz) && hz is > 0 and <= 60)
-            {
-                targetFps = _display.Current;
-            }
+            string targetFps = DisplayRefreshTracker.EffectiveOverride(_display.CurrentHertz, App.Settings.Current.SmoothMotion);
             _context.CommandAsync(new MpvCommand("set", DisplayFpsOverride, targetFps));
         }
         catch (Exception exception) when (exception is MpvException or ObjectDisposedException)

@@ -19,7 +19,9 @@ public sealed record StreamResolutionOptions(
     bool PreferGpuDecodableFormats = true,
     string? HttpProxy = null,
     TimeSpan? Timeout = null,
-    string? FormatSelectorOverride = null);
+    string? FormatSelectorOverride = null,
+    QualityOption? RequestedQuality = null,
+    bool BypassCache = false);
 
 public sealed record StreamChapter(double Start, double End, string Title);
 
@@ -33,7 +35,9 @@ public sealed record StreamFormat(
     string? Ext,
     double? Bitrate,
     string Url,
-    IReadOnlyDictionary<string, string>? HttpHeaders);
+    IReadOnlyDictionary<string, string>? HttpHeaders,
+    string? Protocol = null,
+    bool HasDrm = false);
 
 public sealed record StreamSubtitle(string Language, string? Name, string Url, string Ext, bool IsAutomatic);
 
@@ -71,4 +75,5 @@ public sealed class StreamResolutionException : Exception
 public interface IYtDlpStreamResolver
 {
     Task<ResolvedStream> ResolveAsync(string url, StreamResolutionOptions options, CancellationToken ct = default);
+    void Invalidate(string url) { }
 }

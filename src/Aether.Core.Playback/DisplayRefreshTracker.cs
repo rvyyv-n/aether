@@ -23,6 +23,9 @@ public sealed class DisplayRefreshTracker
     /// <summary>The value mpv should hold now: hertz such as "120" or "59.94", or <see cref="Unknown"/>.</summary>
     public string Current { get; private set; } = Unknown;
 
+    /// <summary>The measured monitor refresh rate in hertz, or 0 when unknown.</summary>
+    public double CurrentHertz { get; private set; }
+
     /// <summary>
     /// True when the display should be read again: after a display change (<paramref name="displayChanged"/>, because
     /// the same monitor can switch rate), when the window is on another monitor, or before the first reading.
@@ -38,6 +41,7 @@ public sealed class DisplayRefreshTracker
     {
         _monitor = monitor;
         _hasReading = true;
+        CurrentHertz = hertz is >= MinimumHertz and <= MaximumHertz ? hertz : 0;
 
         string value = Format(hertz);
         if (value == Current)
@@ -47,6 +51,13 @@ public sealed class DisplayRefreshTracker
         Current = value;
         return value;
     }
+
+    /// <summary>
+    /// The effective <c>display-fps-override</c> sent to mpv: fractional rates up to 60 Hz (such as 59.94 or 60)
+    /// when Smooth motion is enabled, and <see cref="Unknown"/> on high-refresh (&gt;60 Hz) displays per ADR-0018.
+    /// </summary>
+    public static string EffectiveOverride(double refreshHz, bool smoothMotion) =>
+        smoothMotion && refreshHz is >= MinimumHertz and <= 60.5 ? Format(refreshHz) : Unknown;
 
     /// <summary>
     /// The <c>display-fps-override</c> text for a reading: hertz to three decimals without trailing zeros ("60",

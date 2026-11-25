@@ -41,19 +41,33 @@ public sealed partial class MainPage
     private bool _mixPending;
     private int? _trackBeforeMix;
     private DispatcherQueueTimer? _mixTimer;
+    private TracksPanel? _tracksPanel;
 
     private void InitializeTracks()
     {
         // Light dismiss would otherwise swallow the first click on the pill, as for the volume flyout.
         TracksFlyout.OverlayInputPassThroughElement = Osd;
-        TracksPanel.TrackChosen += OnTrackChosen;
-        TracksPanel.AddSubtitleRequested += OnAddSubtitleRequested;
-        TracksPanel.DelayStepped += OnDelayStepped;
-        TracksPanel.MixChanged += OnMixChanged;
+    }
+
+    private TracksPanel EnsureTracksPanel()
+    {
+        if (_tracksPanel is not null)
+        {
+            return _tracksPanel;
+        }
+        App.EnsureSettingsControlsLoaded();
+        var panel = new TracksPanel();
+        panel.TrackChosen += OnTrackChosen;
+        panel.AddSubtitleRequested += OnAddSubtitleRequested;
+        panel.DelayStepped += OnDelayStepped;
+        panel.MixChanged += OnMixChanged;
         _mixTimer = DispatcherQueue.CreateTimer();
         _mixTimer.Interval = TimeSpan.FromMilliseconds(120);
         _mixTimer.IsRepeating = false;
         _mixTimer.Tick += (_, _) => SendMix();
+        _tracksPanel = panel;
+        TracksFlyout.Content = panel;
+        return panel;
     }
 
     private void OnMixChanged(object? sender, IReadOnlyList<MixLevel>? levels)
@@ -114,24 +128,26 @@ public sealed partial class MainPage
         {
             return;
         }
+        TracksPanel panel = EnsureTracksPanel();
         ApplyTracks(snapshot);
         // The window less 8 either side (9.5), and the 1 px stroke the presenter adds.
-        TracksPanel.MaxPanelHeight = Math.Max(0, XamlRoot.Size.Height - (double)Application.Current.Resources["AetherSizeMenuMaxHeightInset"] - 2);
+        panel.MaxPanelHeight = Math.Max(0, XamlRoot.Size.Height - (double)Application.Current.Resources["AetherSizeMenuMaxHeightInset"] - 2);
         TracksFlyout.ShowAt(Osd, new FlyoutShowOptions { Placement = FlyoutPlacementMode.Top, ShowMode = FlyoutShowMode.Standard });
     }
 
     private void ApplyTracks(TrackSnapshot snapshot)
     {
         _tracks = snapshot;
-        TracksPanel.RequestedTheme = ThemeTokens.AppTheme; // rows built here must match the theme the flyout opens in
-        TracksPanel.LinkTitle = _streamTitle;
-        TracksPanel.Show(snapshot);
+        TracksPanel panel = EnsureTracksPanel();
+        panel.RequestedTheme = ThemeTokens.AppTheme; // rows built here must match the theme the flyout opens in
+        panel.LinkTitle = _streamTitle;
+        panel.Show(snapshot);
     }
 
     private void OnTracksFlyoutOpened(object? sender, object e)
     {
         HoldForMenu(true);
-        SetPopupSurface(TracksPanel);
+        SetPopupSurface(_tracksPanel);
     }
 
     private void OnTracksFlyoutClosed(object? sender, object e)

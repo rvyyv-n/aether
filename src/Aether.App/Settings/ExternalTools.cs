@@ -88,12 +88,13 @@ internal static class ExternalTools
     {
         try
         {
-            var start = new ProcessStartInfo(path, "--version")
+            var start = new ProcessStartInfo(path)
             {
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
+            start.ArgumentList.Add("--version");
             using Process? process = Process.Start(start);
             if (process is null)
             {

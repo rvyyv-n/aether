@@ -28,9 +28,27 @@ public sealed partial class MainPage
     private readonly MotionTween _sideSlide = new(0);
     private readonly TranslateTransform _sideOffset = new();
     private SidePanel _sidePanel;
+    private bool _sideLayerWired;
 
     private void InitializeQueue()
     {
+        _sideSlide.Changed += (_, _) => ApplySideSlide();
+        VideoSurface.FadeBackdrop(BackdropSlot.SidePanel, false, 0);
+    }
+
+    private void EnsureSideLayer()
+    {
+        if (SideLayer is not null)
+        {
+            return;
+        }
+        App.EnsureSettingsControlsLoaded();
+        FindName(nameof(SideLayer));
+        if (SideLayer is null || _sideLayerWired)
+        {
+            return;
+        }
+        _sideLayerWired = true;
         QueueDrawer.Queue = _playlist;
         QueueDrawer.PlayRequested += (_, item) => Open(item, fromQueue: true);
         QueueDrawer.Edited += (_, _) =>
@@ -43,13 +61,12 @@ public sealed partial class MainPage
         TranscriptPane.CloseRequested += (_, _) => CloseSidePanel();
         TranscriptPane.SeekRequested += (_, seconds) => OnSeekRequested(seconds, dragging: false);
         SideLayer.RenderTransform = _sideOffset;
-        _sideSlide.Changed += (_, _) => ApplySideSlide();
-        VideoSurface.FadeBackdrop(BackdropSlot.SidePanel, false, 0);
     }
 
     private bool IsSidePanelAvailable => !_settingsShown && !_tour.IsActive && !IsPictureInPicture && _openUrl.Stage != OpenUrlStage.Editing;
 
-    private FrameworkElement SideSurface => _sidePanel == SidePanel.Transcript ? TranscriptPane.Surface : QueueDrawer.Surface;
+    private FrameworkElement? SideSurface =>
+        SideLayer is null ? null : (_sidePanel == SidePanel.Transcript ? TranscriptPane?.Surface : QueueDrawer?.Surface);
 
     private void OnQueueAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) => ToggleSidePanel(args, SidePanel.Queue);
 
@@ -88,6 +105,11 @@ public sealed partial class MainPage
         {
             return;
         }
+        EnsureSideLayer();
+        if (SideLayer is null)
+        {
+            return;
+        }
         bool opening = _sidePanel == SidePanel.None;
         _sidePanel = panel;
         QueueDrawer.Visibility = panel == SidePanel.Queue ? Visibility.Visible : Visibility.Collapsed;
@@ -103,7 +125,7 @@ public sealed partial class MainPage
         }
         if (opening)
         {
-            ClipDrawer.Close(); // both grow out of the same corner
+            ClipDrawer?.Close(); // both grow out of the same corner
             PlaceSidePanel();
             _fader.Enter(SideLayer, null);
             _sideSlide.AnimateTo(1, Motion.Token("AetherMotionQuickInMilliseconds"), Motion.EaseOut);
@@ -115,7 +137,7 @@ public sealed partial class MainPage
     /// <summary>Takes the card away and gives the keyboard back to the page. True if it was open.</summary>
     private bool CloseSidePanel()
     {
-        if (_sidePanel == SidePanel.None || _fader is null)
+        if (_sidePanel == SidePanel.None || _fader is null || SideLayer is null)
         {
             return false;
         }
@@ -133,7 +155,7 @@ public sealed partial class MainPage
     {
         if (_sidePanel == SidePanel.Queue)
         {
-            QueueDrawer.Refresh();
+            QueueDrawer?.Refresh();
         }
         if (_sidePanel != SidePanel.None && !IsSidePanelAvailable)
         {
@@ -143,27 +165,36 @@ public sealed partial class MainPage
 
     private void SyncDrawerHold()
     {
-        _chrome.SetHold(ChromeHolds.Drawer, ClipDrawer.IsOpen || ClipDrawer.IsDraggingOut || _sidePanel != SidePanel.None);
+        _chrome.SetHold(ChromeHolds.Drawer, (ClipDrawer?.IsOpen == true) || (ClipDrawer?.IsDraggingOut == true) || _sidePanel != SidePanel.None);
         ApplyChrome();
     }
 
     /// <summary>From under the title bar to 8 above the full transport card, 16 in from the right edge.</summary>
     private void PlaceSidePanel()
     {
+        if (SideLayer is null)
+        {
+            return;
+        }
         double top = (TitleBar.Visibility == Visibility.Visible ? TitleBar.Height : 0) + 8;
-        double bottom = Osd.Margin.Bottom + (double)Application.Current.Resources["AetherSizeOsdHeight"] + 8;
+        double bottom = Osd.Margin.Bottom + _osdFullHeight + 8;
         SideLayer.Margin = new Thickness(0, top, SideInset, bottom);
     }
 
     private void ApplySideSlide()
     {
-        _sideOffset.X = (1 - _sideSlide.Value) * (SideSurface.ActualWidth + SideInset);
+        if (SideSurface is not { } surface)
+        {
+            return;
+        }
+        _sideOffset.X = (1 - _sideSlide.Value) * (surface.ActualWidth + SideInset);
         PostSideRegion();
     }
 
     private void PostSideRegion()
     {
-        if (SideLayer.Visibility == Visibility.Visible && MeasureSurface(SideSurface) is { } region
+        if (_backdropAllowed && SideLayer is { Visibility: Visibility.Visible }
+            && SideSurface is { } surface && MeasureSurface(surface) is { } region
             && region != _postedSurfaceRegions[(int)BackdropSlot.SidePanel])
         {
             _postedSurfaceRegions[(int)BackdropSlot.SidePanel] = region;

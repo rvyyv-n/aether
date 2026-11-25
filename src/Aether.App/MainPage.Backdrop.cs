@@ -115,22 +115,28 @@ public sealed partial class MainPage
     /// <summary>Blurs behind the clip chip and drawer, the open dialog card and the open flyout, like the transport card.</summary>
     private void PostSurfaceRegions()
     {
-        FrameworkElement? card = LanStreamOverlay.Visibility == Visibility.Visible ? LanStreamCard
-            : OpenUrlOverlay.Visibility == Visibility.Visible ? OpenUrlCard
+        if (!_backdropAllowed || !_isLoaded || !VideoSurface.IsLoaded)
+        {
+            HideSurface(BackdropSlot.Clip);
+            HideSurface(BackdropSlot.Card);
+            HideSurface(BackdropSlot.Popup);
+            return;
+        }
+        FrameworkElement? card = LanStreamOverlay is { Visibility: Visibility.Visible } ? LanStreamCard
+            : OpenUrlOverlay is { Visibility: Visibility.Visible } ? OpenUrlCard
             : null;
-        PostSurfaceRegion(BackdropSlot.Clip, ClipDrawer.Visibility == Visibility.Visible ? ClipDrawer.Surface : null, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0);
-        PostSurfaceRegion(BackdropSlot.Card, card, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0);
-        PostSurfaceRegion(BackdropSlot.Popup, _popupSurface, fadeMilliseconds: _fader?.RevealDurationMilliseconds(true) ?? 0);
+        PostSurfaceRegion(BackdropSlot.Clip, ClipDrawer is { Visibility: Visibility.Visible } clip ? clip.Surface : null);
+        PostSurfaceRegion(BackdropSlot.Card, card);
+        PostSurfaceRegion(BackdropSlot.Popup, _popupSurface);
     }
 
-    private void PostSurfaceRegion(BackdropSlot slot, FrameworkElement? surface, double fadeMilliseconds)
+    private void PostSurfaceRegion(BackdropSlot slot, FrameworkElement? surface)
     {
         int index = (int)slot;
-        bool visible = _backdropAllowed && _isLoaded && VideoSurface.IsLoaded
-            && surface is { IsLoaded: true, ActualWidth: > 0, ActualHeight: > 0 };
+        bool visible = surface is { IsLoaded: true, ActualWidth: > 0, ActualHeight: > 0 };
         if (!visible || surface is null)
         {
-            ShowSurface(slot, false, 0);
+            HideSurface(slot);
             return;
         }
         if (MeasureSurface(surface) is not { } region)
@@ -143,7 +149,24 @@ public sealed partial class MainPage
             VideoSurface.PostBackdrop(slot, region);
         }
         // After the post, so the first frame of a new blur is drawn at the new card, not where the last one was.
-        ShowSurface(slot, true, fadeMilliseconds);
+        if (!_surfaceShown[index])
+        {
+            _surfaceShown[index] = true;
+            VideoSurface.SetBackdropActive(slot, true);
+            VideoSurface.FadeBackdrop(slot, true, _fader?.RevealDurationMilliseconds(true) ?? 0);
+        }
+    }
+
+    private void HideSurface(BackdropSlot slot)
+    {
+        int index = (int)slot;
+        if (!_surfaceShown[index])
+        {
+            return;
+        }
+        _surfaceShown[index] = false;
+        VideoSurface.SetBackdropActive(slot, false);
+        VideoSurface.FadeBackdrop(slot, false, 0);
     }
 
     /// <summary>Where <paramref name="surface"/> sits over the video, in swap-chain pixels; null when it is out of the tree.</summary>
@@ -172,24 +195,17 @@ public sealed partial class MainPage
             (float)(radius * scaleX), scaleX, target.Width, target.Height);
     }
 
-    private void ShowSurface(BackdropSlot slot, bool visible, double fadeMilliseconds)
-    {
-        if (visible == _surfaceShown[(int)slot])
-        {
-            return;
-        }
-        _surfaceShown[(int)slot] = visible;
-        VideoSurface.SetBackdropActive(slot, visible);
-        VideoSurface.FadeBackdrop(slot, visible, fadeMilliseconds);
-    }
-
     /// <summary>Re-measures the cards against the video surface and posts each if it moved, resized or the scale changed.</summary>
     private void PostBackdropRegion()
     {
-        PostSidebarRegion();
         PostSurfaceRegions();
+        if (!_backdropAllowed || !_isLoaded || !VideoSurface.IsLoaded)
+        {
+            return;
+        }
+        PostSidebarRegion();
         PostSideRegion();
-        if (!_isLoaded || Osd.Visibility != Visibility.Visible || !Osd.IsLoaded || !VideoSurface.IsLoaded)
+        if (!_chromeShown || Osd.Visibility != Visibility.Visible || !Osd.IsLoaded)
         {
             return;
         }
@@ -216,7 +232,7 @@ public sealed partial class MainPage
     /// </summary>
     private void PostSidebarRegion()
     {
-        if (!_isLoaded || !VideoSurface.IsLoaded)
+        if (!_backdropAllowed || !_isLoaded || !VideoSurface.IsLoaded || Rail.Visibility != Visibility.Visible)
         {
             return;
         }

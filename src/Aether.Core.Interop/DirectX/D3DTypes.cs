@@ -96,3 +96,25 @@ public enum PresentResult
 
 /// <summary>Back-buffer size in physical pixels.</summary>
 public readonly record struct SwapChainTargetSize(uint Width, uint Height);
+
+public enum D3D11QueryType : uint
+{
+    Timestamp = 2,
+    TimestampDisjoint = 3,
+}
+
+/// <summary>Blittable mirror of <c>D3D11_QUERY_DESC</c>.</summary>
+[StructLayout(LayoutKind.Sequential)]
+public struct D3D11QueryDesc
+{
+    public D3D11QueryType Query;
+    public uint MiscFlags;
+}
+
+/// <summary>Blittable mirror of <c>D3D11_QUERY_DATA_TIMESTAMP_DISJOINT</c> (16 bytes).</summary>
+[StructLayout(LayoutKind.Sequential)]
+public struct D3D11QueryDataTimestampDisjoint
+{
+    public ulong Frequency;
+    public int Disjoint;
+}

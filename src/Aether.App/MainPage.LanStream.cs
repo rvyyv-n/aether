@@ -47,12 +47,28 @@ public sealed partial class MainPage
     private bool _lanRendering;
     private DispatcherQueueTimer? _lanWatchersTimer;
     private DispatcherQueueTimer? _lanCopiedTimer;
+    private bool _lanOverlayWired;
 
     /// <summary>Waits up to <paramref name="timeoutMilliseconds"/> for a stopping server to let go of its port.</summary>
     internal static void WaitForLanServerStop(int timeoutMilliseconds) => s_lanServerStopping.Wait(timeoutMilliseconds);
 
     private void InitializeLanStream()
     {
+    }
+
+    private void EnsureLanStreamOverlay()
+    {
+        if (LanStreamOverlay is not null)
+        {
+            return;
+        }
+        App.EnsureSettingsControlsLoaded();
+        FindName(nameof(LanStreamOverlay));
+        if (LanStreamOverlay is null || _lanOverlayWired)
+        {
+            return;
+        }
+        _lanOverlayWired = true;
         LanStreamTitle.Text = AppStrings.Get("LanStream_Title");
         AutomationProperties.SetName(LanStreamSwitch, LanStreamTitle.Text);
         LanStreamCodeOffText.Text = AppStrings.Get("LanStream_CodeOff");
@@ -98,6 +114,11 @@ public sealed partial class MainPage
         {
             return;
         }
+        EnsureLanStreamOverlay();
+        if (LanStreamOverlay is null)
+        {
+            return;
+        }
         EndTour();
         CloseRail();
         LeavePictureInPicture();
@@ -132,7 +153,7 @@ public sealed partial class MainPage
     /// <summary>Esc, the shortcut and a click outside close it. True if it was open.</summary>
     private bool CloseLanStream()
     {
-        if (!_lanShown)
+        if (!_lanShown || LanStreamOverlay is null)
         {
             return false;
         }

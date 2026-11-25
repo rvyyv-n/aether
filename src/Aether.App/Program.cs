@@ -38,6 +38,7 @@ public static class Program
         {
             return 0;
         }
+        App.PreloadStartupState();
         Application.Start(callback =>
         {
             SynchronizationContext.SetSynchronizationContext(new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));

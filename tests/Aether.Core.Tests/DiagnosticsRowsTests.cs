@@ -7,7 +7,7 @@ public class DiagnosticsRowsTests
 {
     private static readonly DiagnosticsWording Wording = new("Software", "Hardware ({0})", "playing");
 
-    private static readonly string[] Labels = ["Decoder", "Video", "Frame rate", "Display", "Dropped", "Cache"];
+    private static readonly string[] Labels = ["Decoder", "Video", "Frame rate", "Display", "Dropped", "Cache", "GPU"];
 
     [Fact]
     public void NothingReported_ShowsDashesAndZeroDrops()
@@ -20,6 +20,7 @@ public class DiagnosticsRowsTests
         Assert.Equal(DiagnosticsRows.Unavailable, rows.Display);
         Assert.Equal("0 · 0", rows.Dropped);
         Assert.Equal(DiagnosticsRows.Unavailable, rows.Cache);
+        Assert.Equal(DiagnosticsRows.Unavailable, rows.Gpu);
     }
 
     [Fact]
@@ -39,7 +40,7 @@ public class DiagnosticsRowsTests
             CacheDuration = 8.25,
         };
 
-        DiagnosticsRows rows = DiagnosticsRows.From(state, Wording);
+        DiagnosticsRows rows = DiagnosticsRows.From(state, Wording, gpuFrameTimeMs: 0.42);
 
         Assert.Equal("Hardware (d3d11va)", rows.Decoder);
         Assert.Equal("h264 · 1920×1080", rows.Video);
@@ -47,6 +48,7 @@ public class DiagnosticsRowsTests
         Assert.Equal("60 Hz", rows.Display);
         Assert.Equal("2 · 5", rows.Dropped);
         Assert.Equal("8.3 s", rows.Cache);
+        Assert.Equal("0.42 ms", rows.Gpu);
     }
 
     [Fact]
@@ -103,11 +105,9 @@ public class DiagnosticsRowsTests
     [Fact]
     public void Video_InvalidDimensions_ShowsCodecAloneOrUnavailable()
     {
-        // Incomplete dimension ignores size
         DiagnosticsRows codecOnly = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "hevc", CodedWidth = 1920, CodedHeight = 0 }, Wording);
         Assert.Equal("hevc", codecOnly.Video);
 
-        // Neither format nor valid dimensions yields unavailable dash
         DiagnosticsRows empty = DiagnosticsRows.From(PlayerState.Initial with { VideoFormat = "", CodedWidth = 0, CodedHeight = 0 }, Wording);
         Assert.Equal(DiagnosticsRows.Unavailable, empty.Video);
     }
@@ -137,28 +137,44 @@ public class DiagnosticsRowsTests
     }
 
     [Fact]
-    public void Display_FractionalRate_FormatsHzWithDecimals()
+    public void Display_FractionalRate_AndFallbackRefreshWork()
     {
         DiagnosticsRows fractional = DiagnosticsRows.From(PlayerState.Initial with { DisplayFps = 59.94 }, Wording);
         Assert.Equal("59.94 Hz", fractional.Display);
+
+        DiagnosticsRows fallback = DiagnosticsRows.From(PlayerState.Initial with { DisplayFps = 0 }, Wording, fallbackDisplayFps: 179.96);
+        Assert.Equal("179.96 Hz", fallback.Display);
 
         DiagnosticsRows zero = DiagnosticsRows.From(PlayerState.Initial with { DisplayFps = 0 }, Wording);
         Assert.Equal(DiagnosticsRows.Unavailable, zero.Display);
     }
 
+    [Theory]
+    [InlineData(-1.0, "—")]
+    [InlineData(double.NaN, "—")]
+    [InlineData(double.PositiveInfinity, "—")]
+    [InlineData(0.0, "0.00 ms")]
+    [InlineData(1.236, "1.24 ms")]
+    public void Gpu_FormatsValidAndUnavailableValues(double ms, string expected)
+    {
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial, Wording, gpuFrameTimeMs: ms);
+        Assert.Equal(expected, rows.Gpu);
+    }
+
     [Fact]
     public void ToText_ListsTitleThenLabelledRows()
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { Decoder = "no" }, Wording);
+        DiagnosticsRows rows = DiagnosticsRows.From(PlayerState.Initial with { Decoder = "no" }, Wording, gpuFrameTimeMs: 0.5);
 
         string[] lines = rows.ToText("Diagnostics", Labels).Split(Environment.NewLine);
 
-        Assert.Equal(["Diagnostics", "Decoder: Software", "Video: —", "Frame rate: —", "Display: —", "Dropped: 0 · 0", "Cache: —"], lines);
+        Assert.Equal(["Diagnostics", "Decoder: Software", "Video: —", "Frame rate: —", "Display: —", "Dropped: 0 · 0", "Cache: —", "GPU: 0.50 ms"], lines);
     }
 
     [Fact]
     public void ToText_WrongLabelCount_Throws()
     {
         Assert.Throws<ArgumentException>(() => DiagnosticsRows.From(PlayerState.Initial, Wording).ToText("Diagnostics", ["Decoder"]));
+        Assert.Throws<ArgumentException>(() => DiagnosticsRows.From(PlayerState.Initial, Wording).ToText("Diagnostics", Labels[..6]));
     }
 }

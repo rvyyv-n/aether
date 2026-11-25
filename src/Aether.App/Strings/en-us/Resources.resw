@@ -710,6 +710,9 @@
   <data name="Diagnostics_Cache" xml:space="preserve">
     <value>Cache</value>
   </data>
+  <data name="Diagnostics_Gpu" xml:space="preserve">
+    <value>GPU</value>
+  </data>
   <data name="Pip_BackToFullWindow" xml:space="preserve">
     <value>Back to full window</value>
   </data>

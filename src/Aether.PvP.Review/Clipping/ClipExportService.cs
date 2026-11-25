@@ -16,7 +16,9 @@ public sealed class ClipExportService : IDisposable
     private readonly CancellationTokenSource _lifetime = new();
     private volatile string _ffmpegPath;
     private volatile bool _isFfmpegAvailable;
+    private volatile string? _ffmpegVersionLine;
     private readonly IProcessRunner _runner;
+    private readonly IEncoderCache? _encoderCache;
     private IHardwareEncoderDetector? _detector;
     private string? _detectorPath;
     private readonly object _detectorLock = new();
@@ -24,14 +26,17 @@ public sealed class ClipExportService : IDisposable
     public ClipExportService(
         string ffmpegPath = "ffmpeg.exe",
         IProcessRunner? runner = null,
-        IHardwareEncoderDetector? detector = null)
+        IHardwareEncoderDetector? detector = null,
+        IEncoderCache? encoderCache = null)
     {
         _ffmpegPath = ffmpegPath;
         _runner = runner ?? new SystemProcessRunner();
         _detector = detector;
+        _encoderCache = encoderCache;
     }
 
     public bool IsFfmpegAvailable => _isFfmpegAvailable;
+    public string? FfmpegVersionLine => _ffmpegVersionLine;
 
     // Running the binary once pulls it into the OS file cache so the first real export doesn't
     // pay for a cold disk read or the first-run security scan.
@@ -61,25 +66,38 @@ public sealed class ClipExportService : IDisposable
         if (process is null)
         {
             _isFfmpegAvailable = false;
+            _ffmpegVersionLine = null;
             return;
         }
 
         using (process)
         {
-            Task output = process.StandardOutput.ReadToEndAsync();
+            Task<string> output = process.StandardOutput.ReadToEndAsync();
             Task errors = process.StandardError.ReadToEndAsync();
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _lifetime.Token);
             linked.CancelAfter(PreWarmTimeout);
             try
             {
                 await process.WaitForExitAsync(linked.Token).ConfigureAwait(false);
-                await Task.WhenAll(output, errors).ConfigureAwait(false);
+                string stdout = await output.ConfigureAwait(false);
+                await errors.ConfigureAwait(false);
                 _isFfmpegAvailable = process.ExitCode == 0;
+                if (_isFfmpegAvailable)
+                {
+                    int nl = stdout.IndexOfAny(['\r', '\n']);
+                    string firstLine = (nl >= 0 ? stdout[..nl] : stdout).Trim();
+                    _ffmpegVersionLine = firstLine.Length > 0 ? firstLine : null;
+                }
+                else
+                {
+                    _ffmpegVersionLine = null;
+                }
             }
             catch (OperationCanceledException)
             {
                 Kill(process);
                 _isFfmpegAvailable = false;
+                _ffmpegVersionLine = null;
                 if (ct.IsCancellationRequested) throw;
             }
         }
@@ -280,7 +298,7 @@ public sealed class ClipExportService : IDisposable
             string path = _ffmpegPath;
             if (_detector is null || (_detectorPath is not null && _detectorPath != path))
             {
-                _detector = new FfmpegEncoderDetector(_runner, path);
+                _detector = new FfmpegEncoderDetector(_runner, path, cache: _encoderCache);
                 _detectorPath = path;
             }
             return _detector;

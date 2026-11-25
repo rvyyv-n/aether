@@ -38,11 +38,28 @@ public sealed partial class PrecisionSeekBar : UserControl
     private ChapterList _chapters = ChapterList.Empty;
     private IReadOnlyList<SponsorSegment> _skipSegments = [];
     private readonly List<Piece> _pieces = [];
+    private readonly List<Border> _marks = [];
+
+    private bool _bubbleThemeDirty = true;
+    private string? _lastBubbleTime;
+    private string? _lastBubbleChapter;
+    private Size _bubbleSize;
+    private double _barLeft;
+    private bool _barLeftValid;
 
     public PrecisionSeekBar()
     {
         InitializeComponent();
-        ActualThemeChanged += (_, _) => ApplyBrushes();
+        ActualThemeChanged += (_, _) =>
+        {
+            ApplyBrushes();
+            _bubbleThemeDirty = true;
+            if (BubblePopup.IsOpen)
+            {
+                Bubble.RequestedTheme = ThemeTokens.AppTheme;
+                _bubbleThemeDirty = false;
+            }
+        };
     }
 
     /// <summary>
@@ -148,6 +165,7 @@ public sealed partial class PrecisionSeekBar : UserControl
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
+        _barLeftValid = false;
         Arrange();
     }
 
@@ -166,14 +184,26 @@ public sealed partial class PrecisionSeekBar : UserControl
         double x = X(IsDragging ? _dragTime : _position);
         foreach (Piece piece in _pieces)
         {
-            piece.Played.Width = piece.Fill(x);
+            double fill = piece.Fill(x);
+            double pieceWidth = piece.End - piece.Start;
+            if (double.IsNaN(piece.Played.Width)
+                || Math.Abs(piece.Played.Width - fill) >= 0.25
+                || (fill == 0 && piece.Played.Width != 0)
+                || (fill >= pieceWidth && piece.Played.Width < pieceWidth))
+            {
+                piece.Played.Width = fill;
+            }
         }
-        double size = IsDragging ? DragThumbSize : ThumbSize;
-        Thumb.Width = size;
-        Thumb.Height = size;
-        Canvas.SetLeft(Thumb, x - size / 2);
-        Canvas.SetTop(Thumb, (Root.Height - size) / 2);
-        Thumb.Visibility = (_hovering || IsDragging) && _duration > 0 ? Visibility.Visible : Visibility.Collapsed;
+        bool showThumb = (_hovering || IsDragging) && _duration > 0;
+        Thumb.Visibility = showThumb ? Visibility.Visible : Visibility.Collapsed;
+        if (showThumb)
+        {
+            double size = IsDragging ? DragThumbSize : ThumbSize;
+            Thumb.Width = size;
+            Thumb.Height = size;
+            Canvas.SetLeft(Thumb, x - size / 2);
+            Canvas.SetTop(Thumb, (Root.Height - size) / 2);
+        }
     }
 
     private void ArrangeBuffered()
@@ -222,22 +252,46 @@ public sealed partial class PrecisionSeekBar : UserControl
 
     private void ArrangeMarks()
     {
-        Marks.Children.Clear();
+        if (_skipSegments.Count == 0 && _marks.Count == 0)
+        {
+            return;
+        }
+        int active = 0;
         foreach (SponsorSegment segment in _skipSegments)
         {
             if (SeekBarMath.Span(segment.Start, segment.End, BarWidth, _duration, MinMarkWidth) is not (double left, double width))
             {
                 continue;
             }
-            var strip = new Border
+            Border strip;
+            if (active < _marks.Count)
             {
-                Width = width,
-                Height = 4,
-                CornerRadius = new CornerRadius(2),
-                Background = (Brush)Application.Current.Resources[MarkBrush(segment.Category)],
-            };
+                strip = _marks[active];
+                strip.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                strip = new Border
+                {
+                    Height = 4,
+                    CornerRadius = new CornerRadius(2),
+                };
+                _marks.Add(strip);
+                Marks.Children.Add(strip);
+            }
+            string brushKey = MarkBrush(segment.Category);
+            if (!Equals(strip.Tag, brushKey))
+            {
+                strip.Tag = brushKey;
+                strip.Background = (Brush)Application.Current.Resources[brushKey];
+            }
+            strip.Width = width;
             Canvas.SetLeft(strip, left);
-            Marks.Children.Add(strip);
+            active++;
+        }
+        for (int i = active; i < _marks.Count; i++)
+        {
+            _marks[i].Visibility = Visibility.Collapsed;
         }
     }
 
@@ -336,29 +390,57 @@ public sealed partial class PrecisionSeekBar : UserControl
         if (!show)
         {
             BubblePopup.IsOpen = false;
+            _barLeftValid = false;
             return;
         }
+        bool opening = !BubblePopup.IsOpen;
+        if (opening || _bubbleThemeDirty)
+        {
+            Bubble.RequestedTheme = ThemeTokens.AppTheme; // popup content does not inherit the bar's theme
+            _bubbleThemeDirty = false;
+        }
+
         double seconds = IsDragging ? _dragTime : SeekBarMath.TimeAt(_pointerX, BarWidth, _duration);
-        BubbleText.Text = Timecode.FormatClock(seconds, _duration);
+        string timeText = Timecode.FormatClock(seconds, _duration);
         int chapter = _chapters.IndexAt(seconds);
         string title = chapter >= 0 ? _chapters[chapter].Title.Trim() : "";
-        ChapterText.Text = title;
-        ChapterText.Visibility = title.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-        Bubble.RequestedTheme = ThemeTokens.AppTheme; // popup content does not inherit the bar's theme
-        BubblePopup.IsOpen = true;
-        Bubble.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-        Size size = Bubble.DesiredSize;
+        bool textChanged = timeText != _lastBubbleTime || title != _lastBubbleChapter;
+        if (textChanged)
+        {
+            _lastBubbleTime = timeText;
+            _lastBubbleChapter = title;
+            BubbleText.Text = timeText;
+            ChapterText.Text = title;
+            ChapterText.Visibility = title.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
 
-        double barLeft = Root.TransformToVisual(null).TransformPoint(default).X;
+        if (opening)
+        {
+            BubblePopup.IsOpen = true;
+        }
+
+        if (textChanged || opening || _bubbleSize.Width <= 0)
+        {
+            Bubble.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            _bubbleSize = Bubble.DesiredSize;
+        }
+
+        if (!_barLeftValid)
+        {
+            _barLeft = Root.TransformToVisual(null).TransformPoint(default).X;
+            _barLeftValid = true;
+        }
+
         double windowWidth = XamlRoot!.Size.Width;
-        double centre = barLeft + X(seconds);
-        BubblePopup.HorizontalOffset = SeekBarMath.CentreWithin(centre, size.Width, WindowInset, windowWidth - WindowInset) - barLeft;
-        BubblePopup.VerticalOffset = -BubbleLift - size.Height;
+        double centre = _barLeft + X(seconds);
+        BubblePopup.HorizontalOffset = SeekBarMath.CentreWithin(centre, _bubbleSize.Width, WindowInset, windowWidth - WindowInset) - _barLeft;
+        BubblePopup.VerticalOffset = -BubbleLift - _bubbleSize.Height;
     }
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
         _hovering = true;
+        _barLeftValid = false;
         _pointerX = e.GetCurrentPoint(Root).Position.X;
         ArrangeProgress();
         ArrangeHover();
@@ -371,10 +453,14 @@ public sealed partial class PrecisionSeekBar : UserControl
         {
             DragTo(_pointerX);
         }
-        else
+        else if (!_hovering)
         {
             _hovering = true;
             ArrangeProgress();
+            ArrangeHover();
+        }
+        else
+        {
             ArrangeHover();
         }
     }
@@ -398,6 +484,7 @@ public sealed partial class PrecisionSeekBar : UserControl
         }
         e.Handled = true;
         IsDragging = true;
+        _barLeftValid = false;
         _pointerX = point.Position.X;
         DragTo(_pointerX);
     }

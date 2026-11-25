@@ -13,6 +13,20 @@ public sealed partial class MainPage
 {
     private bool IsPictureInPicture => _host?.IsPictureInPicture == true;
 
+    private void EnsurePipChrome()
+    {
+        if (PipChrome is not null)
+        {
+            return;
+        }
+        FindName(nameof(PipChrome));
+        if (PipChrome is not null)
+        {
+            PipChrome.IsHitTestVisible = _chromeShown;
+            _fader?.Fade(PipChrome, _chromeShown);
+        }
+    }
+
     private void TogglePictureInPicture()
     {
         if (IsPictureInPicture)
@@ -26,7 +40,7 @@ public sealed partial class MainPage
         }
         // Only the video goes along: anything that needs the full window closes first.
         CloseRail();
-        ClipDrawer.Close();
+        ClipDrawer?.Close();
         if (_diagnosticsShown)
         {
             SetDiagnosticsShown(false);
@@ -60,6 +74,10 @@ public sealed partial class MainPage
 
     private void OnPipSeekPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (PipSeekLine is null)
+        {
+            return;
+        }
         double width = PipSeekLine.ActualWidth;
         if (_session is not { } session || width <= 0 || session.ViewModel.Duration <= 0)
         {
@@ -73,7 +91,7 @@ public sealed partial class MainPage
     /// <summary>Runs with the clock, which only ticks while the chrome shows, so a hidden line costs nothing.</summary>
     private void UpdatePipSeek(PlayerViewModel vm)
     {
-        if (PipChrome.Visibility != Visibility.Visible)
+        if (PipChrome is not { Visibility: Visibility.Visible } || PipSeekScale is null)
         {
             return;
         }

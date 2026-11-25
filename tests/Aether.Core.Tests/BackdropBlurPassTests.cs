@@ -318,4 +318,37 @@ public sealed unsafe class BackdropBlurPassTests(ITestOutputHelper output)
         Assert.Equal(0, allocatedAfter - allocated);
         Assert.True(totalMs < 10, $"{totalMs} ms per frame");
     }
+
+    [Fact]
+    public void Draw_AnimatingHeightAcrossCapacitySteps_HasNoEdgeBleedAndZeroAllocations()
+    {
+        if (!AngleTestEnvironment.IsAvailable)
+        {
+            return;
+        }
+
+        using Rig rig = Rig.Create();
+        // Prime targets with a tall card first so smaller heights sit strictly inside larger capacity textures.
+        rig.FillSplit(600); // all white
+        rig.Pass.Draw([new BackdropFrame(new BackdropRegion(220, 200, 200, 120, 24, 1f, Width, Height), 1f, (int)BackdropSlot.Bar)], Width, Height);
+
+        // Shrink height in 20 steps: the white interior near the card's bottom edge must stay bright (no black border bleed from padding texels).
+        BackdropFrame[] frames = [new BackdropFrame(new BackdropRegion(220, 250, 200, 48f, 24, 1f, Width, Height), 1f, (int)BackdropSlot.Bar)];
+        Span<int> reds = stackalloc int[20];
+        long allocated = GC.GetAllocatedBytesForCurrentThread();
+        for (int i = 0; i < 20; i++)
+        {
+            float h = 48f + (i * 2f);
+            frames[0] = new BackdropFrame(new BackdropRegion(220, 250, 200, h, 24, 1f, Width, Height), 1f, (int)BackdropSlot.Bar);
+            rig.FillSplit(600);
+            rig.Pass.Draw(frames, Width, Height);
+            reds[i] = rig.Red(320, (int)(250 + h - 4));
+        }
+        long allocatedAfter = GC.GetAllocatedBytesForCurrentThread();
+        Assert.Equal(0, allocatedAfter - allocated);
+        for (int i = 0; i < 20; i++)
+        {
+            Assert.InRange(reds[i], 245, 255);
+        }
+    }
 }

@@ -9,6 +9,8 @@ namespace Aether.Core.Tests.TestSupport;
 /// </summary>
 public sealed class ManualTimeProvider : TimeProvider
 {
+    private readonly long _initialTimestamp;
+    private readonly DateTimeOffset _startUtc = DateTimeOffset.UtcNow;
     private long _timestamp;
 
     public ManualTimeProvider(long initialTimestamp = 0)
@@ -18,12 +20,16 @@ public sealed class ManualTimeProvider : TimeProvider
             throw new ArgumentOutOfRangeException(nameof(initialTimestamp), "Timestamp cannot be negative.");
         }
 
+        _initialTimestamp = initialTimestamp;
         _timestamp = initialTimestamp;
     }
 
     public override long TimestampFrequency => TimeSpan.TicksPerSecond;
 
     public override long GetTimestamp() => Interlocked.Read(ref _timestamp);
+
+    public override DateTimeOffset GetUtcNow() =>
+        _startUtc.AddTicks(Interlocked.Read(ref _timestamp) - _initialTimestamp);
 
     public void Advance(TimeSpan delta)
     {

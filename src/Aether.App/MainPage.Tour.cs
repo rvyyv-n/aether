@@ -42,17 +42,25 @@ public sealed partial class MainPage
     private bool _tourMenuShown;
     private bool _tourBarShown;
     private double _tourCardPlacedHeight;
+    private bool _tourLayerWired;
 
     private readonly record struct TourTarget(TourRect Rect, double Radius, bool Dashed = false);
 
-    private void InitializeTour()
-    {
-        _tourStartTimer = DispatcherQueue.CreateTimer();
-        _tourStartTimer.IsRepeating = false;
-        _tourStartTimer.Interval = TimeSpan.FromMilliseconds(TourStartDelayMilliseconds);
-        _tourStartTimer.Tick += OnTourStartTimerTick;
-        _tourLight.Changed += (_, _) => ApplyLight();
+    private void InitializeTour() => _tourLight.Changed += (_, _) => ApplyLight();
 
+    private void EnsureTourLayer()
+    {
+        if (TourLayer is not null)
+        {
+            return;
+        }
+        App.EnsureSettingsControlsLoaded();
+        FindName(nameof(TourLayer));
+        if (TourLayer is null || _tourLayerWired)
+        {
+            return;
+        }
+        _tourLayerWired = true;
         AutomationProperties.SetName(TourCard, AppStrings.Get("Tour_Name"));
         TourSkipButton.Content = AppStrings.Get("Tour_Skip");
         TourBackButton.Content = AppStrings.Get("Tour_Back");
@@ -71,7 +79,14 @@ public sealed partial class MainPage
         await App.SettingsLoaded;
         if (_isLoaded && !App.Settings.Current.TourSeen)
         {
-            _tourStartTimer?.Start();
+            if (_tourStartTimer is null)
+            {
+                _tourStartTimer = DispatcherQueue.CreateTimer();
+                _tourStartTimer.IsRepeating = false;
+                _tourStartTimer.Interval = TimeSpan.FromMilliseconds(TourStartDelayMilliseconds);
+                _tourStartTimer.Tick += OnTourStartTimerTick;
+            }
+            _tourStartTimer.Start();
         }
     }
 
@@ -98,6 +113,12 @@ public sealed partial class MainPage
         {
             return;
         }
+        EnsureTourLayer();
+        if (TourLayer is null)
+        {
+            _tour.End();
+            return;
+        }
         // Saved as it opens, so closing the window halfway does not bring it back next time.
         App.Settings.Set(SettingKeys.TourSeen, true);
         _ = Task.Run(() =>
@@ -116,7 +137,7 @@ public sealed partial class MainPage
         ApplyChrome();
         SetShortcutsEnabled(false);
         CloseRail();
-        ClipDrawer.Close();
+        ClipDrawer?.Close();
 
         _lightFrom = _lightTo = default;
         _tourBarShown = false;
@@ -135,11 +156,14 @@ public sealed partial class MainPage
         }
         LeaveTourStep();
         _tourLight.Stop();
-        StopRingPulse();
-        if (_fader is not null)
+        if (TourLayer is not null)
         {
-            _fader.Exit(TourCard, ChromeFader.FromBelow);
-            _fader.Exit(TourLayer, null);
+            StopRingPulse();
+            if (_fader is not null)
+            {
+                _fader.Exit(TourCard, ChromeFader.FromBelow);
+                _fader.Exit(TourLayer, null);
+            }
         }
         _chrome.SetHold(ChromeHolds.Tour, false);
         ApplyChrome();
@@ -209,7 +233,7 @@ public sealed partial class MainPage
     /// <summary>The window or the bar changed size: the light and card jump to their new places rather than gliding.</summary>
     private void RefreshTourLayout()
     {
-        if (!_tour.IsActive || TourLayer.ActualWidth <= 0)
+        if (!_tour.IsActive || TourLayer is null || TourLayer.ActualWidth <= 0)
         {
             return;
         }

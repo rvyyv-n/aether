@@ -99,6 +99,10 @@ public sealed partial class MainPage : Page
     private bool _durationRecorded;
     private bool _settingsShown;
     private bool _diagnosticsShown;
+    private string? _lastPositionText;
+    private string? _lastDurationText;
+    private bool _openUrlOverlayWired;
+    private bool _toastLayerWired;
 
     public MainPage()
     {
@@ -149,8 +153,18 @@ public sealed partial class MainPage : Page
             return;
         }
         PlayerViewModel? model = _session?.ViewModel;
+        MpvRenderLoop? loop = VideoSurface.RenderLoop;
+        double displayFps = model is { DisplayFps: > 0 } ? model.DisplayFps : App.DisplaySync?.CurrentHertz ?? 0;
         PerfLog.WriteSessionTotals(
-            model?.DroppedFrames ?? 0, model?.DecoderDroppedFrames ?? 0, VideoSurface.RenderLoop?.FramesPresented ?? 0, model?.DisplayFps ?? 0);
+            model?.DroppedFrames ?? 0,
+            model?.DecoderDroppedFrames ?? 0,
+            loop?.FramesPresented ?? 0,
+            displayFps,
+            loop?.AverageGpuFrameTimeMilliseconds ?? -1,
+            loop?.MaxGpuFrameTimeMilliseconds ?? -1,
+            loop?.GpuTimingSamples ?? 0,
+            loop?.AverageBlurPassMilliseconds ?? -1,
+            loop?.BlurPassFrames ?? 0);
     }
 
     /// <summary>Labels that never change, from the strings file (the XAML text is only a design-time stand-in).</summary>
@@ -161,23 +175,11 @@ public sealed partial class MainPage : Page
         AutomationProperties.SetName(SettingsButton, AppStrings.Get("Settings_Title"));
         ToolTipService.SetToolTip(SettingsBackButton, AppStrings.Get("Settings_Back"));
         AutomationProperties.SetName(SettingsBackButton, AppStrings.Get("Settings_Back"));
-        SearchedKey.Text = AppStrings.Get("EmptyState_DetailsSearched");
-        ErrorKey.Text = AppStrings.Get("EmptyState_DetailsError");
         OpenFileLabel.Text = AppStrings.Get("EmptyState_OpenFile");
         OpenUrlLabel.Text = AppStrings.Get("EmptyState_OpenUrl");
         StreamCancelButton.Content = AppStrings.Get("Stream_Cancel");
-        StreamRetryLabel.Text = AppStrings.Get("Stream_Retry");
-        StreamInstallLabel.Text = AppStrings.Get("Stream_InstallYtDlp");
-        StreamEditLinkLabel.Text = AppStrings.Get("Stream_EditLink");
-        StreamOpenInBrowserLabel.Text = AppStrings.Get("Stream_OpenInBrowser");
-        StreamFailureCancelLabel.Text = AppStrings.Get("Stream_Cancel");
         RecentsHeader.Text = AppStrings.Get("EmptyState_Recent");
         ClearRecentsButton.Content = AppStrings.Get("EmptyState_ClearList");
-        OpenUrlTitle.Text = AppStrings.Get("OpenUrl_Title");
-        OpenUrlFieldLabel.Text = AppStrings.Get("OpenUrl_Placeholder");
-        AutomationProperties.SetName(OpenUrlBox, OpenUrlFieldLabel.Text);
-        OpenUrlPlayLabel.Text = AppStrings.Get("OpenUrl_Play");
-        OpenUrlCancelButton.Content = AppStrings.Get("OpenUrl_Cancel");
         AutomationProperties.SetName(OpenButton, AppStrings.Get("Menu_OpenFile"));
         AutomationProperties.SetName(VolumeButton, AppStrings.Get("Transport_Volume"));
         AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
@@ -187,9 +189,128 @@ public sealed partial class MainPage : Page
         string backToFull = AppStrings.Get("Pip_BackToFullWindow");
         ToolTipService.SetToolTip(PipBackButton, backToFull);
         AutomationProperties.SetName(PipBackButton, backToFull);
-        RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
-        CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
     }
+
+    private void SetPositionText(string text)
+    {
+        if (!string.Equals(_lastPositionText, text, StringComparison.Ordinal))
+        {
+            _lastPositionText = text;
+            PositionText.Text = text;
+        }
+    }
+
+    private void SetDurationText(string text)
+    {
+        if (!string.Equals(_lastDurationText, text, StringComparison.Ordinal))
+        {
+            _lastDurationText = text;
+            DurationText.Text = text;
+        }
+    }
+
+    private (Toast Card, FrameworkElement Layer) EnsureToastLayer()
+    {
+        if (ToastLayer is null)
+        {
+            FindName(nameof(ToastLayer));
+        }
+        if (ToastLayer is not null && !_toastLayerWired)
+        {
+            _toastLayerWired = true;
+            // The Skip button steps over a toast it would touch, so it follows the toast coming and going.
+            ToastLayer.RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => UpdateToastPlacement());
+            ToastLayer.SizeChanged += (_, _) => UpdateToastPlacement();
+            UpdateToastPlacement();
+        }
+        return (ToastCard, ToastLayer!);
+    }
+
+    private void EnsureEngineFailureUi()
+    {
+        if (DetailsPanel is null)
+        {
+            FindName(nameof(DetailsPanel));
+            if (DetailsPanel is not null)
+            {
+                SearchedKey.Text = AppStrings.Get("EmptyState_DetailsSearched");
+                ErrorKey.Text = AppStrings.Get("EmptyState_DetailsError");
+            }
+        }
+        if (FailureActions is null)
+        {
+            FindName(nameof(FailureActions));
+            if (FailureActions is not null)
+            {
+                RetryLabel.Text = AppStrings.Get("Shell_EngineFailedRetry");
+                CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
+            }
+        }
+    }
+
+    private void EnsureStreamFailureActions()
+    {
+        if (StreamFailureActions is not null)
+        {
+            return;
+        }
+        FindName(nameof(StreamFailureActions));
+        if (StreamFailureActions is not null)
+        {
+            StreamRetryLabel.Text = AppStrings.Get("Stream_Retry");
+            StreamInstallLabel.Text = AppStrings.Get("Stream_InstallYtDlp");
+            StreamEditLinkLabel.Text = AppStrings.Get("Stream_EditLink");
+            StreamOpenInBrowserLabel.Text = AppStrings.Get("Stream_OpenInBrowser");
+            StreamFailureCancelLabel.Text = AppStrings.Get("Stream_Cancel");
+        }
+    }
+
+    private void EnsureOpenUrlOverlay()
+    {
+        if (OpenUrlOverlay is not null)
+        {
+            return;
+        }
+        FindName(nameof(OpenUrlOverlay));
+        if (OpenUrlOverlay is not null && !_openUrlOverlayWired)
+        {
+            _openUrlOverlayWired = true;
+            OpenUrlTitle.Text = AppStrings.Get("OpenUrl_Title");
+            OpenUrlFieldLabel.Text = AppStrings.Get("OpenUrl_Placeholder");
+            AutomationProperties.SetName(OpenUrlBox, OpenUrlFieldLabel.Text);
+            OpenUrlPlayLabel.Text = AppStrings.Get("OpenUrl_Play");
+            OpenUrlCancelButton.Content = AppStrings.Get("OpenUrl_Cancel");
+        }
+    }
+
+    private DiagnosticsPanel? EnsureDiagnostics()
+    {
+        if (Diagnostics is null)
+        {
+            FindName(nameof(Diagnostics));
+        }
+        return Diagnostics;
+    }
+
+    private void UpdateDiagnostics(in PlayerState state)
+    {
+        if (Diagnostics is not { } panel)
+        {
+            return;
+        }
+        double gpuMs = VideoSurface.RenderLoop?.GpuFrameTimeMilliseconds ?? -1;
+        double fallbackHz = state.DisplayFps > 0 ? 0 : App.DisplaySync?.CurrentHertz ?? 0;
+        panel.Update(state, gpuMs, fallbackHz);
+    }
+
+    private void OnClipsShelfChanged(object? sender, EventArgs e) =>
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_isLoaded && HasVideo && !IsPictureInPicture && ClipLayer is null && App.Clips.Items.Count > 0)
+            {
+                Render();
+            }
+        });
 
     public PlayerSession? Session => _session;
 
@@ -276,14 +397,10 @@ public sealed partial class MainPage : Page
             _copiedTimer.Interval = TimeSpan.FromSeconds(2);
             _copiedTimer.IsRepeating = false;
             _copiedTimer.Tick += OnCopiedTimerTick;
-            _toasts = new ToastService(ToastCard, ToastLayer, _fader, DispatcherQueue, () => Focus(FocusState.Programmatic));
-            ClipLayer.SizeChanged += (_, _) => UpdateToastPlacement();
-            // The Skip button steps over a toast it would touch, so it follows the toast coming and going.
-            ToastLayer.RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => UpdateToastPlacement());
-            ToastLayer.SizeChanged += (_, _) => UpdateToastPlacement();
-            SkipChapterLayer.SizeChanged += (_, _) => UpdateToastPlacement();
+            _toasts = new ToastService(EnsureToastLayer, _fader, DispatcherQueue, () => Focus(FocusState.Programmatic));
         }
         AppToasts.Requested += OnToastRequested;
+        App.Clips.Changed += OnClipsShelfChanged;
         if (_session is null)
         {
             StartEngine();
@@ -305,8 +422,17 @@ public sealed partial class MainPage : Page
         _volumeHoverTimer?.Stop();
         _openUrlTimer?.Stop();
         _copiedTimer?.Stop();
+        _bar?.Stop();
+        _subtitleLift?.Stop();
+        _railSlide.Stop();
+        _sideSlide.Stop();
+        _tourLight.Stop();
         EndTour();
-        CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
+        if (CopyDetailsLabel is not null)
+        {
+            CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
+        }
+        App.Clips.Changed -= OnClipsShelfChanged;
         App.Recents.Changed -= OnRecentsChanged;
         App.Shortcuts.Changed -= OnShortcutsChanged;
         AppToasts.Requested -= OnToastRequested;
@@ -462,6 +588,10 @@ public sealed partial class MainPage : Page
     /// <summary>Copies the failure as shown: title, subtitle and the details rows that are visible.</summary>
     private void OnCopyDetailsClick(object sender, RoutedEventArgs e)
     {
+        if (DetailsPanel is null)
+        {
+            return;
+        }
         string text = FailureDetails.Format(
             HomeTitle.Text,
             HomeSubtitle.Text,
@@ -474,7 +604,10 @@ public sealed partial class MainPage : Page
         try
         {
             Clipboard.SetContent(package);
-            CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopied");
+            if (CopyDetailsLabel is not null)
+            {
+                CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopied");
+            }
             _copiedTimer?.Start(); // Start on a running timer restarts the 2 seconds
         }
         catch (Exception)
@@ -483,8 +616,13 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void OnCopiedTimerTick(DispatcherQueueTimer sender, object args) =>
-        CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
+    private void OnCopiedTimerTick(DispatcherQueueTimer sender, object args)
+    {
+        if (CopyDetailsLabel is not null)
+        {
+            CopyDetailsLabel.Text = AppStrings.Get("Shell_EngineFailedCopyDetails");
+        }
+    }
 
     // The loader also tries mpv-2.dll, but the failure names the file the installer ships.
     private static string LibraryPath =>
@@ -506,6 +644,7 @@ public sealed partial class MainPage : Page
         string resumeKey = link?.WebLink ?? path;
         double? startAt = carry?.Position ?? (App.Settings.Current.ResumePlayback ? App.Resume.TryGet(resumeKey) : null);
         _currentPath = path;
+        SyncClipRange();
         _currentWebLink = link?.WebLink;
         _streamTitle = link?.Title;
         SyncLanStreamSource(path);
@@ -524,7 +663,7 @@ public sealed partial class MainPage : Page
         string fileOptions = MpvLoadOptions.ForStream(link?.AudioUrl);
         _fitWindowPending = carry is null; // after a restart the window keeps the size it has
         _durationRecorded = false;
-        TracksPanel.EndMix();
+        _tracksPanel?.EndMix();
         _transcriptKey = null;
         _pendingMix = null;
         _mixPending = false;
@@ -612,7 +751,7 @@ public sealed partial class MainPage : Page
                 UpdateMediaTimeline(vm);
                 if (_sidePanel == SidePanel.Transcript)
                 {
-                    TranscriptPane.SetPosition(vm.Position);
+                    TranscriptPane?.SetPosition(vm.Position);
                 }
                 break;
             case nameof(PlayerViewModel.Duration):
@@ -658,7 +797,7 @@ public sealed partial class MainPage : Page
                 _lastDecoder = vm.Decoder;
                 break;
             case nameof(PlayerViewModel.State) when _diagnosticsShown:
-                Diagnostics.Update(vm.State);
+                UpdateDiagnostics(vm.State);
                 break;
         }
     }
@@ -678,12 +817,11 @@ public sealed partial class MainPage : Page
     /// <summary>Position and duration text and the seek bar. Both times change shape together from an hour.</summary>
     private void UpdateClock(PlayerViewModel vm)
     {
-        if (!_chromeShown && (Osd?.Visibility != Visibility.Visible))
+        if (!_chromeShown)
         {
             return;
         }
-        DurationText.Text = Timecode.FormatClock(vm.Duration, vm.Duration);
-        SyncClipRange();
+        SetDurationText(Timecode.FormatClock(vm.Duration, vm.Duration));
         UpdatePipSeek(vm);
         if (UpdateLiveClock(vm))
         {
@@ -694,7 +832,7 @@ public sealed partial class MainPage : Page
         SeekBar.Position = position;
         if (!SeekBar.IsDragging)
         {
-            PositionText.Text = Timecode.FormatClock(position, vm.Duration); // while dragging it shows the drag time
+            SetPositionText(Timecode.FormatClock(position, vm.Duration)); // while dragging it shows the drag time
         }
     }
 
@@ -775,25 +913,34 @@ public sealed partial class MainPage : Page
     private void SetDiagnosticsShown(bool show)
     {
         _diagnosticsShown = show;
+        if (!show && Diagnostics is null)
+        {
+            return;
+        }
         if (show)
         {
             LeavePictureInPicture();
         }
+        DiagnosticsPanel? panel = show ? EnsureDiagnostics() : Diagnostics;
+        if (panel is null)
+        {
+            return;
+        }
         if (show && _session is { } session)
         {
-            Diagnostics.Update(session.ViewModel.State);
+            UpdateDiagnostics(session.ViewModel.State);
         }
         if (_fader is null)
         {
-            Diagnostics.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            panel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         }
         else if (show)
         {
-            _fader.Enter(Diagnostics, ChromeFader.FromAbove);
+            _fader.Enter(panel, ChromeFader.FromAbove);
         }
         else
         {
-            _fader.Exit(Diagnostics, ChromeFader.FromAbove);
+            _fader.Exit(panel, ChromeFader.FromAbove);
         }
     }
 
@@ -1036,7 +1183,7 @@ public sealed partial class MainPage : Page
             args.Handled = true;
             SetSettingsShown(false);
         }
-        else if (ClipDrawer.Close())
+        else if (ClipDrawer?.Close() == true)
         {
             args.Handled = true;
         }
@@ -1085,6 +1232,7 @@ public sealed partial class MainPage : Page
         _settingsShown = shown;
         if (shown)
         {
+            App.EnsureSettingsControlsLoaded();
             SettingsHost.Child ??= new SettingsView();
             LeavePictureInPicture();
             _host?.SetFullScreen(false);
@@ -1152,6 +1300,11 @@ public sealed partial class MainPage : Page
         CloseLanStream();
         LeavePictureInPicture();
         _openUrl.Open(clipboard);
+        EnsureOpenUrlOverlay();
+        if (OpenUrlOverlay is null)
+        {
+            return;
+        }
         OpenUrlOverlay.RequestedTheme = HasVideo ? ElementTheme.Dark : ElementTheme.Default;
         OpenUrlBox.Text = _openUrl.Text;
         if (_fader is null)
@@ -1227,14 +1380,17 @@ public sealed partial class MainPage : Page
 
     private void HideOpenUrlDialog()
     {
-        if (_fader is null)
+        if (OpenUrlOverlay is not null)
         {
-            OpenUrlOverlay.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            _fader.Exit(OpenUrlOverlay, null);
-            _fader.Slide(OpenUrlCard, false, ChromeFader.FromBelow);
+            if (_fader is null)
+            {
+                OpenUrlOverlay.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                _fader.Exit(OpenUrlOverlay, null);
+                _fader.Slide(OpenUrlCard, false, ChromeFader.FromBelow);
+            }
         }
         _chrome.SetHold(ChromeHolds.Dialog, false);
         ApplyChrome();
@@ -1274,7 +1430,7 @@ public sealed partial class MainPage : Page
 
         // A remembered size is asked for from the start; yt-dlp lists every size whatever was asked for.
         string savedQuality = App.Settings.Current.StreamQualityChoice;
-        StreamResolutionOptions options = StreamOptions(RememberedQualitySelector());
+        StreamResolutionOptions options = StreamOptions(RememberedQualitySelector(), QualityOptions.ForKey(savedQuality));
 
         try
         {
@@ -1384,12 +1540,24 @@ public sealed partial class MainPage : Page
         {
             return;
         }
-        StreamInstallButton.IsEnabled = false;
-        StreamInstallLabel.Text = AppStrings.Format("YtDlp_InstallProgress", 0);
+        EnsureStreamFailureActions();
+        if (StreamInstallButton is not null && StreamInstallLabel is not null)
+        {
+            StreamInstallButton.IsEnabled = false;
+            StreamInstallLabel.Text = AppStrings.Format("YtDlp_InstallProgress", 0);
+        }
         var progress = new Progress<double>(fraction =>
-            StreamInstallLabel.Text = AppStrings.Format("YtDlp_InstallProgress", (int)(fraction * 100)));
+        {
+            if (StreamInstallLabel is not null)
+            {
+                StreamInstallLabel.Text = AppStrings.Format("YtDlp_InstallProgress", (int)(fraction * 100));
+            }
+        });
         (YtDlpInstallOutcome outcome, string? version) = await YtDlpManager.InstallLatestAsync(onlyIfNewer: false, progress);
-        StreamInstallButton.IsEnabled = true;
+        if (StreamInstallButton is not null)
+        {
+            StreamInstallButton.IsEnabled = true;
+        }
         if (!_isLoaded || _failedStreamLink != link)
         {
             return;
@@ -1401,7 +1569,10 @@ public sealed partial class MainPage : Page
             return;
         }
         // The screen stays up with the reason and the same button, now reading Retry.
-        StreamInstallLabel.Text = AppStrings.Get("Stream_Retry");
+        if (StreamInstallLabel is not null)
+        {
+            StreamInstallLabel.Text = AppStrings.Get("Stream_Retry");
+        }
         if (_streamFailure is { } failure)
         {
             _streamFailure = failure with { Subtitle = AppStrings.Get(YtDlpManager.FailureKey(outcome)) };
@@ -1413,6 +1584,7 @@ public sealed partial class MainPage : Page
     {
         if (_failedStreamLink is { } link)
         {
+            _streamResolver.Invalidate(link);
             _streamFailure = null;
             StartResolvingStream(link);
         }
@@ -1470,6 +1642,10 @@ public sealed partial class MainPage : Page
     /// <summary>Play follows the link check; the line under the field is the hint or the reason Play did nothing.</summary>
     private void RenderOpenUrl()
     {
+        if (OpenUrlOverlay is null)
+        {
+            return;
+        }
         OpenUrlPlayButton.IsEnabled = _openUrl.CanSubmit;
         // OpenUrl_Hint (Ctrl+V plays a copied link) replaces the not-available text once links play.
         (string note, Tone? dot) = _openUrl.Note switch
@@ -1566,7 +1742,7 @@ public sealed partial class MainPage : Page
 
     private async void OnDragEnter(object sender, DragEventArgs e)
     {
-        if (ClipDrawer.IsDraggingOut)
+        if (ClipDrawer is { IsDraggingOut: true })
         {
             return; // a clip leaving the drawer is not a file to open
         }
@@ -1708,13 +1884,19 @@ public sealed partial class MainPage : Page
             _fader.Fade(TitleText, visible);
             _fader.Fade(SettingsButton, visible);
             _fader.Fade(CaptionButtons, visible);
-            _fader.Fade(PipChrome, visible);
-            PipChrome.IsHitTestVisible = visible;
+            if (PipChrome is not null)
+            {
+                _fader.Fade(PipChrome, visible);
+                PipChrome.IsHitTestVisible = visible;
+            }
             _fader.Fade(Osd, visible);
             VideoSurface.FadeBackdrop(BackdropSlot.Bar, visible, _fader.DurationMilliseconds(visible));
             Osd.IsHitTestVisible = visible;
-            _fader.Fade(ClipLayer, visible);
-            ClipLayer.IsHitTestVisible = visible;
+            if (ClipLayer is not null)
+            {
+                _fader.Fade(ClipLayer, visible);
+                ClipLayer.IsHitTestVisible = visible;
+            }
         }
         SyncBar();
         SyncSubtitleLift();
@@ -1745,7 +1927,7 @@ public sealed partial class MainPage : Page
     private void UpdateToastPlacement()
     {
         bool controls = _chrome.IsVisible && Osd.Visibility == Visibility.Visible;
-        double chip = ClipLayer.Visibility == Visibility.Visible ? ClipLayer.ActualHeight : 0;
+        double chip = ClipLayer is { Visibility: Visibility.Visible } clip ? clip.ActualHeight : 0;
         _toasts?.SetControlsShown(controls, Osd.Height, chip);
         PlaceSkipChapter(controls, chip);
     }
@@ -1850,8 +2032,22 @@ public sealed partial class MainPage : Page
         DropScrim.Visibility = hasVideo && _dragging ? Visibility.Visible : Visibility.Collapsed;
         DropOutline.Visibility = _dragging ? Visibility.Visible : Visibility.Collapsed;
         Osd.Visibility = hasVideo && !pip ? Visibility.Visible : Visibility.Collapsed;
-        ClipLayer.Visibility = Osd.Visibility;
-        PipChrome.Visibility = hasVideo && pip ? Visibility.Visible : Visibility.Collapsed;
+        if (hasVideo && !pip && App.Clips.Items.Count > 0)
+        {
+            EnsureClipLayer();
+        }
+        if (ClipLayer is not null)
+        {
+            ClipLayer.Visibility = Osd.Visibility;
+        }
+        if (hasVideo && pip)
+        {
+            EnsurePipChrome();
+        }
+        if (PipChrome is not null)
+        {
+            PipChrome.Visibility = hasVideo && pip ? Visibility.Visible : Visibility.Collapsed;
+        }
         // ADR-0013: no blur in picture in picture; there is no card to blur behind.
         VideoSurface.SetBackdropActive(BackdropSlot.Bar, hasVideo && !pip);
         VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, hasVideo && !pip);
@@ -1883,9 +2079,12 @@ public sealed partial class MainPage : Page
         PlayPauseButton.Content = glyph;
         ToolTipService.SetToolTip(PlayPauseButton, label);
         AutomationProperties.SetName(PlayPauseButton, label);
-        PipPlayPauseButton.Content = glyph;
-        ToolTipService.SetToolTip(PipPlayPauseButton, label);
-        AutomationProperties.SetName(PipPlayPauseButton, label);
+        if (PipPlayPauseButton is not null)
+        {
+            PipPlayPauseButton.Content = glyph;
+            ToolTipService.SetToolTip(PipPlayPauseButton, label);
+            AutomationProperties.SetName(PipPlayPauseButton, label);
+        }
         FullScreenButton.Content = fullScreen ? ExitFullScreenGlyph : FullScreenGlyph;
         ToolTipService.SetToolTip(FullScreenButton, fullScreen ? AppStrings.Get("Transport_ExitFullScreen") : Tip("Transport_FullScreen", ShortcutAction.FullScreen));
 
@@ -1964,10 +2163,14 @@ public sealed partial class MainPage : Page
                 AppStrings.Get(missing ? "Shell_EngineFailedMissingFile" : "Shell_EngineFailedUnavailable"),
                 Tone.Warning,
                 engine);
-            SearchedValue.Text = LibraryPath;
-            ErrorValue.Text = missing
-                ? AppStrings.Get("Shell_EngineFailedReinstall")
-                : _startupError ?? AppStrings.Get("Shell_EngineFailedUnknownError");
+            EnsureEngineFailureUi();
+            if (DetailsPanel is not null)
+            {
+                SearchedValue.Text = LibraryPath;
+                ErrorValue.Text = missing
+                    ? AppStrings.Get("Shell_EngineFailedReinstall")
+                    : _startupError ?? AppStrings.Get("Shell_EngineFailedUnknownError");
+            }
         }
         else if (vm?.Status == PlaybackStatus.Loading)
         {
@@ -1989,20 +2192,38 @@ public sealed partial class MainPage : Page
         StreamProgress.Visibility = showStream ? Visibility.Visible : Visibility.Collapsed;
         StreamProgress.IsActive = showStream;
         StreamCancelButton.Visibility = showStream ? Visibility.Visible : Visibility.Collapsed;
-        StreamFailureActions.Visibility = streamFailed ? Visibility.Visible : Visibility.Collapsed;
-        // Without yt-dlp a plain Retry cannot succeed, so Install takes its place.
-        bool needsInstall = _streamFailure?.Reason == StreamFailureReason.YtDlpMissing;
-        StreamInstallButton.Visibility = needsInstall ? Visibility.Visible : Visibility.Collapsed;
-        StreamRetryButton.Visibility = needsInstall ? Visibility.Collapsed : Visibility.Visible;
+        if (streamFailed)
+        {
+            EnsureStreamFailureActions();
+        }
+        if (StreamFailureActions is not null)
+        {
+            StreamFailureActions.Visibility = streamFailed ? Visibility.Visible : Visibility.Collapsed;
+            // Without yt-dlp a plain Retry cannot succeed, so Install takes its place.
+            bool needsInstall = _streamFailure?.Reason == StreamFailureReason.YtDlpMissing;
+            StreamInstallButton.Visibility = needsInstall ? Visibility.Visible : Visibility.Collapsed;
+            StreamRetryButton.Visibility = needsInstall ? Visibility.Collapsed : Visibility.Visible;
+        }
         // Recents belong to the plain empty state: hidden until there is history (2.10).
         bool idle = _startup == StartupPhase.Ready && !_dragging && !streaming && !streamFailed && vm?.Status != PlaybackStatus.Loading;
         RecentsPanel.Visibility = idle && RecentsList.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        Visibility failure = failed && !_dragging ? Visibility.Visible : Visibility.Collapsed;
-        DetailsPanel.Visibility = failure;
-        FailureActions.Visibility = failure;
-        Visibility searched = _startup == StartupPhase.MissingBinary ? Visibility.Visible : Visibility.Collapsed;
-        SearchedKey.Visibility = searched;
-        SearchedValue.Visibility = searched;
+        bool showFailureUi = failed && !_dragging;
+        if (showFailureUi)
+        {
+            EnsureEngineFailureUi();
+        }
+        Visibility failure = showFailureUi ? Visibility.Visible : Visibility.Collapsed;
+        if (DetailsPanel is not null)
+        {
+            DetailsPanel.Visibility = failure;
+            Visibility searched = _startup == StartupPhase.MissingBinary ? Visibility.Visible : Visibility.Collapsed;
+            SearchedKey.Visibility = searched;
+            SearchedValue.Visibility = searched;
+        }
+        if (FailureActions is not null)
+        {
+            FailureActions.Visibility = failure;
+        }
     }
 
     /// <param name="titleTone">Dot beside the title (failures), or null for none.</param>

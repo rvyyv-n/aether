@@ -6,13 +6,14 @@ namespace Aether.Core.Interop.Rendering;
 /// <summary>
 /// The blur behind the player card (ADR-0013), drawn into the back buffer after mpv has rendered, in
 /// the same ANGLE context. In-app Acrylic can't see a swap chain, so the render thread does it:
-/// the card's rectangle plus a margin is blitted down to half and then quarter size (two linear
+/// each card's rectangle plus a margin is blitted down to half and then quarter size (two linear
 /// blits), blurred with a separable 9-tap Gaussian, and drawn back clipped to the card's rounded
 /// rectangle (a signed-distance function gives the antialiased edge), together with the card's
 /// shadow outside that shape. The XAML card keeps its own tint on top.
 /// <para>
-/// ES 3 only (blits and <c>gl_VertexID</c>, so no vertex buffers are needed). mpv draws in this
-/// context next frame, so every binding and state this pass touches is saved and restored. Render thread.
+/// Multi-card draws are phase-batched (all FBO 0 reads -> all half/quarter downsamples -> all
+/// blur passes -> all composites) and render targets grow in capacity steps so animating cards
+/// never reallocate textures mid-motion. Render thread, zero allocations.
 /// </para>
 /// </summary>
 internal sealed unsafe class BackdropBlurPass : IDisposable
@@ -64,6 +65,8 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
     // Two rounds of the classic 9-tap kernel (5 linear fetches) at quarter size: about 12 px of
     // standard deviation at 1x, close to what Acrylic looks like.
     private const int BlurRounds = 2;
+    private const int HalfCapacityStep = 64;
+    private const int QuarterCapacityStep = 32;
 
     private const string VertexSource = """
         #version 300 es
@@ -78,14 +81,19 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
         #version 300 es
         precision highp float;
         uniform sampler2D uTex;
-        uniform vec4 uBlur; // 1/width, 1/height, step.x, step.y in uv
+        uniform vec4 uBlur;  // 1/capWidth, 1/capHeight, step.x, step.y in uv
+        uniform vec2 uMaxUv; // (activeWidth - 0.5) / capWidth, (activeHeight - 0.5) / capHeight
         out vec4 o;
         void main() {
-            vec2 uv = gl_FragCoord.xy * uBlur.xy;
+            vec2 uv = min(gl_FragCoord.xy * uBlur.xy, uMaxUv);
             vec2 s = uBlur.zw;
+            vec2 p1 = min(uv + s * 1.3846153846, uMaxUv);
+            vec2 n1 = max(uv - s * 1.3846153846, vec2(0.0));
+            vec2 p2 = min(uv + s * 3.2307692308, uMaxUv);
+            vec2 n2 = max(uv - s * 3.2307692308, vec2(0.0));
             o = texture(uTex, uv) * 0.2270270270
-              + (texture(uTex, uv + s * 1.3846153846) + texture(uTex, uv - s * 1.3846153846)) * 0.3162162162
-              + (texture(uTex, uv + s * 3.2307692308) + texture(uTex, uv - s * 3.2307692308)) * 0.0702702703;
+              + (texture(uTex, p1) + texture(uTex, n1)) * 0.3162162162
+              + (texture(uTex, p2) + texture(uTex, n2)) * 0.0702702703;
         }
         """;
 
@@ -93,10 +101,11 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
         #version 300 es
         precision highp float;
         uniform sampler2D uTex;
-        uniform vec4 uCard;   // x0, y0, x1, y1 in back-buffer pixels
-        uniform vec4 uCopy;   // x, y, width, height of the blurred source in back-buffer pixels
-        uniform vec4 uShape;  // corner radius, shadow sigma, shadow offset, opacity (pixels)
-        uniform float uShadow; // shadow strength
+        uniform vec4 uCard;     // x0, y0, x1, y1 in back-buffer pixels
+        uniform vec4 uCopy;     // x, y, width, height of the blurred source in back-buffer pixels
+        uniform vec4 uShape;    // corner radius, shadow sigma, shadow offset, opacity (pixels)
+        uniform vec4 uUvBounds; // activeW/capW, activeH/capH, maxU, maxV
+        uniform float uShadow;  // shadow strength
         out vec4 o;
         float box(vec2 p, vec2 ext, float r) {
             vec2 q = abs(p) - ext + r;
@@ -110,7 +119,8 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
             // A Gaussian-blurred edge is close to a logistic curve over the distance to the shape.
             float d = box(p - vec2(0.0, uShape.z), ext, uShape.x) / uShape.y;
             float shadow = uShadow / (1.0 + exp(min(1.702 * d, 30.0))) * (1.0 - cover);
-            vec3 blur = texture(uTex, (gl_FragCoord.xy - uCopy.xy) / uCopy.zw).rgb;
+            vec2 uv = clamp(((gl_FragCoord.xy - uCopy.xy) / uCopy.zw) * uUvBounds.xy, vec2(0.0), uUvBounds.zw);
+            vec3 blur = texture(uTex, uv).rgb;
             float a = uShape.w;
             o = vec4(blur * (cover * a), a * (cover + shadow));
         }
@@ -150,20 +160,22 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
     private readonly delegate* unmanaged[Stdcall]<uint, uint, int*, void> _glGetProgramiv;
     private readonly delegate* unmanaged[Stdcall]<uint, byte*, int> _glGetUniformLocation;
     private readonly delegate* unmanaged[Stdcall]<int, float, void> _glUniform1f;
+    private readonly delegate* unmanaged[Stdcall]<int, float, float, void> _glUniform2f;
     private readonly delegate* unmanaged[Stdcall]<int, float, float, float, float, void> _glUniform4f;
     private readonly delegate* unmanaged[Stdcall]<uint, void> _glDeleteShader;
     private readonly delegate* unmanaged[Stdcall]<uint, void> _glDeleteProgram;
 
     private uint _blurProgram, _compositeProgram;
-    private int _blurQuad, _blurParams;
-    private int _compositeQuad, _compositeCard, _compositeCopy, _compositeShape, _compositeShadow;
+    private int _blurQuad, _blurParams, _blurMaxUv;
+    private int _compositeQuad, _compositeCard, _compositeCopy, _compositeShape, _compositeUvBounds, _compositeShadow;
 
     // Half-size and quarter-size targets for a card's rectangle; A and B ping-pong while blurring. One set per slot, so
     // two cards of different sizes don't reallocate each other's targets every frame.
     private struct Targets
     {
         public uint Half, A, B, HalfFbo, AFbo, BFbo;
-        public int HalfWidth, HalfHeight, QuarterWidth, QuarterHeight;
+        public int HalfWidth, HalfHeight, HalfCapWidth, HalfCapHeight;
+        public int QuarterWidth, QuarterHeight, QuarterCapWidth, QuarterCapHeight;
     }
 
     private readonly Targets[] _targets = new Targets[BackdropSource.SlotCount];
@@ -205,6 +217,7 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
         _glGetProgramiv = (delegate* unmanaged[Stdcall]<uint, uint, int*, void>)Need(bridge, "glGetProgramiv"u8);
         _glGetUniformLocation = (delegate* unmanaged[Stdcall]<uint, byte*, int>)Need(bridge, "glGetUniformLocation"u8);
         _glUniform1f = (delegate* unmanaged[Stdcall]<int, float, void>)Need(bridge, "glUniform1f"u8);
+        _glUniform2f = (delegate* unmanaged[Stdcall]<int, float, float, void>)Need(bridge, "glUniform2f"u8);
         _glUniform4f = (delegate* unmanaged[Stdcall]<int, float, float, float, float, void>)Need(bridge, "glUniform4f"u8);
         _glDeleteShader = (delegate* unmanaged[Stdcall]<uint, void>)Need(bridge, "glDeleteShader"u8);
         _glDeleteProgram = (delegate* unmanaged[Stdcall]<uint, void>)Need(bridge, "glDeleteProgram"u8);
@@ -248,11 +261,41 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
 
     /// <summary>
     /// Blurs the surroundings of each card and draws the blurred cards and their shadows over the back buffer.
-    /// GL state is saved and restored once for all of them. No allocation.
+    /// GL state is saved and restored once for all of them. Phase-batched with zero allocation.
     /// </summary>
     public void Draw(ReadOnlySpan<BackdropFrame> frames, uint bufferWidth, uint bufferHeight)
     {
         if (_failed || frames.IsEmpty)
+        {
+            return;
+        }
+
+        Span<BackdropLayout> layouts = stackalloc BackdropLayout[BackdropSource.SlotCount];
+        Span<int> slots = stackalloc int[BackdropSource.SlotCount];
+        Span<float> opacities = stackalloc float[BackdropSource.SlotCount];
+        int validCount = 0;
+
+        foreach (ref readonly BackdropFrame frame in frames)
+        {
+            if (validCount >= BackdropSource.SlotCount)
+            {
+                break;
+            }
+            if ((uint)frame.Slot >= (uint)_targets.Length)
+            {
+                continue;
+            }
+            if (!BackdropGeometry.TryLayout(frame.Region, bufferWidth, bufferHeight, out BackdropLayout layout))
+            {
+                continue;
+            }
+            layouts[validCount] = layout;
+            slots[validCount] = frame.Slot;
+            opacities[validCount] = frame.Opacity;
+            validCount++;
+        }
+
+        if (validCount == 0)
         {
             return;
         }
@@ -269,77 +312,93 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
             _glActiveTexture(GL_TEXTURE0);
             _glBindSampler(0, 0);
 
-            foreach (ref readonly BackdropFrame frame in frames)
+            // Phase 0: ensure capacity-rounded targets for all valid cards.
+            for (int i = 0; i < validCount; i++)
             {
-                if (!BackdropGeometry.TryLayout(frame.Region, bufferWidth, bufferHeight, out BackdropLayout layout))
-                {
-                    continue;
-                }
-                if (!DrawOne(ref _targets[frame.Slot], frame.Opacity, layout, bufferWidth, bufferHeight))
+                ref readonly BackdropLayout layout = ref layouts[i];
+                if (!EnsureTargets(ref _targets[slots[i]], (layout.CopyWidth + 1) / 2, (layout.CopyHeight + 1) / 2,
+                        (layout.CopyWidth + 3) / 4, (layout.CopyHeight + 3) / 4))
                 {
                     _failed = true;
                     return;
                 }
+            }
+
+            // Phase 1: downsample every card from the untouched back buffer before any composite touches FBO 0.
+            _glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+            for (int i = 0; i < validCount; i++)
+            {
+                ref readonly BackdropLayout layout = ref layouts[i];
+                ref Targets t = ref _targets[slots[i]];
+                _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, t.HalfFbo);
+                _glBlitFramebuffer(layout.CopyX, layout.CopyY, layout.CopyX + layout.CopyWidth, layout.CopyY + layout.CopyHeight,
+                    0, 0, t.HalfWidth, t.HalfHeight, GL_COLOR_BUFFER_BIT, (uint)GL_LINEAR);
+            }
+            for (int i = 0; i < validCount; i++)
+            {
+                ref Targets t = ref _targets[slots[i]];
+                _glBindFramebuffer(GL_READ_FRAMEBUFFER, t.HalfFbo);
+                _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, t.AFbo);
+                _glBlitFramebuffer(0, 0, t.HalfWidth, t.HalfHeight, 0, 0, t.QuarterWidth, t.QuarterHeight, GL_COLOR_BUFFER_BIT, (uint)GL_LINEAR);
+            }
+
+            // Phase 2: separable Gaussian blur for every card with one program bind.
+            _glUseProgram(_blurProgram);
+            _glUniform4f(_blurQuad, -1f, -1f, 1f, 1f);
+            for (int i = 0; i < validCount; i++)
+            {
+                ref Targets t = ref _targets[slots[i]];
+                _glViewport(0, 0, t.QuarterWidth, t.QuarterHeight);
+                float invCapW = 1f / t.QuarterCapWidth;
+                float invCapH = 1f / t.QuarterCapHeight;
+                float maxU = (t.QuarterWidth - 0.5f) * invCapW;
+                float maxV = (t.QuarterHeight - 0.5f) * invCapH;
+                _glUniform2f(_blurMaxUv, maxU, maxV);
+                for (int round = 0; round < BlurRounds; round++)
+                {
+                    BlurPass(t.BFbo, t.A, invCapW, invCapH, invCapW, 0f);
+                    BlurPass(t.AFbo, t.B, invCapW, invCapH, 0f, invCapH);
+                }
+            }
+
+            // Phase 3: composite all blurred cards + shadows onto FBO 0 in one state block.
+            _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            _glViewport(0, 0, (int)bufferWidth, (int)bufferHeight);
+            _glEnable(GL_BLEND);
+            _glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            _glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+            _glUseProgram(_compositeProgram);
+            _glUniform1f(_compositeShadow, BackdropGeometry.ShadowOpacity);
+            float w = bufferWidth, h = bufferHeight;
+
+            for (int i = 0; i < validCount; i++)
+            {
+                ref readonly BackdropLayout layout = ref layouts[i];
+                ref Targets t = ref _targets[slots[i]];
+                _glBindTexture(GL_TEXTURE_2D, t.A);
+
+                float sigma = BackdropGeometry.ShadowBlurDips * 0.5f * layout.Scale;
+                float offset = BackdropGeometry.ShadowOffsetDips * layout.Scale;
+                float reach = (3f * sigma) + offset;
+                _glUniform4f(_compositeQuad,
+                    (((layout.CardX0 - reach) / w) * 2f) - 1f, (((layout.CardY0 - reach) / h) * 2f) - 1f,
+                    (((layout.CardX1 + reach) / w) * 2f) - 1f, (((layout.CardY1 + reach) / h) * 2f) - 1f);
+                _glUniform4f(_compositeCard, layout.CardX0, layout.CardY0, layout.CardX1, layout.CardY1);
+                _glUniform4f(_compositeCopy, layout.CopyX, layout.CopyY, layout.CopyWidth, layout.CopyHeight);
+                _glUniform4f(_compositeShape, layout.Radius, sigma, offset, opacities[i]);
+
+                float scaleX = (float)t.QuarterWidth / t.QuarterCapWidth;
+                float scaleY = (float)t.QuarterHeight / t.QuarterCapHeight;
+                float maxU = (t.QuarterWidth - 0.5f) / t.QuarterCapWidth;
+                float maxV = (t.QuarterHeight - 0.5f) / t.QuarterCapHeight;
+                _glUniform4f(_compositeUvBounds, scaleX, scaleY, maxU, maxV);
+                _glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             }
         }
         finally
         {
             Restore(saved);
         }
-    }
-
-    /// <summary>One card: copy, downsample, blur, composite. Assumes the state <see cref="Draw"/> set up.</summary>
-    private bool DrawOne(ref Targets t, float opacity, in BackdropLayout layout, uint bufferWidth, uint bufferHeight)
-    {
-        if (!EnsureTargets(ref t, (layout.CopyWidth + 1) / 2, (layout.CopyHeight + 1) / 2,
-                (layout.CopyWidth + 3) / 4, (layout.CopyHeight + 3) / 4))
-        {
-            return false;
-        }
-
-        // The composite pass below leaves blending on; the next card's copy and blur start from none.
-        _glDisable(GL_BLEND);
-
-        // Two linear blits make a 4×4 box average, enough to keep the quarter-size copy from shimmering.
-        _glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-        _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, t.HalfFbo);
-        _glBlitFramebuffer(layout.CopyX, layout.CopyY, layout.CopyX + layout.CopyWidth, layout.CopyY + layout.CopyHeight,
-            0, 0, t.HalfWidth, t.HalfHeight, GL_COLOR_BUFFER_BIT, (uint)GL_LINEAR);
-        _glBindFramebuffer(GL_READ_FRAMEBUFFER, t.HalfFbo);
-        _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, t.AFbo);
-        _glBlitFramebuffer(0, 0, t.HalfWidth, t.HalfHeight, 0, 0, t.QuarterWidth, t.QuarterHeight, GL_COLOR_BUFFER_BIT, (uint)GL_LINEAR);
-
-        _glViewport(0, 0, t.QuarterWidth, t.QuarterHeight);
-        _glUseProgram(_blurProgram);
-        _glUniform4f(_blurQuad, -1f, -1f, 1f, 1f);
-        float invW = 1f / t.QuarterWidth, invH = 1f / t.QuarterHeight;
-        for (int i = 0; i < BlurRounds; i++)
-        {
-            BlurPass(t.BFbo, t.A, invW, invH, invW, 0f);
-            BlurPass(t.AFbo, t.B, invW, invH, 0f, invH);
-        }
-
-        _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        _glViewport(0, 0, (int)bufferWidth, (int)bufferHeight);
-        _glEnable(GL_BLEND);
-        _glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        _glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-        _glUseProgram(_compositeProgram);
-        _glBindTexture(GL_TEXTURE_2D, t.A);
-
-        float sigma = BackdropGeometry.ShadowBlurDips * 0.5f * layout.Scale;
-        float offset = BackdropGeometry.ShadowOffsetDips * layout.Scale;
-        float reach = (3f * sigma) + offset;
-        float w = bufferWidth, h = bufferHeight;
-        _glUniform4f(_compositeQuad,
-            (((layout.CardX0 - reach) / w) * 2f) - 1f, (((layout.CardY0 - reach) / h) * 2f) - 1f,
-            (((layout.CardX1 + reach) / w) * 2f) - 1f, (((layout.CardY1 + reach) / h) * 2f) - 1f);
-        _glUniform4f(_compositeCard, layout.CardX0, layout.CardY0, layout.CardX1, layout.CardY1);
-        _glUniform4f(_compositeCopy, layout.CopyX, layout.CopyY, layout.CopyWidth, layout.CopyHeight);
-        _glUniform4f(_compositeShape, layout.Radius, sigma, offset, opacity);
-        _glUniform1f(_compositeShadow, BackdropGeometry.ShadowOpacity);
-        _glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        return true;
     }
 
     private void BlurPass(uint targetFbo, uint sourceTexture, float invW, float invH, float stepX, float stepY)
@@ -377,10 +436,12 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
 
         _blurQuad = Uniform(_blurProgram, "uQuad"u8);
         _blurParams = Uniform(_blurProgram, "uBlur"u8);
+        _blurMaxUv = Uniform(_blurProgram, "uMaxUv"u8);
         _compositeQuad = Uniform(_compositeProgram, "uQuad"u8);
         _compositeCard = Uniform(_compositeProgram, "uCard"u8);
         _compositeCopy = Uniform(_compositeProgram, "uCopy"u8);
         _compositeShape = Uniform(_compositeProgram, "uShape"u8);
+        _compositeUvBounds = Uniform(_compositeProgram, "uUvBounds"u8);
         _compositeShadow = Uniform(_compositeProgram, "uShadow"u8);
 
         uint* names = stackalloc uint[3];
@@ -441,29 +502,66 @@ internal sealed unsafe class BackdropBlurPass : IDisposable
         }
     }
 
-    /// <summary>(Re)allocates the targets when the card's rectangle changed size. Binds textures; the caller restores them.</summary>
+    /// <summary>
+    /// (Re)allocates capacity-rounded targets when the card grows beyond capacity or shrinks by more
+    /// than two capacity steps. Binds textures; the caller restores them.
+    /// </summary>
     private bool EnsureTargets(ref Targets t, int halfWidth, int halfHeight, int quarterWidth, int quarterHeight)
     {
+        halfWidth = Math.Max(1, halfWidth);
+        halfHeight = Math.Max(1, halfHeight);
+        quarterWidth = Math.Max(1, quarterWidth);
+        quarterHeight = Math.Max(1, quarterHeight);
+
         if (halfWidth == t.HalfWidth && halfHeight == t.HalfHeight && quarterWidth == t.QuarterWidth && quarterHeight == t.QuarterHeight)
         {
             return true;
         }
 
-        Allocate(t.Half, t.HalfFbo, halfWidth, halfHeight);
-        Allocate(t.A, t.AFbo, quarterWidth, quarterHeight);
-        Allocate(t.B, t.BFbo, quarterWidth, quarterHeight);
-        (t.HalfWidth, t.HalfHeight, t.QuarterWidth, t.QuarterHeight) = (halfWidth, halfHeight, quarterWidth, quarterHeight);
+        bool halfFits = halfWidth <= t.HalfCapWidth && halfHeight <= t.HalfCapHeight
+            && t.HalfCapWidth - halfWidth < HalfCapacityStep * 2 && t.HalfCapHeight - halfHeight < HalfCapacityStep * 2;
+        bool quarterFits = quarterWidth <= t.QuarterCapWidth && quarterHeight <= t.QuarterCapHeight
+            && t.QuarterCapWidth - quarterWidth < QuarterCapacityStep * 2 && t.QuarterCapHeight - quarterHeight < QuarterCapacityStep * 2;
 
-        foreach (uint fbo in (ReadOnlySpan<uint>)[t.HalfFbo, t.AFbo, t.BFbo])
+        if (!halfFits)
         {
-            _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+            int capW = RoundUp(halfWidth, HalfCapacityStep);
+            int capH = RoundUp(halfHeight, HalfCapacityStep);
+            Allocate(t.Half, t.HalfFbo, capW, capH);
             if (_glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
                 return false;
             }
+            t.HalfCapWidth = capW;
+            t.HalfCapHeight = capH;
         }
+
+        if (!quarterFits)
+        {
+            int capW = RoundUp(quarterWidth, QuarterCapacityStep);
+            int capH = RoundUp(quarterHeight, QuarterCapacityStep);
+            Allocate(t.A, t.AFbo, capW, capH);
+            if (_glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            {
+                return false;
+            }
+            Allocate(t.B, t.BFbo, capW, capH);
+            if (_glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            {
+                return false;
+            }
+            t.QuarterCapWidth = capW;
+            t.QuarterCapHeight = capH;
+        }
+
+        t.HalfWidth = halfWidth;
+        t.HalfHeight = halfHeight;
+        t.QuarterWidth = quarterWidth;
+        t.QuarterHeight = quarterHeight;
         return true;
     }
+
+    private static int RoundUp(int value, int step) => (value + step - 1) / step * step;
 
     private void Allocate(uint texture, uint fbo, int width, int height)
     {

@@ -22,19 +22,23 @@ public sealed partial class MainPage
 
     private MotionTween? _bar;
     private MotionTween? _subtitleLift; // 0 with the bar hidden, 1 with it showing
+    private UIElement[]? _barExtras;
+    private double _osdSlimHeight;
+    private double _osdFullHeight;
+    private double _osdGap;
     private bool _barExpanded = true;
     private double _playSlide; // how far Play and Mute move from their full-card spots to the slim pill's
     private double _volumeSlide;
     private double _seekInsetLeft; // the seek row's side insets in the slim pill, between Play and Mute
     private double _seekInsetRight;
 
-    private UIElement[] BarExtras =>
-    [
-        SpeedButton, QualityButton, BackButton, ForwardButton, MoreButton,
-    ];
-
     private void InitializeBar()
     {
+        _barExtras = [SpeedButton, QualityButton, BackButton, ForwardButton, MoreButton];
+        _osdSlimHeight = Motion.Token("AetherSizeOsdSlimHeight");
+        _osdFullHeight = Motion.Token("AetherSizeOsdHeight");
+        _osdGap = Motion.Token("AetherSizeOsdGap");
+
         _bar = new MotionTween(1);
         _bar.Changed += (_, _) => ApplyBarProgress();
         _subtitleLift = new MotionTween(0);
@@ -57,13 +61,13 @@ public sealed partial class MainPage
     private void SyncBar()
     {
         bool expanded = _chrome.IsExpanded;
-        if (_bar is null || expanded == _barExpanded)
+        if (_bar is null || _barExtras is null || expanded == _barExpanded)
         {
             return;
         }
         _barExpanded = expanded;
         // The hidden buttons stop taking the pointer at once; Tab still reaches them, and focus grows the card.
-        foreach (UIElement extra in BarExtras)
+        foreach (UIElement extra in _barExtras)
         {
             extra.IsHitTestVisible = expanded;
         }
@@ -111,7 +115,7 @@ public sealed partial class MainPage
         {
             return;
         }
-        double bar = (Osd.Margin.Bottom + Osd.Height + Motion.Token("AetherSizeOsdGap")) * Math.Clamp(_subtitleLift.Value, 0, 1);
+        double bar = (Osd.Margin.Bottom + Osd.Height + _osdGap) * Math.Clamp(_subtitleLift.Value, 0, 1);
         double letterbox = Math.Max(0, (VideoHost.ActualHeight - VideoSurface.ActualHeight) / 2);
         session.SetSubtitleClearance(Math.Max(0, bar - letterbox), VideoSurface.ActualHeight);
     }
@@ -130,14 +134,14 @@ public sealed partial class MainPage
 
     private void ApplyBarProgress()
     {
-        if (_bar is null)
+        if (_bar is null || _barExtras is null)
         {
             return;
         }
         // A spring runs a little past 0 and 1: the card overshoots in height, and squeezes its padding below the slim pill.
         double p = _bar.Value;
-        double slim = Motion.Token("AetherSizeOsdSlimHeight");
-        double full = Motion.Token("AetherSizeOsdHeight");
+        double slim = _osdSlimHeight;
+        double full = _osdFullHeight;
         double row = ButtonRow.Height;
         double height = slim + ((full - slim) * p);
         double stroke = Osd.BorderThickness.Top;
@@ -153,14 +157,17 @@ public sealed partial class MainPage
         VolumeButton.Translation = new Vector3((float)(_volumeSlide * (1 - p)), 0, 0);
         // The extras come in over the second half of the grow and are gone in the first part of the shrink.
         double extras = Math.Clamp((p - 0.4) / 0.6, 0, 1);
-        foreach (UIElement extra in BarExtras)
+        foreach (UIElement extra in _barExtras)
         {
             extra.Opacity = extras;
         }
 
-        Thickness clip = ClipLayer.Margin;
-        ClipLayer.Margin = new Thickness(clip.Left, clip.Top, clip.Right,
-            Osd.Margin.Bottom + height + Motion.Token("AetherSizeOsdGap"));
+        if (ClipLayer is not null)
+        {
+            Thickness clip = ClipLayer.Margin;
+            ClipLayer.Margin = new Thickness(clip.Left, clip.Top, clip.Right,
+                Osd.Margin.Bottom + height + _osdGap);
+        }
         UpdateToastPlacement();
         PlaceRail();
         UpdateSubtitleLift();

@@ -20,7 +20,7 @@ public sealed partial class MainPage
     private void LoadTranscript()
     {
         _transcriptKey = null;
-        TranscriptPane.Load([], "", 0, AppStrings.Get(HasVideo ? "Transcript_Reading" : "Transcript_NoVideo"));
+        TranscriptPane?.Load([], "", 0, AppStrings.Get(HasVideo ? "Transcript_Reading" : "Transcript_NoVideo"));
         if (HasVideo)
         {
             _ = ChangeTracks(_ => { });
@@ -38,7 +38,7 @@ public sealed partial class MainPage
 
     private async void FollowTranscript(TrackSnapshot snapshot)
     {
-        if (_sidePanel != SidePanel.Transcript || _currentPath is not { } video || !HasVideo)
+        if (_sidePanel != SidePanel.Transcript || TranscriptPane is null || _currentPath is not { } video || !HasVideo)
         {
             return;
         }
@@ -63,7 +63,7 @@ public sealed partial class MainPage
             : TrackLabels.Format(source, AppStrings.Get("Tracks_TrackN"), AppStrings.Get("Tracks_Sdh"), AppStrings.Get("Tracks_Forced"), _streamTitle);
         TranscriptPane.Load([], name, duration, AppStrings.Get("Transcript_Reading"));
         (IReadOnlyList<TranscriptLine> lines, string? problem) = await Task.Run(() => ReadTranscript(video, source, work.Token));
-        if (work.IsCancellationRequested || _transcriptKey != key)
+        if (work.IsCancellationRequested || _transcriptKey != key || TranscriptPane is null)
         {
             return;
         }

@@ -169,7 +169,7 @@ public sealed partial class MainPage
         SetMenuSurface(sender, false);
         if (_tour.IsActive)
         {
-            TourNextButton.Focus(FocusState.Programmatic);
+            TourNextButton?.Focus(FocusState.Programmatic);
         }
         else if (_lanShown)
         {
@@ -190,6 +190,7 @@ public sealed partial class MainPage
     private void OnClipsMenuClick(object sender, RoutedEventArgs e)
     {
         LeavePictureInPicture();
+        EnsureClipLayer();
         ClipDrawer.Open();
     }
 

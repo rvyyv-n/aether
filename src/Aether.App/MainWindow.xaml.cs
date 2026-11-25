@@ -104,7 +104,13 @@ public sealed partial class MainWindow : Window, IShellWindow
     // A video opens at one video pixel per screen pixel, within this share of the work area.
     private const double FitMaxWorkAreaFraction = 0.9;
 
+    private static readonly NonClientRegionKind[] CaptionKinds =
+        [NonClientRegionKind.Minimize, NonClientRegionKind.Maximize, NonClientRegionKind.Close];
+
     private readonly RectInt32[][] _captionRegions = [[], [], []];
+    private readonly RectInt32[] _captionRects = new RectInt32[3];
+    private readonly bool[] _captionHasRect = new bool[3];
+    private readonly InputNonClientPointerSource _nonClient;
     private NonClientRegionKind? _pressedCaption;
     private readonly AspectRatioLock? _aspectLock;
     private readonly TaskbarThumbButtons? _taskbarButtons;
@@ -129,19 +135,13 @@ public sealed partial class MainWindow : Window, IShellWindow
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(Shell.TitleBarDragRegion);
-        ApplyTaskbarIcon();
         // The page draws its own caption buttons, which fade with the chrome (12.10); the system's are hidden.
         AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Collapsed;
         Shell.LayoutUpdated += (_, _) => UpdateCaptionRegions();
         ApplyTheme();
         App.Settings.Changed += OnSettingsChanged;
-        Closed += (_, _) => App.Settings.Changed -= OnSettingsChanged;
 
-        Shell.ActualThemeChanged += (_, _) =>
-        {
-            ApplyTheme();
-            ApplyTaskbarIcon();
-        };
+        Shell.ActualThemeChanged += (_, _) => ApplyTheme();
 
 
         try
@@ -178,14 +178,13 @@ public sealed partial class MainWindow : Window, IShellWindow
             command => MediaCommandRequested?.Invoke(this, command),
             position => MediaSeekRequested?.Invoke(this, position));
 
-        InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
-        nonClient.PointerEntered += OnNonClientPointerMoved;
-        nonClient.PointerMoved += OnNonClientPointerMoved;
-        nonClient.PointerExited += (_, _) => Shell.SetCaptionPointer(null, pressed: false);
-        nonClient.PointerPressed += OnNonClientPointerPressed;
-        nonClient.PointerReleased += OnNonClientPointerReleased;
+        _nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
+        _nonClient.PointerEntered += OnNonClientPointerMoved;
+        _nonClient.PointerMoved += OnNonClientPointerMoved;
+        _nonClient.PointerExited += (_, _) => Shell.SetCaptionPointer(null, pressed: false);
+        _nonClient.PointerPressed += OnNonClientPointerPressed;
+        _nonClient.PointerReleased += OnNonClientPointerReleased;
 
-        App.Settings.Changed += OnSettingChanged;
         ApplyAlwaysOnTop();
         _uiSettings.ColorValuesChanged += OnSystemColoursChanged;
 
@@ -208,7 +207,7 @@ public sealed partial class MainWindow : Window, IShellWindow
             _taskbarButtons?.Dispose(); // before the display sync: it sits on top of that subclass
             DisplaySync.Dispose(); // before the aspect lock: it sits on top of that subclass
             _aspectLock?.Dispose();
-            App.Settings.Changed -= OnSettingChanged;
+            App.Settings.Changed -= OnSettingsChanged;
             _uiSettings.ColorValuesChanged -= OnSystemColoursChanged;
         };
         AppWindow.Changed += OnAppWindowChanged;
@@ -445,10 +444,16 @@ public sealed partial class MainWindow : Window, IShellWindow
         });
     }
 
-    // The setting changes on the thread pool when it loads, so the window is updated on its own thread.
-    private void OnSettingChanged(object? sender, SettingChangedEventArgs e)
+    // Raised off the UI thread when the Windows light/dark setting changes.
+    private void OnSystemColoursChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(ApplyTheme);
+
+    private void OnSettingsChanged(object? sender, SettingChangedEventArgs e)
     {
-        if (e.Key == SettingKeys.AlwaysOnTop)
+        if (e.Key is SettingKeys.Theme or SettingKeys.Accent)
+        {
+            DispatcherQueue.TryEnqueue(ApplyTheme);
+        }
+        else if (e.Key == SettingKeys.AlwaysOnTop)
         {
             DispatcherQueue.TryEnqueue(ApplyAlwaysOnTop);
         }
@@ -547,21 +552,6 @@ public sealed partial class MainWindow : Window, IShellWindow
         _taskbarButtons?.Update(controls.PreviousEnabled, glyph, tip, controls.PlayPauseEnabled, controls.NextEnabled);
     }
 
-    // Raised off the UI thread when the Windows light/dark setting changes.
-    private void OnSystemColoursChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(() =>
-    {
-        ApplyTaskbarIcon();
-        ApplyTheme();
-    });
-
-    private void OnSettingsChanged(object? sender, SettingChangedEventArgs e)
-    {
-        if (e.Key is SettingKeys.Theme or SettingKeys.Accent)
-        {
-            DispatcherQueue.TryEnqueue(ApplyTheme);
-        }
-    }
-
     private void ApplyTheme()
     {
         string theme = App.Settings.Current.Theme;
@@ -584,6 +574,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     /// <summary>
     /// Marks the page's caption buttons as the window's own, so Windows runs them, shows Snap Layouts over maximise and
     /// keeps them out of the drag region. Rectangles are in client pixels; unchanged ones are not sent again.
+    /// Zero allocations on steady layout passes.
     /// </summary>
     private void UpdateCaptionRegions()
     {
@@ -592,17 +583,19 @@ public sealed partial class MainWindow : Window, IShellWindow
         {
             return;
         }
-        InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
-        NonClientRegionKind[] kinds = [NonClientRegionKind.Minimize, NonClientRegionKind.Maximize, NonClientRegionKind.Close];
-        for (int i = 0; i < kinds.Length; i++)
+        for (int i = 0; i < CaptionKinds.Length; i++)
         {
-            RectInt32[] rects = Shell.CaptionButton(kinds[i]) is { } button
-                ? [ToClientPixels(button.TransformToVisual(null).TransformBounds(new Windows.Foundation.Rect(0, 0, button.ActualWidth, button.ActualHeight)), scale)]
-                : [];
-            if (!rects.AsSpan().SequenceEqual(_captionRegions[i]))
+            FrameworkElement? button = Shell.CaptionButton(CaptionKinds[i]);
+            bool hasRect = button is not null;
+            RectInt32 rect = hasRect
+                ? ToClientPixels(button!.TransformToVisual(null).TransformBounds(new Windows.Foundation.Rect(0, 0, button.ActualWidth, button.ActualHeight)), scale)
+                : default;
+            if (hasRect != _captionHasRect[i] || (hasRect && rect != _captionRects[i]))
             {
-                _captionRegions[i] = rects;
-                nonClient.SetRegionRects(kinds[i], rects);
+                _captionHasRect[i] = hasRect;
+                _captionRects[i] = rect;
+                _captionRegions[i] = hasRect ? [rect] : [];
+                _nonClient.SetRegionRects(CaptionKinds[i], _captionRegions[i]);
             }
         }
     }

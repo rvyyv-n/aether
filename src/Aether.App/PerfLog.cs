@@ -11,6 +11,8 @@ namespace Aether_App;
 /// </summary>
 internal static class PerfLog
 {
+    private const double Megabyte = 1024.0 * 1024.0;
+
     private static readonly string? s_path = Environment.GetEnvironmentVariable("AETHER_PERF_LOG");
     private static readonly Lock s_gate = new();
     private static int s_windowShown;
@@ -33,12 +35,19 @@ internal static class PerfLog
         }
     }
 
-    /// <summary>The first frame the window draws: the moment the user sees it.</summary>
+    /// <summary>The first frame the window draws: the moment the user sees it, plus startup memory footprint.</summary>
     public static void MarkWindowShown()
     {
         if (s_path is not null && Interlocked.Exchange(ref s_windowShown, 1) == 0)
         {
-            Mark("window_shown_ms");
+            using Process process = Process.GetCurrentProcess();
+            double elapsedMs = (DateTime.Now - process.StartTime).TotalMilliseconds;
+            double workingSetMb = process.WorkingSet64 / Megabyte;
+            double privateMb = process.PrivateMemorySize64 / Megabyte;
+            Write(string.Concat(
+                "window_shown_ms=", elapsedMs.ToString("F0", CultureInfo.InvariantCulture), Environment.NewLine,
+                "startup_working_set_mb=", workingSetMb.ToString("F1", CultureInfo.InvariantCulture), Environment.NewLine,
+                "startup_private_mb=", privateMb.ToString("F1", CultureInfo.InvariantCulture)));
         }
     }
 
@@ -52,17 +61,39 @@ internal static class PerfLog
         }
     }
 
-    /// <summary>Playback and collector totals for the session, written as the window closes.</summary>
-    public static void WriteSessionTotals(long droppedFrames, long decoderDroppedFrames, long framesPresented, double displayFps)
+    /// <summary>Playback, GPU, memory, and collector totals for the session, written as the window closes.</summary>
+    public static void WriteSessionTotals(
+        long droppedFrames,
+        long decoderDroppedFrames,
+        long framesPresented,
+        double displayFps,
+        double gpuFrameAvgMs = -1,
+        double gpuFrameMaxMs = -1,
+        long gpuSamples = 0,
+        double blurPassAvgMs = -1,
+        long blurPassFrames = 0)
     {
         if (s_path is null)
         {
             return;
         }
+        using Process process = Process.GetCurrentProcess();
+        double workingSetMb = process.WorkingSet64 / Megabyte;
+        double peakWorkingSetMb = process.PeakWorkingSet64 / Megabyte;
+        double privateMb = process.PrivateMemorySize64 / Megabyte;
+
         Write($"dropped_frames={droppedFrames}");
         Write($"decoder_dropped_frames={decoderDroppedFrames}");
         Write($"frames_presented={framesPresented}");
         Write($"display_fps={displayFps.ToString("F2", CultureInfo.InvariantCulture)}");
+        Write($"gpu_frame_avg_ms={(gpuFrameAvgMs >= 0 ? gpuFrameAvgMs.ToString("F3", CultureInfo.InvariantCulture) : "n/a")}");
+        Write($"gpu_frame_max_ms={(gpuFrameMaxMs >= 0 ? gpuFrameMaxMs.ToString("F3", CultureInfo.InvariantCulture) : "n/a")}");
+        Write($"gpu_samples={gpuSamples}");
+        Write($"blur_pass_avg_ms={(blurPassAvgMs >= 0 ? blurPassAvgMs.ToString("F3", CultureInfo.InvariantCulture) : "n/a")}");
+        Write($"blur_pass_frames={blurPassFrames}");
+        Write($"working_set_mb={workingSetMb.ToString("F1", CultureInfo.InvariantCulture)}");
+        Write($"peak_working_set_mb={peakWorkingSetMb.ToString("F1", CultureInfo.InvariantCulture)}");
+        Write($"private_mb={privateMb.ToString("F1", CultureInfo.InvariantCulture)}");
         Write($"gc_gen0={GC.CollectionCount(0)}");
         Write($"gc_gen1={GC.CollectionCount(1)}");
         Write($"gc_gen2={GC.CollectionCount(2)}");

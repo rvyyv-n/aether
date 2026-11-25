@@ -26,6 +26,12 @@ public interface IVideoRenderBackend : IDisposable
 
     /// <summary>Called right after a successful Present.</summary>
     void ReportSwap();
+
+    /// <summary>Average backdrop blur pass CPU duration in milliseconds, or -1 when unused.</summary>
+    double AverageBlurPassMilliseconds => -1;
+
+    /// <summary>Total frames where the backdrop blur pass drew at least one card.</summary>
+    long BlurPassFrames => 0;
 }
 
 /// <summary>Creates a backend for each device generation (initial start and every device-loss recovery).</summary>

@@ -6,10 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Live GPU frame render time (ms) in the Diagnostics overlay (`Ctrl+I`) via non-blocking Direct3D 11 timestamp queries (`D3D11GpuTimer`).
+- Expanded performance benchmarking (`tools/measure-performance.ps1` & `PerfLog`) with working-set/private memory footprint, GPU frame time, backdrop blur pass duration, and display refresh rate.
 - Global Windows media controls (SMTC): hardware media keys (Play/Pause, Next, Previous, Stop) now work even when Aether is in the background, and Windows 11 Quick Settings and the lock screen show the live title, source, playback state and a seekable timeline.
 
 ### Changed
+- **Faster startup & leaner UI:** Deferred 12 non-initial overlays, drawers, flyouts, tour UI, and `SettingsControls.xaml` styles until first opened, preloaded settings/window bounds earlier at launch, and removed idle clock and seek-bar layout allocations—cutting warm ReadyToRun startup from 629 ms to 347 ms (and JIT Release from 629 ms to 514 ms).
+- **Direct-to-backbuffer video & batched backdrop blur:** Bypassed the offscreen `VideoFrameCache` render-target copy whenever no blurred overlay or fade is visible, and updated `BackdropBlurPass` with capacity-stepped targets, UV bounds clamping, and 3-phase multi-card draw batching (averaging ~0.08 ms per blur pass at 1080p).
+- **Snappier stream switching & clip export:** Cached resolved yt-dlp metadata/formats in-session (Tier 1 & Tier 2 LRU) for instant quality switches without re-running `yt-dlp`, persisted hardware encoder probes across sessions keyed by GPU driver + `ffmpeg` binary fingerprint, and switched keyframe lookup (`CutStartTracker`) to zero-decode compressed packet-header probing with an 8-file LRU interval cache.
 - Unified every project in the solution onto `.NET 10` (`net10.0`), dropping the mixed `.NET 9` library targets.
+
+### Fixed
+- Diagnostics (`Ctrl+I`) and performance logs now accurately report fractional display refresh rates (e.g. `59.94 Hz`) and high-refresh monitor rates (`SmoothMotion` off) instead of falling back to `0 Hz`.
 
 ## [1.1.0-preview.2] - 2026-11-12
 ### Changed

@@ -1,5 +1,6 @@
 ﻿using Aether.Core.Playback;
 using Aether.Core.Playback.Input;
+using Aether_App.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -17,13 +18,11 @@ public sealed partial class MainPage
 {
     private ClipRange _clipRange;
     private string? _clipRangePath; // the file the In/Out points belong to; a new file clears them
+    private bool _clipLayerWired;
 
     private void InitializeTransport()
     {
         SeekBar.SeekRequested += OnSeekRequested;
-        ClipDrawer.ClearRequested += (_, _) => SetClipRange(default);
-        ClipDrawer.CutStartChanged += SeekBar.SetCutStart;
-        ClipDrawer.HoldChanged += OnClipDrawerHoldChanged;
         foreach (double option in PlaybackSpeed.Options)
         {
             var item = new ToggleMenuFlyoutItem
@@ -107,7 +106,7 @@ public sealed partial class MainPage
         _segmentSkipper.OnUserSeek(target);
         _chrome.SetHold(ChromeHolds.Interaction, dragging);
         ApplyChrome();
-        PositionText.Text = SeekBarClock(target, session.ViewModel.Duration);
+        SetPositionText(SeekBarClock(target, session.ViewModel.Duration));
         TrySend(() => session.Seek(target, dragging));
     }
 
@@ -311,8 +310,38 @@ public sealed partial class MainPage
     private void OnSetOutAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
         OnTransportKey(args, () => SetClipRange(_clipRange.SetOut(CurrentPosition())));
 
+    private void EnsureClipLayer()
+    {
+        if (ClipLayer is not null)
+        {
+            return;
+        }
+        App.EnsureSettingsControlsLoaded();
+        FindName(nameof(ClipLayer));
+        if (ClipLayer is null || _clipLayerWired)
+        {
+            return;
+        }
+        _clipLayerWired = true;
+        ClipDrawer.ExportFilterSource = ExportFilterChain;
+        ClipDrawer.ClearRequested += (_, _) => SetClipRange(default);
+        ClipDrawer.CutStartChanged += SeekBar.SetCutStart;
+        ClipDrawer.HoldChanged += OnClipDrawerHoldChanged;
+        ClipLayer.SizeChanged += (_, _) => UpdateToastPlacement();
+        double gap = _osdGap > 0 ? _osdGap : Motion.Token("AetherSizeOsdGap");
+        ClipLayer.Margin = new Thickness(ClipLayer.Margin.Left, ClipLayer.Margin.Top, ClipLayer.Margin.Right,
+            Osd.Margin.Bottom + Osd.Height + gap);
+        ClipLayer.Visibility = Osd.Visibility;
+        ClipLayer.IsHitTestVisible = _chromeShown;
+        _fader?.Fade(ClipLayer, _chromeShown);
+    }
+
     private void OnExportClipAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) =>
-        OnTransportKey(args, ClipDrawer.RequestExport);
+        OnTransportKey(args, () =>
+        {
+            EnsureClipLayer();
+            ClipDrawer.RequestExport();
+        });
 
     private double CurrentPosition() =>
         _session is { } session ? TransportState.DisplayPosition(session.ViewModel.State) : 0;
@@ -322,7 +351,11 @@ public sealed partial class MainPage
         _clipRange = range;
         _clipRangePath = _currentPath;
         SeekBar.Range = range;
-        ClipDrawer.Update(range, _currentPath, _session?.ViewModel.Duration ?? 0);
+        if (!range.IsEmpty)
+        {
+            EnsureClipLayer();
+        }
+        ClipDrawer?.Update(range, _currentPath, _session?.ViewModel.Duration ?? 0);
     }
 
     private void OnClipDrawerHoldChanged(object? sender, EventArgs e) => SyncDrawerHold();

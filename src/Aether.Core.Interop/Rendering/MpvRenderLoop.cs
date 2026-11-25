@@ -100,8 +100,22 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     private int _deviceLossCount;
     private long _framesPresented;
 
+    // Lock-free GPU & blur pass telemetry read by UI/PerfLog on any thread (zero hot-path allocations).
+    private long _lastGpuMsBits = BitConverter.DoubleToInt64Bits(-1.0);
+    private long _avgGpuMsBits = BitConverter.DoubleToInt64Bits(-1.0);
+    private long _maxGpuMsBits = BitConverter.DoubleToInt64Bits(-1.0);
+    private long _gpuSamples;
+    private double _prevGenGpuTotalMs;
+    private double _prevGenGpuMaxMs;
+    private long _prevGenGpuSamples;
+    private long _avgBlurMsBits = BitConverter.DoubleToInt64Bits(-1.0);
+    private long _blurFrames;
+    private double _prevGenBlurTotalMs;
+    private long _prevGenBlurFrames;
+
     // Render-thread state.
     private D3D11DeviceManager? _device;
+    private D3D11GpuTimer? _gpuTimer;
     private DxgiPresenter? _presenter;
     private IVideoRenderBackend? _backend;
 
@@ -134,6 +148,24 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     public int DeviceLossCount => Volatile.Read(ref _deviceLossCount);
 
     public long FramesPresented => Interlocked.Read(ref _framesPresented);
+
+    /// <summary>Latest smoothed D3D11 GPU frame duration in milliseconds, or -1 when unavailable.</summary>
+    public double GpuFrameTimeMilliseconds => BitConverter.Int64BitsToDouble(Volatile.Read(ref _lastGpuMsBits));
+
+    /// <summary>Session-wide average D3D11 GPU frame duration in milliseconds, or -1 when no samples exist.</summary>
+    public double AverageGpuFrameTimeMilliseconds => BitConverter.Int64BitsToDouble(Volatile.Read(ref _avgGpuMsBits));
+
+    /// <summary>Session-wide peak D3D11 GPU frame duration in milliseconds, or -1 when no samples exist.</summary>
+    public double MaxGpuFrameTimeMilliseconds => BitConverter.Int64BitsToDouble(Volatile.Read(ref _maxGpuMsBits));
+
+    /// <summary>Total completed D3D11 GPU frame timing samples collected in this loop.</summary>
+    public long GpuTimingSamples => Volatile.Read(ref _gpuSamples);
+
+    /// <summary>Session-wide average backdrop blur pass CPU duration in milliseconds, or -1 when unused.</summary>
+    public double AverageBlurPassMilliseconds => BitConverter.Int64BitsToDouble(Volatile.Read(ref _avgBlurMsBits));
+
+    /// <summary>Total frames where the backdrop blur pass drew at least one card.</summary>
+    public long BlurPassFrames => Volatile.Read(ref _blurFrames);
 
     /// <summary>Starts the render thread. Once only.</summary>
     public void Start()
@@ -293,7 +325,15 @@ public sealed unsafe class MpvRenderLoop : IDisposable
                         continue;
                     }
 
-                    if (!backend.Render(presenter.PixelWidth, presenter.PixelHeight))
+                    bool timing = _gpuTimer?.TryBeginFrame() == true;
+                    bool rendered = backend.Render(presenter.PixelWidth, presenter.PixelHeight);
+                    if (timing)
+                    {
+                        _gpuTimer!.EndFrame();
+                    }
+                    PublishTelemetry(backend);
+
+                    if (!rendered)
                     {
                         presenter.ReportDeviceLost(DxNative.DXGI_ERROR_DEVICE_REMOVED);
                     }
@@ -409,11 +449,13 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     private bool TryCreateStack()
     {
         D3D11DeviceManager? device = null;
+        D3D11GpuTimer? gpuTimer = null;
         DxgiPresenter? presenter = null;
         IVideoRenderBackend? backend = null;
         try
         {
             device = _options.DeviceFactory?.Invoke(_options.Device) ?? D3D11DeviceManager.Create(_options.Device);
+            gpuTimer = D3D11GpuTimer.TryCreate(device);
 
             double w, h;
             float sx, sy;
@@ -448,6 +490,7 @@ public sealed unsafe class MpvRenderLoop : IDisposable
         {
             DisposeQuietly(backend);
             DisposeQuietly(presenter);
+            DisposeQuietly(gpuTimer);
             DisposeQuietly(device);
             _state = RenderLoopState.Recovering;
             Report(ex);
@@ -456,6 +499,7 @@ public sealed unsafe class MpvRenderLoop : IDisposable
 
         int generation = Interlocked.Increment(ref _generation);
         _device = device;
+        _gpuTimer = gpuTimer;
         Volatile.Write(ref _presenter, presenter);
         _backend = backend;
         _state = RenderLoopState.Running;
@@ -489,18 +533,76 @@ public sealed unsafe class MpvRenderLoop : IDisposable
         }
     }
 
-    /// <summary>Reverse creation order: backend (frees the mpv render context), presenter, device.</summary>
+    /// <summary>Reverse creation order: backend (frees the mpv render context), presenter, gpuTimer, device.</summary>
     private void DestroyStack()
     {
         IVideoRenderBackend? backend = _backend;
         DxgiPresenter? presenter = _presenter;
+        D3D11GpuTimer? gpuTimer = _gpuTimer;
         D3D11DeviceManager? device = _device;
+
+        if (gpuTimer is not null)
+        {
+            long samples = gpuTimer.SampleCount;
+            if (samples > 0)
+            {
+                _prevGenGpuTotalMs += gpuTimer.TotalFrameMilliseconds;
+                _prevGenGpuMaxMs = _prevGenGpuSamples > 0
+                    ? Math.Max(_prevGenGpuMaxMs, gpuTimer.MaxFrameMilliseconds)
+                    : gpuTimer.MaxFrameMilliseconds;
+                _prevGenGpuSamples += samples;
+            }
+            Volatile.Write(ref _lastGpuMsBits, BitConverter.DoubleToInt64Bits(-1.0));
+        }
+        if (backend is not null)
+        {
+            long blurFrames = backend.BlurPassFrames;
+            double blurAvg = backend.AverageBlurPassMilliseconds;
+            if (blurFrames > 0 && blurAvg >= 0)
+            {
+                _prevGenBlurTotalMs += blurAvg * blurFrames;
+                _prevGenBlurFrames += blurFrames;
+            }
+        }
+
         _backend = null;
         Volatile.Write(ref _presenter, null);
+        _gpuTimer = null;
         _device = null;
         DisposeQuietly(backend);
         DisposeQuietly(presenter);
+        DisposeQuietly(gpuTimer);
         DisposeQuietly(device);
+    }
+
+    private void PublishTelemetry(IVideoRenderBackend backend)
+    {
+        if (_gpuTimer is { } timer)
+        {
+            long genSamples = timer.SampleCount;
+            long totalSamples = _prevGenGpuSamples + genSamples;
+            if (totalSamples > 0)
+            {
+                double totalMs = _prevGenGpuTotalMs + (genSamples > 0 ? timer.TotalFrameMilliseconds : 0);
+                double maxMs = _prevGenGpuSamples > 0
+                    ? (genSamples > 0 ? Math.Max(_prevGenGpuMaxMs, timer.MaxFrameMilliseconds) : _prevGenGpuMaxMs)
+                    : timer.MaxFrameMilliseconds;
+                Volatile.Write(ref _lastGpuMsBits, BitConverter.DoubleToInt64Bits(timer.LastFrameMilliseconds));
+                Volatile.Write(ref _avgGpuMsBits, BitConverter.DoubleToInt64Bits(totalMs / totalSamples));
+                Volatile.Write(ref _maxGpuMsBits, BitConverter.DoubleToInt64Bits(maxMs));
+                Volatile.Write(ref _gpuSamples, totalSamples);
+            }
+        }
+
+        long genBlurFrames = backend.BlurPassFrames;
+        long totalBlurFrames = _prevGenBlurFrames + genBlurFrames;
+        if (totalBlurFrames > 0)
+        {
+            double genBlurAvg = backend.AverageBlurPassMilliseconds;
+            double totalBlurMs = _prevGenBlurTotalMs + (genBlurFrames > 0 && genBlurAvg >= 0 ? genBlurAvg * genBlurFrames : 0);
+            Volatile.Write(ref _avgBlurMsBits, BitConverter.DoubleToInt64Bits(totalBlurMs / totalBlurFrames));
+            Volatile.Write(ref _blurFrames, totalBlurFrames);
+        }
     }
 
     private void DisposeQuietly(IDisposable? disposable)

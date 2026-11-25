@@ -394,6 +394,10 @@ public sealed partial class ClipDrawer : UserControl
         }
 
         RowsScroller.ChangeView(null, 0, null, disableAnimation: true);
+        if (open && !IsLoaded)
+        {
+            RenderRows();
+        }
         RenderOptionsBlock(); // the Look may have changed since the drawer was last open
         RenderChip();
         HoldChanged?.Invoke(this, EventArgs.Empty);

@@ -46,7 +46,6 @@
                     <Setter Property="MaxHeight" Value="2000" />
                 </Style>
             </Flyout.FlyoutPresenterStyle>
-            <controls:TracksPanel x:Name="TracksPanel" />
         </Flyout>
 
         <!--  Video flyout (9.3): right-aligned to the pill, on the same surface as the tracks flyout (MainPage.Video.cs).  -->
@@ -70,7 +69,6 @@
                     <Setter Property="MaxHeight" Value="2000" />
                 </Style>
             </Flyout.FlyoutPresenterStyle>
-            <controls:VideoPanel x:Name="VideoPanel" />
         </Flyout>
     </Page.Resources>
 
@@ -337,6 +335,7 @@
                 -->
                 <Border
                     x:Name="DetailsPanel"
+                    x:Load="False"
                     MaxWidth="480"
                     Margin="0,24,0,0"
                     Style="{StaticResource AetherGlassPanelStyle}"
@@ -451,6 +450,7 @@
                 </StackPanel>
                 <StackPanel
                     x:Name="FailureActions"
+                    x:Load="False"
                     Margin="0,24,0,0"
                     HorizontalAlignment="Center"
                     Orientation="Horizontal"
@@ -485,6 +485,7 @@
                 </StackPanel>
                 <StackPanel
                     x:Name="StreamFailureActions"
+                    x:Load="False"
                     Margin="0,24,0,0"
                     HorizontalAlignment="Center"
                     Orientation="Horizontal"
@@ -624,6 +625,7 @@
         -->
         <Grid
             x:Name="PipChrome"
+            x:Load="False"
             RequestedTheme="Dark"
             Visibility="Collapsed">
             <Button
@@ -778,6 +780,7 @@
         <!--  Diagnostics (Ctrl+I): top-left, 16 in from the edge and under the 32 px title bar.  -->
         <controls:DiagnosticsPanel
             x:Name="Diagnostics"
+            x:Load="False"
             RequestedTheme="Dark"
             Margin="16,48,0,0"
             HorizontalAlignment="Left"
@@ -865,6 +868,7 @@
         -->
         <Grid
             x:Name="ClipLayer"
+            x:Load="False"
             MaxWidth="{StaticResource AetherSizeOsdWidth}"
             Margin="16,0,16,120"
             VerticalAlignment="Bottom"
@@ -878,6 +882,7 @@
         <!--  The card on the right edge, the queue drawer (13.3) or the transcript (15.3): between the title bar and the full transport card; MainPage.SidePanel.cs places and slides it.  -->
         <Grid
             x:Name="SideLayer"
+            x:Load="False"
             HorizontalAlignment="Right"
             Visibility="Collapsed">
             <controls:PlaylistDrawer x:Name="QueueDrawer" VerticalAlignment="Top" />
@@ -1256,6 +1261,7 @@
         -->
         <Grid
             x:Name="SkipChapterLayer"
+            x:Load="False"
             Margin="16,0,16,24"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
@@ -1293,6 +1299,7 @@
         -->
         <Grid
             x:Name="ToastLayer"
+            x:Load="False"
             Margin="16,0,16,24"
             VerticalAlignment="Bottom"
             Visibility="Collapsed">
@@ -1306,6 +1313,7 @@
         -->
         <Grid
             x:Name="OpenUrlOverlay"
+            x:Load="False"
             Background="{ThemeResource AetherSurfaceScrimBrush}"
             Visibility="Collapsed">
             <Border
@@ -1388,6 +1396,7 @@
         -->
         <Grid
             x:Name="LanStreamOverlay"
+            x:Load="False"
             RequestedTheme="Dark"
             Background="{ThemeResource AetherSurfaceScrimBrush}"
             PointerPressed="OnLanStreamOverlayPointerPressed"
@@ -1535,6 +1544,7 @@
         -->
         <Grid
             x:Name="TourLayer"
+            x:Load="False"
             SizeChanged="OnTourLayerSizeChanged"
             Visibility="Collapsed">
             <Border x:Name="TourBlocker" Background="Transparent" />

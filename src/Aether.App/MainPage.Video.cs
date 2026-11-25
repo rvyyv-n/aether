@@ -28,6 +28,7 @@ public sealed partial class MainPage
     private bool _lookApplied; // mpv currently has the Look's filters and the copy-back decoder
     private bool _lookPushing;
     private bool _lookStale;
+    private Controls.VideoPanel? _videoPanel;
 
     private VideoLook CurrentLook => VideoLook.FromSettings(App.Settings.Current);
 
@@ -35,12 +36,23 @@ public sealed partial class MainPage
     {
         // Light dismiss would otherwise swallow the first click on the pill, as for the volume flyout.
         VideoFlyout.OverlayInputPassThroughElement = Osd;
-        VideoPanel.Adjusted += OnVideoAdjusted;
-        VideoPanel.Library = _looks;
-        VideoPanel.LookChanged += (_, look) => ApplyLook(look);
-        VideoPanel.AddLookRequested += (_, _) => _ = AddLookAsync();
-        VideoPanel.OpenLooksFolderRequested += (_, _) => _ = OpenLooksFolderAsync();
-        ClipDrawer.ExportFilterSource = ExportFilterChain;
+    }
+
+    private Controls.VideoPanel EnsureVideoPanel()
+    {
+        if (_videoPanel is not null)
+        {
+            return _videoPanel;
+        }
+        App.EnsureSettingsControlsLoaded();
+        var panel = new Controls.VideoPanel { Library = _looks };
+        panel.Adjusted += OnVideoAdjusted;
+        panel.LookChanged += (_, look) => ApplyLook(look);
+        panel.AddLookRequested += (_, _) => _ = AddLookAsync();
+        panel.OpenLooksFolderRequested += (_, _) => _ = OpenLooksFolderAsync();
+        _videoPanel = panel;
+        VideoFlyout.Content = panel;
+        return panel;
     }
 
     /// <summary>What a Precise clip bakes in: the saved Look and the colour sliders as playback has them, or null when all are at rest.</summary>
@@ -68,20 +80,21 @@ public sealed partial class MainPage
         {
             return;
         }
+        Controls.VideoPanel panel = EnsureVideoPanel();
         VideoAdjustments baseline = VideoAdjustments.FromSettings(App.Settings.Current);
-        VideoPanel.RequestedTheme = ThemeTokens.AppTheme; // the grade list's dividers take their colour from the panel's theme as they are built
-        VideoPanel.Baseline = baseline;
-        VideoPanel.Show(_video ?? baseline);
-        VideoPanel.ShowLook(FallBackFromMissingGrade(CurrentLook));
+        panel.RequestedTheme = ThemeTokens.AppTheme; // the grade list's dividers take their colour from the panel's theme as they are built
+        panel.Baseline = baseline;
+        panel.Show(_video ?? baseline);
+        panel.ShowLook(FallBackFromMissingGrade(CurrentLook));
         // The window less 8 either side (9.5), and the 1 px stroke the presenter adds.
-        VideoPanel.MaxPanelHeight = Math.Max(0, XamlRoot.Size.Height - (double)Application.Current.Resources["AetherSizeMenuMaxHeightInset"] - 2);
+        panel.MaxPanelHeight = Math.Max(0, XamlRoot.Size.Height - (double)Application.Current.Resources["AetherSizeMenuMaxHeightInset"] - 2);
         VideoFlyout.ShowAt(Osd, new FlyoutShowOptions { Placement = FlyoutPlacementMode.TopEdgeAlignedRight, ShowMode = FlyoutShowMode.Standard });
     }
 
     private void OnVideoFlyoutOpened(object? sender, object e)
     {
         HoldForMenu(true);
-        SetPopupSurface(VideoPanel);
+        SetPopupSurface(_videoPanel);
     }
 
     private void OnVideoFlyoutClosed(object? sender, object e)

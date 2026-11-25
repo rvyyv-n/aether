@@ -23,12 +23,17 @@ public sealed partial class MainPage
     private Storyboard? _livePulse;
     private bool _livePulsing;
 
-    private void InitializeLive()
+    private void InitializeLive() => LiveText.Text = AppStrings.Get("Transport_Live");
+
+    private void EnsureLiveInitialized()
     {
+        if (_liveTimer is not null)
+        {
+            return;
+        }
         _liveTimer = DispatcherQueue.CreateTimer();
         _liveTimer.Interval = TimeSpan.FromSeconds(1);
         _liveTimer.Tick += (_, _) => ReadLiveWindow();
-        LiveText.Text = AppStrings.Get("Transport_Live");
         var fade = new DoubleAnimation { From = 1, To = 0.3, Duration = TimeSpan.FromMilliseconds(900), AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever };
         Storyboard.SetTarget(fade, LiveDot);
         Storyboard.SetTargetProperty(fade, nameof(Opacity));
@@ -44,7 +49,8 @@ public sealed partial class MainPage
         DurationText.Visibility = isLive ? Visibility.Collapsed : Visibility.Visible;
         if (isLive)
         {
-            _liveTimer?.Start();
+            EnsureLiveInitialized();
+            _liveTimer!.Start();
         }
         else
         {
@@ -88,7 +94,7 @@ public sealed partial class MainPage
         if (_liveWindow is not { } window)
         {
             SeekBar.Duration = 0;
-            PositionText.Text = Timecode.FormatClock(position, 0);
+            SetPositionText(Timecode.FormatClock(position, 0));
             ShowLiveEdge(true);
             return true;
         }
@@ -96,7 +102,7 @@ public sealed partial class MainPage
         SeekBar.Position = window.ToBar(position);
         if (!SeekBar.IsDragging)
         {
-            PositionText.Text = Behind(window, position);
+            SetPositionText(Behind(window, position));
         }
         ShowLiveEdge(window.IsAtEdge(position));
         return true;

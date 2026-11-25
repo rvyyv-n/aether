@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 using Aether.Core.Interop.Angle;
 using Aether.Core.Interop.DirectX;
 using Aether.Core.Interop.Mpv;
@@ -27,16 +28,30 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
     private readonly BackdropBlurPass? _backdrop;
 
     private VideoFrameCache? _frameCache;
+    private bool _frameCacheFailed;
     private bool _videoStale = true;
+    private bool _cacheValid;
+    private long _blurTicksTotal;
+    private long _blurFrames;
 
-    private AngleMpvRenderBackend(AngleBridge bridge, MpvRenderContext? render, BackdropSource? backdropSource, BackdropBlurPass? backdrop, VideoFrameCache? frameCache)
+    private AngleMpvRenderBackend(AngleBridge bridge, MpvRenderContext? render, BackdropSource? backdropSource, BackdropBlurPass? backdrop)
     {
         _bridge = bridge;
         _render = render;
         _backdropSource = backdropSource;
         _backdrop = backdrop;
-        _frameCache = frameCache;
     }
+
+    public double AverageBlurPassMilliseconds
+    {
+        get
+        {
+            long frames = Volatile.Read(ref _blurFrames);
+            return frames > 0 ? Volatile.Read(ref _blurTicksTotal) * 1000.0 / Stopwatch.Frequency / frames : -1;
+        }
+    }
+
+    public long BlurPassFrames => Volatile.Read(ref _blurFrames);
 
     public static AngleMpvRenderBackend Create(D3D11DeviceManager device, DxgiPresenter presenter, MpvContext? mpv, BackdropSource? backdropSource, nint frameReadyEvent)
     {
@@ -50,9 +65,7 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
                 : MpvRenderContext.CreateOpenGL(mpv, AngleBridge.GetProcAddressCallback, bridge.GetProcAddressContext, frameReadyEvent);
             // Only a video frame has a card to blur behind; a null pass leaves the plain tint.
             BackdropBlurPass? backdrop = render is not null && backdropSource is not null ? BackdropBlurPass.Create(bridge) : null;
-            // Only worth its extra copy when redraws without a new video frame happen, which is what the fade causes.
-            VideoFrameCache? frameCache = backdrop is not null ? VideoFrameCache.Create(bridge) : null;
-            return new AngleMpvRenderBackend(bridge, render, backdropSource, backdrop, frameCache);
+            return new AngleMpvRenderBackend(bridge, render, backdropSource, backdrop);
         }
         catch
         {
@@ -64,7 +77,11 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
     public bool PollFrame()
     {
         bool frame = _render is not null && (_render.Update() & MpvRenderUpdateFlags.Frame) != 0;
-        _videoStale |= frame;
+        if (frame)
+        {
+            _videoStale = true;
+            _cacheValid = false;
+        }
         return frame;
     }
 
@@ -80,15 +97,16 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
         }
         else
         {
-            RenderVideo(width, height);
-            if (_backdrop is not null)
+            Span<BackdropFrame> frames = stackalloc BackdropFrame[BackdropSource.SlotCount];
+            int count = _backdrop is not null ? _backdropSource!.TryGetFrames(Stopwatch.GetTimestamp(), frames) : 0;
+            RenderVideo(width, height, needCache: count > 0);
+            if (count > 0)
             {
-                Span<BackdropFrame> frames = stackalloc BackdropFrame[BackdropSource.SlotCount];
-                int count = _backdropSource!.TryGetFrames(Stopwatch.GetTimestamp(), frames);
-                if (count > 0)
-                {
-                    _backdrop.Draw(frames[..count], width, height);
-                }
+                long start = Stopwatch.GetTimestamp();
+                _backdrop!.Draw(frames[..count], width, height);
+                long elapsed = Stopwatch.GetTimestamp() - start;
+                Interlocked.Add(ref _blurTicksTotal, elapsed);
+                Interlocked.Increment(ref _blurFrames);
             }
         }
         _bridge.Flush();
@@ -96,19 +114,44 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
     }
 
     /// <summary>
-    /// Draws the picture. A redraw without a new video frame (the card's fade) copies the cached one
-    /// back instead of making mpv render it again; the cache is stale after a new frame or a resize.
+    /// Draws the picture. When no blurred card is visible or fading, renders directly into the swap
+    /// chain back buffer (zero extra copy). When blur overlays are active, caches the rendered frame
+    /// so UI fades while paused reuse it instead of making mpv re-render every vsync.
     /// </summary>
-    private void RenderVideo(uint width, uint height)
+    private void RenderVideo(uint width, uint height, bool needCache)
     {
+        if (!needCache)
+        {
+            if (!_videoStale && _cacheValid && _frameCache is { } cached
+                && cached.Width == (int)width && cached.Height == (int)height)
+            {
+                cached.CopyToBackBuffer();
+                return;
+            }
+            MpvException.ThrowIfError(_render!.RenderOpenGL(0, (int)width, (int)height, AngleBridge.RenderFlipY), "mpv_render_context_render");
+            _videoStale = false;
+            _cacheValid = false;
+            return;
+        }
+
+        if (_frameCache is null && !_frameCacheFailed)
+        {
+            _frameCache = VideoFrameCache.Create(_bridge);
+            if (_frameCache is null)
+            {
+                _frameCacheFailed = true;
+            }
+        }
+
         if (_frameCache is { } cache)
         {
             if (cache.EnsureSize(width, height, out bool reallocated))
             {
-                if (_videoStale || reallocated)
+                if (_videoStale || reallocated || !_cacheValid)
                 {
                     MpvException.ThrowIfError(_render!.RenderOpenGL((int)cache.Framebuffer, (int)width, (int)height, AngleBridge.RenderFlipY), "mpv_render_context_render");
                     _videoStale = false;
+                    _cacheValid = true;
                 }
                 cache.CopyToBackBuffer();
                 return;
@@ -116,8 +159,11 @@ internal sealed unsafe class AngleMpvRenderBackend : IVideoRenderBackend
             // The cache texture could not be built: draw straight to the back buffer from now on.
             cache.Dispose();
             _frameCache = null;
+            _frameCacheFailed = true;
         }
         MpvException.ThrowIfError(_render!.RenderOpenGL(0, (int)width, (int)height, AngleBridge.RenderFlipY), "mpv_render_context_render");
+        _videoStale = false;
+        _cacheValid = false;
     }
 
     public void ReportSwap() => _render?.ReportSwap();

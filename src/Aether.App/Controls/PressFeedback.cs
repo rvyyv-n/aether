@@ -30,7 +30,7 @@ internal static class PressFeedback
     private static void Squash(UIElement element, bool pressed)
     {
         StrongBox<bool> squashed = Squashed.GetOrCreateValue(element);
-        if (pressed == squashed.Value || (pressed && (!Motion.AnimationsEnabled || !Motion.IsSpringy)))
+        if (pressed == squashed.Value || (pressed && (!Motion.IsSpringy || !Motion.AnimationsEnabled)))
         {
             return;
         }

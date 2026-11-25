@@ -6,7 +6,7 @@ namespace Aether.Core.Playback;
 public sealed record DiagnosticsWording(string Software, string HardwareFormat, string Playing);
 
 /// <summary>
-/// The six lines of the diagnostics panel, as text. Pure: built from a <see cref="PlayerState"/> so the
+/// The seven lines of the diagnostics panel, as text. Pure: built from a <see cref="PlayerState"/> so the
 /// wording is tested without a window. A value mpv has not reported reads as <see cref="Unavailable"/>.
 /// </summary>
 public sealed record DiagnosticsRows(
@@ -15,24 +15,38 @@ public sealed record DiagnosticsRows(
     string FrameRate,
     string Display,
     string Dropped,
-    string Cache)
+    string Cache,
+    string Gpu)
 {
     public const string Unavailable = "—";
 
-    public static DiagnosticsRows From(in PlayerState state, DiagnosticsWording wording) => new(
-        FormatDecoder(state.Decoder, wording),
-        FormatVideo(state.VideoFormat, state.CodedWidth, state.CodedHeight),
-        FormatFrameRate(state.FramesPerSecond, state.EstimatedFps, wording),
-        state.DisplayFps > 0 ? Number(state.DisplayFps, "0.##") + " Hz" : Unavailable,
-        $"{state.DecoderDroppedFrames.ToString(CultureInfo.InvariantCulture)} · {state.DroppedFrames.ToString(CultureInfo.InvariantCulture)}",
-        state.CacheDuration >= 0 ? Number(state.CacheDuration, "0.0") + " s" : Unavailable);
+    public static DiagnosticsRows From(
+        in PlayerState state,
+        DiagnosticsWording wording,
+        double gpuFrameTimeMs = -1,
+        double fallbackDisplayFps = 0)
+    {
+        double displayHz = state.DisplayFps > 0 ? state.DisplayFps : fallbackDisplayFps;
+        string gpu = gpuFrameTimeMs >= 0 && double.IsFinite(gpuFrameTimeMs)
+            ? Number(gpuFrameTimeMs, "0.00") + " ms"
+            : Unavailable;
+
+        return new(
+            FormatDecoder(state.Decoder, wording),
+            FormatVideo(state.VideoFormat, state.CodedWidth, state.CodedHeight),
+            FormatFrameRate(state.FramesPerSecond, state.EstimatedFps, wording),
+            displayHz > 0 && double.IsFinite(displayHz) ? Number(displayHz, "0.##") + " Hz" : Unavailable,
+            $"{state.DecoderDroppedFrames.ToString(CultureInfo.InvariantCulture)} · {state.DroppedFrames.ToString(CultureInfo.InvariantCulture)}",
+            state.CacheDuration >= 0 ? Number(state.CacheDuration, "0.0") + " s" : Unavailable,
+            gpu);
+    }
 
     /// <summary>Plain text for the clipboard: the title, then "label: value" per row. <paramref name="labels"/> follow the row order.</summary>
     public string ToText(string title, IReadOnlyList<string> labels)
     {
         ArgumentException.ThrowIfNullOrEmpty(title);
         ArgumentNullException.ThrowIfNull(labels);
-        if (labels.Count != 6)
+        if (labels.Count != 7)
         {
             throw new ArgumentException("Expected one label per row.", nameof(labels));
         }
@@ -44,7 +58,8 @@ public sealed record DiagnosticsRows(
             $"{labels[2]}: {FrameRate}",
             $"{labels[3]}: {Display}",
             $"{labels[4]}: {Dropped}",
-            $"{labels[5]}: {Cache}");
+            $"{labels[5]}: {Cache}",
+            $"{labels[6]}: {Gpu}");
     }
 
     private static string FormatDecoder(string? decoder, DiagnosticsWording wording) => decoder switch

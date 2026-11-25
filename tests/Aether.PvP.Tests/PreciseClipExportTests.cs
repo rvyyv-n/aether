@@ -47,7 +47,7 @@ public sealed class PreciseClipExportTests : IDisposable
         public Task<ProcessOutcome> RunAsync(
             string fileName, IReadOnlyList<string> arguments, Func<TextReader, Task>? stdoutConsumer, CancellationToken ct)
         {
-            Calls.Add(arguments);
+            lock (Calls) Calls.Add(arguments);
             return behaviour(arguments, stdoutConsumer, ct);
         }
     }

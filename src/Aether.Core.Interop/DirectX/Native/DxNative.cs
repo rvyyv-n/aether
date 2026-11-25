@@ -6,6 +6,10 @@ namespace Aether.Core.Interop.DirectX.Native;
 internal static unsafe partial class DxNative
 {
     public const uint D3D11_SDK_VERSION = 7;
+    public const uint D3D11_ASYNC_GETDATA_DONOTFLUSH = 0x1;
+
+    public const int S_OK = 0;
+    public const int S_FALSE = 1;
 
     public const uint DXGI_USAGE_RENDER_TARGET_OUTPUT = 0x20;
     public const int DXGI_FEATURE_PRESENT_ALLOW_TEARING = 0;

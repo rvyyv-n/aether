@@ -7,13 +7,14 @@
 
     <!--
         Diagnostics (screen 8.1): a solid panel, not Acrylic (ADR-0013), so secondary text holds over bright video.
-        The title and Copy, then six label / value rows.
+        The title and Copy, then seven label / value rows.
     -->
     <Border
         Width="{StaticResource AetherSizeDiagnosticsWidth}"
         Style="{StaticResource AetherOverlayStrongPanelStyle}">
         <Grid RowSpacing="4">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -98,6 +99,16 @@
             <TextBlock
                 x:Name="CacheValue"
                 Grid.Row="6"
+                Grid.Column="1"
+                Style="{StaticResource AetherMonoTextStyle}"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                x:Name="GpuLabel"
+                Grid.Row="7"
+                Style="{StaticResource AetherCaptionTextStyle}" />
+            <TextBlock
+                x:Name="GpuValue"
+                Grid.Row="7"
                 Grid.Column="1"
                 Style="{StaticResource AetherMonoTextStyle}"
                 TextTrimming="CharacterEllipsis" />

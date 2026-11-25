@@ -14,6 +14,8 @@ namespace Aether_App.Controls;
 internal static class Motion
 {
     private static readonly UISettings Settings = new();
+    private static Vector4? s_easeOut;
+    private static Vector4? s_easeIn;
 
     public static bool AnimationsEnabled => Settings.AnimationsEnabled;
 
@@ -30,9 +32,9 @@ internal static class Motion
         return new Vector4(At(0), At(1), At(2), At(3));
     }
 
-    public static Vector4 EaseOut => Curve("AetherMotionEaseOut");
+    public static Vector4 EaseOut => s_easeOut ??= Curve("AetherMotionEaseOut");
 
-    public static Vector4 EaseIn => Curve("AetherMotionEaseIn");
+    public static Vector4 EaseIn => s_easeIn ??= Curve("AetherMotionEaseIn");
 
     /// <summary>The eased fraction at time fraction <paramref name="t"/> (0..1) of <paramref name="curve"/>.</summary>
     public static double Ease(Vector4 curve, double t) => new CubicBezier(curve.X, curve.Y, curve.Z, curve.W).Ease(t);

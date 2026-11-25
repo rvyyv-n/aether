@@ -8,7 +8,7 @@ namespace Aether_App;
 /// <summary>
 /// Shows toasts on the page: feeds requests to the <see cref="ToastQueue"/>, draws what it says is showing in the
 /// overlay <see cref="Toast"/>, and arms the timer it asks for. Any code that wants a toast calls <see cref="Show(ToastRequest)"/>.
-/// UI thread only.
+/// Defers realizing the toast visual tree until the first toast is shown. UI thread only.
 /// </summary>
 internal sealed class ToastService
 {
@@ -16,22 +16,30 @@ internal sealed class ToastService
     private const double Gap = 8; // above the card, and above the chip
 
     private readonly ToastQueue _queue;
-    private readonly Toast _toast;
-    private readonly FrameworkElement _layer;
+    private readonly Func<(Toast Card, FrameworkElement Layer)> _ensureView;
     private readonly ChromeFader _fader;
     private readonly Action _returnFocus;
     private readonly DispatcherQueueTimer _timer;
     private readonly DispatcherQueueTimer _hideTimer;
+    private Toast? _toast;
+    private FrameworkElement? _layer;
     private bool _focused;
     private bool _shown;
+    private bool _controlsShown;
+    private double _controlsHeight;
+    private double _chipHeight;
+    private bool _hasPlacement;
 
-    /// <param name="layer">The overlay holding <paramref name="toast"/>: bottom aligned, with 16 side margins.</param>
+    /// <param name="ensureView">Realizes the overlay holding <see cref="Toast"/> on first use.</param>
     /// <param name="returnFocus">Puts keyboard focus back on the page when a toast that had it goes away.</param>
     public ToastService(
-        Toast toast, FrameworkElement layer, ChromeFader fader, DispatcherQueue dispatcher, Action returnFocus, TimeProvider? time = null)
+        Func<(Toast Card, FrameworkElement Layer)> ensureView,
+        ChromeFader fader,
+        DispatcherQueue dispatcher,
+        Action returnFocus,
+        TimeProvider? time = null)
     {
-        _toast = toast;
-        _layer = layer;
+        _ensureView = ensureView;
         _fader = fader;
         _returnFocus = returnFocus;
         _queue = new ToastQueue(time);
@@ -49,25 +57,11 @@ internal sealed class ToastService
         _hideTimer.Tick += (_, _) =>
         {
             _hideTimer.Stop();
-            _layer.Visibility = Visibility.Collapsed;
+            if (_layer is not null)
+            {
+                _layer.Visibility = Visibility.Collapsed;
+            }
         };
-
-        toast.HoverChanged += (_, hovered) =>
-        {
-            _queue.SetHovered(hovered);
-            Arm();
-        };
-        toast.FocusChanged += (_, focused) =>
-        {
-            _focused = focused;
-            _queue.SetFocused(focused);
-            Arm();
-        };
-        toast.ActionInvoked += (_, _) => Close();
-        toast.DismissRequested += (_, _) => Close();
-
-        _layer.Visibility = Visibility.Collapsed;
-        _fader.Reveal(_layer, false);
     }
 
     public void Show(string key, string text, ToastTone tone = ToastTone.Neutral, string? actionLabel = null, Action? action = null) =>
@@ -93,9 +87,51 @@ internal sealed class ToastService
     /// </summary>
     public void SetControlsShown(bool shown, double controlsHeight, double chipHeight = 0)
     {
-        Thickness margin = _layer.Margin;
+        _controlsShown = shown;
+        _controlsHeight = controlsHeight;
+        _chipHeight = chipHeight;
+        _hasPlacement = true;
+        if (_layer is not null)
+        {
+            ApplyPlacement(_layer, shown, controlsHeight, chipHeight);
+        }
+    }
+
+    private static void ApplyPlacement(FrameworkElement layer, bool shown, double controlsHeight, double chipHeight)
+    {
+        Thickness margin = layer.Margin;
         double bottom = shown ? BottomMargin + controlsHeight + Gap + (chipHeight > 0 ? chipHeight + Gap : 0) : BottomMargin;
-        _layer.Margin = new Thickness(margin.Left, margin.Top, margin.Right, bottom);
+        layer.Margin = new Thickness(margin.Left, margin.Top, margin.Right, bottom);
+    }
+
+    private void EnsureToastView()
+    {
+        if (_toast is not null && _layer is not null)
+        {
+            return;
+        }
+        (Toast toast, FrameworkElement layer) = _ensureView();
+        _toast = toast;
+        _layer = layer;
+        toast.HoverChanged += (_, hovered) =>
+        {
+            _queue.SetHovered(hovered);
+            Arm();
+        };
+        toast.FocusChanged += (_, focused) =>
+        {
+            _focused = focused;
+            _queue.SetFocused(focused);
+            Arm();
+        };
+        toast.ActionInvoked += (_, _) => Close();
+        toast.DismissRequested += (_, _) => Close();
+        layer.Visibility = Visibility.Collapsed;
+        _fader.Reveal(layer, false);
+        if (_hasPlacement)
+        {
+            ApplyPlacement(layer, _controlsShown, _controlsHeight, _chipHeight);
+        }
     }
 
     private void Close()
@@ -113,9 +149,10 @@ internal sealed class ToastService
     {
         if (_queue.Showing is { } request)
         {
+            EnsureToastView();
             _hideTimer.Stop();
-            _toast.Present(request);
-            _layer.Visibility = Visibility.Visible;
+            _toast!.Present(request);
+            _layer!.Visibility = Visibility.Visible;
             _fader.Reveal(_layer, true);
             if (!_shown)
             {
@@ -123,7 +160,7 @@ internal sealed class ToastService
                 _fader.Slide(_toast, true); // a message replacing one on screen stays put
             }
         }
-        else
+        else if (_toast is not null && _layer is not null)
         {
             _focused = false;
             _shown = false;

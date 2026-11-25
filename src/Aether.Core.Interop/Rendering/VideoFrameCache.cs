@@ -97,6 +97,10 @@ internal sealed unsafe class VideoFrameCache : IDisposable
     /// <summary>The framebuffer mpv renders into. Valid after <see cref="EnsureSize"/> returned true.</summary>
     public uint Framebuffer => _fbo;
 
+    public int Width => _width;
+
+    public int Height => _height;
+
     /// <summary>
     /// Sizes the texture to the back buffer. <paramref name="reallocated"/> is true when the old picture
     /// is gone and mpv must draw again. False if the framebuffer would not be complete.

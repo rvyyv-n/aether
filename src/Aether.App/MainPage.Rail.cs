@@ -27,6 +27,8 @@ public sealed partial class MainPage
     // because the render thread's blur has to be told where the card is on every step (see PostSidebarRegion).
     private readonly MotionTween _railSlide = new(0);
     private double _railTop = 40;
+    private double _lastPlacedHotTop = double.NaN;
+    private double _lastPlacedRailTop = double.NaN;
     private bool _railFits = true;
     private bool _sidebarEnabled = true;
     private DispatcherQueueTimer? _railTimer;
@@ -88,6 +90,10 @@ public sealed partial class MainPage
 
     private void SetPointerHeld(bool held)
     {
+        if (_pointerHeld == held)
+        {
+            return;
+        }
         _pointerHeld = held;
         SyncRail();
     }
@@ -142,6 +148,7 @@ public sealed partial class MainPage
     private void OnRailClipsClick(object sender, RoutedEventArgs e)
     {
         CloseRail();
+        EnsureClipLayer();
         ClipDrawer.Open();
     }
 
@@ -192,7 +199,7 @@ public sealed partial class MainPage
         }
         bool available = _sidebarEnabled && !_tour.IsActive && _railFits && _chrome.IsVisible && !_settingsShown && _openUrl.Stage != OpenUrlStage.Editing && !IsPictureInPicture;
         _rail.SetAvailable(available);
-        _rail.SetDragging(_dragging || _pointerHeld || ClipDrawer.IsDraggingOut);
+        _rail.SetDragging(_dragging || _pointerHeld || (ClipDrawer?.IsDraggingOut == true));
         RailHotZone.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
 
         double peek = _rail.IsPeeking ? 1 : 0;
@@ -257,11 +264,17 @@ public sealed partial class MainPage
             y = Math.Min(y, bottom - Osd.Margin.Bottom - Osd.Height - RailInset - Rail.Height);
         }
         bool fits = y >= top + RailInset;
-        _railTop = Math.Max(y, top + RailInset);
+        double railTop = Math.Max(y, top + RailInset);
+        _railTop = railTop;
 
-        RailHotZone.Margin = new Thickness(0, top, 0, 0);
-        RailPeek.Margin = new Thickness(0, _railTop - top, 0, 0);
-        Rail.Margin = new Thickness(Rail.Margin.Left, _railTop, 0, 0);
+        if (top != _lastPlacedHotTop || railTop != _lastPlacedRailTop)
+        {
+            _lastPlacedHotTop = top;
+            _lastPlacedRailTop = railTop;
+            RailHotZone.Margin = new Thickness(0, top, 0, 0);
+            RailPeek.Margin = new Thickness(0, railTop - top, 0, 0);
+            Rail.Margin = new Thickness(Rail.Margin.Left, railTop, 0, 0);
+        }
         if (fits != _railFits)
         {
             _railFits = fits;

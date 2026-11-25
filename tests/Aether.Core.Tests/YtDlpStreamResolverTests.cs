@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Aether.Core.Playback.Streams;
+using Aether.Core.Tests.TestSupport;
 using Xunit;
 
 namespace Aether.Core.Tests;
@@ -10,9 +11,11 @@ public class YtDlpStreamResolverTests
     {
         public Func<ProcessStartInfo, CancellationToken, Task<ProcessRunResult>>? Handler { get; set; }
         public ProcessStartInfo? LastStartInfo { get; private set; }
+        public int CallCount { get; private set; }
 
         public Task<ProcessRunResult> RunAsync(ProcessStartInfo startInfo, CancellationToken ct)
         {
+            CallCount++;
             LastStartInfo = startInfo;
             if (Handler is not null)
             {
@@ -22,8 +25,38 @@ public class YtDlpStreamResolverTests
         }
     }
 
+    private static string MultiFormatJson(
+        bool isLive = false,
+        long? expireUnix = null,
+        string? rootHeadersJson = null,
+        string? videoEntryHeadersJson = null)
+    {
+        string suffix = expireUnix is { } exp ? $"?expire={exp}" : string.Empty;
+        string rootHeaders = rootHeadersJson is not null ? $",\"http_headers\":{rootHeadersJson}" : string.Empty;
+        string entryHeaders = videoEntryHeadersJson is not null ? $",\"http_headers\":{videoEntryHeadersJson}" : string.Empty;
+        return $$"""
+            {
+              "title": "Sample Video",
+              "duration": 240.0,
+              "webpage_url": "https://www.youtube.com/watch?v=abc",
+              "is_live": {{(isLive ? "true" : "false")}}
+              {{rootHeaders}},
+              "requested_formats": [
+                {"format_id":"137","url":"https://cdn.example/v1080{{suffix}}","vcodec":"avc1","acodec":"none"{{entryHeaders}}},
+                {"format_id":"140-es","url":"https://cdn.example/a-es{{suffix}}","vcodec":"none","acodec":"mp4a"}
+              ],
+              "formats": [
+                {"format_id":"140-es","url":"https://cdn.example/a-es{{suffix}}","vcodec":"none","acodec":"mp4a","ext":"m4a","tbr":128,"protocol":"https","has_drm":false},
+                {"format_id":"136","url":"https://cdn.example/v720{{suffix}}","vcodec":"avc1","acodec":"none","ext":"mp4","height":720,"width":1280,"fps":30,"tbr":2200,"protocol":"https","has_drm":false},
+                {"format_id":"137","url":"https://cdn.example/v1080{{suffix}}","vcodec":"avc1","acodec":"none","ext":"mp4","height":1080,"width":1920,"fps":30,"tbr":4200,"protocol":"https","has_drm":false},
+                {"format_id":"315","url":"https://cdn.example/v2160{{suffix}}","vcodec":"vp9","acodec":"none","ext":"webm","height":2160,"width":3840,"fps":60,"tbr":12000,"protocol":"m3u8_native","has_drm":true}
+              ]
+            }
+            """.ReplaceLineEndings(" ");
+    }
+
     [Fact]
-    public async Task ResolveAsync_ValidJson_ReturnsResolvedStream()
+    public async Task ResolveAsync_ValidJson_ReturnsResolvedStreamAndUsesArgumentList()
     {
         string json = string.Concat(
             (char)123,
@@ -48,6 +81,12 @@ public class YtDlpStreamResolverTests
         Assert.Equal("https://youtube.com/watch?v=123", stream.WebpageUrl);
         Assert.NotNull(stream.HttpHeaders);
         Assert.Equal("Test/1.0", stream.HttpHeaders!["User-Agent"]);
+
+        Assert.NotNull(runner.LastStartInfo);
+        Assert.Equal(string.Empty, runner.LastStartInfo!.Arguments);
+        Assert.Contains("--dump-json", runner.LastStartInfo.ArgumentList);
+        Assert.Contains("--", runner.LastStartInfo.ArgumentList);
+        Assert.Equal("https://youtube.com/watch?v=123", runner.LastStartInfo.ArgumentList[^1]);
     }
 
     [Fact]
@@ -74,7 +113,7 @@ public class YtDlpStreamResolverTests
     }
 
     [Fact]
-    public async Task ResolveAsync_NonZeroExitCode_ThrowsClassifiedException()
+    public async Task ResolveAsync_NonZeroExitCode_ThrowsClassifiedExceptionAndDoesNotCache()
     {
         var runner = new MockProcessRunner
         {
@@ -85,8 +124,11 @@ public class YtDlpStreamResolverTests
 
         StreamResolutionException ex = await Assert.ThrowsAsync<StreamResolutionException>(() =>
             resolver.ResolveAsync("https://youtube.com/watch?v=private", options));
-
         Assert.Equal(StreamFailureReason.PrivateVideo, ex.Reason);
+
+        await Assert.ThrowsAsync<StreamResolutionException>(() =>
+            resolver.ResolveAsync("https://youtube.com/watch?v=private", options));
+        Assert.Equal(2, runner.CallCount);
     }
 
     [Fact]
@@ -174,5 +216,187 @@ public class YtDlpStreamResolverTests
             resolver.ResolveAsync("https://youtu.be/test", options));
 
         Assert.Equal(StreamFailureReason.Unknown, ex.Reason);
+    }
+
+    [Fact]
+    public void ParseStreamJson_ParsesProtocolHasDrmAndFallsBackToVideoEntryHeaders()
+    {
+        ResolvedStream missingRootHeaders = YtDlpStreamResolver.ParseStreamJson(
+            MultiFormatJson(rootHeadersJson: null, videoEntryHeadersJson: """{"User-Agent":"EntryUA"}"""),
+            "https://fallback");
+        Assert.Equal("EntryUA", missingRootHeaders.HttpHeaders!["User-Agent"]);
+
+        ResolvedStream emptyRootHeaders = YtDlpStreamResolver.ParseStreamJson(
+            MultiFormatJson(rootHeadersJson: "{}", videoEntryHeadersJson: """{"User-Agent":"EntryUA2"}"""),
+            "https://fallback");
+        Assert.Equal("EntryUA2", emptyRootHeaders.HttpHeaders!["User-Agent"]);
+
+        Assert.Equal("https", missingRootHeaders.Formats![1].Protocol);
+        Assert.False(missingRootHeaders.Formats[1].HasDrm);
+        Assert.Equal("m3u8_native", missingRootHeaders.Formats[3].Protocol);
+        Assert.True(missingRootHeaders.Formats[3].HasDrm);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Tier1AndTier2CacheHits_AvoidExtraProcessRuns()
+    {
+        var runner = new MockProcessRunner
+        {
+            Handler = (_, _) => Task.FromResult(new ProcessRunResult(0, MultiFormatJson(), string.Empty))
+        };
+        var resolver = new YtDlpStreamResolver(runner, new ManualTimeProvider());
+        string url = "https://www.youtube.com/watch?v=abc";
+
+        ResolvedStream initial = await resolver.ResolveAsync(url, new StreamResolutionOptions(StreamingQuality: "1080p"));
+        Assert.Equal("https://cdn.example/v1080", initial.StreamUrl);
+        Assert.Equal(1, runner.CallCount);
+
+        // Tier 1 exact hit (even with surrounding spaces on URL)
+        ResolvedStream tier1 = await resolver.ResolveAsync($"  {url}  ", new StreamResolutionOptions(StreamingQuality: "1080p"));
+        Assert.Equal(initial.StreamUrl, tier1.StreamUrl);
+        Assert.Equal(1, runner.CallCount);
+
+        // Tier 2 metadata hit for a different quality -> StreamFormatSelector selects 720p + keeps audio-es
+        var opt720 = new StreamResolutionOptions(
+            RequestedQuality: QualityOptions.ForKey("h720"),
+            FormatSelectorOverride: "bv*[height<=720]+ba/b[height<=720]");
+        ResolvedStream tier2To720 = await resolver.ResolveAsync(url, opt720);
+        Assert.Equal("https://cdn.example/v720", tier2To720.StreamUrl);
+        Assert.Equal("https://cdn.example/a-es", tier2To720.AudioUrl);
+        Assert.Equal("136", tier2To720.VideoFormatId);
+        Assert.Equal("140-es", tier2To720.AudioFormatId);
+        Assert.Equal(1, runner.CallCount);
+
+        // Tier 2 -> AudioOnly
+        ResolvedStream tier2Audio = await resolver.ResolveAsync(
+            url,
+            new StreamResolutionOptions(RequestedQuality: QualityOptions.AudioOnly, FormatSelectorOverride: "ba/b"));
+        Assert.Equal("https://cdn.example/a-es", tier2Audio.StreamUrl);
+        Assert.Null(tier2Audio.AudioUrl);
+        Assert.Equal("140-es", tier2Audio.VideoFormatId);
+        Assert.Equal(1, runner.CallCount);
+
+        // BypassCache forces fresh process run
+        await resolver.ResolveAsync(url, new StreamResolutionOptions(StreamingQuality: "1080p", BypassCache: true));
+        Assert.Equal(2, runner.CallCount);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Tier2MissesOnCustomSelectorOverrideWithoutRequestedQuality()
+    {
+        var runner = new MockProcessRunner
+        {
+            Handler = (_, _) => Task.FromResult(new ProcessRunResult(0, MultiFormatJson(), string.Empty))
+        };
+        var resolver = new YtDlpStreamResolver(runner, new ManualTimeProvider());
+        string url = "https://www.youtube.com/watch?v=abc";
+
+        await resolver.ResolveAsync(url, new StreamResolutionOptions());
+        await resolver.ResolveAsync(url, new StreamResolutionOptions(FormatSelectorOverride: "best[height<=480]", RequestedQuality: null));
+
+        Assert.Equal(2, runner.CallCount);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_RespectsVodAndLiveTtlAndInvalidate()
+    {
+        var time = new ManualTimeProvider();
+        bool live = false;
+        var runner = new MockProcessRunner
+        {
+            Handler = (_, _) => Task.FromResult(new ProcessRunResult(0, MultiFormatJson(isLive: live), string.Empty))
+        };
+        var resolver = new YtDlpStreamResolver(runner, time);
+        var opts = new StreamResolutionOptions();
+
+        // VOD: 20 minutes
+        await resolver.ResolveAsync("https://example.com/vod", opts);
+        time.Advance(TimeSpan.FromMinutes(19));
+        await resolver.ResolveAsync("https://example.com/vod", opts);
+        Assert.Equal(1, runner.CallCount);
+
+        time.Advance(TimeSpan.FromMinutes(1));
+        await resolver.ResolveAsync("https://example.com/vod", opts);
+        Assert.Equal(2, runner.CallCount);
+
+        // Invalidate clears cached entry
+        resolver.Invalidate("https://example.com/vod");
+        await resolver.ResolveAsync("https://example.com/vod", opts);
+        Assert.Equal(3, runner.CallCount);
+
+        // Live: 60 seconds
+        live = true;
+        await resolver.ResolveAsync("https://example.com/live", opts);
+        time.Advance(TimeSpan.FromSeconds(59));
+        await resolver.ResolveAsync("https://example.com/live", opts);
+        Assert.Equal(4, runner.CallCount);
+
+        time.Advance(TimeSpan.FromSeconds(1));
+        await resolver.ResolveAsync("https://example.com/live", opts);
+        Assert.Equal(5, runner.CallCount);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_CapsCacheExpiryByUrlExpireParamMinus5Minutes()
+    {
+        var time = new ManualTimeProvider();
+        DateTimeOffset startUtc = time.GetUtcNow();
+        long expireIn12Min = (startUtc + TimeSpan.FromMinutes(12)).ToUnixTimeSeconds();
+        long expireIn4Min = (startUtc + TimeSpan.FromMinutes(4)).ToUnixTimeSeconds();
+
+        long currentExpire = expireIn12Min;
+        var runner = new MockProcessRunner
+        {
+            Handler = (_, _) => Task.FromResult(new ProcessRunResult(0, MultiFormatJson(expireUnix: currentExpire), string.Empty))
+        };
+        var resolver = new YtDlpStreamResolver(runner, time);
+        var opts = new StreamResolutionOptions();
+
+        // expire in 12m -> cached for 12m - 5m = 7m
+        await resolver.ResolveAsync("https://example.com/exp", opts);
+        time.Advance(TimeSpan.FromMinutes(6));
+        await resolver.ResolveAsync("https://example.com/exp", opts);
+        Assert.Equal(1, runner.CallCount);
+
+        time.Advance(TimeSpan.FromMinutes(1));
+        await resolver.ResolveAsync("https://example.com/exp", opts);
+        Assert.Equal(2, runner.CallCount);
+
+        // expire in 4m -> already inside 5m margin -> never cached
+        currentExpire = (time.GetUtcNow() + TimeSpan.FromMinutes(4)).ToUnixTimeSeconds();
+        await resolver.ResolveAsync("https://example.com/soon", opts);
+        await resolver.ResolveAsync("https://example.com/soon", opts);
+        Assert.Equal(4, runner.CallCount);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_LruEvictsOldestBeyond32Entries()
+    {
+        var runner = new MockProcessRunner
+        {
+            Handler = (_, _) => Task.FromResult(new ProcessRunResult(0, MultiFormatJson(), string.Empty))
+        };
+        var resolver = new YtDlpStreamResolver(runner, new ManualTimeProvider());
+        var opts = new StreamResolutionOptions();
+
+        for (int i = 0; i < 32; i++)
+        {
+            await resolver.ResolveAsync($"https://example.com/v{i}", opts);
+        }
+        Assert.Equal(32, runner.CallCount);
+
+        // Touch v0 so v1 becomes LRU
+        await resolver.ResolveAsync("https://example.com/v0", opts);
+        Assert.Equal(32, runner.CallCount);
+
+        // Add 33rd URL -> evicts v1, keeps v0
+        await resolver.ResolveAsync("https://example.com/v32", opts);
+        Assert.Equal(33, runner.CallCount);
+
+        await resolver.ResolveAsync("https://example.com/v0", opts);
+        Assert.Equal(33, runner.CallCount);
+
+        await resolver.ResolveAsync("https://example.com/v1", opts);
+        Assert.Equal(34, runner.CallCount);
     }
 }

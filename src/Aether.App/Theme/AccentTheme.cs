@@ -16,6 +16,10 @@ public static class AccentTheme
     public static void Apply(string setting)
     {
         AccentColor? accent = AccentPalette.Resolve(setting);
+        if (accent is null && Originals.Count == 0)
+        {
+            return;
+        }
         IReadOnlyDictionary<string, uint> overrides = AccentPalette.Overrides(accent ?? default);
         foreach (ElementTheme theme in (ElementTheme[])[ElementTheme.Light, ElementTheme.Dark])
         {

@@ -5,7 +5,7 @@ using Windows.ApplicationModel.DataTransfer;
 
 namespace Aether_App.Controls;
 
-/// <summary>The diagnostics overlay (Ctrl+I): playback facts from mpv as six rows, with a Copy button. UI thread only.</summary>
+/// <summary>The diagnostics overlay (Ctrl+I): playback facts from mpv and D3D11 GPU timing as seven rows, with a Copy button. UI thread only.</summary>
 public sealed partial class DiagnosticsPanel : UserControl
 {
     private readonly DiagnosticsWording _wording = new(AppStrings.Get("Diagnostics_Software"), AppStrings.Get("Diagnostics_Hardware"), AppStrings.Get("Diagnostics_Playing"));
@@ -23,12 +23,13 @@ public sealed partial class DiagnosticsPanel : UserControl
         DisplayLabel.Text = AppStrings.Get("Diagnostics_Display");
         DroppedLabel.Text = AppStrings.Get("Diagnostics_Dropped");
         CacheLabel.Text = AppStrings.Get("Diagnostics_Cache");
+        GpuLabel.Text = AppStrings.Get("Diagnostics_Gpu");
         Show(_rows);
     }
 
-    public void Update(in PlayerState state)
+    public void Update(in PlayerState state, double gpuFrameTimeMs = -1, double fallbackDisplayFps = 0)
     {
-        DiagnosticsRows rows = DiagnosticsRows.From(state, _wording);
+        DiagnosticsRows rows = DiagnosticsRows.From(state, _wording, gpuFrameTimeMs, fallbackDisplayFps);
         if (rows != _rows)
         {
             Show(rows);
@@ -44,6 +45,7 @@ public sealed partial class DiagnosticsPanel : UserControl
         DisplayValue.Text = rows.Display;
         DroppedValue.Text = rows.Dropped;
         CacheValue.Text = rows.Cache;
+        GpuValue.Text = rows.Gpu;
     }
 
     private void OnCopyClick(object sender, RoutedEventArgs e)
@@ -51,7 +53,7 @@ public sealed partial class DiagnosticsPanel : UserControl
         string[] labels =
         [
             DecoderLabel.Text, VideoLabel.Text, FrameRateLabel.Text,
-            DisplayLabel.Text, DroppedLabel.Text, CacheLabel.Text,
+            DisplayLabel.Text, DroppedLabel.Text, CacheLabel.Text, GpuLabel.Text,
         ];
         var package = new DataPackage();
         package.SetText(_rows.ToText(TitleText.Text, labels));
