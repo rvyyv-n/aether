@@ -86,6 +86,9 @@
   <data name="EmptyState_EngineReady" xml:space="preserve">
     <value>Ready</value>
   </data>
+  <data name="EmptyState_EngineRenderer" xml:space="preserve">
+    <value>libmpv · D3D11</value>
+  </data>
   <data name="EmptyState_DetailsSearched" xml:space="preserve">
     <value>Searched</value>
   </data>
@@ -629,6 +632,9 @@
   <data name="Rail_Name" xml:space="preserve">
     <value>Navigation</value>
   </data>
+  <data name="Rail_Open" xml:space="preserve">
+    <value>Open navigation</value>
+  </data>
   <data name="Menu_ClearList" xml:space="preserve">
     <value>Clear list</value>
   </data>
@@ -817,7 +823,7 @@
     <value>Appearance</value>
   </data>
   <data name="Settings_Theme_Description" xml:space="preserve">
-    <value>Choose light, dark, or follow your Windows setting</value>
+    <value>Choose light, dark, pure-black OLED, or follow your Windows setting</value>
   </data>
   <data name="Settings_Theme_Auto" xml:space="preserve">
     <value>Auto</value>
@@ -827,6 +833,9 @@
   </data>
   <data name="Settings_Theme_Dark" xml:space="preserve">
     <value>Dark</value>
+  </data>
+  <data name="Settings_Theme_Oled" xml:space="preserve">
+    <value>OLED</value>
   </data>
   <data name="Settings_BatterySaver_Title" xml:space="preserve">
     <value>Battery saver</value>

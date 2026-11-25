@@ -17,9 +17,10 @@ public sealed partial class GeneralPage : Page
         InitializeComponent();
         var binder = new SettingsPageBinder(this);
         binder.Choose(ThemeRow, ThemeSegmented, SettingKeys.Theme,
-            [new("auto", AppStrings.Get("Settings_Theme_Auto")),
-             new("light", AppStrings.Get("Settings_Theme_Light")),
-             new("dark", AppStrings.Get("Settings_Theme_Dark"))],
+            [new(ThemeModes.Auto, AppStrings.Get("Settings_Theme_Auto")),
+             new(ThemeModes.Light, AppStrings.Get("Settings_Theme_Light")),
+             new(ThemeModes.Dark, AppStrings.Get("Settings_Theme_Dark")),
+             new(ThemeModes.Oled, AppStrings.Get("Settings_Theme_Oled"))],
             "Settings_Theme_Title", "Settings_Theme_Description");
         binder.Choose(LookModeRow, LookModeSegmented, SettingKeys.LookMode,
             [new(LookModes.Aether, AppStrings.Get("Settings_LookMode_Aether")),

@@ -6,41 +6,61 @@ namespace Aether.Core.Tests;
 public class HoverRailTests
 {
     [Fact]
-    public void RestingInTheHotZone_PeeksThenOpensAfterTheDelay()
+    public void ApproachingLeftEdge_RevealsHandleWithoutAutoOpening_AndClickOpensImmediately()
     {
         var rail = new HoverRail();
-        Assert.False(rail.IsPeeking);
+        Assert.False(rail.IsHandleVisible);
         Assert.Null(rail.DueIn);
 
-        rail.PointerInHotZone(true);
+        rail.PointerNearEdge(true);
 
-        Assert.True(rail.IsPeeking);
-        Assert.Equal(HoverRailAction.Open, rail.Decide());
-        Assert.Equal(HoverRail.OpenDelay, rail.DueIn);
+        Assert.True(rail.IsHandleVisible);
+        Assert.Equal(HoverRailAction.None, rail.Decide());
+        Assert.Null(rail.DueIn);
+
         Assert.True(rail.Open());
         Assert.True(rail.IsOpen);
-        Assert.False(rail.IsPeeking);
+        Assert.False(rail.IsHandleVisible);
     }
 
     [Fact]
-    public void PassingThroughTheHotZone_DoesNotOpen()
+    public void PassingNearLeftEdge_HidesHandleAgain()
     {
         var rail = new HoverRail();
-        rail.PointerInHotZone(true);
-        rail.PointerInHotZone(false);
+        rail.PointerNearEdge(true);
+        Assert.True(rail.IsHandleVisible);
+        rail.PointerNearEdge(false);
 
+        Assert.False(rail.IsHandleVisible);
         Assert.Equal(HoverRailAction.None, rail.Decide());
-        Assert.False(rail.IsPeeking);
     }
 
     [Fact]
-    public void LeavingBothTheRailAndTheZone_ClosesAfterTheGrace()
+    public void HoveringHandle_HoldsChromeOpen()
     {
         var rail = new HoverRail();
-        rail.PointerInHotZone(true);
+        rail.PointerNearEdge(true);
+        Assert.False(rail.HoldsChrome);
+
+        rail.PointerOverHandle(true);
+        Assert.True(rail.HoldsChrome);
+
+        rail.PointerOverHandle(false);
+        Assert.False(rail.HoldsChrome);
+    }
+
+    [Fact]
+    public void LeavingBothRailAndCorridor_ClosesAfterTheGrace()
+    {
+        var rail = new HoverRail();
+        rail.PointerNearEdge(true);
         rail.Open();
+        rail.PointerInCorridor(true);
+        Assert.Equal(HoverRailAction.None, rail.Decide());
+        Assert.True(rail.HoldsChrome);
+
         rail.PointerOverRail(true);
-        rail.PointerInHotZone(false);
+        rail.PointerInCorridor(false);
         Assert.Equal(HoverRailAction.None, rail.Decide());
         Assert.True(rail.HoldsChrome);
 
@@ -52,55 +72,57 @@ public class HoverRailTests
     }
 
     [Fact]
-    public void ADrag_StopsItPeekingAndOpening_ButLeavesAnOpenRail()
+    public void ADrag_StopsHandleAndOpening_ButLeavesAnOpenRail()
     {
         var rail = new HoverRail();
         rail.SetDragging(true);
-        rail.PointerInHotZone(true);
+        rail.PointerNearEdge(true);
 
-        Assert.False(rail.IsPeeking);
+        Assert.False(rail.IsHandleVisible);
         Assert.Equal(HoverRailAction.None, rail.Decide());
         Assert.False(rail.Open()); // a click during the drag too
 
         rail.SetDragging(false);
+        Assert.True(rail.IsHandleVisible);
         Assert.True(rail.Open());
         rail.SetDragging(true);
         Assert.True(rail.IsOpen);
     }
 
     [Fact]
-    public void Unavailable_ClosesAnOpenRailAndBlocksOpening()
+    public void Unavailable_ClosesAnOpenRailAndBlocksHandleAndOpening()
     {
         var rail = new HoverRail();
-        rail.PointerInHotZone(true);
+        rail.PointerNearEdge(true);
         rail.Open();
 
         Assert.True(rail.SetAvailable(false));
         Assert.False(rail.IsOpen);
         Assert.False(rail.SetAvailable(false));
 
-        rail.PointerInHotZone(true);
-        Assert.False(rail.IsPeeking);
+        rail.PointerNearEdge(true);
+        Assert.False(rail.IsHandleVisible);
         Assert.False(rail.Open());
 
         rail.SetAvailable(true);
-        Assert.True(rail.IsPeeking);
+        Assert.True(rail.IsHandleVisible);
     }
 
     [Fact]
-    public void ClosingUnderARestingPointer_WaitsForThePointerToComeBack()
+    public void ClosingUnderARestingPointer_ClearsHandleUntilPointerApproachesAgain()
     {
         var rail = new HoverRail();
-        rail.PointerInHotZone(true);
+        rail.PointerNearEdge(true);
         rail.Open();
 
         Assert.True(rail.Close()); // Esc
         Assert.False(rail.Close());
 
-        Assert.False(rail.IsPeeking);
+        Assert.False(rail.IsHandleVisible);
         Assert.Null(rail.DueIn);
-        rail.PointerInHotZone(true);
-        Assert.Equal(HoverRailAction.Open, rail.Decide());
+        rail.PointerNearEdge(true);
+        Assert.True(rail.IsHandleVisible);
+        Assert.Equal(HoverRailAction.None, rail.Decide());
     }
 
     [Fact]

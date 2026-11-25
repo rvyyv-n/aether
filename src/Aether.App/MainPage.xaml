@@ -90,6 +90,15 @@
 
     <Grid>
         <!--
+            Backdrop veil: solid pure black in OLED mode, or a subtle dark charcoal tint over Desktop Acrylic in
+            Native Dark mode (Home and Settings) so vivid desktop wallpaper never washes out card contrast.
+        -->
+        <Border
+            x:Name="BackdropVeil"
+            IsHitTestVisible="False"
+            Visibility="Collapsed" />
+
+        <!--
             Video. The surface is sized to the video's own aspect ratio, so the letterbox bars are
             the window backdrop (windowed) or black (full screen, VideoHost background), never mpv's clear colour.
         -->
@@ -394,17 +403,20 @@
                     </Grid>
                 </Border>
 
-                <!--  Pills: 32 tall, at least 144 wide, gap 8; Emphasis on the left, Outline on the right.  -->
+                <!--  Capsule pills: 36 tall, radius 18, at least 140 wide, gap 10; Emphasis on the left, Outline on the right.  -->
                 <StackPanel
                     x:Name="OpenActions"
                     Margin="0,24,0,0"
                     HorizontalAlignment="Center"
                     Orientation="Horizontal"
-                    Spacing="8">
+                    Spacing="10">
                     <Button
                         x:Name="OpenFileButton"
-                        MinWidth="144"
+                        MinWidth="140"
+                        Height="36"
+                        Padding="20,0"
                         Click="OnOpenFileClick"
+                        CornerRadius="18"
                         Style="{StaticResource AetherEmphasisPillButtonStyle}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon
@@ -416,8 +428,11 @@
                     </Button>
                     <Button
                         x:Name="OpenUrlButton"
-                        MinWidth="144"
+                        MinWidth="140"
+                        Height="36"
+                        Padding="20,0"
                         Click="OnOpenUrlClick"
+                        CornerRadius="18"
                         Style="{StaticResource AetherOutlinePillButtonStyle}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon
@@ -430,11 +445,14 @@
                 </StackPanel>
                 <Button
                     x:Name="StreamCancelButton"
-                    MinWidth="144"
+                    MinWidth="140"
+                    Height="36"
                     Margin="0,24,0,0"
+                    Padding="20,0"
                     HorizontalAlignment="Center"
                     Click="OnStreamCancelClick"
                     Content="Cancel"
+                    CornerRadius="18"
                     Style="{StaticResource AetherOutlinePillButtonStyle}"
                     Visibility="Collapsed" />
 
@@ -582,16 +600,19 @@
             </StackPanel>
 
             <!--
-                Status footer: reports the engine only, borderless on the backdrop. Dot, label and muted
-                detail; startup work runs a 2 px bar along the bottom edge.
+                Status footer: thin 1 px top divider, engine status dot and label on the left, active renderer readout
+                on the right; startup work runs a 2 px bar along the bottom edge.
             -->
             <Border
+                x:Name="StatusFooter"
                 Grid.Row="1"
                 Height="40"
-                Padding="16,12"
-                Margin="{StaticResource AetherPageMargin}">
+                Margin="16,0,16,8"
+                Padding="0,8,0,0"
+                BorderBrush="{ThemeResource AetherStrokeDividerBrush}"
+                BorderThickness="0,1,0,0">
                 <Grid>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="8">
                         <Ellipse
                             x:Name="StatusDot"
                             Margin="0,5,0,0"
@@ -602,12 +623,19 @@
                             Style="{StaticResource AetherCaptionTextStyle}" />
                         <TextBlock x:Name="StatusDetail" Style="{StaticResource AetherCaptionTextStyle}" />
                     </StackPanel>
-                    <!--  The negative margin cancels the strip's padding so the bar sits on its bottom edge.  -->
+                    <TextBlock
+                        x:Name="StatusEngineInfo"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Foreground="{ThemeResource AetherTextTertiaryBrush}"
+                        Style="{StaticResource AetherCaptionTextStyle}"
+                        Visibility="Collapsed" />
+                    <!--  The negative margin cancels the strip's inset so the bar sits flush on the window bottom edge.  -->
                     <ProgressBar
                         x:Name="StartupProgress"
                         Height="2"
                         MinHeight="2"
-                        Margin="-16,0,-16,-12"
+                        Margin="-16,0,-16,-8"
                         VerticalAlignment="Bottom"
                         IsIndeterminate="True" />
                 </Grid>
@@ -736,7 +764,7 @@
                         Style="{StaticResource AetherCaptionStrongTextStyle}"
                         Text="Aether"
                         TextLineBounds="TrimToBaseline" />
-                    <!--  Plain text, no pill (7.14): a muted dot and file name while a video is open, "Alpha" otherwise.  -->
+                    <!--  Plain text, no pill (7.14): a muted dot and file name while a video is open; clean app name on Home.  -->
                     <TextBlock
                         x:Name="TitleSeparator"
                         VerticalAlignment="Bottom"
@@ -749,9 +777,9 @@
                         MaxWidth="{StaticResource AetherSizeBadgeMaxWidth}"
                         VerticalAlignment="Bottom"
                         Style="{StaticResource AetherCaptionTextStyle}"
-                        Text="Alpha"
                         TextLineBounds="TrimToBaseline"
-                        TextTrimming="CharacterEllipsis" />
+                        TextTrimming="CharacterEllipsis"
+                        Visibility="Collapsed" />
                 </StackPanel>
             </Grid>
             <Button
@@ -808,33 +836,24 @@
             Visibility="Collapsed" />
 
         <!--
-            Sidebar (P8.1). A 4 px hot zone on the left edge under the title bar wakes it: resting there shows the FillRange
-            peek strip beside where the card will be and opens it after 150 ms, a click opens it at once. The card is a
-            48 x 168 pill (padding 6 counting the stroke) on the bar's tint with the bar's blur behind it (the render
-            thread draws that, ADR-0013); the page places it (MainPage.Rail.cs) and slides it in from the left edge. Follows
-            the app's theme like the bar, so in light it is the same frosted near-white card with dark glyphs.
+            Sidebar (P8.1). Approaching the left edge fades in a subtle frosted chevron handle; clicking it opens the
+            floating 48 x 208 navigation pill immediately with the bar's blur behind it (ADR-0013), and moving the
+            pointer away auto-collapses it cleanly. Follows the app's theme like the bar.
         -->
-        <Border
-            x:Name="RailHotZone"
-            Width="{StaticResource AetherSizeRailHotZone}"
-            Margin="0,32,0,0"
+        <Button
+            x:Name="RailHandle"
             HorizontalAlignment="Left"
-            Background="Transparent"
-            PointerCanceled="OnRailHotZoneExited"
-            PointerEntered="OnRailHotZoneEntered"
-            PointerExited="OnRailHotZoneExited"
-            Tapped="OnRailHotZoneTapped">
-            <Border
-                x:Name="RailPeek"
-                Width="4"
-                Height="208"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="{ThemeResource AetherFillRangeBrush}"
-                CornerRadius="0,2,2,0"
-                IsHitTestVisible="False"
-                Opacity="0" />
-        </Border>
+            VerticalAlignment="Top"
+            Click="OnRailHandleClick"
+            Content="&#xE76C;"
+            IsHitTestVisible="False"
+            IsTabStop="False"
+            Opacity="0"
+            PointerCanceled="OnRailHandleExited"
+            PointerEntered="OnRailHandleEntered"
+            PointerExited="OnRailHandleExited"
+            Style="{StaticResource AetherRailHandleStyle}"
+            Visibility="Collapsed" />
         <Border
             x:Name="Rail"
             Width="{StaticResource AetherSizeSidebarWidth}"

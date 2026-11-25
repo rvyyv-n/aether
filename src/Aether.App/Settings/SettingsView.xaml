@@ -150,22 +150,19 @@
                 HorizontalScrollBarVisibility="Disabled"
                 HorizontalScrollMode="Disabled"
                 VerticalScrollBarVisibility="Auto">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <!--  One capped column: the cards fill the pane up to the cap and stay left-aligned beyond it.  -->
-                        <ColumnDefinition Width="*" MaxWidth="{StaticResource AetherSizeSettingsContentMax}" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel
-                        x:Name="ContentPanel"
-                        Padding="16,16,16,16"
-                        Spacing="16">
-                        <TextBlock
-                            x:Name="PageTitle"
-                            AutomationProperties.HeadingLevel="Level1"
-                            Style="{StaticResource AetherSubtitleTextStyle}" />
-                        <Frame x:Name="ContentFrame" IsNavigationStackEnabled="False" />
-                    </StackPanel>
-                </Grid>
+                <!--  Capped at 860 px and centred on wide windows while filling smaller panes edge to edge.  -->
+                <StackPanel
+                    x:Name="ContentPanel"
+                    MaxWidth="{StaticResource AetherSizeSettingsContentMax}"
+                    HorizontalAlignment="Stretch"
+                    Padding="16,16,16,16"
+                    Spacing="16">
+                    <TextBlock
+                        x:Name="PageTitle"
+                        AutomationProperties.HeadingLevel="Level1"
+                        Style="{StaticResource AetherSubtitleTextStyle}" />
+                    <Frame x:Name="ContentFrame" IsNavigationStackEnabled="False" />
+                </StackPanel>
             </ScrollViewer>
         </Grid>
     </Grid>

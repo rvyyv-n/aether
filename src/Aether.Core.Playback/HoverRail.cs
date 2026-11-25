@@ -9,40 +9,50 @@ public enum HoverRailAction
 }
 
 /// <summary>
-/// Hover intent for the left-edge rail (7.21, screen 6). Resting in the 4 px hot zone shows the peek strip and opens
-/// the rail after <see cref="OpenDelay"/>; a click there opens it at once. It closes once the pointer has left both
-/// the hot zone and the rail for <see cref="CloseDelay"/>, or straight away from <see cref="Close"/> (Esc, an item
-/// used, the chrome hiding). Nothing opens or peeks during a drag or while the rail is unavailable (Settings, a
-/// dialog, hidden chrome). Once closed it waits for the pointer to come back into the hot zone, so Esc does not
-/// reopen it under a resting pointer. The page owns the timer: it re-arms it to <see cref="DueIn"/> after every
-/// change and asks <see cref="Decide"/> when it fires. Not thread-safe (UI thread only).
+/// Proximity-handle and auto-collapse state for the left-edge floating sidebar rail. Approaching the left edge reveals
+/// a frosted chevron handle (<see cref="IsHandleVisible"/>); clicking the handle opens the rail immediately via
+/// <see cref="Open"/> (never auto-opening on hover). Once open, it closes after <see cref="CloseDelay"/> when the
+/// pointer leaves the rail and its corridor, or immediately from <see cref="Close"/> (Esc, an item used, or chrome
+/// hiding). Nothing reveals or opens during a drag or while unavailable (Settings, a dialog, or hidden chrome). The
+/// page owns the timer: it re-arms it to <see cref="DueIn"/> after every change and asks <see cref="Decide"/> when it
+/// fires. Not thread-safe (UI thread only).
 /// </summary>
 public sealed class HoverRail
 {
     public static readonly TimeSpan OpenDelay = TimeSpan.FromMilliseconds(150);
     public static readonly TimeSpan CloseDelay = TimeSpan.FromMilliseconds(300);
 
-    private bool _inHotZone;
+    private bool _nearEdge;
+    private bool _overHandle;
     private bool _overRail;
+    private bool _inCorridor;
     private bool _dragging;
     private bool _available = true;
     private bool _pinned;
 
     public bool IsOpen { get; private set; }
 
-    /// <summary>The 4 px strip shows: the pointer is in the hot zone and the rail could open.</summary>
-    public bool IsPeeking => !IsOpen && _inHotZone && CanOpen;
+    /// <summary>The frosted chevron handle shows: the pointer is near the left edge (or over the handle) and the rail could open.</summary>
+    public bool IsHandleVisible => !IsOpen && (_nearEdge || _overHandle) && CanOpen;
 
-    /// <summary>The pointer is on the open rail, so the chrome should not hide under it.</summary>
-    public bool HoldsChrome => IsOpen && _overRail;
+    /// <summary>Backwards-compatible alias for <see cref="IsHandleVisible"/>.</summary>
+    public bool IsPeeking => IsHandleVisible;
+
+    /// <summary>The pointer is on the open rail or hovering the handle, so auto-hiding chrome stays up.</summary>
+    public bool HoldsChrome => (IsOpen && (_overRail || _inCorridor)) || (IsHandleVisible && _overHandle);
 
     private bool CanOpen => _available && !_dragging;
 
-    public void PointerInHotZone(bool inside) => _inHotZone = inside;
+    public void PointerNearEdge(bool near) => _nearEdge = near;
+
+    public void PointerOverHandle(bool over) => _overHandle = over;
 
     public void PointerOverRail(bool over) => _overRail = over;
 
-    /// <summary>A file drag, a seek drag, a clip dragged out or a held button. Stops the rail opening; an open rail stays.</summary>
+    /// <summary>True while the pointer sits in the open rail's immediate left-edge corridor (including where the handle was clicked).</summary>
+    public void PointerInCorridor(bool inside) => _inCorridor = inside;
+
+    /// <summary>A file drag, a seek drag, a clip dragged out or a held button. Stops the handle showing and the rail opening; an open rail stays.</summary>
     public void SetDragging(bool dragging) => _dragging = dragging;
 
     /// <summary>False under Settings, a dialog or hidden chrome. Returns true if that closed the rail.</summary>
@@ -58,7 +68,7 @@ public sealed class HoverRail
     }
 
     /// <summary>
-    /// Holds the rail open whatever the pointer does (the first-run tour's rail step), and opens it if it can.
+    /// Holds the rail open whatever the pointer does (keyboard shortcut or tour), and opens it if it can.
     /// Unpinning leaves it open for <see cref="Decide"/> to close as usual. True if pinning opened it.
     /// </summary>
     public bool SetPinned(bool pinned)
@@ -86,7 +96,7 @@ public sealed class HoverRail
         return SetPinned(true);
     }
 
-    /// <summary>Opens the rail if it can. True if it opened.</summary>
+    /// <summary>Opens the rail immediately if it can. True if it opened.</summary>
     public bool Open()
     {
         if (IsOpen || !CanOpen)
@@ -103,8 +113,10 @@ public sealed class HoverRail
         bool wasOpen = IsOpen;
         IsOpen = false;
         _pinned = false;
-        _inHotZone = false;
+        _nearEdge = false;
+        _overHandle = false;
         _overRail = false;
+        _inCorridor = false;
         return wasOpen;
     }
 
@@ -120,8 +132,8 @@ public sealed class HoverRail
     {
         if (!IsOpen)
         {
-            return IsPeeking ? HoverRailAction.Open : HoverRailAction.None;
+            return HoverRailAction.None;
         }
-        return _pinned || _inHotZone || _overRail ? HoverRailAction.None : HoverRailAction.Close;
+        return _pinned || _overRail || _inCorridor ? HoverRailAction.None : HoverRailAction.Close;
     }
 }

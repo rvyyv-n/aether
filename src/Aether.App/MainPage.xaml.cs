@@ -106,6 +106,10 @@ public sealed partial class MainPage : Page
     private bool _openUrlOverlayWired;
     private bool _toastLayerWired;
     private bool _nativeLook;
+    private bool _oledTheme;
+    private bool _lastHasVideo;
+    private static readonly SolidColorBrush PureBlackVeilBrush = new(Windows.UI.Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
+    private static readonly SolidColorBrush NativeDarkVeilBrush = new(Windows.UI.Color.FromArgb(0xA8, 0x0C, 0x0E, 0x12));
     private SeekThumbnailService? _thumbnails;
 
     public MainPage()
@@ -193,6 +197,7 @@ public sealed partial class MainPage : Page
         StreamCancelButton.Content = AppStrings.Get("Stream_Cancel");
         RecentsHeader.Text = AppStrings.Get("EmptyState_Recent");
         ClearRecentsButton.Content = AppStrings.Get("EmptyState_ClearList");
+        StatusEngineInfo.Text = AppStrings.Get("EmptyState_EngineRenderer");
         AutomationProperties.SetName(OpenButton, AppStrings.Get("Menu_OpenFile"));
         AutomationProperties.SetName(VolumeButton, AppStrings.Get("Transport_Volume"));
         AutomationProperties.SetName(VolumeSlider, AppStrings.Get("Transport_Volume"));
@@ -325,10 +330,11 @@ public sealed partial class MainPage : Page
             }
         });
 
-    /// <summary>Updates surface corner radii between Aether glass and Native 8 px mode (12.2).</summary>
-    internal void ApplyLookMode(bool native)
+    /// <summary>Updates surface corner radii between Aether glass and Native 8 px mode (12.2) and syncs the backdrop veil.</summary>
+    internal void ApplyLookMode(bool native, bool oled = false)
     {
         _nativeLook = native;
+        _oledTheme = oled;
         LookCornerRadii radii = LookCornerRadii.For(native ? LookModes.Native : LookModes.Aether);
         HeroTile.CornerRadius = new CornerRadius(radii.Tile);
         ApplyBarLookMode(radii);
@@ -339,7 +345,26 @@ public sealed partial class MainPage : Page
         {
             PipPlayPauseButton.CornerRadius = new CornerRadius(native ? radii.PlayButton : 24);
         }
+        UpdateBackdropVeil(_lastHasVideo);
         PostBackdropRegion();
+    }
+
+    private void UpdateBackdropVeil(bool hasVideo)
+    {
+        if (_oledTheme)
+        {
+            BackdropVeil.Background = PureBlackVeilBrush;
+            BackdropVeil.Visibility = Visibility.Visible;
+        }
+        else if (_nativeLook && !hasVideo && ThemeTokens.AppTheme == ElementTheme.Dark)
+        {
+            BackdropVeil.Background = NativeDarkVeilBrush;
+            BackdropVeil.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            BackdropVeil.Visibility = Visibility.Collapsed;
+        }
     }
 
     public PlayerSession? Session => _session;
@@ -1761,9 +1786,21 @@ public sealed partial class MainPage : Page
             return;
         }
         RecentsList.Children.Clear();
+        RecentsList.ColumnDefinitions.Clear();
+        int visibleCount = Math.Min(items.Count, 3);
+        for (int col = 0; col < visibleCount; col++)
+        {
+            RecentsList.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        }
+        RecentsPanel.MaxWidth = visibleCount switch
+        {
+            1 => 240,
+            2 => 410,
+            _ => (double)Application.Current.Resources["AetherSizeRecentsGridWidth"],
+        };
         DateTimeOffset now = DateTimeOffset.Now;
         string[] activeLocations = items.Select(i => i.Location).ToArray();
-        for (int i = 0; i < items.Count && i < 3; i++)
+        for (int i = 0; i < visibleCount; i++)
         {
             RecentItem item = items[i];
             double progress = missing[i]
@@ -1958,6 +1995,7 @@ public sealed partial class MainPage : Page
         _lastPointer = position;
         // Back on the mouse: a transport button left with Tab focus must not keep the card up for good.
         _chrome.SetHold(ChromeHolds.KeyboardFocus, false);
+        UpdateRailPointer(position);
         NotifyActivity();
     }
 
@@ -1966,6 +2004,7 @@ public sealed partial class MainPage : Page
     private void OnPagePointerExited(object sender, PointerRoutedEventArgs e)
     {
         _pointerInside = false;
+        ClearRailPointer();
         UpdateCursor();
     }
 
@@ -2144,6 +2183,8 @@ public sealed partial class MainPage : Page
         // Between two files of a folder the overlay keeps its look rather than flashing the home screen; so does a
         // link switching quality while its new stream loads.
         bool hasVideo = (HasVideo || pip || _qualitySwitching) && !_settingsShown;
+        _lastHasVideo = hasVideo;
+        UpdateBackdropVeil(hasVideo);
         // The title bar sits on the picture, which is always dark; settings covers it with the backdrop again.
         TitleBar.RequestedTheme = hasVideo ? ElementTheme.Dark : ElementTheme.Default;
         ApplyTitleBarButtonBrushes();
@@ -2191,14 +2232,14 @@ public sealed partial class MainPage : Page
         RefreshSidePanel();
         TopScrim.Visibility = hasVideo && !fullScreen ? Visibility.Visible : Visibility.Collapsed;
         string? fileName = _streamTitle ?? (HasVideo || vm?.Status == PlaybackStatus.Loading ? Path.GetFileName(_currentPath) : null);
-        TitleBadgeText.Text = fileName ?? AppStrings.Get("App_Badge");
+        TitleBadgeText.Text = fileName ?? string.Empty;
         TitleText.Visibility = pip ? Visibility.Collapsed : Visibility.Visible;
         SettingsButton.Visibility = pip || _settingsShown ? Visibility.Collapsed : Visibility.Visible;
         PipBackButton.Visibility = pip ? Visibility.Visible : Visibility.Collapsed;
         CaptionMinimize.Visibility = CaptionMaximize.Visibility = pip ? Visibility.Collapsed : Visibility.Visible;
         // Settings names itself beside its back arrow (6.1) in place of the app name and badge.
         TitleAppName.Text = AppStrings.Get(_settingsShown ? "Settings_Title" : "App_Name");
-        TitleBadgeText.Visibility = _settingsShown ? Visibility.Collapsed : Visibility.Visible;
+        TitleBadgeText.Visibility = fileName is not null && !_settingsShown ? Visibility.Visible : Visibility.Collapsed;
         TitleSeparator.Visibility = fileName is not null && !_settingsShown ? Visibility.Visible : Visibility.Collapsed;
 
         (string glyph, string label) = TransportState.PlayButton(vm?.Status ?? PlaybackStatus.Idle) switch
@@ -2316,6 +2357,7 @@ public sealed partial class MainPage : Page
 
         bool streamFailed = _streamFailure is not null && !_dragging;
         StartupProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        StatusEngineInfo.Visibility = _startup == StartupPhase.Ready ? Visibility.Visible : Visibility.Collapsed;
         OpenActions.Visibility = failed || _dragging || streaming || streamFailed ? Visibility.Collapsed : Visibility.Visible;
         OpenFileButton.IsEnabled = _session is not null;
         OpenUrlButton.IsEnabled = _session is not null;

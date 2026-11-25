@@ -2,8 +2,8 @@ namespace Aether.Core.Playback;
 
 /// <summary>
 /// Controls Aether's overall visual chrome style (12.2): Aether glass uses translucent rounded frosted surfaces
-/// and Mica Alt; Native uses Windows Desktop Acrylic, Windows' system accent colour (when Accent is None), and
-/// standard 8 px corner radii.
+/// and Mica Alt; Native uses Windows Desktop Acrylic and standard 8 px corner radii while respecting the user's
+/// chosen accent (staying monochrome when Accent is None).
 /// </summary>
 public static class LookModes
 {

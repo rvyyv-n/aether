@@ -203,7 +203,7 @@ public static class SettingDefinitions
         Flag(SettingKeys.BatterySaver, s => s.BatterySaver, (s, v) => s with { BatterySaver = v }),
         Flag(SettingKeys.OpenInRunningWindow, s => s.OpenInRunningWindow, (s, v) => s with { OpenInRunningWindow = v }),
         Flag(SettingKeys.TourSeen, s => s.TourSeen, (s, v) => s with { TourSeen = v }),
-        Choice(SettingKeys.Theme, s => s.Theme, (s, v) => s with { Theme = v }, false, "auto", "light", "dark"),
+        Choice(SettingKeys.Theme, s => s.Theme, (s, v) => s with { Theme = v }, false, "auto", "light", "dark", "oled"),
         Choice(SettingKeys.LookMode, s => s.LookMode, (s, v) => s with { LookMode = v }, false, LookModes.Aether, LookModes.Native),
         new SettingDefinition<string> { Key = SettingKeys.Accent, Get = s => s.Accent, With = (s, v) => s with { Accent = v }, IsValid = AccentPalette.IsValid },
 

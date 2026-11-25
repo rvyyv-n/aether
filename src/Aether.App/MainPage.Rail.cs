@@ -8,35 +8,44 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Windows.Foundation;
 
 namespace Aether_App;
 
 /// <summary>
-/// The sidebar (P8.1): a small floating card on the left edge with Player, Clips, Stream and Settings.
-/// <see cref="HoverRail"/> decides when it peeks, opens and closes; this file wires the pointer and the keyboard shortcut
-/// to it, places the card, and slides and fades it in and out with the render thread's blur behind it. It is there over
-/// the player and the home screen, never under Settings or a dialog, and hides with the chrome. UI thread only.
+/// The sidebar (P8.1): a small floating card on the left edge with Player, Clips, Queue, Stream and Settings.
+/// Approaching the left edge gently fades in a frosted chevron tab (<see cref="RailHandle"/>); clicking it opens the
+/// floating pill immediately with the render thread's blur behind it, and moving the pointer away auto-collapses it
+/// cleanly. <see cref="HoverRail"/> owns the proximity, hold, and auto-collapse state. UI thread only.
 /// </summary>
 public sealed partial class MainPage
 {
     // Clear space kept between the card and the title bar or the transport pill.
     private const double RailInset = 8;
+    // Distance from the left edge (DIPs) within which the frosted chevron handle fades in.
+    private const double RailProximityWidth = 96;
+    // Extra margin around the open rail where pointer motion keeps it open (covers the handle-click zone on the left).
+    private const double RailCorridorPadding = 16;
+    private static readonly Vector3 RailHandleHiddenOffset = new(-6, 0, 0);
 
     private readonly HoverRail _rail = new();
     // 0 off to the left of the window, 1 in place. Moved by the UI thread, once per frame and only while it slides,
     // because the render thread's blur has to be told where the card is on every step (see PostSidebarRegion).
     private readonly MotionTween _railSlide = new(0);
     private double _railTop = 40;
-    private double _lastPlacedHotTop = double.NaN;
     private double _lastPlacedRailTop = double.NaN;
+    private double _lastPlacedHandleTop = double.NaN;
     private bool _railFits = true;
     private bool _sidebarEnabled = true;
     private DispatcherQueueTimer? _railTimer;
     private bool _railShown;
+    private bool _railHandleShown;
+    private bool _railNearEdge;
+    private bool _railInCorridor;
     private bool _pointerHeld;
 
     /// <summary>
-    /// Off removes the sidebar altogether: no hot zone, no peek, no shortcut, and an open one closes. For screens that
+    /// Off removes the sidebar altogether: no chevron handle, no shortcut, and an open one closes. For screens that
     /// have no use for it, such as the first-run tour.
     /// </summary>
     public bool IsSidebarEnabled
@@ -56,6 +65,7 @@ public sealed partial class MainPage
     {
         _railSlide.Changed += (_, _) => ApplyRailSlide();
         ApplyRailSlide();
+        RailHandle.Translation = RailHandleHiddenOffset;
         // Starts hidden; the bar's blur starts shown, the sidebar's must not.
         VideoSurface.FadeBackdrop(BackdropSlot.Sidebar, false, 0);
         _railTimer = DispatcherQueue.CreateTimer();
@@ -67,11 +77,14 @@ public sealed partial class MainPage
         AddHandler(PointerCaptureLostEvent, new PointerEventHandler((_, _) => SetPointerHeld(false)), handledEventsToo: true);
 
         AutomationProperties.SetName(Rail, AppStrings.Get("Rail_Name"));
+        AutomationProperties.SetName(RailHandle, AppStrings.Get("Rail_Open"));
+        ToolTipService.SetToolTip(RailHandle, AppStrings.Get("Rail_Open"));
         LabelRailItem(RailPlayer, AppStrings.Get("Rail_Player"));
         LabelRailItem(RailClips, AppStrings.Get("Rail_Clips"));
         LabelRailItem(RailQueue, AppStrings.Get("Rail_Queue"));
         LabelRailItem(RailStream, AppStrings.Get("Rail_Stream"));
         LabelRailItem(RailSettings, AppStrings.Get("Rail_Settings"));
+        PressFeedback.Attach(RailHandle);
         foreach (UIElement item in new UIElement[] { RailPlayer, RailClips, RailQueue, RailStream, RailSettings })
         {
             PressFeedback.Attach(item);
@@ -84,13 +97,18 @@ public sealed partial class MainPage
         AutomationProperties.SetName(item, label);
     }
 
-    /// <summary>Settings shows its shortcut, as the gear's tooltip does; called again when shortcuts change.</summary>
-    private void ApplyRailShortcutLabels() =>
+    /// <summary>Settings and the chevron handle show their shortcuts; called again when shortcuts change.</summary>
+    private void ApplyRailShortcutLabels()
+    {
         ToolTipService.SetToolTip(RailSettings, Tip("Rail_Settings", ShortcutAction.Settings));
+        ToolTipService.SetToolTip(RailHandle, Tip("Rail_Open", ShortcutAction.Sidebar));
+    }
 
     private void ApplyRailLookMode(LookCornerRadii radii)
     {
         Rail.CornerRadius = new CornerRadius(radii.Transport);
+        double handleRadius = _nativeLook ? 8 : 12;
+        RailHandle.CornerRadius = new CornerRadius(0, handleRadius, handleRadius, 0);
         var itemRadius = new CornerRadius(radii.SidebarItem);
         foreach (Button item in new[] { RailPlayer, RailClips, RailQueue, RailStream, RailSettings })
         {
@@ -108,22 +126,62 @@ public sealed partial class MainPage
         SyncRail();
     }
 
-    private void OnRailHotZoneEntered(object sender, PointerRoutedEventArgs e)
+    private void UpdateRailPointer(Point position)
     {
-        _rail.PointerInHotZone(true);
+        double top = TitleBar.Visibility == Visibility.Visible ? TitleBar.Height : 0;
+        bool nearEdge = position.Y >= top && position.X <= RailProximityWidth;
+        bool inCorridor = _rail.IsOpen
+            && position.X <= Rail.Margin.Left + Rail.Width + RailCorridorPadding
+            && position.Y >= _railTop - RailCorridorPadding
+            && position.Y <= _railTop + Rail.Height + RailCorridorPadding;
+
+        if (nearEdge == _railNearEdge && inCorridor == _railInCorridor)
+        {
+            return;
+        }
+        _railNearEdge = nearEdge;
+        _railInCorridor = inCorridor;
+        _rail.PointerNearEdge(nearEdge);
+        _rail.PointerInCorridor(inCorridor);
         SyncRail();
     }
 
-    private void OnRailHotZoneExited(object sender, PointerRoutedEventArgs e)
+    private void ClearRailPointer()
     {
-        _rail.PointerInHotZone(false);
+        if (!_railNearEdge && !_railInCorridor)
+        {
+            return;
+        }
+        _railNearEdge = false;
+        _railInCorridor = false;
+        _rail.PointerNearEdge(false);
+        _rail.PointerInCorridor(false);
         SyncRail();
     }
 
-    private void OnRailHotZoneTapped(object sender, TappedRoutedEventArgs e)
+    private void OnRailHandleEntered(object sender, PointerRoutedEventArgs e)
     {
-        e.Handled = true;
-        _rail.Open();
+        _rail.PointerOverHandle(true);
+        SyncRail();
+    }
+
+    private void OnRailHandleExited(object sender, PointerRoutedEventArgs e)
+    {
+        _rail.PointerOverHandle(false);
+        SyncRail();
+    }
+
+    private void OnRailHandleClick(object sender, RoutedEventArgs e)
+    {
+        if (RailHandle.FocusState == FocusState.Keyboard)
+        {
+            _rail.SetPinned(true);
+        }
+        else if (_rail.Open())
+        {
+            _railInCorridor = true;
+            _rail.PointerInCorridor(true);
+        }
         SyncRail();
     }
 
@@ -141,14 +199,11 @@ public sealed partial class MainPage
 
     private void OnRailTimerTick(DispatcherQueueTimer sender, object args)
     {
-        switch (_rail.Decide())
+        if (_rail.Decide() == HoverRailAction.Close)
         {
-            case HoverRailAction.Open:
-                _rail.Open();
-                break;
-            case HoverRailAction.Close:
-                _rail.Close();
-                break;
+            _rail.Close();
+            _railNearEdge = false;
+            _railInCorridor = false;
         }
         SyncRail();
     }
@@ -189,6 +244,8 @@ public sealed partial class MainPage
     private bool CloseRail()
     {
         bool closed = _rail.Close();
+        _railNearEdge = false;
+        _railInCorridor = false;
         SyncRail();
         if (closed)
         {
@@ -198,8 +255,9 @@ public sealed partial class MainPage
     }
 
     /// <summary>
-    /// Brings the rail's look in line with <see cref="_rail"/>: availability, the peek strip, the rail itself, its hold
-    /// on the chrome and the timer. <paramref name="applyChrome"/> is false when called from <see cref="ApplyChrome"/>.
+    /// Brings the rail's look in line with <see cref="_rail"/>: availability, the proximity chevron handle, the rail
+    /// itself, its hold on the chrome and the timer. <paramref name="applyChrome"/> is false when called from
+    /// <see cref="ApplyChrome"/>.
     /// </summary>
     private void SyncRail(bool applyChrome = true)
     {
@@ -210,15 +268,31 @@ public sealed partial class MainPage
         bool available = _sidebarEnabled && !_tour.IsActive && _railFits && _chrome.IsVisible && !_settingsShown && _openUrl.Stage != OpenUrlStage.Editing && !IsPictureInPicture;
         _rail.SetAvailable(available);
         _rail.SetDragging(_dragging || _pointerHeld || (ClipDrawer?.IsDraggingOut == true));
-        RailHotZone.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
 
-        double peek = _rail.IsPeeking ? 1 : 0;
-        if (RailPeek.Opacity != peek)
+        if (!available || _rail.IsOpen)
         {
-            RailPeek.OpacityTransition = Motion.AnimationsEnabled
-                ? new ScalarTransition { Duration = TimeSpan.FromMilliseconds(Motion.Token("AetherMotionFastMilliseconds")) }
-                : null;
-            RailPeek.Opacity = peek;
+            _railHandleShown = false;
+            RailHandle.OpacityTransition = null;
+            RailHandle.TranslationTransition = null;
+            RailHandle.Opacity = 0;
+            RailHandle.Translation = RailHandleHiddenOffset;
+            RailHandle.IsHitTestVisible = false;
+            RailHandle.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            RailHandle.Visibility = Visibility.Visible;
+            bool showHandle = _rail.IsHandleVisible;
+            if (showHandle != _railHandleShown)
+            {
+                _railHandleShown = showHandle;
+                TimeSpan duration = TimeSpan.FromMilliseconds(Motion.Token(showHandle ? "AetherMotionChromeShowMilliseconds" : "AetherMotionFastMilliseconds"));
+                RailHandle.OpacityTransition = Motion.AnimationsEnabled ? new ScalarTransition { Duration = duration } : null;
+                RailHandle.TranslationTransition = Motion.AnimationsEnabled ? new Vector3Transition { Duration = duration } : null;
+                RailHandle.Opacity = showHandle ? 1 : 0;
+                RailHandle.Translation = showHandle ? Vector3.Zero : RailHandleHiddenOffset;
+                RailHandle.IsHitTestVisible = showHandle;
+            }
         }
 
         if (_rail.IsOpen != _railShown)
@@ -270,8 +344,8 @@ public sealed partial class MainPage
     }
 
     /// <summary>
-    /// Centres the card between the title bar (or the top in full screen) and the bottom of the window, and keeps it
-    /// 8 above the pill when the window is short. If that leaves less than 8 under the title bar, it doesn't open.
+    /// Centres the card and its left-edge chevron handle between the title bar (or the top in full screen) and the
+    /// bottom of the window, keeping 8 DIPs above the transport pill when the window is short.
     /// </summary>
     private void PlaceRail()
     {
@@ -284,14 +358,14 @@ public sealed partial class MainPage
         }
         bool fits = y >= top + RailInset;
         double railTop = Math.Max(y, top + RailInset);
+        double handleTop = railTop + ((Rail.Height - RailHandle.Height) / 2);
         _railTop = railTop;
 
-        if (top != _lastPlacedHotTop || railTop != _lastPlacedRailTop)
+        if (railTop != _lastPlacedRailTop || handleTop != _lastPlacedHandleTop)
         {
-            _lastPlacedHotTop = top;
             _lastPlacedRailTop = railTop;
-            RailHotZone.Margin = new Thickness(0, top, 0, 0);
-            RailPeek.Margin = new Thickness(0, railTop - top, 0, 0);
+            _lastPlacedHandleTop = handleTop;
+            RailHandle.Margin = new Thickness(0, handleTop, 0, 0);
             Rail.Margin = new Thickness(Rail.Margin.Left, railTop, 0, 0);
         }
         if (fits != _railFits)

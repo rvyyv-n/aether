@@ -5,6 +5,7 @@ using Aether.Core.Playback.Recents;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
@@ -17,14 +18,21 @@ public sealed partial class RecentRow : UserControl
     private const string FileGlyph = ""; // Video
     private const string LinkGlyph = ""; // Link
 
+    private readonly bool _missing;
+
     public RecentRow(RecentItem item, bool missing, DateTimeOffset now, double resumeProgress = 0)
     {
         InitializeComponent();
         Item = item;
+        _missing = missing;
 
         Icon.Glyph = item.IsLink ? LinkGlyph : FileGlyph;
-        NameText.Text = item.DisplayName;
+        NameText.Text = RecentDisplay.DisplayTitle(item);
         ToolTipService.SetToolTip(RowButton, item.Location);
+
+        string remove = AppStrings.Get("EmptyState_RemoveFromRecent");
+        ToolTipService.SetToolTip(RemoveButton, remove);
+        AutomationProperties.SetName(RemoveButton, remove);
 
         string source = RecentDisplay.ShortSource(item);
         if (missing)
@@ -34,10 +42,8 @@ public sealed partial class RecentRow : UserControl
             ActualThemeChanged += (_, _) => ApplyMissingBrushes();
             MetaText.Text = AppStrings.Get("EmptyState_FileNotFound");
             RowButton.IsEnabled = false;
-            RemoveButton.Visibility = Visibility.Visible;
-            string remove = AppStrings.Get("EmptyState_RemoveFromRecent");
-            ToolTipService.SetToolTip(RemoveButton, remove);
-            AutomationProperties.SetName(RemoveButton, remove);
+            RemoveButton.Opacity = 1;
+            RemoveButton.IsHitTestVisible = true;
         }
         else
         {
@@ -104,6 +110,33 @@ public sealed partial class RecentRow : UserControl
     private void OnRowClick(object sender, RoutedEventArgs e) => OpenRequested?.Invoke(this, EventArgs.Empty);
 
     private void OnRemoveClick(object sender, RoutedEventArgs e) => RemoveRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnCardPointerEntered(object sender, PointerRoutedEventArgs e) => SetHoverChrome(shown: true);
+
+    private void OnCardPointerExited(object sender, PointerRoutedEventArgs e) => SetHoverChrome(shown: false);
+
+    private void SetHoverChrome(bool shown)
+    {
+        if (_missing)
+        {
+            return;
+        }
+        ScalarTransition? transition = Motion.AnimationsEnabled
+            ? new ScalarTransition { Duration = TimeSpan.FromMilliseconds(Motion.Token("AetherMotionFastMilliseconds")) }
+            : null;
+        double opacity = shown ? 1 : 0;
+        if (PlayBadgeOverlay.Opacity != opacity)
+        {
+            PlayBadgeOverlay.OpacityTransition = transition;
+            PlayBadgeOverlay.Opacity = opacity;
+        }
+        if (RemoveButton.Opacity != opacity)
+        {
+            RemoveButton.OpacityTransition = transition;
+            RemoveButton.Opacity = opacity;
+        }
+        RemoveButton.IsHitTestVisible = shown;
+    }
 
     private void ApplyMissingBrushes()
     {

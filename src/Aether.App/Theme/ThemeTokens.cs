@@ -1,3 +1,4 @@
+using Aether.Core.Playback;
 using Microsoft.UI.Xaml;
 
 namespace Aether_App;
@@ -12,16 +13,19 @@ public static class ThemeTokens
     private static readonly Windows.UI.ViewManagement.UISettings System = new();
 
     /// <summary>
-    /// The theme the user's Appearance choice gives right now: Light or Dark as picked, or Windows' own when on Auto. Read
-    /// from the setting rather than from an element's ActualTheme, which can still show the old theme just after the
-    /// choice changes, and Application.RequestedTheme, which stays at what Windows was at launch.
+    /// The theme the user's Appearance choice gives right now: Light or Dark as picked (OLED uses Dark), or Windows'
+    /// own when on Auto. Read from the setting rather than from an element's ActualTheme, which can still show the old
+    /// theme just after the choice changes, and Application.RequestedTheme, which stays at what Windows was at launch.
     /// </summary>
     public static ElementTheme AppTheme => App.Settings.Current.Theme switch
     {
-        "light" => ElementTheme.Light,
-        "dark" => ElementTheme.Dark,
+        ThemeModes.Light => ElementTheme.Light,
+        ThemeModes.Dark or ThemeModes.Oled => ElementTheme.Dark,
         _ => IsLight(System.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background)) ? ElementTheme.Light : ElementTheme.Dark,
     };
+
+    /// <summary>True when Appearance is set to pure-black OLED Dark.</summary>
+    public static bool IsOled => ThemeModes.IsOled(App.Settings.Current.Theme);
 
     private static bool IsLight(Windows.UI.Color background) => background.R + background.G + background.B > 382;
 
@@ -44,6 +48,24 @@ public static class ThemeTokens
             return (T)value!;
         }
         return (T)Application.Current.Resources[key];
+    }
+
+    /// <summary>Looks up a resource inside a named theme dictionary (<c>"Dark"</c>, <c>"Default"</c>, <c>"Light"</c>).</summary>
+    public static bool TryGetByThemeKey<T>(string themeKey, string key, out T? result)
+    {
+        if (Cache.TryGetValue((themeKey, key), out object? cached) && cached is T typedCached)
+        {
+            result = typedCached;
+            return true;
+        }
+        if (TryFind(Application.Current.Resources, themeKey, key, out object? value) && value is T typed)
+        {
+            Cache[(themeKey, key)] = value!;
+            result = typed;
+            return true;
+        }
+        result = default;
+        return false;
     }
 
     // Searches every merged dictionary, since the Windows App SDK's own controls resources have Light and Dark

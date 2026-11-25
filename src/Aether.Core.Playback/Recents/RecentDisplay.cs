@@ -14,6 +14,41 @@ public enum RecentDay
 /// <summary>The parts of a recents card (2.10, 2.18, 22.4) that do not depend on the strings file.</summary>
 public static class RecentDisplay
 {
+    private static readonly string[] StrippedVideoExtensions =
+    [
+        ".mp4", ".mkv", ".mov", ".webm", ".avi", ".m4v",
+        ".ts", ".mts", ".m2ts", ".wmv", ".flv", ".mpg", ".mpeg", ".ogv", ".3gp",
+    ];
+
+    /// <summary>
+    /// Card title for a recent item: strips common video container extensions from local file names while leaving
+    /// stream titles, non-video names, and dot-only names untouched.
+    /// </summary>
+    public static string DisplayTitle(RecentItem item)
+    {
+        string title = item.DisplayName;
+        if (item.IsLink || string.IsNullOrWhiteSpace(title))
+        {
+            return title;
+        }
+
+        ReadOnlySpan<char> ext = Path.GetExtension(title.AsSpan());
+        if (ext.IsEmpty)
+        {
+            return title;
+        }
+
+        foreach (string known in StrippedVideoExtensions)
+        {
+            if (ext.Equals(known, StringComparison.OrdinalIgnoreCase))
+            {
+                string stem = Path.GetFileNameWithoutExtension(title);
+                return string.IsNullOrWhiteSpace(stem) ? title : stem;
+            }
+        }
+        return title;
+    }
+
     /// <summary>Compares calendar days in <paramref name="now"/>'s offset (the local time zone in the app).</summary>
     public static RecentDay Day(DateTimeOffset openedAt, DateTimeOffset now)
     {

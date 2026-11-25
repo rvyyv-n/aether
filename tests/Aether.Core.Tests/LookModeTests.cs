@@ -1,5 +1,7 @@
+using System.Xml.Linq;
 using Aether.Core.Playback;
 using Aether.Core.Playback.Settings;
+using Aether.Core.Tests.TestSupport;
 using Xunit;
 
 namespace Aether.Core.Tests;
@@ -40,16 +42,38 @@ public class LookModeTests
     }
 
     [Fact]
-    public void ResolveEffective_PrefersExplicitAccentAndFallsBackToSystemAccentOnlyInNative()
+    public void ResolveEffective_KeepsNoneMonochromeInBothAetherAndNativeLook()
     {
         var system = new AccentColor(0x00, 0x78, 0xD4);
 
         Assert.Null(AccentPalette.ResolveEffective(AccentPalette.None, nativeLook: false, system));
-        Assert.Equal(system, AccentPalette.ResolveEffective(AccentPalette.None, nativeLook: true, system));
+        Assert.Null(AccentPalette.ResolveEffective(AccentPalette.None, nativeLook: true, system));
 
         AccentColor explicitPreset = AccentPalette.Resolve("mint")!.Value;
         Assert.Equal(explicitPreset, AccentPalette.ResolveEffective("mint", nativeLook: true, system));
         Assert.Equal(new AccentColor(0xFF, 0x11, 0x22), AccentPalette.ResolveEffective("#FF1122", nativeLook: true, system));
+    }
+
+    [Fact]
+    public void OledBrushOverrides_ResolveInDarkTheme_AndDoNotOverlapAccentOverrides()
+    {
+        var accentKeys = AccentPalette.Overrides(new AccentColor(0x22, 0xD3, 0xEE)).Keys.ToHashSet(StringComparer.Ordinal);
+        foreach (string key in ThemeModes.OledBrushOverrides.Keys)
+        {
+            Assert.DoesNotContain(key, accentKeys);
+        }
+
+        XNamespace xamlNs = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace xNs = "http://schemas.microsoft.com/winfx/2006/xaml";
+        var doc = XDocument.Load(RepoPath.Get("src", "Aether.App", "Theme", "DesignTokens.xaml"));
+        XElement darkDict = doc.Descendants(xamlNs + "ResourceDictionary")
+            .Single(d => (string?)d.Attribute(xNs + "Key") == "Dark");
+        var darkBrushKeys = darkDict.Elements(xamlNs + "SolidColorBrush")
+            .Select(e => (string)e.Attribute(xNs + "Key")!)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.All(ThemeModes.OledBrushOverrides.Keys, key => Assert.Contains(key, darkBrushKeys));
+        Assert.Equal(0xFF000000u, ThemeModes.OledBrushOverrides["AetherSurfaceLayerBrush"]);
     }
 
     [Fact]

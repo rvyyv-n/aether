@@ -126,9 +126,16 @@ public sealed partial class MainWindow : Window, IShellWindow
     private readonly PictureInPicture _pip = new();
     private readonly UISettings _uiSettings = new(); // held so ColorValuesChanged keeps firing
     private WindowRect? _pipBounds; // where the overlay was last, for the next time it opens
+    private enum WindowBackdropMode
+    {
+        MicaAlt,
+        Acrylic,
+        None,
+    }
+
     private double _videoAspect;
     private bool _overVideo;
-    private bool? _nativeLookApplied;
+    private WindowBackdropMode? _backdropApplied;
     private bool _closed;
 
     public MainWindow()
@@ -569,35 +576,30 @@ public sealed partial class MainWindow : Window, IShellWindow
     private void ApplyTheme()
     {
         string theme = App.Settings.Current.Theme;
+        bool oled = ThemeModes.IsOled(theme);
         Shell.RequestedTheme = theme switch
         {
-            "light" => ElementTheme.Light,
-            "dark" => ElementTheme.Dark,
+            ThemeModes.Light => ElementTheme.Light,
+            ThemeModes.Dark or ThemeModes.Oled => ElementTheme.Dark,
             _ => ElementTheme.Default,
         };
         bool native = LookModes.IsNative(App.Settings.Current.LookMode);
-        if (_nativeLookApplied != native)
+        WindowBackdropMode backdrop = oled
+            ? WindowBackdropMode.None
+            : native ? WindowBackdropMode.Acrylic : WindowBackdropMode.MicaAlt;
+        if (_backdropApplied != backdrop)
         {
-            _nativeLookApplied = native;
-            SystemBackdrop = native
-                ? new DesktopAcrylicBackdrop()
-                : new MicaBackdrop { Kind = Microsoft.UI.Composition.SystemBackdrops.MicaKind.BaseAlt };
-        }
-        AccentColor? systemAccent = null;
-        if (native)
-        {
-            try
+            _backdropApplied = backdrop;
+            SystemBackdrop = backdrop switch
             {
-                Windows.UI.Color c = _uiSettings.GetColorValue(UIColorType.Accent);
-                systemAccent = new AccentColor(c.R, c.G, c.B);
-            }
-            catch (Exception)
-            {
-                systemAccent = null;
-            }
+                WindowBackdropMode.None => null,
+                WindowBackdropMode.Acrylic => new DesktopAcrylicBackdrop(),
+                _ => new MicaBackdrop { Kind = Microsoft.UI.Composition.SystemBackdrops.MicaKind.BaseAlt },
+            };
         }
-        AccentTheme.Apply(App.Settings.Current.Accent, systemAccent);
-        Shell.ApplyLookMode(native);
+        OledTheme.Apply(oled);
+        AccentTheme.Apply(App.Settings.Current.Accent);
+        Shell.ApplyLookMode(native, oled);
         ApplyTaskbarIcon();
         ApplyBorder();
     }

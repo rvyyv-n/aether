@@ -161,7 +161,7 @@ public class SettingsStoreTests
     }
 
     [Fact]
-    public void Theme_Setting_Defaults_To_Auto_And_Accepts_Light_And_Dark()
+    public void Theme_Setting_Defaults_To_Auto_And_Accepts_Light_Dark_And_Oled()
     {
         var store = NewStore();
 
@@ -173,6 +173,9 @@ public class SettingsStoreTests
 
         Assert.True(store.Set(SettingKeys.Theme, "dark"));
         Assert.Equal("dark", store.Current.Theme);
+
+        Assert.True(store.Set(SettingKeys.Theme, "oled"));
+        Assert.Equal("oled", store.Current.Theme);
 
         Assert.True(store.Set(SettingKeys.Theme, "auto"));
         Assert.Equal("auto", store.Current.Theme);

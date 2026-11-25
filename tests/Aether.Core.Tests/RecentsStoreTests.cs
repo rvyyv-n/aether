@@ -192,6 +192,20 @@ public class RecentsStoreTests
         Assert.Equal("youtube.com", RecentDisplay.ShortSource(new RecentItem("https://www.youtube.com/watch?v=1", "Sunset", Now)));
     }
 
+    [Theory]
+    [InlineData(@"D:\Captures\molk AS1 - blur.mp4", "molk AS1 - blur.mp4", "molk AS1 - blur")]
+    [InlineData(@"D:\Captures\clip.v2.MKV", "clip.v2.MKV", "clip.v2")]
+    [InlineData(@"D:\Captures\demo.webm", "demo.webm", "demo")]
+    [InlineData(@"D:\Captures\archive.mov", "archive.mov", "archive")]
+    [InlineData(@"D:\Captures\.mp4", ".mp4", ".mp4")]
+    [InlineData(@"D:\Captures\NoExtension", "NoExtension", "NoExtension")]
+    [InlineData("https://www.youtube.com/watch?v=1", "Release v2.0.mp4 Review", "Release v2.0.mp4 Review")]
+    public void DisplayTitle_StripsVideoExtensionsOnlyForLocalFiles(string location, string displayName, string expected)
+    {
+        var item = new RecentItem(location, displayName, Now);
+        Assert.Equal(expected, RecentDisplay.DisplayTitle(item));
+    }
+
     [Fact]
     public void ThumbnailCacheKey_NormalizesPathsCaseInsensitively_AndLinksCaseSensitively()
     {
