@@ -439,14 +439,15 @@
                     Visibility="Collapsed" />
 
                 <!--
-                    Recents (2.10): only with history, at most 3 rows of 52 with a gap of 4, in a column
-                    of at most 400; a 32 tall header with the Clear list link.
+                    Recents (2.10, 22.4): minimalist 3-card 16:9 glass grid with cached thumbnails and thin resume bars,
+                    up to 600 wide with a 32 tall header and Clear list link.
                 -->
                 <StackPanel
                     x:Name="RecentsPanel"
-                    MaxWidth="{StaticResource AetherSizeRecentsColumn}"
+                    MaxWidth="{StaticResource AetherSizeRecentsGridWidth}"
+                    HorizontalAlignment="Stretch"
                     Margin="0,24,0,0"
-                    Spacing="4"
+                    Spacing="6"
                     Visibility="Collapsed">
                     <Grid Height="{StaticResource AetherSizeControl}">
                         <TextBlock
@@ -466,7 +467,13 @@
                             Foreground="{ThemeResource AetherTextSecondaryBrush}"
                             Style="{StaticResource AetherOutlinePillButtonStyle}" />
                     </Grid>
-                    <StackPanel x:Name="RecentsList" Spacing="4" />
+                    <Grid x:Name="RecentsList" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
                 </StackPanel>
                 <StackPanel
                     x:Name="FailureActions"

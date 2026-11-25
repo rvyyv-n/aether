@@ -4,24 +4,76 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!--  52 tall: icon, name over meta, date on the right; a missing file swaps the date for a 32×32 Remove.  -->
-    <Grid Height="{StaticResource AetherSizeRow}">
+    <!--  Minimalist 16:9 glass recent card (22.4): cached artwork, duration badge, thin resume hairline, and compact caption.  -->
+    <Grid>
         <Button
             x:Name="RowButton"
+            Padding="0"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
             Click="OnRowClick"
             Style="{StaticResource AetherRecentRowButtonStyle}">
-            <Grid ColumnSpacing="14">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <FontIcon
-                    x:Name="Icon"
-                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                    FontSize="{StaticResource AetherSizeIcon}"
-                    Foreground="{ThemeResource AetherTextSecondaryBrush}" />
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="106" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border
+                    x:Name="ThumbContainer"
+                    Background="{ThemeResource AetherFillInputBrush}"
+                    CornerRadius="7,7,0,0">
+                    <Grid>
+                        <FontIcon
+                            x:Name="Icon"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                            FontSize="{StaticResource AetherSizeIconLarge}"
+                            Foreground="{ThemeResource AetherTextSecondaryBrush}" />
+                        <Image
+                            x:Name="ThumbnailImage"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Stretch="UniformToFill"
+                            Visibility="Collapsed" />
+                        <Border
+                            x:Name="DurationBadge"
+                            Margin="0,0,6,8"
+                            Padding="5,1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Background="{ThemeResource AetherSurfaceOsdBrush}"
+                            CornerRadius="{StaticResource AetherBadgeCornerRadius}"
+                            RequestedTheme="Dark"
+                            Visibility="Collapsed">
+                            <TextBlock
+                                x:Name="DurationText"
+                                FontSize="11"
+                                Foreground="{ThemeResource AetherTextPrimaryBrush}"
+                                Style="{StaticResource AetherCaptionTextStyle}"
+                                Typography.NumeralAlignment="Tabular" />
+                        </Border>
+                        <Grid
+                            x:Name="ResumeTrack"
+                            Height="3"
+                            VerticalAlignment="Bottom"
+                            Background="#73000000"
+                            RequestedTheme="Dark"
+                            Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="ResumeFilledCol" Width="0*" />
+                                <ColumnDefinition x:Name="ResumeEmptyCol" Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{ThemeResource AetherFillProgressValueBrush}" />
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <StackPanel
+                    Grid.Row="1"
+                    Padding="10,8,10,9"
+                    Spacing="2">
                     <TextBlock
                         x:Name="NameText"
                         Style="{StaticResource AetherBodyTextStyle}"
@@ -33,17 +85,13 @@
                         TextTrimming="CharacterEllipsis"
                         TextWrapping="NoWrap" />
                 </StackPanel>
-                <TextBlock
-                    x:Name="DateText"
-                    Grid.Column="2"
-                    VerticalAlignment="Center"
-                    Style="{StaticResource AetherCaptionTextStyle}" />
             </Grid>
         </Button>
         <Button
             x:Name="RemoveButton"
-            Margin="0,0,10,0"
+            Margin="0,6,6,0"
             HorizontalAlignment="Right"
+            VerticalAlignment="Top"
             Click="OnRemoveClick"
             Content="&#xE711;"
             Style="{StaticResource AetherIconButtonStyle}"

@@ -240,6 +240,13 @@ public sealed class YtDlpStreamResolver : IYtDlpStreamResolver
             bool live = (root.TryGetProperty("is_live", out JsonElement isLive) && isLive.ValueKind == JsonValueKind.True)
                 || GetString(root, "live_status") == "is_live";
 
+            string? thumbnailUrl = GetString(root, "thumbnail");
+            if (!Uri.TryCreate(thumbnailUrl, UriKind.Absolute, out Uri? thumbUri)
+                || (thumbUri.Scheme != Uri.UriSchemeHttp && thumbUri.Scheme != Uri.UriSchemeHttps))
+            {
+                thumbnailUrl = null;
+            }
+
             return new ResolvedStream(
                 StreamUrl: streamUrl ?? fallbackUrl,
                 Title: title,
@@ -253,7 +260,8 @@ public sealed class YtDlpStreamResolver : IYtDlpStreamResolver
                 VideoFormatId: videoFormatId,
                 AudioFormatId: audioFormatId,
                 IsLive: live,
-                Storyboards: ParseStoryboards(root));
+                Storyboards: ParseStoryboards(root),
+                ThumbnailUrl: thumbnailUrl);
         }
         catch (JsonException ex)
         {

@@ -97,6 +97,7 @@ public sealed partial class MainPage : Page
     private DispatcherQueueTimer? _openUrlTimer;
     private DispatcherQueueTimer? _copiedTimer;
     private int _recentsVersion; // bumped to drop a missing-file check that a newer one replaced
+    private CancellationTokenSource? _recentsThumbCts;
     private bool _durationRecorded;
     private bool _settingsShown;
     private bool _diagnosticsShown;
@@ -435,6 +436,7 @@ public sealed partial class MainPage : Page
             StartEngine();
         }
         App.Recents.Changed += OnRecentsChanged;
+        App.Resume.Changed += OnResumeChanged;
         App.Shortcuts.Changed += OnShortcutsChanged;
         BuildShortcuts(); // settings may have finished loading since the constructor
         ApplyShortcutLabels();
@@ -463,9 +465,13 @@ public sealed partial class MainPage : Page
         }
         App.Clips.Changed -= OnClipsShelfChanged;
         App.Recents.Changed -= OnRecentsChanged;
+        App.Resume.Changed -= OnResumeChanged;
         App.Shortcuts.Changed -= OnShortcutsChanged;
         AppToasts.Requested -= OnToastRequested;
         SaveResumePosition(background: false);
+        _recentsThumbCts?.Cancel();
+        _recentsThumbCts?.Dispose();
+        _recentsThumbCts = null;
         _thumbnails?.Dispose();
         _thumbnails = null;
         ShutDownLanStream();
@@ -1482,12 +1488,16 @@ public sealed partial class MainPage : Page
                 link, displayName, resolved.HttpHeaders, resolved.AudioUrl, resolved.Chapters, resolved.Subtitles,
                 qualities, QualityOptions.Resolve(savedQuality, qualities), resolved.IsLive, resolved.Storyboards));
 
-            _ = Task.Run(() =>
+            _ = Task.Run(async () =>
             {
                 App.Recents.Add(link, displayName, DateTimeOffset.Now);
                 if (resolved.DurationSeconds is { } dur && dur > 0)
                 {
                     App.Recents.SetDuration(link, dur);
+                }
+                if (resolved.ThumbnailUrl is { Length: > 0 } thumbUrl)
+                {
+                    await RecentThumbnailCache.SaveFromUrlAsync(link, thumbUrl, App.Recents.Items.Select(i => i.Location)).ConfigureAwait(false);
                 }
             });
 
@@ -1695,14 +1705,27 @@ public sealed partial class MainPage : Page
         }
     }
 
-    // ---- Recents (2.10, 2.18) ----
+    // ---- Recents (2.10, 2.18, 22.4) ----
 
     private void OnRecentsChanged(object? sender, EventArgs e) => DispatcherQueue.TryEnqueue(RefreshRecents);
 
-    /// <summary>Rebuilds the rows; the missing-file check runs on the thread pool so a slow drive never stalls the UI.</summary>
+    private void OnResumeChanged(object? sender, EventArgs e) => DispatcherQueue.TryEnqueue(() =>
+    {
+        if (_isLoaded && !HasVideo && App.Recents.Items.Count > 0)
+        {
+            RefreshRecents();
+        }
+    });
+
+    /// <summary>Rebuilds the 3-card recents grid; missing-file and thumbnail lookups run off the UI thread.</summary>
     private async void RefreshRecents()
     {
         int version = ++_recentsVersion;
+        _recentsThumbCts?.Cancel();
+        _recentsThumbCts?.Dispose();
+        var thumbCts = new CancellationTokenSource();
+        _recentsThumbCts = thumbCts;
+
         IReadOnlyList<RecentItem> items = App.Recents.Items;
         bool[] missing = await Task.Run(() => items.Select(item => RecentDisplay.IsMissing(item, File.Exists)).ToArray());
         if (version != _recentsVersion || !_isLoaded)
@@ -1711,14 +1734,56 @@ public sealed partial class MainPage : Page
         }
         RecentsList.Children.Clear();
         DateTimeOffset now = DateTimeOffset.Now;
-        for (int i = 0; i < items.Count; i++)
+        string[] activeLocations = items.Select(i => i.Location).ToArray();
+        for (int i = 0; i < items.Count && i < 3; i++)
         {
-            var row = new RecentRow(items[i], missing[i], now);
-            row.OpenRequested += OnRecentOpenRequested;
-            row.RemoveRequested += OnRecentRemoveRequested;
-            RecentsList.Children.Add(row);
+            RecentItem item = items[i];
+            double progress = missing[i]
+                ? 0
+                : ResumeStore.ProgressFraction(App.Resume.TryGetEntry(item.Location), item.Duration);
+            var card = new RecentRow(item, missing[i], now, progress);
+            card.OpenRequested += OnRecentOpenRequested;
+            card.RemoveRequested += OnRecentRemoveRequested;
+            Grid.SetColumn(card, i);
+            RecentsList.Children.Add(card);
+            if (!missing[i])
+            {
+                _ = LoadRecentCardThumbnailAsync(card, item, activeLocations, version, thumbCts.Token);
+            }
         }
         Render();
+    }
+
+    private async Task LoadRecentCardThumbnailAsync(
+        RecentRow card,
+        RecentItem item,
+        string[] activeLocations,
+        int version,
+        CancellationToken ct)
+    {
+        try
+        {
+            string? cachePath = item.IsLink
+                ? await Task.Run(() => RecentThumbnailCache.TryGetCachedPath(item.Location, isLink: true), ct)
+                : await RecentThumbnailCache.GetOrCreateLocalAsync(item.Location, item.Duration, activeLocations, ct);
+
+            if (cachePath is null || ct.IsCancellationRequested || version != _recentsVersion || !_isLoaded)
+            {
+                return;
+            }
+
+            byte[] bytes = await File.ReadAllBytesAsync(cachePath, ct);
+            if (ct.IsCancellationRequested || version != _recentsVersion || !_isLoaded)
+            {
+                return;
+            }
+
+            await card.SetThumbnailBytesAsync(bytes);
+        }
+        catch (Exception)
+        {
+            // Keep the clean fallback glyph if the file moved or decoding was cancelled.
+        }
     }
 
     private void OnRecentOpenRequested(object? sender, EventArgs e)

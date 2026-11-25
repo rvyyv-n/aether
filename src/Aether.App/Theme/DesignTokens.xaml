@@ -622,6 +622,7 @@
     <x:Double x:Key="AetherSizeProgressBar">4</x:Double>  <!-- Determinate bar thickness; 2 px when docked to the status strip's bottom edge -->
     <x:Double x:Key="AetherSizeProgressRing">40</x:Double>  <!-- In the hero tile. WinUI draws its own stroke -->
     <x:Double x:Key="AetherSizeRecentsColumn">400</x:Double>  <!-- Max width of the recents list; at most 3 rows, hidden with no history -->
+    <x:Double x:Key="AetherSizeRecentsGridWidth">600</x:Double>  <!-- Max width of the 3-card recents shelf (22.4) -->
     <x:Double x:Key="AetherSizeDropTargetInset">8</x:Double>  <!-- Drag-over border inset from the window edges, top inset 8 below the title bar -->
     <x:Double x:Key="AetherSizeBadgeMaxWidth">320</x:Double>  <!-- Title-bar badge trims with an ellipsis past this -->
     <x:Double x:Key="AetherSizeTimecodeGap">6</x:Double>  <!-- Equal gaps either side of the slash so it sits centred -->
@@ -1424,6 +1425,7 @@
         <Setter Property="CornerRadius" Value="{StaticResource AetherOverlayCornerRadius}" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -1432,7 +1434,7 @@
                         <Border x:Name="StateLayer" Background="Transparent" CornerRadius="{TemplateBinding CornerRadius}">
                             <Border.BackgroundTransition><BrushTransition Duration="0:0:0.083" /></Border.BackgroundTransition>
                         </Border>
-                        <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Content="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" />
+                        <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" Content="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" />
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal" />

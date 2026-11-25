@@ -184,4 +184,59 @@ public class RecentsStoreTests
         Assert.False(RecentDisplay.IsMissing(file, _ => true));
         Assert.False(RecentDisplay.IsMissing(link, _ => false));
     }
+
+    [Fact]
+    public void ShortSource_UsesLeafFolderForFilesAndHostForLinks()
+    {
+        Assert.Equal("Captures", RecentDisplay.ShortSource(new RecentItem(@"D:\Videos\Captures\clip.mkv", "clip.mkv", Now)));
+        Assert.Equal("youtube.com", RecentDisplay.ShortSource(new RecentItem("https://www.youtube.com/watch?v=1", "Sunset", Now)));
+    }
+
+    [Fact]
+    public void ThumbnailCacheKey_NormalizesPathsCaseInsensitively_AndLinksCaseSensitively()
+    {
+        string lower = RecentDisplay.ThumbnailCacheKey(@"D:\Videos\Clip.MP4");
+        string upper = RecentDisplay.ThumbnailCacheKey(@"d:\videos\clip.mp4");
+        Assert.Equal(64, lower.Length);
+        Assert.Equal(lower, upper);
+
+        string urlA = RecentDisplay.ThumbnailCacheKey("https://youtu.be/AbCdEf");
+        string urlB = RecentDisplay.ThumbnailCacheKey("https://youtu.be/abcdef");
+        Assert.NotEqual(urlA, urlB);
+    }
+
+    [Fact]
+    public void PruneThumbnailCache_KeepsActiveEntriesAndDeletesOldestOverflow()
+    {
+        string dir = Path.Combine(Path.GetTempPath(), "aether-recents-cache-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            string activeLoc = @"D:\Videos\keep.mkv";
+            string staleOldLoc = @"D:\Videos\old.mkv";
+            string staleNewLoc = @"D:\Videos\newer.mkv";
+
+            string activePath = RecentDisplay.ThumbnailCachePath(dir, activeLoc);
+            string staleOldPath = RecentDisplay.ThumbnailCachePath(dir, staleOldLoc);
+            string staleNewPath = RecentDisplay.ThumbnailCachePath(dir, staleNewLoc);
+
+            File.WriteAllBytes(staleOldPath, [1]);
+            File.SetLastWriteTimeUtc(staleOldPath, DateTime.UtcNow.AddMinutes(-30));
+            File.WriteAllBytes(activePath, [2]);
+            File.SetLastWriteTimeUtc(activePath, DateTime.UtcNow.AddMinutes(-20));
+            File.WriteAllBytes(staleNewPath, [3]);
+            File.SetLastWriteTimeUtc(staleNewPath, DateTime.UtcNow.AddMinutes(-1));
+
+            int removed = RecentDisplay.PruneThumbnailCache(dir, [activeLoc], maxKeep: 2);
+
+            Assert.Equal(1, removed);
+            Assert.True(File.Exists(activePath));
+            Assert.True(File.Exists(staleNewPath));
+            Assert.False(File.Exists(staleOldPath));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
 }

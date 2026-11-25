@@ -23,6 +23,9 @@ public sealed class ResumeStore(ISettingsStorage storage)
     private readonly object _gate = new();
     private ResumeEntry[] _entries = [];
 
+    /// <summary>Raised on the thread that made the change, outside the store's lock.</summary>
+    public event EventHandler? Changed;
+
     public IReadOnlyList<ResumeEntry> Entries
     {
         get { lock (_gate) { return _entries; } }
@@ -33,6 +36,19 @@ public sealed class ResumeStore(ISettingsStorage storage)
         double.IsFinite(position) && double.IsFinite(duration)
         && duration > SkipStart + SkipEnd
         && position >= SkipStart && position <= duration - SkipEnd;
+
+    /// <summary>Normalized playback progress in [0, 1] for resume progress bars, or 0 when not worth resuming.</summary>
+    public static double ProgressFraction(ResumeEntry? entry, double fallbackDuration = 0)
+    {
+        if (entry is null)
+        {
+            return 0;
+        }
+        double duration = entry.Duration > 0 ? entry.Duration : fallbackDuration;
+        return IsWorthResuming(entry.Position, duration)
+            ? Math.Clamp(entry.Position / duration, 0, 1)
+            : 0;
+    }
 
     public void Load()
     {
@@ -49,17 +65,21 @@ public sealed class ResumeStore(ISettingsStorage storage)
         {
             _entries = loaded;
         }
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>The position to resume <paramref name="location"/> at, or null to start from the beginning.</summary>
-    public double? TryGet(string location)
+    /// <summary>The saved entry for <paramref name="location"/> when worth resuming, or null.</summary>
+    public ResumeEntry? TryGetEntry(string location)
     {
         lock (_gate)
         {
             ResumeEntry? entry = _entries.FirstOrDefault(e => SameLocation(e.Location, location));
-            return entry is not null && IsWorthResuming(entry.Position, entry.Duration) ? entry.Position : null;
+            return entry is not null && IsWorthResuming(entry.Position, entry.Duration) ? entry : null;
         }
     }
+
+    /// <summary>The position to resume <paramref name="location"/> at, or null to start from the beginning.</summary>
+    public double? TryGet(string location) => TryGetEntry(location)?.Position;
 
     /// <summary>Records where the file was left, or forgets it when the position is not worth resuming.</summary>
     public void Save(string location, double position, double duration, DateTimeOffset savedAt) => Update(entries =>
@@ -100,6 +120,7 @@ public sealed class ResumeStore(ISettingsStorage storage)
         {
             // The positions still apply this session; they are written again on the next change.
         }
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     private static bool SameLocation(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);

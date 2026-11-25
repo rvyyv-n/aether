@@ -183,4 +183,18 @@ public class SeekThumbnailsTests
         Assert.Equal("https://i.ytimg.com/sb/abc/M0.jpg", frag.Url);
         Assert.Equal(50.0, frag.Duration);
     }
+
+    [Fact]
+    public void YtDlpStreamResolver_Extracts_Valid_Http_ThumbnailUrl_And_Rejects_NonHttp()
+    {
+        ResolvedStream valid = YtDlpStreamResolver.ParseStreamJson(
+            """{"title":"t","url":"https://cdn/v.mp4","thumbnail":"https://i.ytimg.com/vi/abc/hqdefault.jpg"}""",
+            "https://youtube.com/watch?v=abc");
+        Assert.Equal("https://i.ytimg.com/vi/abc/hqdefault.jpg", valid.ThumbnailUrl);
+
+        ResolvedStream invalid = YtDlpStreamResolver.ParseStreamJson(
+            """{"title":"t","url":"https://cdn/v.mp4","thumbnail":"file:///C:/secret.jpg"}""",
+            "https://youtube.com/watch?v=abc");
+        Assert.Null(invalid.ThumbnailUrl);
+    }
 }

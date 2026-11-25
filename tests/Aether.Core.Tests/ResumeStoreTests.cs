@@ -142,4 +142,28 @@ public class ResumeStoreTests
         Assert.Empty(store.Entries);
         Assert.Null(store.TryGet("b.mp4"));
     }
+
+    [Fact]
+    public void Changed_Fires_On_Load_Save_Remove_And_Clear_And_ProgressFraction_Normalizes()
+    {
+        var store = new ResumeStore(new FakeStorage());
+        int changes = 0;
+        store.Changed += (_, _) => changes++;
+
+        store.Load();
+        Assert.Equal(1, changes);
+
+        store.Save(@"D:\clip.mkv", 50, 100, DateTimeOffset.UtcNow);
+        Assert.Equal(2, changes);
+
+        ResumeEntry? entry = store.TryGetEntry(@"d:\clip.mkv");
+        Assert.NotNull(entry);
+        Assert.Equal(0.5, ResumeStore.ProgressFraction(entry), precision: 3);
+        Assert.Equal(0.0, ResumeStore.ProgressFraction(null));
+        Assert.Equal(0.0, ResumeStore.ProgressFraction(new ResumeEntry("x", 2, 100, DateTimeOffset.UtcNow)));
+
+        store.Remove(@"D:\clip.mkv");
+        Assert.Equal(3, changes);
+        Assert.Null(store.TryGetEntry(@"D:\clip.mkv"));
+    }
 }

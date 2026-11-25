@@ -295,3 +295,11 @@
 - **Consequences:** Release x64 builds with 0 warnings across 2,031 tests (including live `"sw"` render seek extraction with zero `MpvRenderParamBlock` leaks and live `audio-device-list` switching), warm Release startup remains unchanged (`548 ms`, `60.6 MB` private RAM), and 180.00 Hz playback sustains 0 dropped frames (`0.095 ms` avg blur pass).
 - **Status:** Accepted.
 
+## ADR-0033: Minimalist 3-Card Home Recents Grid & Disk Thumbnail Cache
+- **Context:** Pass `22.4` required upgrading the Home Recents surface with cached video thumbnails and thin resume progress bars after comparing compact enhanced rows against a minimalist card grid.
+- **Decision:**
+  1. **Minimalist 3-Card 16:9 Grid (`RecentRow`, `MainPage.xaml`, `DesignTokens.xaml`):** Widened `RecentsPanel` to `AetherSizeRecentsGridWidth` (`600 px`) hosting a 3-column grid of 16:9 glass cards (`Height="106"` artwork container with concentric top radii, dark-themed bottom-right tabular duration chip, and a 3 px star-proportioned resume hairline) while keeping the overall vertical height slightly shorter than the previous 3-row stack (`160 px` vs `164 px`) so `640×400` minimum windows stay clean and scroll-free.
+  2. **Non-Blocking Disk Thumbnail Cache (`RecentDisplay`, `RecentThumbnailCache`, `ResumeStore.Changed`):** Stores thumbnails under `%LOCALAPPDATA%\Aether\thumbnails\<sha256>.jpg` (pruned to active + 24 recent entries, auto-invalidated when a local file's modification time advances) and decodes into `BitmapImage` from memory streams so Windows never holds file locks on cache files. Local files check disk first, then Windows Shell thumbnails (`StorageFile.GetThumbnailAsync`), falling back to a one-shot `LocalThumbnailDecoder` frame encoded via WinRT `BitmapEncoder` for MKV/WebM files. Streamed links cache `ResolvedStream.ThumbnailUrl` when present. `ResumeStore` emits `Changed` and exposes `TryGetEntry`/`ProgressFraction` so resume hairlines refresh automatically once async startup loads complete.
+- **Consequences:** Home stays uncluttered and modern in both Dark and Light themes without touching cold-start latency (`RefreshRecents` runs asynchronously post-activation), and Release x64 passes cleanly across 2,036 unit and integration tests with zero warnings.
+- **Status:** Accepted.
+

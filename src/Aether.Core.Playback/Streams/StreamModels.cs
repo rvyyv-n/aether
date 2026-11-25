@@ -70,7 +70,8 @@ public sealed record ResolvedStream(
     string? VideoFormatId = null,
     string? AudioFormatId = null,
     bool IsLive = false,
-    IReadOnlyList<StreamStoryboard>? Storyboards = null);
+    IReadOnlyList<StreamStoryboard>? Storyboards = null,
+    string? ThumbnailUrl = null);
 
 public sealed class StreamResolutionException : Exception
 {
