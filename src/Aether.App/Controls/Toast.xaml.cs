@@ -45,6 +45,9 @@ public sealed partial class Toast : UserControl
 
     public event EventHandler<bool>? FocusChanged;
 
+    /// <summary>The visible toast card, which the page blurs the video behind.</summary>
+    public FrameworkElement Surface => Root;
+
     /// <summary>Draws <paramref name="request"/> and tells screen readers about it.</summary>
     public void Present(ToastRequest request)
     {

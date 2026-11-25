@@ -239,4 +239,50 @@ public class BackdropTests
         Assert.Equal(1, Frames(source, Ms(0), out BackdropFrame frame));
         Assert.Equal((int)Sidebar, frame.Slot);
     }
+
+    [Fact]
+    public void Source_DeactivatingFadingSlot_ClearsPendingRedraws()
+    {
+        var source = new BackdropSource();
+        source.Post(BackdropSlot.Clip, Card(x: 420, y: 150, w: 120, h: 40));
+        source.SetActive(BackdropSlot.Clip, true);
+        source.Fade(BackdropSlot.Clip, visible: false, durationMilliseconds: 250, Ms(1000));
+
+        Assert.True(source.NeedsFrameAt(Ms(1050)));
+
+        source.SetActive(BackdropSlot.Clip, false);
+        Assert.False(source.NeedsFrameAt(Ms(1050)));
+        Assert.Equal(0, Frames(source, Ms(1050), out _));
+    }
+
+    [Fact]
+    public void Source_ClipToastAndSkipChapterSlots_FadeOutToZeroWithoutGhostFrames()
+    {
+        var source = new BackdropSource();
+        BackdropSlot[] overlaySlots = [BackdropSlot.Clip, BackdropSlot.Toast, BackdropSlot.SkipChapter];
+        foreach (BackdropSlot slot in overlaySlots)
+        {
+            source.Fade(slot, visible: false, durationMilliseconds: 0, Ms(0));
+            source.Post(slot, Card(x: 100 + (int)slot * 10, y: 120, w: 140, h: 36));
+            source.SetActive(slot, true);
+            source.Fade(slot, visible: true, durationMilliseconds: 150, Ms(100));
+        }
+
+        Span<BackdropFrame> frames = stackalloc BackdropFrame[BackdropSource.SlotCount];
+        int midIn = source.TryGetFrames(Ms(150), frames);
+        Assert.Equal(3, midIn);
+        for (int i = 0; i < midIn; i++)
+        {
+            Assert.InRange(frames[i].Opacity, 0.01f, 0.99f);
+        }
+
+        // Fade all three out with chrome/dismissal and verify zero ghost frames remain once elapsed.
+        foreach (BackdropSlot slot in overlaySlots)
+        {
+            source.Fade(slot, visible: false, durationMilliseconds: 200, Ms(500));
+        }
+        Assert.Equal(3, source.TryGetFrames(Ms(550), frames));
+        Assert.Equal(0, source.TryGetFrames(Ms(700), frames));
+        Assert.False(source.NeedsFrameAt(Ms(701)));
+    }
 }

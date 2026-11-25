@@ -61,8 +61,18 @@ internal sealed class ToastService
             {
                 _layer.Visibility = Visibility.Collapsed;
             }
+            Collapsed?.Invoke();
         };
     }
+
+    /// <summary>True while a toast is actively shown (false once dismissed or fading out).</summary>
+    public bool IsShown => _shown;
+
+    /// <summary>Raised when the toast begins fading in or out, with the matching fade duration in ms.</summary>
+    public event Action<bool, double>? VisibilityChanged;
+
+    /// <summary>Raised once the exit fade completes and the toast layer is collapsed.</summary>
+    public event Action? Collapsed;
 
     public void Show(string key, string text, ToastTone tone = ToastTone.Neutral, string? actionLabel = null, Action? action = null) =>
         Show(new ToastRequest(key, text, tone, actionLabel, action));
@@ -158,6 +168,7 @@ internal sealed class ToastService
             {
                 _shown = true;
                 _fader.Slide(_toast, true); // a message replacing one on screen stays put
+                VisibilityChanged?.Invoke(true, _fader.RevealDurationMilliseconds(true));
             }
         }
         else if (_toast is not null && _layer is not null)
@@ -166,8 +177,9 @@ internal sealed class ToastService
             _shown = false;
             _fader.Reveal(_layer, false);
             _fader.Slide(_toast, false);
-            // Collapsed once the fade is done, so the invisible toast takes no clicks and is left out of the tab order.
             double fade = _fader.RevealDurationMilliseconds(false);
+            VisibilityChanged?.Invoke(false, fade);
+            // Collapsed once the fade is done, so the invisible toast takes no clicks and is left out of the tab order.
             _hideTimer.Interval = TimeSpan.FromMilliseconds(Math.Max(fade, 1));
             _hideTimer.Start();
         }

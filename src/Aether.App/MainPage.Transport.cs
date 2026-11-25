@@ -425,12 +425,14 @@ public sealed partial class MainPage
         ClipDrawer.HoldChanged += OnClipDrawerHoldChanged;
         ClipLayer.SizeChanged += (_, _) => UpdateToastPlacement();
         double gap = _osdGap > 0 ? _osdGap : Motion.Token("AetherSizeOsdGap");
+        ClipLayer.MaxWidth = Osd.MaxWidth;
         ClipLayer.Margin = new Thickness(ClipLayer.Margin.Left, ClipLayer.Margin.Top, ClipLayer.Margin.Right,
             Osd.Margin.Bottom + Osd.Height + gap);
         ClipLayer.Visibility = Osd.Visibility;
         ClipLayer.IsHitTestVisible = _chromeShown;
         _fader?.Fade(ClipLayer, _chromeShown);
         ApplyClipLookMode();
+        PostBackdropRegion();
     }
 
     private void ApplyClipLookMode()

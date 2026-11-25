@@ -152,15 +152,31 @@ public sealed partial class MainPage
         if (_fader is null)
         {
             SkipChapterLayer.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            if (!show)
+            {
+                HideSurface(Aether.Core.Interop.Rendering.BackdropSlot.SkipChapter);
+            }
+            else
+            {
+                PostBackdropRegion();
+            }
         }
         else if (show)
         {
             _fader.Enter(SkipChapterLayer, ChromeFader.FromBelow);
+            PostBackdropRegion();
         }
         else
         {
             _pointerOnSkipChapter = false; // collapsing it sends no pointer exit
-            _fader.Exit(SkipChapterLayer, ChromeFader.FromBelow);
+            FadeOutSurface(Aether.Core.Interop.Rendering.BackdropSlot.SkipChapter, _fader.RevealDurationMilliseconds(false));
+            _fader.Exit(SkipChapterLayer, ChromeFader.FromBelow, () =>
+            {
+                if (!_skipChapterShown)
+                {
+                    HideSurface(Aether.Core.Interop.Rendering.BackdropSlot.SkipChapter);
+                }
+            });
         }
     }
 

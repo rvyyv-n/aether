@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Diagnostics (`Ctrl+I`) and performance logs now accurately report fractional display refresh rates (e.g. `59.94 Hz`) and high-refresh monitor rates (`SmoothMotion` off) instead of falling back to `0 Hz`.
 - Unsubscribed `MainWindow.UpdateCaptionRegions()` during window teardown and guarded against closed `InputNonClientPointerSource` instances, preventing an unhandled `ObjectDisposedException` (`0xC000027B`) on app exit so engine and LAN server shutdown hooks complete with exit code `0`.
 - Changed `SettingsSection.All` from `IReadOnlyList<SettingsSection>` (compiler-synthesized read-only array) to a concrete `List<SettingsSection>` on a `partial` class so CsWinRT AOT marshaling for `ItemsControl.ItemsSource` opens Settings cleanly in Release / Native AOT builds without `ArgumentException` (`E_INVALIDARG`).
+- Fixed backdrop blur lifecycle across all glass overlays: the Clips chip/drawer blur now fades in lockstep with playback chrome instead of leaving a ghost blur behind, dialog cards (`OpenUrl` and `LanStream`) fade their blur smoothly on close, switching flyouts/menus no longer drops or leaves stale popup blur, Transcript side-panel slide-out keeps tracking its blur, transient slots initialize at zero opacity for smooth first reveals, and Toasts and Skip Chapter prompts now receive synchronized frosted backdrop blur.
 
 ## [1.1.0-preview.2] - 2026-11-12
 ### Changed

@@ -94,13 +94,13 @@ public sealed partial class MainPage
     private void OnVideoFlyoutOpened(object? sender, object e)
     {
         HoldForMenu(true);
-        SetPopupSurface(_videoPanel);
+        SetPopupSurface(VideoFlyout, _videoPanel);
     }
 
     private void OnVideoFlyoutClosed(object? sender, object e)
     {
         HoldForMenu(false);
-        SetPopupSurface(null);
+        SetPopupSurface(VideoFlyout, null);
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
     }
 

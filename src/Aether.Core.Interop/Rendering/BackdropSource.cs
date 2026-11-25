@@ -24,6 +24,12 @@ public enum BackdropSlot
 
     /// <summary>The card on the right edge: the queue or the transcript, one at a time.</summary>
     SidePanel = 5,
+
+    /// <summary>The bottom-centre toast banner over video.</summary>
+    Toast = 6,
+
+    /// <summary>The bottom-right skip chapter / SponsorBlock prompt over video.</summary>
+    SkipChapter = 7,
 }
 
 /// <summary>
@@ -35,7 +41,7 @@ public enum BackdropSlot
 public sealed class BackdropSource
 {
     /// <summary>The number of <see cref="BackdropSlot"/> values; size the buffer given to <see cref="TryGetFrames"/> with it.</summary>
-    public const int SlotCount = 6;
+    public const int SlotCount = 8;
 
     // A fade that nobody renders (another backend) must not keep the loop redrawing forever.
     private const double GraceMilliseconds = 100;
@@ -77,7 +83,12 @@ public sealed class BackdropSource
     {
         lock (_lock)
         {
-            _slots[(int)slot].Active = active;
+            ref Slot s = ref _slots[(int)slot];
+            s.Active = active;
+            if (!active)
+            {
+                s.FinalFramePending = false;
+            }
         }
     }
 

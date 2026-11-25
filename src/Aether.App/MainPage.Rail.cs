@@ -229,11 +229,20 @@ public sealed partial class MainPage
                 RailClips.IsEnabled = HasVideo && App.Clips.Items.Count > 0; // as the right-click menu's Clips
                 _fader.Enter(Rail, null);
                 _railSlide.AnimateTo(1, Motion.Token("AetherMotionQuickInMilliseconds"), Motion.EaseOut);
+                VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, _backdropAllowed);
                 VideoSurface.FadeBackdrop(BackdropSlot.Sidebar, true, _fader.RevealDurationMilliseconds(true));
+                PostSidebarRegion();
             }
             else
             {
-                _fader.Exit(Rail, null);
+                _fader.Exit(Rail, null, () =>
+                {
+                    if (!_railShown)
+                    {
+                        _postedSidebarBackdrop = default;
+                        VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, false);
+                    }
+                });
                 _railSlide.AnimateTo(0, Motion.Token("AetherMotionQuickOutMilliseconds"), Motion.EaseIn);
                 VideoSurface.FadeBackdrop(BackdropSlot.Sidebar, false, _fader.RevealDurationMilliseconds(false));
             }

@@ -188,6 +188,10 @@ public sealed partial class MainPage
             visibleCount += btns.Length;
         }
         Osd.MaxWidth = Math.Min(760, _baseOsdMaxWidth + Math.Max(0, visibleCount - 8) * 40);
+        if (ClipLayer is not null)
+        {
+            ClipLayer.MaxWidth = Osd.MaxWidth;
+        }
 
         double extrasOpacity = _bar is { Value: var progress } ? Math.Clamp((progress - 0.4) / 0.6, 0, 1) : 1;
         foreach (UIElement extra in _barExtras)

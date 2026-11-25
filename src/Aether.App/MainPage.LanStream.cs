@@ -164,10 +164,18 @@ public sealed partial class MainPage
         if (_fader is null)
         {
             LanStreamOverlay.Visibility = Visibility.Collapsed;
+            HideSurface(Aether.Core.Interop.Rendering.BackdropSlot.Card);
         }
         else
         {
-            _fader.Exit(LanStreamOverlay, null);
+            FadeOutSurface(Aether.Core.Interop.Rendering.BackdropSlot.Card, _fader.RevealDurationMilliseconds(false));
+            _fader.Exit(LanStreamOverlay, null, () =>
+            {
+                if (!_lanShown && !IsOpenUrlShown)
+                {
+                    HideSurface(Aether.Core.Interop.Rendering.BackdropSlot.Card);
+                }
+            });
             _fader.Slide(LanStreamCard, false, ChromeFader.FromBelow);
         }
         _chrome.SetHold(ChromeHolds.Dialog, false);

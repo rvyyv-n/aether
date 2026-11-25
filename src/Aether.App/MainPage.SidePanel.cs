@@ -28,6 +28,8 @@ public sealed partial class MainPage
     private readonly MotionTween _sideSlide = new(0);
     private readonly TranslateTransform _sideOffset = new();
     private SidePanel _sidePanel;
+    // Stays set to the outgoing panel until its exit slide/fade completes so TranscriptPane slides out and tracks blur cleanly.
+    private SidePanel _visibleSidePanel;
     private bool _sideLayerWired;
 
     private void InitializeQueue()
@@ -78,7 +80,14 @@ public sealed partial class MainPage
     private bool IsSidePanelAvailable => !_settingsShown && !_tour.IsActive && !IsPictureInPicture && _openUrl.Stage != OpenUrlStage.Editing;
 
     private FrameworkElement? SideSurface =>
-        SideLayer is null ? null : (_sidePanel == SidePanel.Transcript ? TranscriptPane?.Surface : QueueDrawer?.Surface);
+        SideLayer is null
+            ? null
+            : _visibleSidePanel switch
+            {
+                SidePanel.Transcript => TranscriptPane?.Surface,
+                SidePanel.Queue => QueueDrawer?.Surface,
+                _ => null,
+            };
 
     private void OnQueueAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args) => ToggleSidePanel(args, SidePanel.Queue);
 
@@ -124,6 +133,7 @@ public sealed partial class MainPage
         }
         bool opening = _sidePanel == SidePanel.None;
         _sidePanel = panel;
+        _visibleSidePanel = panel;
         QueueDrawer.Visibility = panel == SidePanel.Queue ? Visibility.Visible : Visibility.Collapsed;
         TranscriptPane.Visibility = panel == SidePanel.Transcript ? Visibility.Visible : Visibility.Collapsed;
         if (panel == SidePanel.Queue)
@@ -141,8 +151,14 @@ public sealed partial class MainPage
             PlaceSidePanel();
             _fader.Enter(SideLayer, null);
             _sideSlide.AnimateTo(1, Motion.Token("AetherMotionQuickInMilliseconds"), Motion.EaseOut);
+            VideoSurface.SetBackdropActive(BackdropSlot.SidePanel, _backdropAllowed);
             VideoSurface.FadeBackdrop(BackdropSlot.SidePanel, true, _fader.RevealDurationMilliseconds(true));
+            PostSideRegion();
             SyncDrawerHold();
+        }
+        else
+        {
+            PostSideRegion();
         }
     }
 
@@ -154,7 +170,15 @@ public sealed partial class MainPage
             return false;
         }
         _sidePanel = SidePanel.None;
-        _fader.Exit(SideLayer, null);
+        _fader.Exit(SideLayer, null, () =>
+        {
+            if (_sidePanel == SidePanel.None)
+            {
+                _visibleSidePanel = SidePanel.None;
+                _postedSurfaceRegions[(int)BackdropSlot.SidePanel] = default;
+                VideoSurface.SetBackdropActive(BackdropSlot.SidePanel, false);
+            }
+        });
         _sideSlide.AnimateTo(0, Motion.Token("AetherMotionQuickOutMilliseconds"), Motion.EaseIn);
         VideoSurface.FadeBackdrop(BackdropSlot.SidePanel, false, _fader.RevealDurationMilliseconds(false));
         SyncDrawerHold();

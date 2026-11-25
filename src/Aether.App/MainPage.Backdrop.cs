@@ -7,8 +7,9 @@ using Windows.Foundation;
 namespace Aether_App;
 
 /// <summary>
-/// Posts the player card's place over the video to the render thread, which blurs the video behind it
-/// (ADR-0013). UI thread only.
+/// Posts every frosted glass card's place over the video to the render thread, which blurs the video behind it
+/// (ADR-0013), and keeps each slot's fade opacity and active state strictly locked to the XAML surface's lifecycle.
+/// UI thread only.
 /// </summary>
 public sealed partial class MainPage
 {
@@ -16,21 +17,43 @@ public sealed partial class MainPage
     private BackdropRegion _postedSidebarBackdrop;
     private readonly BackdropRegion[] _postedSurfaceRegions = new BackdropRegion[BackdropSource.SlotCount];
     private readonly bool[] _surfaceShown = new bool[BackdropSource.SlotCount];
+    private readonly bool[] _surfaceFadingOut = new bool[BackdropSource.SlotCount];
     private bool _backdropAllowed;
+    private object? _popupOwner;
     private FrameworkElement? _popupSurface;
     private const int PopupSettleFrames = 3;
     private FrameworkElement? _pendingPopup;
     private int _pendingPopupFrames;
 
-    /// <summary>The open flyout's presenter, so the blur follows it; null when none is open.</summary>
-    private void SetPopupSurface(FrameworkElement? content)
+    /// <summary>Starts every transient overlay blur slot at zero opacity so its first reveal always fades in smoothly.</summary>
+    private void InitializeBackdrop()
+    {
+        VideoSurface.FadeBackdrop(BackdropSlot.Sidebar, false, 0);
+        VideoSurface.FadeBackdrop(BackdropSlot.Clip, false, 0);
+        VideoSurface.FadeBackdrop(BackdropSlot.Card, false, 0);
+        VideoSurface.FadeBackdrop(BackdropSlot.Popup, false, 0);
+        VideoSurface.FadeBackdrop(BackdropSlot.SidePanel, false, 0);
+        VideoSurface.FadeBackdrop(BackdropSlot.Toast, false, 0);
+        VideoSurface.FadeBackdrop(BackdropSlot.SkipChapter, false, 0);
+    }
+
+    private void CleanupBackdrop()
+    {
+        Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnPopupRendering;
+        _popupOwner = null;
+        _pendingPopup = null;
+        _popupSurface = null;
+    }
+
+    /// <summary>The open flyout's presenter, so the blur follows it; null when that owner closed.</summary>
+    private void SetPopupSurface(object? owner, FrameworkElement? content)
     {
         FrameworkElement? found = FindPresenter(content);
         if (found is Microsoft.UI.Xaml.Controls.Control presenter)
         {
             presenter.RequestedTheme = ThemeTokens.AppTheme; // a flyout's popup does not reliably take the page's in-app theme
         }
-        ShowPopupSurface(found);
+        ShowPopupSurface(owner, found);
     }
 
     /// <summary>
@@ -49,7 +72,7 @@ public sealed partial class MainPage
             control.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(
                 ThemeTokens.AppTheme, _backdropAllowed ? "AetherSurfaceMenuBrush" : "AetherSurfaceMenuFallbackBrush");
         }
-        ShowPopupSurface(presenter);
+        ShowPopupSurface(sender, presenter);
     }
 
     /// <summary>
@@ -59,16 +82,34 @@ public sealed partial class MainPage
     /// presenter's template root, never the presenter: setting the presenter's own visual's opacity takes the whole
     /// flyout out of WinUI's hit testing, so clicks fell through it to the page.
     /// </summary>
-    private void ShowPopupSurface(FrameworkElement? presenter)
+    private void ShowPopupSurface(object? owner, FrameworkElement? presenter)
     {
-        _pendingPopup = presenter;
         if (presenter is null)
         {
+            if (owner is not null && !ReferenceEquals(owner, _popupOwner))
+            {
+                return; // an older flyout finished closing after a replacement flyout already opened
+            }
+            Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnPopupRendering;
+            _popupOwner = null;
+            _pendingPopup = null;
             _popupSurface = null;
-            PostBackdropRegion();
+            HideSurface(BackdropSlot.Popup);
             return;
         }
-        ElementCompositionPreview.GetElementVisual(Fill(presenter)).Opacity = 0;
+
+        if (!ReferenceEquals(presenter, _popupSurface))
+        {
+            _popupSurface = null;
+            HideSurface(BackdropSlot.Popup);
+        }
+
+        _popupOwner = owner;
+        _pendingPopup = presenter;
+        if (TryGetFill(presenter, out UIElement? fill))
+        {
+            ElementCompositionPreview.GetElementVisual(fill!).Opacity = 0;
+        }
         _pendingPopupFrames = PopupSettleFrames;
         Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnPopupRendering;
         Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += OnPopupRendering;
@@ -85,20 +126,41 @@ public sealed partial class MainPage
         {
             return;
         }
+        if (!_pendingPopup.IsLoaded)
+        {
+            _popupOwner = null;
+            _pendingPopup = null;
+            _popupSurface = null;
+            HideSurface(BackdropSlot.Popup);
+            return;
+        }
         _popupSurface = _pendingPopup;
         _pendingPopup = null;
-        if (_fader is null)
+        if (TryGetFill(_popupSurface, out UIElement? fill))
         {
-            ElementCompositionPreview.GetElementVisual(Fill(_popupSurface)).Opacity = 1;
-        }
-        else
-        {
-            _fader.Reveal(Fill(_popupSurface), true);
+            if (_fader is null)
+            {
+                ElementCompositionPreview.GetElementVisual(fill!).Opacity = 1;
+            }
+            else
+            {
+                _fader.Reveal(fill!, true);
+            }
         }
         PostBackdropRegion();
     }
 
-    private static UIElement Fill(FrameworkElement presenter) => (UIElement)Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(presenter, 0);
+    private static bool TryGetFill(FrameworkElement presenter, out UIElement? fill)
+    {
+        if (Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(presenter) > 0
+            && Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(presenter, 0) is UIElement root)
+        {
+            fill = root;
+            return true;
+        }
+        fill = null;
+        return false;
+    }
 
     private static FrameworkElement? FindPresenter(DependencyObject? content)
     {
@@ -112,7 +174,7 @@ public sealed partial class MainPage
         return null;
     }
 
-    /// <summary>Blurs behind the clip chip and drawer, the open dialog card and the open flyout, like the transport card.</summary>
+    /// <summary>Blurs behind the clip chip/drawer, dialog card, flyout, toast, and skip-chapter prompt.</summary>
     private void PostSurfaceRegions()
     {
         if (!_backdropAllowed || !_isLoaded || !VideoSurface.IsLoaded)
@@ -120,14 +182,107 @@ public sealed partial class MainPage
             HideSurface(BackdropSlot.Clip);
             HideSurface(BackdropSlot.Card);
             HideSurface(BackdropSlot.Popup);
+            HideSurface(BackdropSlot.Toast);
+            HideSurface(BackdropSlot.SkipChapter);
             return;
         }
-        FrameworkElement? card = LanStreamOverlay is { Visibility: Visibility.Visible } ? LanStreamCard
-            : OpenUrlOverlay is { Visibility: Visibility.Visible } ? OpenUrlCard
+
+        PostClipRegion();
+
+        FrameworkElement? card = _lanShown && LanStreamOverlay is { Visibility: Visibility.Visible } ? LanStreamCard
+            : IsOpenUrlShown && OpenUrlOverlay is { Visibility: Visibility.Visible } ? OpenUrlCard
             : null;
-        PostSurfaceRegion(BackdropSlot.Clip, ClipDrawer is { Visibility: Visibility.Visible } clip ? clip.Surface : null);
         PostSurfaceRegion(BackdropSlot.Card, card);
         PostSurfaceRegion(BackdropSlot.Popup, _popupSurface);
+        PostSurfaceRegion(BackdropSlot.Toast, _toasts is { IsShown: true } && ToastLayer is { Visibility: Visibility.Visible } ? ToastCard?.Surface : null);
+        PostSurfaceRegion(BackdropSlot.SkipChapter, _skipChapterShown && SkipChapterLayer is { Visibility: Visibility.Visible } ? SkipChapterButton : null);
+    }
+
+    /// <summary>
+    /// Keeps <see cref="BackdropSlot.Clip"/> synced to both <see cref="ClipDrawer"/>'s visibility/bounds and chrome
+    /// visibility: its rectangle continues tracking layout changes during fade-out, but it never activates or fades
+    /// in while chrome is hidden.
+    /// </summary>
+    private void PostClipRegion()
+    {
+        int index = (int)BackdropSlot.Clip;
+        if (ClipLayer is not { Visibility: Visibility.Visible }
+            || ClipDrawer is not { Visibility: Visibility.Visible } clip
+            || clip.Surface is not { IsLoaded: true, ActualWidth: > 0, ActualHeight: > 0 } surface)
+        {
+            HideSurface(BackdropSlot.Clip);
+            return;
+        }
+        if (MeasureSurface(surface) is not { } region)
+        {
+            HideSurface(BackdropSlot.Clip);
+            return;
+        }
+        if (region != _postedSurfaceRegions[index])
+        {
+            _postedSurfaceRegions[index] = region;
+            VideoSurface.PostBackdrop(BackdropSlot.Clip, region);
+        }
+        if (_chromeShown && !_surfaceShown[index])
+        {
+            if (!_surfaceFadingOut[index])
+            {
+                VideoSurface.FadeBackdrop(BackdropSlot.Clip, false, 0);
+            }
+            _surfaceShown[index] = true;
+            _surfaceFadingOut[index] = false;
+            VideoSurface.SetBackdropActive(BackdropSlot.Clip, true);
+            VideoSurface.FadeBackdrop(BackdropSlot.Clip, true, _fader?.RevealDurationMilliseconds(true) ?? 0);
+        }
+    }
+
+    /// <summary>Fades the Clips chip/drawer blur in lockstep with <see cref="ApplyChrome"/>.</summary>
+    private void FadeClipBackdropForChrome(bool visible, double durationMilliseconds)
+    {
+        int index = (int)BackdropSlot.Clip;
+        if (!visible)
+        {
+            if (_surfaceShown[index])
+            {
+                if (durationMilliseconds <= 0)
+                {
+                    HideSurface(BackdropSlot.Clip);
+                }
+                else
+                {
+                    _surfaceShown[index] = false;
+                    _surfaceFadingOut[index] = true;
+                    VideoSurface.FadeBackdrop(BackdropSlot.Clip, false, durationMilliseconds);
+                }
+            }
+            return;
+        }
+
+        if (!_backdropAllowed || !_isLoaded || !VideoSurface.IsLoaded
+            || ClipLayer is not { Visibility: Visibility.Visible }
+            || ClipDrawer is not { Visibility: Visibility.Visible } clip
+            || clip.Surface is not { IsLoaded: true, ActualWidth: > 0, ActualHeight: > 0 } surface)
+        {
+            return;
+        }
+        if (MeasureSurface(surface) is not { } region)
+        {
+            HideSurface(BackdropSlot.Clip);
+            return;
+        }
+        if (region != _postedSurfaceRegions[index])
+        {
+            _postedSurfaceRegions[index] = region;
+            VideoSurface.PostBackdrop(BackdropSlot.Clip, region);
+        }
+        if (!_surfaceShown[index] && !_surfaceFadingOut[index])
+        {
+            VideoSurface.FadeBackdrop(BackdropSlot.Clip, false, 0);
+        }
+        _surfaceShown[index] = true;
+        _surfaceFadingOut[index] = false;
+        VideoSurface.SetBackdropActive(BackdropSlot.Clip, true);
+        VideoSurface.FadeBackdrop(BackdropSlot.Clip, true, durationMilliseconds);
     }
 
     private void PostSurfaceRegion(BackdropSlot slot, FrameworkElement? surface)
@@ -136,12 +291,16 @@ public sealed partial class MainPage
         bool visible = surface is { IsLoaded: true, ActualWidth: > 0, ActualHeight: > 0 };
         if (!visible || surface is null)
         {
-            HideSurface(slot);
+            if (!_surfaceFadingOut[index])
+            {
+                HideSurface(slot);
+            }
             return;
         }
         if (MeasureSurface(surface) is not { } region)
         {
-            return; // a popup that is closing is already out of the tree; the next layout pass tidies up
+            HideSurface(slot);
+            return;
         }
         if (region != _postedSurfaceRegions[index])
         {
@@ -151,20 +310,45 @@ public sealed partial class MainPage
         // After the post, so the first frame of a new blur is drawn at the new card, not where the last one was.
         if (!_surfaceShown[index])
         {
+            if (!_surfaceFadingOut[index])
+            {
+                VideoSurface.FadeBackdrop(slot, false, 0);
+            }
             _surfaceShown[index] = true;
+            _surfaceFadingOut[index] = false;
             VideoSurface.SetBackdropActive(slot, true);
             VideoSurface.FadeBackdrop(slot, true, _fader?.RevealDurationMilliseconds(true) ?? 0);
         }
     }
 
-    private void HideSurface(BackdropSlot slot)
+    /// <summary>Starts fading an active surface blur out alongside its exit animation.</summary>
+    private void FadeOutSurface(BackdropSlot slot, double durationMilliseconds)
     {
         int index = (int)slot;
         if (!_surfaceShown[index])
         {
             return;
         }
+        if (durationMilliseconds <= 0)
+        {
+            HideSurface(slot);
+            return;
+        }
         _surfaceShown[index] = false;
+        _surfaceFadingOut[index] = true;
+        VideoSurface.FadeBackdrop(slot, false, durationMilliseconds);
+    }
+
+    private void HideSurface(BackdropSlot slot)
+    {
+        int index = (int)slot;
+        if (!_surfaceShown[index] && !_surfaceFadingOut[index] && _postedSurfaceRegions[index] == default)
+        {
+            return;
+        }
+        _surfaceShown[index] = false;
+        _surfaceFadingOut[index] = false;
+        _postedSurfaceRegions[index] = default;
         VideoSurface.SetBackdropActive(slot, false);
         VideoSurface.FadeBackdrop(slot, false, 0);
     }
@@ -205,7 +389,7 @@ public sealed partial class MainPage
         }
         PostSidebarRegion();
         PostSideRegion();
-        if (!_chromeShown || Osd.Visibility != Visibility.Visible || !Osd.IsLoaded)
+        if (Osd.Visibility != Visibility.Visible || !Osd.IsLoaded)
         {
             return;
         }

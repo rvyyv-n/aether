@@ -147,13 +147,13 @@ public sealed partial class MainPage
     private void OnTracksFlyoutOpened(object? sender, object e)
     {
         HoldForMenu(true);
-        SetPopupSurface(_tracksPanel);
+        SetPopupSurface(TracksFlyout, _tracksPanel);
     }
 
     private void OnTracksFlyoutClosed(object? sender, object e)
     {
         HoldForMenu(false);
-        SetPopupSurface(null);
+        SetPopupSurface(TracksFlyout, null);
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
     }
 

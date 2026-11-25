@@ -129,6 +129,7 @@ public sealed partial class MainPage : Page
         VolumeFlyoutContent.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(OnVolumeFlyoutReleased), true);
         _chrome.SetHold(ChromeHolds.NotPlaying, true);
         AddHandler(KeyDownEvent, new KeyEventHandler(OnAnyKeyDown), handledEventsToo: true);
+        InitializeBackdrop();
         InitializeTransport();
         InitializeBar();
         InitializeRail();
@@ -427,6 +428,24 @@ public sealed partial class MainPage : Page
             _copiedTimer.IsRepeating = false;
             _copiedTimer.Tick += OnCopiedTimerTick;
             _toasts = new ToastService(EnsureToastLayer, _fader, DispatcherQueue, () => Focus(FocusState.Programmatic));
+            _toasts.VisibilityChanged += (visible, durationMs) =>
+            {
+                if (visible)
+                {
+                    PostBackdropRegion();
+                }
+                else
+                {
+                    FadeOutSurface(BackdropSlot.Toast, durationMs);
+                }
+            };
+            _toasts.Collapsed += () =>
+            {
+                if (_toasts?.IsShown != true)
+                {
+                    HideSurface(BackdropSlot.Toast);
+                }
+            };
             _thumbnails = new SeekThumbnailService(DispatcherQueue, OnThumbnailReady);
         }
         AppToasts.Requested += OnToastRequested;
@@ -448,6 +467,7 @@ public sealed partial class MainPage : Page
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _isLoaded = false;
+        CleanupBackdrop();
         _startupVersion++; // a startup still running disposes its engine when it returns
         _chromeTimer?.Stop();
         _volumeHoverTimer?.Stop();
@@ -1098,7 +1118,7 @@ public sealed partial class MainPage : Page
             VolumeSlider.Focus(FocusState.Keyboard);
         }
         _chrome.SetHold(ChromeHolds.Flyout, true);
-        SetPopupSurface(VolumeFlyoutContent);
+        SetPopupSurface(VolumeFlyout, VolumeFlyoutContent);
         ApplyChrome();
     }
 
@@ -1107,7 +1127,7 @@ public sealed partial class MainPage : Page
         _volumeHover.Closed();
         ArmVolumeHover();
         _chrome.SetHold(ChromeHolds.Flyout, false);
-        SetPopupSurface(null);
+        SetPopupSurface(VolumeFlyout, null);
         ApplyChrome();
         Focus(FocusState.Programmatic); // keep Space and the frame-step keys on the page
     }
@@ -1424,10 +1444,18 @@ public sealed partial class MainPage : Page
             if (_fader is null)
             {
                 OpenUrlOverlay.Visibility = Visibility.Collapsed;
+                HideSurface(BackdropSlot.Card);
             }
             else
             {
-                _fader.Exit(OpenUrlOverlay, null);
+                FadeOutSurface(BackdropSlot.Card, _fader.RevealDurationMilliseconds(false));
+                _fader.Exit(OpenUrlOverlay, null, () =>
+                {
+                    if (!_lanShown && !IsOpenUrlShown)
+                    {
+                        HideSurface(BackdropSlot.Card);
+                    }
+                });
                 _fader.Slide(OpenUrlCard, false, ChromeFader.FromBelow);
             }
         }
@@ -1995,6 +2023,7 @@ public sealed partial class MainPage : Page
                 _fader.Fade(ClipLayer, visible);
                 ClipLayer.IsHitTestVisible = visible;
             }
+            FadeClipBackdropForChrome(visible, _fader.DurationMilliseconds(visible));
         }
         SyncBar();
         SyncSubtitleLift();
@@ -2150,10 +2179,11 @@ public sealed partial class MainPage : Page
             PipChrome.Visibility = hasVideo && pip ? Visibility.Visible : Visibility.Collapsed;
         }
         // ADR-0013: no blur in picture in picture; there is no card to blur behind.
-        VideoSurface.SetBackdropActive(BackdropSlot.Bar, hasVideo && !pip);
-        VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, hasVideo && !pip);
-        VideoSurface.SetBackdropActive(BackdropSlot.SidePanel, hasVideo && !pip);
-        _backdropAllowed = hasVideo && !pip;
+        bool backdropAllowed = hasVideo && !pip;
+        VideoSurface.SetBackdropActive(BackdropSlot.Bar, backdropAllowed);
+        VideoSurface.SetBackdropActive(BackdropSlot.Sidebar, backdropAllowed && Rail.Visibility == Visibility.Visible);
+        VideoSurface.SetBackdropActive(BackdropSlot.SidePanel, backdropAllowed && _visibleSidePanel != SidePanel.None);
+        _backdropAllowed = backdropAllowed;
         PostBackdropRegion();
         TitleBar.Visibility = fullScreen ? Visibility.Collapsed : Visibility.Visible;
         PlaceRail();
