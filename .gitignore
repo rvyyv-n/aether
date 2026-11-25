@@ -31,9 +31,8 @@ TestResults/
 # Local tooling
 CLAUDE.md
 GEMINI.md
-AGENTS.md
-docs/AGENTS.md
 aether-spec.md
+.agents/
 .claude/
 .gemini/
 .vs/

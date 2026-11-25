@@ -3,6 +3,7 @@
   "iconPath": "docs/assets/aether-icon-light.png",
   "scripts": [
     {
+      "id": "worktree-setup",
       "name": "Worktree Setup",
       "command": "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force 'src\\Aether.App\\Native\\x64' | Out-Null; if (Test-Path 'D:\\Code\\Repos\\aether\\src\\Aether.App\\Native\\x64') { Copy-Item 'D:\\Code\\Repos\\aether\\src\\Aether.App\\Native\\x64\\*.dll' 'src\\Aether.App\\Native\\x64\\' -ErrorAction SilentlyContinue }; dotnet restore AetherPlayer.sln\"",
       "icon": "configure",
@@ -10,20 +11,33 @@
       "async": false
     },
     {
+      "id": "run-player",
       "name": "Run Player",
       "command": "powershell -File .\\run.ps1",
       "icon": "play",
+      "runOnWorktreeCreate": false,
       "stopOnSettle": true
     },
     {
+      "id": "build",
       "name": "Build",
       "command": "dotnet build AetherPlayer.sln -p:Platform=x64 -warnaserror",
-      "icon": "build"
+      "icon": "build",
+      "runOnWorktreeCreate": false
     },
     {
+      "id": "test",
       "name": "Test",
-      "command": "dotnet test AetherPlayer.sln",
-      "icon": "test"
+      "command": "dotnet test AetherPlayer.sln --filter \"Category!=UI\"",
+      "icon": "test",
+      "runOnWorktreeCreate": false
+    },
+    {
+      "id": "ui-tests",
+      "name": "UI Tests",
+      "command": "powershell -File .\\tools\\run-ui-tests.ps1",
+      "icon": "test",
+      "runOnWorktreeCreate": false
     }
   ]
 }
