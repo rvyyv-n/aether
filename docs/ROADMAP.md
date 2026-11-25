@@ -446,6 +446,18 @@ One-shot target for Opus: Automated integration test harness verifying the unpac
 
 ---
 
+### Pass 20: Windows Media Integration & .NET 10 Unification
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 20.1 | Global Windows SMTC (System Media Transport Controls): Wire `SystemMediaTransportControls` via `ISystemMediaTransportControlsInterop` for the unpackaged window so media keys (Play/Pause, Next, Previous, Stop) work when Aether is unfocused, and publish live title, source, playback state, and timeline position to Windows 11 Quick Settings and lock-screen Now Playing. | M | Open |
+| 20.2 | Unify target frameworks on `.NET 10`: Upgrade `Directory.Build.props`, `Aether.Core.Interop`, `Aether.Core.Playback`, and `Aether.Server.LanHost` from `net9.0` to `net10.0` so the entire solution targets a single SDK and TFM, and update CI workflows and docs (`docs/AGENTS.md`, `README.md`) to match. | S | Open |
+| 20.3 | Tests & AOT verification for Pass 20: Unit tests for SMTC metadata, timeline, and transport-button state mapping, plus a full Release Native AOT build and test pass on the unified `net10.0` solution. | S | Open |
+
+**Pass 20 means:** Background media-key control and native Windows 11 Now Playing integration, backed by a single unified `.NET 10` codebase.
+
+---
+
 ### Parked
 
 - **Vulkan swap chain interop (`VK_KHR_win32_surface`):** Experimental alternative to Direct3D 11 for cross-platform research.
