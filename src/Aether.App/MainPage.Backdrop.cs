@@ -63,14 +63,25 @@ public sealed partial class MainPage
     /// </summary>
     private void SetMenuSurface(object? sender, bool open)
     {
-        FrameworkElement? presenter = open && sender is Microsoft.UI.Xaml.Controls.MenuFlyout { Items.Count: > 0 } menu
-            ? FindPresenter(menu.Items[0])
-            : null;
+        FrameworkElement? presenter = null;
+        if (open && sender is Microsoft.UI.Xaml.Controls.MenuFlyout menu)
+        {
+            foreach (Microsoft.UI.Xaml.Controls.MenuFlyoutItemBase item in menu.Items)
+            {
+                if (FindPresenter(item) is { } found)
+                {
+                    presenter = found;
+                    break;
+                }
+            }
+        }
         if (presenter is Microsoft.UI.Xaml.Controls.Control control)
         {
             control.RequestedTheme = ThemeTokens.AppTheme;
             control.Background = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(
                 ThemeTokens.AppTheme, _backdropAllowed ? "AetherSurfaceMenuBrush" : "AetherSurfaceMenuFallbackBrush");
+            control.BorderBrush = ThemeTokens.Get<Microsoft.UI.Xaml.Media.Brush>(
+                ThemeTokens.AppTheme, "AetherStrokeMenuBrush");
         }
         ShowPopupSurface(sender, presenter);
     }
@@ -223,7 +234,7 @@ public sealed partial class MainPage
             _postedSurfaceRegions[index] = region;
             VideoSurface.PostBackdrop(BackdropSlot.Clip, region);
         }
-        if (_chromeShown && !_surfaceShown[index])
+        if (_clipLayerShown && !_surfaceShown[index])
         {
             if (!_surfaceFadingOut[index])
             {

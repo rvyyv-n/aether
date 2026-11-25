@@ -72,7 +72,8 @@ public sealed partial class MainPage
         _railTimer.IsRepeating = false;
         _railTimer.Tick += OnRailTimerTick;
         // A held button is a drag of some kind (seek bar, selection, window): the rail must not open under it.
-        AddHandler(PointerPressedEvent, new PointerEventHandler((_, _) => SetPointerHeld(true)), handledEventsToo: true);
+        // Presses starting on the chevron handle or inside the open rail are explicit rail interactions, not drags.
+        AddHandler(PointerPressedEvent, new PointerEventHandler(OnPageRailPointerPressed), handledEventsToo: true);
         AddHandler(PointerReleasedEvent, new PointerEventHandler((_, _) => SetPointerHeld(false)), handledEventsToo: true);
         AddHandler(PointerCaptureLostEvent, new PointerEventHandler((_, _) => SetPointerHeld(false)), handledEventsToo: true);
 
@@ -114,6 +115,27 @@ public sealed partial class MainPage
         {
             item.CornerRadius = itemRadius;
         }
+    }
+
+    private void OnPageRailPointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (e.OriginalSource is DependencyObject source && (IsDescendantOf(source, RailHandle) || IsDescendantOf(source, Rail)))
+        {
+            return;
+        }
+        SetPointerHeld(true);
+    }
+
+    private static bool IsDescendantOf(DependencyObject? node, DependencyObject ancestor)
+    {
+        for (DependencyObject? current = node; current is not null; current = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(current))
+        {
+            if (ReferenceEquals(current, ancestor))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void SetPointerHeld(bool held)
@@ -173,6 +195,9 @@ public sealed partial class MainPage
 
     private void OnRailHandleClick(object sender, RoutedEventArgs e)
     {
+        _pointerHeld = false;
+        NotifyActivity();
+        _rail.SetDragging(_dragging || (ClipDrawer?.IsDraggingOut == true));
         if (RailHandle.FocusState == FocusState.Keyboard)
         {
             _rail.SetPinned(true);

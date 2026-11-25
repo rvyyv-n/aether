@@ -266,4 +266,31 @@ public class DesignTokensTests
         Assert.Contains("AetherDisplayFont", Setter("FontFamily"));
         Assert.Equal("SemiBold", Setter("FontWeight"));
     }
+
+    [Fact]
+    public void PlayButton_IsBorderless_AndMenusMatchBarGlassSurface()
+    {
+        var doc = LoadDesignTokens();
+        var playStyle = doc.Descendants(XamlNamespace + "Style")
+            .Single(e => (string?)e.Attribute(XNamespace + "Key") == "AetherPlayButtonStyle");
+        string? PlaySetter(string property) => playStyle.Elements(XamlNamespace + "Setter")
+            .Single(e => (string?)e.Attribute("Property") == property).Attribute("Value")?.Value;
+
+        Assert.Equal("0", PlaySetter("BorderThickness"));
+        Assert.Equal("Transparent", PlaySetter("BorderBrush"));
+
+        foreach (var dict in ThemeDictionaries(doc))
+        {
+            string? BrushColor(string key) => dict.Elements(XamlNamespace + "SolidColorBrush")
+                .Single(e => (string?)e.Attribute(XNamespace + "Key") == key).Attribute("Color")?.Value;
+
+            Assert.Equal(BrushColor("AetherSurfaceBarBrush"), BrushColor("AetherSurfaceMenuBrush"));
+            Assert.Equal(BrushColor("AetherStrokeBarBrush"), BrushColor("AetherStrokeMenuBrush"));
+        }
+
+        var clipDrawer = XDocument.Load(RepoPath.Get("src", "Aether.App", "Controls", "ClipDrawer.xaml"));
+        var showAll = clipDrawer.Descendants(XamlNamespace + "Button")
+            .Single(e => (string?)e.Attribute(XNamespace + "Name") == "ShowAllButton");
+        Assert.NotEqual("{StaticResource AetherIconButtonStyle}", (string?)showAll.Attribute("Style"));
+    }
 }

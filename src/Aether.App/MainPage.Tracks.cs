@@ -132,6 +132,7 @@ public sealed partial class MainPage
         ApplyTracks(snapshot);
         // The window less 8 either side (9.5), and the 1 px stroke the presenter adds.
         panel.MaxPanelHeight = Math.Max(0, XamlRoot.Size.Height - (double)Application.Current.Resources["AetherSizeMenuMaxHeightInset"] - 2);
+        ClipDrawer?.Close();
         TracksFlyout.ShowAt(Osd, new FlyoutShowOptions { Placement = FlyoutPlacementMode.Top, ShowMode = FlyoutShowMode.Standard });
     }
 

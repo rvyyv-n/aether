@@ -74,6 +74,8 @@ public class LookModeTests
 
         Assert.All(ThemeModes.OledBrushOverrides.Keys, key => Assert.Contains(key, darkBrushKeys));
         Assert.Equal(0xFF000000u, ThemeModes.OledBrushOverrides["AetherSurfaceLayerBrush"]);
+        Assert.Equal(ThemeModes.OledBrushOverrides["AetherSurfaceBarBrush"], ThemeModes.OledBrushOverrides["AetherSurfaceMenuBrush"]);
+        Assert.Equal(ThemeModes.OledBrushOverrides["AetherStrokeBarBrush"], ThemeModes.OledBrushOverrides["AetherStrokeMenuBrush"]);
     }
 
     [Fact]

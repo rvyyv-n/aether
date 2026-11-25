@@ -17,9 +17,11 @@ namespace Aether_App.Settings;
 public sealed partial class SettingsRow : ContentControl
 {
     /// <summary>Below this row width a control wider than <see cref="NarrowControlShare"/> of the row wraps under the text.</summary>
-    private const double NarrowWidth = 460;
+    private const double NarrowWidth = 520;
 
     private const double NarrowControlShare = 0.4;
+    private const double MinimumWrapControlWidth = 160;
+    private const double MinimumTextSpace = 200;
 
     public static readonly DependencyProperty GlyphProperty = DependencyProperty.Register(
         nameof(Glyph), typeof(string), typeof(SettingsRow), new PropertyMetadata(null, OnPartChanged));
@@ -83,14 +85,24 @@ public sealed partial class SettingsRow : ContentControl
     protected override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
+        if (_controlArea is not null)
+        {
+            _controlArea.SizeChanged -= OnControlAreaSizeChanged;
+        }
         _icon = GetTemplateChild("Icon") as FrameworkElement;
         _description = GetTemplateChild("DescriptionText") as FrameworkElement;
         _note = GetTemplateChild("NotePresenter") as FrameworkElement;
         _state = GetTemplateChild("StateTextBlock") as FrameworkElement;
         _controlArea = GetTemplateChild("ControlArea") as FrameworkElement;
+        if (_controlArea is not null)
+        {
+            _controlArea.SizeChanged += OnControlAreaSizeChanged;
+        }
         UpdateParts();
         UpdateLayoutState(ActualWidth);
     }
+
+    private void OnControlAreaSizeChanged(object sender, SizeChangedEventArgs e) => UpdateLayoutState(ActualWidth);
 
     private static void OnPartChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) => ((SettingsRow)d).UpdateParts();
 
@@ -118,7 +130,10 @@ public sealed partial class SettingsRow : ContentControl
     {
         // Zero before the first layout pass; stay wide rather than flashing narrow.
         double control = _controlArea?.DesiredSize.Width ?? 0;
-        bool narrow = width > 0 && width < NarrowWidth && control > width * NarrowControlShare;
+        bool narrow = width > 0
+            && control > 0
+            && ((width < NarrowWidth && control > width * NarrowControlShare)
+                || (control > MinimumWrapControlWidth && width - control < MinimumTextSpace));
         VisualStateManager.GoToState(this, narrow ? "Narrow" : "Wide", false);
     }
 }

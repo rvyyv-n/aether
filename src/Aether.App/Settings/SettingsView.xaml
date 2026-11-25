@@ -13,11 +13,11 @@
             <Setter Property="Height" Value="{StaticResource AetherSizeNavItem}" />
             <Setter Property="MinHeight" Value="{StaticResource AetherSizeNavItem}" />
             <Setter Property="Margin" Value="0,0,0,2" />
-            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Padding" Value="14,0,12,0" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="UseSystemFocusVisuals" Value="True" />
             <!-- The row's fills and the focus ring both follow this radius; a Grid root let a square fill show in the corner. -->
-            <Setter Property="CornerRadius" Value="{StaticResource AetherControlCornerRadius}" />
+            <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
@@ -44,26 +44,41 @@
                                     <VisualState x:Name="Selected">
                                         <VisualState.Setters>
                                             <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisRestBrush}" />
+                                            <Setter Target="ActiveIndicator.Opacity" Value="1" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="PointerOverSelected">
                                         <VisualState.Setters>
                                             <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisHoverBrush}" />
+                                            <Setter Target="ActiveIndicator.Opacity" Value="1" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="PressedSelected">
                                         <VisualState.Setters>
                                             <Setter Target="Root.Background" Value="{ThemeResource AetherFillEmphasisPressedBrush}" />
+                                            <Setter Target="ActiveIndicator.Opacity" Value="1" />
                                         </VisualState.Setters>
                                     </VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
-                            <ContentPresenter
-                                Padding="{TemplateBinding Padding}"
-                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                VerticalContentAlignment="Center"
-                                Content="{TemplateBinding Content}"
-                                ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            <Grid>
+                                <Border
+                                    x:Name="ActiveIndicator"
+                                    Width="3"
+                                    Height="16"
+                                    Margin="2,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                    CornerRadius="1.5"
+                                    Opacity="0" />
+                                <ContentPresenter
+                                    Padding="{TemplateBinding Padding}"
+                                    HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalContentAlignment="Center"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            </Grid>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -102,8 +117,8 @@
                         <Setter Target="SectionPicker.Visibility" Value="Collapsed" />
                         <Setter Target="NavColumn.Width" Value="{StaticResource AetherSizeSettingsNav}" />
                         <Setter Target="ContentPane.BorderThickness" Value="1,1,0,0" />
-                        <Setter Target="ContentPane.CornerRadius" Value="8,0,0,0" />
-                        <Setter Target="ContentPanel.Padding" Value="32,24,32,32" />
+                        <Setter Target="ContentPane.CornerRadius" Value="10,0,0,0" />
+                        <Setter Target="ContentPanel.Padding" Value="36,28,36,36" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -121,7 +136,7 @@
             x:Name="SectionList"
             Grid.RowSpan="2"
             HorizontalAlignment="Stretch"
-            Padding="8,8,8,8"
+            Padding="10,12,10,12"
             IsItemClickEnabled="False"
             ItemContainerStyle="{StaticResource SectionItemStyle}"
             ItemTemplate="{StaticResource SectionTemplate}"
@@ -147,22 +162,31 @@
             BorderThickness="0,1,0,0">
             <ScrollViewer
                 x:Name="ContentScroller"
+                HorizontalContentAlignment="Stretch"
                 HorizontalScrollBarVisibility="Disabled"
                 HorizontalScrollMode="Disabled"
                 VerticalScrollBarVisibility="Auto">
-                <!--  Capped at 860 px and centred on wide windows while filling smaller panes edge to edge.  -->
-                <StackPanel
-                    x:Name="ContentPanel"
-                    MaxWidth="{StaticResource AetherSizeSettingsContentMax}"
-                    HorizontalAlignment="Stretch"
-                    Padding="16,16,16,16"
-                    Spacing="16">
-                    <TextBlock
-                        x:Name="PageTitle"
-                        AutomationProperties.HeadingLevel="Level1"
-                        Style="{StaticResource AetherSubtitleTextStyle}" />
-                    <Frame x:Name="ContentFrame" IsNavigationStackEnabled="False" />
-                </StackPanel>
+                <!--
+                    Full-width host tracks the viewport width explicitly so ScrollViewer never caches a stale centered
+                    offset on resize; ContentColumn handles responsive 960 px centering separately from ContentPanel's slide.
+                -->
+                <Grid x:Name="ContentHost" HorizontalAlignment="Stretch">
+                    <Border
+                        x:Name="ContentColumn"
+                        MaxWidth="{StaticResource AetherSizeSettingsContentMax}"
+                        HorizontalAlignment="Stretch">
+                        <StackPanel
+                            x:Name="ContentPanel"
+                            Padding="16,16,16,24"
+                            Spacing="20">
+                            <TextBlock
+                                x:Name="PageTitle"
+                                AutomationProperties.HeadingLevel="Level1"
+                                Style="{StaticResource AetherSettingsTitleTextStyle}" />
+                            <Frame x:Name="ContentFrame" IsNavigationStackEnabled="False" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </ScrollViewer>
         </Grid>
     </Grid>

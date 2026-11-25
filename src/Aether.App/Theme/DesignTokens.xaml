@@ -67,9 +67,9 @@
             <Color x:Key="AetherSurfaceScrimColor">#4D000000</Color>  <!-- [screen 2] Behind dialogs. = Fluent SmokeFillDefault -->
             <Color x:Key="AetherSurfaceDialogColor">#D914171D</Color>  <!-- [decided] Deep matte charcoal dialog over blur/scrim -->
             <Color x:Key="AetherSurfaceDialogFallbackColor">#F514171D</Color>  <!-- [decided] Solid fallback for surface.dialog -->
-            <Color x:Key="AetherSurfaceMenuColor">#E3202226</Color>  <!-- Player menus over a blurring video: lifted charcoal at 89%, dense enough that the bar and its timecode never read through, with the blur showing only faintly at the edges -->
-            <Color x:Key="AetherSurfaceMenuFallbackColor">#FF202226</Color>  <!-- Player menus with no blur behind them (no video, picture in picture) -->
-            <Color x:Key="AetherStrokeMenuColor">#33000000</Color>  <!-- Edge of a player menu: dark, so it crisps the card on bright video without the pale ring a white edge drew -->
+            <Color x:Key="AetherSurfaceMenuColor">#9E0E1014</Color>  <!-- Player menus over a blurring video: matches SurfaceBar (62% ink) so every popup shares one consistent frosted glass blur -->
+            <Color x:Key="AetherSurfaceMenuFallbackColor">#FF14171D</Color>  <!-- Player menus with no blur behind them (no video, picture in picture) -->
+            <Color x:Key="AetherStrokeMenuColor">#17FFFFFF</Color>  <!-- Edge of a player menu: matches StrokeBar so popups and panels share one crisp frosted rim -->
             <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>  <!-- [screen 3] Over video only: black 50% under the 32 px title bar, linear fade to 0 by 72 px. Keeps 'Aether' and -->
             <Color x:Key="AetherSurfaceOverlayStrongColor">#F514171D</Color>  <!-- [screens 6-10] Same value as surface.dialogFallback. Diagnostics overlay: solid enough that TextSecondary hold -->
             <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>  <!-- [11.3] Behind the phone pairing QR code: white in every theme, the background phone cameras read best -->
@@ -114,9 +114,9 @@
             <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="#4D000000" />
             <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="#D914171D" />
             <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="#F514171D" />
-            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="#E3202226" />
-            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="#FF202226" />
-            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="#33000000" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="#FF14171D" />
+            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="#17FFFFFF" />
             <!--  Player bar, sidebar and the volume, Now Playing and Video pop-ups: the 62% ink glass in dark; light takes the menus' frosted card and faint edge, so they and the menus read as one family  -->
             <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="#9E0E1014" />
             <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="#17FFFFFF" />
@@ -250,9 +250,9 @@
             <Color x:Key="AetherSurfaceScrimColor">#4D000000</Color>  <!-- [screen 2] Behind dialogs. = Fluent SmokeFillDefault -->
             <Color x:Key="AetherSurfaceDialogColor">#D914171D</Color>  <!-- [decided] Deep matte charcoal dialog over blur/scrim -->
             <Color x:Key="AetherSurfaceDialogFallbackColor">#F514171D</Color>  <!-- [decided] Solid fallback for surface.dialog -->
-            <Color x:Key="AetherSurfaceMenuColor">#E3202226</Color>  <!-- Player menus over a blurring video: lifted charcoal at 89%, dense enough that the bar and its timecode never read through, with the blur showing only faintly at the edges -->
-            <Color x:Key="AetherSurfaceMenuFallbackColor">#FF202226</Color>  <!-- Player menus with no blur behind them (no video, picture in picture) -->
-            <Color x:Key="AetherStrokeMenuColor">#33000000</Color>  <!-- Edge of a player menu: dark, so it crisps the card on bright video without the pale ring a white edge drew -->
+            <Color x:Key="AetherSurfaceMenuColor">#9E0E1014</Color>  <!-- Player menus over a blurring video: matches SurfaceBar (62% ink) so every popup shares one consistent frosted glass blur -->
+            <Color x:Key="AetherSurfaceMenuFallbackColor">#FF14171D</Color>  <!-- Player menus with no blur behind them (no video, picture in picture) -->
+            <Color x:Key="AetherStrokeMenuColor">#17FFFFFF</Color>  <!-- Edge of a player menu: matches StrokeBar so popups and panels share one crisp frosted rim -->
             <Color x:Key="AetherSurfaceTopScrimColor">#80000000</Color>  <!-- [screen 3] Over video only: black 50% under the 32 px title bar, linear fade to 0 by 72 px. Keeps 'Aether' and -->
             <Color x:Key="AetherSurfaceOverlayStrongColor">#F514171D</Color>  <!-- [screens 6-10] Same value as surface.dialogFallback. Diagnostics overlay: solid enough that TextSecondary hold -->
             <Color x:Key="AetherSurfaceCodeColor">#FFFFFFFF</Color>  <!-- [11.3] Behind the phone pairing QR code: white in every theme, the background phone cameras read best -->
@@ -297,9 +297,9 @@
             <SolidColorBrush x:Key="AetherSurfaceScrimBrush" Color="#4D000000" />
             <SolidColorBrush x:Key="AetherSurfaceDialogBrush" Color="#D914171D" />
             <SolidColorBrush x:Key="AetherSurfaceDialogFallbackBrush" Color="#F514171D" />
-            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="#E3202226" />
-            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="#FF202226" />
-            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="#33000000" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuBrush" Color="#9E0E1014" />
+            <SolidColorBrush x:Key="AetherSurfaceMenuFallbackBrush" Color="#FF14171D" />
+            <SolidColorBrush x:Key="AetherStrokeMenuBrush" Color="#17FFFFFF" />
             <SolidColorBrush x:Key="AetherSurfaceBarBrush" Color="#9E0E1014" />
             <SolidColorBrush x:Key="AetherStrokeBarBrush" Color="#17FFFFFF" />
             <SolidColorBrush x:Key="AetherSurfaceTopScrimBrush" Color="#80000000" />
@@ -569,6 +569,8 @@
     <x:Double x:Key="AetherBodyLineHeight">20</x:Double>
     <x:Double x:Key="AetherSubtitleFontSize">20</x:Double>
     <x:Double x:Key="AetherSubtitleLineHeight">28</x:Double>
+    <x:Double x:Key="AetherSettingsTitleFontSize">26</x:Double>
+    <x:Double x:Key="AetherSettingsTitleLineHeight">34</x:Double>
     <x:Double x:Key="AetherTimecodeFontSize">14</x:Double>
     <x:Double x:Key="AetherTimecodeLineHeight">20</x:Double>
     <x:Double x:Key="AetherCodeFontSize">13</x:Double>
@@ -647,7 +649,7 @@
     <x:Double x:Key="AetherSizeNavItem">36</x:Double>  <!-- Settings section list item height -->
     <x:Double x:Key="AetherSizeSettingsRow">60</x:Double>  <!-- Settings row card min height: padding 12,16, 20 px icon, title Body + description Caption TextSecond -->
     <x:Double x:Key="AetherSizeSettingsSubRow">48</x:Double>  <!-- Expander sub-rows, indented 52 to the title, StrokeDivider between -->
-    <x:Double x:Key="AetherSizeSettingsContentMax">860</x:Double>  <!-- Max width of the settings content column -->
+    <x:Double x:Key="AetherSizeSettingsContentMax">960</x:Double>  <!-- Max width of the settings content column -->
     <x:Double x:Key="AetherSizeSettingsCompactBreakpoint">640</x:Double>  <!-- Below this window width the section list becomes a picker (combo) above the content -->
     <x:Double x:Key="AetherSizeToggleWidth">40</x:Double>  <!-- Toggle 40×20, knob 12. On: white track, ink knob. Off: 1 px TextSecondary ring, TextSecondary knob.  -->
     <x:Double x:Key="AetherSizeSegmentedItem">28</x:Double>  <!-- Segmented: 32 container (FillInput, StrokeControl, radius 4, padding 2), 28 items, selected FillEmph -->
@@ -729,6 +731,10 @@
         <Setter Property="FontSize" Value="{StaticResource AetherSubtitleFontSize}" />
         <Setter Property="LineHeight" Value="{StaticResource AetherSubtitleLineHeight}" />
         <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="AetherSettingsTitleTextStyle" BasedOn="{StaticResource AetherSubtitleTextStyle}" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource AetherSettingsTitleFontSize}" />
+        <Setter Property="LineHeight" Value="{StaticResource AetherSettingsTitleLineHeight}" />
     </Style>
     <!--  Timecodes (7.12): the UI font with tabular figures, so digits keep their width without a monospace face  -->
     <Style x:Key="AetherTimecodeTextStyle" BasedOn="{StaticResource AetherBodyTextStyle}" TargetType="TextBlock">
@@ -883,7 +889,6 @@
     </Style>
     <Style x:Key="AetherSidebarItemActiveStyle" BasedOn="{StaticResource AetherSidebarItemStyle}" TargetType="Button">
         <Setter Property="Background" Value="{ThemeResource AetherFillEmphasisRestBrush}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource AetherStrokeControlBrush}" />
     </Style>
     <!--  Proximity-revealed left-edge chevron tab: frosted pull-tab that opens the floating sidebar immediately on click  -->
     <Style x:Key="AetherRailHandleStyle" TargetType="Button">
@@ -948,12 +953,14 @@
         <Setter Property="TextLineBounds" Value="Tight" />
         <Setter Property="IsTextScaleFactorEnabled" Value="False" />
     </Style>
-    <!--  Play/pause: 36 round translucent circle with a hairline, the same emphasis as the Open file pill  -->
+    <!--  Play/pause: 36 round translucent circle, borderless so circular edges stay clean and crisp over video  -->
     <Style x:Key="AetherPlayButtonStyle" BasedOn="{StaticResource AetherOutlinePillButtonStyle}" TargetType="Button">
         <Setter Property="Width" Value="{StaticResource AetherSizeTransportButton}" />
         <Setter Property="Height" Value="{StaticResource AetherSizeTransportButton}" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="{ThemeResource AetherFillEmphasisRestBrush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="CornerRadius" Value="18" />
         <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
         <Setter Property="FontSize" Value="{StaticResource AetherSizeTransportIcon}" />
@@ -979,7 +986,6 @@
                                 <VisualState x:Name="Disabled">
                                     <VisualState.Setters>
                                         <Setter Target="Root.Background" Value="{ThemeResource AetherFillDisabledBrush}" />
-                                        <Setter Target="Root.BorderBrush" Value="{ThemeResource AetherStrokeSurfaceBrush}" />
                                         <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource AetherTextDisabledBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>

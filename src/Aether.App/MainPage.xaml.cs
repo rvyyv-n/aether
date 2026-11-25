@@ -1127,11 +1127,12 @@ public sealed partial class MainPage : Page
     {
         _volumeOpeningPinned = pinned;
         // Transient: a hover-opened flyout must not take focus from the page's playback keys.
-        VolumeFlyout.ShowAt(VolumeButton, new FlyoutShowOptions
-        {
-            Placement = FlyoutPlacementMode.Top,
-            ShowMode = pinned ? FlyoutShowMode.Standard : FlyoutShowMode.Transient,
-        });
+        ShowBarFlyout(
+            VolumeFlyout,
+            VolumeButton,
+            FlyoutPlacementMode.Top,
+            pinned ? FlyoutShowMode.Standard : FlyoutShowMode.Transient,
+            closeClipDrawer: false);
     }
 
     private void OnVolumeFlyoutOpened(object? sender, object e)
@@ -2033,6 +2034,30 @@ public sealed partial class MainPage : Page
     }
 
     private bool _chromeShown = true;
+    private bool _clipLayerShown = true;
+
+    private bool IsClipLayerVisible() =>
+        _chrome.IsVisible && ((_chrome.Holds & ChromeHolds.Flyout) == 0 || ClipDrawer?.IsOpen == true);
+
+    private void SyncClipLayerVisibility()
+    {
+        bool visible = IsClipLayerVisible();
+        if (visible == _clipLayerShown)
+        {
+            return;
+        }
+        _clipLayerShown = visible;
+        if (_fader is null)
+        {
+            return;
+        }
+        if (ClipLayer is not null)
+        {
+            _fader.Fade(ClipLayer, visible);
+            ClipLayer.IsHitTestVisible = visible;
+        }
+        FadeClipBackdropForChrome(visible, _fader.DurationMilliseconds(visible));
+    }
 
     /// <summary>Fades the chrome to match <see cref="ChromeVisibility.IsVisible"/> and re-arms the idle timer.</summary>
     private void ApplyChrome()
@@ -2057,13 +2082,8 @@ public sealed partial class MainPage : Page
             _fader.Fade(Osd, visible);
             VideoSurface.FadeBackdrop(BackdropSlot.Bar, visible, _fader.DurationMilliseconds(visible));
             Osd.IsHitTestVisible = visible;
-            if (ClipLayer is not null)
-            {
-                _fader.Fade(ClipLayer, visible);
-                ClipLayer.IsHitTestVisible = visible;
-            }
-            FadeClipBackdropForChrome(visible, _fader.DurationMilliseconds(visible));
         }
+        SyncClipLayerVisibility();
         SyncBar();
         SyncSubtitleLift();
         SyncRail(applyChrome: false);

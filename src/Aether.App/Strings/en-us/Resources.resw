@@ -2045,7 +2045,16 @@
     <value>Appearance style</value>
   </data>
   <data name="Settings_LookMode_Description" xml:space="preserve">
-    <value>Aether glass uses custom frosted cards and Mica Alt; Native uses Windows Acrylic, your system accent colour when Accent is None, and standard 8 px corners.</value>
+    <value>Aether glass uses custom frosted cards and Mica Alt; Native uses Windows Acrylic and standard 8 px corners.</value>
+  </data>
+  <data name="Settings_General_Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings_General_Behaviour" xml:space="preserve">
+    <value>Window &amp; behaviour</value>
+  </data>
+  <data name="Settings_General_History" xml:space="preserve">
+    <value>History &amp; data</value>
   </data>
   <data name="Settings_LookMode_Aether" xml:space="preserve">
     <value>Aether glass</value>

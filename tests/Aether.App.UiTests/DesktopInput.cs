@@ -26,6 +26,9 @@ internal static class DesktopInput
     private const uint WmLButtonDown = 0x0201;
     private const uint WmLButtonUp = 0x0202;
     private const nint MkLButton = 0x0001;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
 
     private static readonly Lazy<bool> s_hardwareInputAvailable = new(ProbeHardwareInput);
 
@@ -109,6 +112,49 @@ internal static class DesktopInput
 
         // On non-active desktops where Windows blocks SendInput, VK_APPS triggers the same XAML ContextRequested path.
         PressKey(window, VirtualKeyShort.APPS);
+    }
+
+    public static void MoveTo(Window window, Point screenPoint)
+    {
+        if (IsHardwareInputAvailable)
+        {
+            Mouse.MoveTo(screenPoint);
+            return;
+        }
+
+        nint target = FindInputTarget(window);
+        Point client = ToClient(target, screenPoint);
+        PostMessage(target, WmMouseMove, 0, MakeLParam(client.X, client.Y));
+        Thread.Sleep(50);
+    }
+
+    public static void Click(Window window, Point screenPoint)
+    {
+        if (IsHardwareInputAvailable)
+        {
+            Mouse.Click(screenPoint);
+            return;
+        }
+
+        nint target = FindInputTarget(window);
+        Point client = ToClient(target, screenPoint);
+        nint lParam = MakeLParam(client.X, client.Y);
+        PostMessage(target, WmMouseMove, 0, lParam);
+        Thread.Sleep(40);
+        PostMessage(target, WmLButtonDown, MkLButton, lParam);
+        Thread.Sleep(50);
+        PostMessage(target, WmLButtonUp, 0, lParam);
+        Thread.Sleep(80);
+    }
+
+    public static void ResizeWindow(Window window, int width, int height)
+    {
+        nint hwnd = window.Properties.NativeWindowHandle.ValueOrDefault;
+        if (hwnd != 0)
+        {
+            SetWindowPos(hwnd, 0, 0, 0, width, height, SwpNoMove | SwpNoZOrder | SwpNoActivate);
+            Thread.Sleep(200);
+        }
     }
 
     public static void Drag(Window window, Point screenStart, Point screenEnd)
@@ -246,6 +292,9 @@ internal static class DesktopInput
 
     [DllImport("user32.dll")]
     private static extern bool SetKeyboardState(byte[] lpKeyState);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct NativePoint

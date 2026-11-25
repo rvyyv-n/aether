@@ -12,7 +12,12 @@
             <Setter Property="StrokeThickness" Value="1" />
         </Style>
     </Page.Resources>
-    <StackPanel Spacing="16">
+    <StackPanel Spacing="8">
+        <TextBlock
+            x:Name="AppearanceHeading"
+            Margin="2,0,0,0"
+            AutomationProperties.HeadingLevel="Level2"
+            Style="{StaticResource AetherCaptionStrongTextStyle}" />
         <settings:SettingsGroup>
             <settings:SettingsRow x:Name="ThemeRow" Glyph="&#xE790;">
                 <ListBox x:Name="ThemeSegmented" Style="{StaticResource AetherSegmentedStyle}" />
@@ -40,14 +45,20 @@
                         Style="{StaticResource AetherSettingsTextBoxStyle}" />
                 </StackPanel>
             </settings:SettingsRow>
+        </settings:SettingsGroup>
+
+        <TextBlock
+            x:Name="BehaviourHeading"
+            Margin="2,12,0,0"
+            AutomationProperties.HeadingLevel="Level2"
+            Style="{StaticResource AetherCaptionStrongTextStyle}" />
+        <settings:SettingsGroup>
             <settings:SettingsRow x:Name="BatterySaverRow" Glyph="&#xE850;">
                 <ToggleSwitch x:Name="BatterySaverToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
             <settings:SettingsRow x:Name="OpenInRunningWindowRow" Glyph="&#xE737;">
                 <ToggleSwitch x:Name="OpenInRunningWindowToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
-        </settings:SettingsGroup>
-        <settings:SettingsGroup>
             <settings:SettingsRow x:Name="RememberWindowSizeRow" Glyph="&#xE740;">
                 <ToggleSwitch x:Name="RememberWindowSizeToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
@@ -55,6 +66,12 @@
                 <ToggleSwitch x:Name="AlwaysOnTopToggle" Style="{StaticResource AetherSettingsToggleStyle}" />
             </settings:SettingsRow>
         </settings:SettingsGroup>
+
+        <TextBlock
+            x:Name="HistoryHeading"
+            Margin="2,12,0,0"
+            AutomationProperties.HeadingLevel="Level2"
+            Style="{StaticResource AetherCaptionStrongTextStyle}" />
         <settings:SettingsGroup>
             <settings:SettingsRow x:Name="ClearRecentsRow" Glyph="&#xE81C;">
                 <Button x:Name="ClearRecentsButton" Style="{StaticResource AetherOutlinePillButtonStyle}" />

@@ -15,6 +15,9 @@ public sealed partial class GeneralPage : Page
     public GeneralPage()
     {
         InitializeComponent();
+        AppearanceHeading.Text = AppStrings.Get("Settings_General_Appearance");
+        BehaviourHeading.Text = AppStrings.Get("Settings_General_Behaviour");
+        HistoryHeading.Text = AppStrings.Get("Settings_General_History");
         var binder = new SettingsPageBinder(this);
         binder.Choose(ThemeRow, ThemeSegmented, SettingKeys.Theme,
             [new(ThemeModes.Auto, AppStrings.Get("Settings_Theme_Auto")),

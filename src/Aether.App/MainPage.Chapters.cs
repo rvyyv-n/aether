@@ -135,11 +135,7 @@ public sealed partial class MainPage
         FrameworkElement target = anchor is { Visibility: Visibility.Visible }
             ? anchor
             : (ChaptersButton.Visibility == Visibility.Visible ? ChaptersButton : MoreButton);
-        ChaptersMenu.ShowAt(target, new FlyoutShowOptions
-        {
-            Placement = FlyoutPlacementMode.Top,
-            ShowMode = FlyoutShowMode.Standard,
-        });
+        ShowBarFlyout(ChaptersMenu, target, FlyoutPlacementMode.Top);
     }
 
     private void OnChapterMenuItemClick(object sender, RoutedEventArgs e)

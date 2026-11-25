@@ -17,9 +17,20 @@ public sealed partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
+        ContentScroller.SizeChanged += (_, _) => SyncContentWidth();
+        ContentScroller.Loaded += (_, _) => SyncContentWidth();
         SectionList.ItemsSource = SettingsSection.All;
         SectionPicker.ItemsSource = SettingsSection.All;
         Show(SettingsSection.All[0]);
+    }
+
+    private void SyncContentWidth()
+    {
+        double width = ContentScroller.ViewportWidth > 0 ? ContentScroller.ViewportWidth : ContentScroller.ActualWidth;
+        if (width > 0 && Math.Abs(ContentHost.Width - width) > 0.5)
+        {
+            ContentHost.Width = width;
+        }
     }
 
     public void Show(SettingsSection section)

@@ -117,12 +117,9 @@
                 <Button
                     x:Name="ShowAllButton"
                     Margin="6,4,0,4"
-                    Padding="8,0"
+                    HorizontalAlignment="Left"
                     Click="OnShowAllClick"
-                    FontSize="{StaticResource AetherCaptionFontSize}"
-                    Foreground="{ThemeResource AetherTextSecondaryBrush}"
-                    Style="{StaticResource AetherIconButtonStyle}"
-                    Width="Auto" />
+                    Style="{StaticResource AetherSettingsTextButtonStyle}" />
                 <Border
                     Height="1"
                     Margin="-3,0,-3,3"

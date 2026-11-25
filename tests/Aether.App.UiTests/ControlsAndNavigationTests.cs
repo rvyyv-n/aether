@@ -79,7 +79,19 @@ public sealed class ControlsAndNavigationTests : IDisposable
         AutomationElement? seekBar = session.WaitForElement("SeekBar", TimeSpan.FromSeconds(5));
         Assert.NotNull(seekBar);
 
-        Rectangle barRect = seekBar!.BoundingRectangle;
+        // Wait for the transport bar expand animation (including Springy ~500 ms settle) to finish before measuring.
+        Rectangle barRect = Rectangle.Empty;
+        Retry.WhileFalse(
+            () =>
+            {
+                Rectangle first = seekBar!.BoundingRectangle;
+                Thread.Sleep(120);
+                Rectangle second = seekBar.BoundingRectangle;
+                barRect = second;
+                return second.Width > 120 && second.Height > 0 && first == second;
+            },
+            timeout: TimeSpan.FromSeconds(3),
+            interval: TimeSpan.FromMilliseconds(80));
         Assert.True(barRect.Width > 40 && barRect.Height > 0, $"Unexpected SeekBar bounds: {barRect}.");
 
         int centerY = barRect.Top + barRect.Height / 2;
@@ -97,6 +109,29 @@ public sealed class ControlsAndNavigationTests : IDisposable
             timeout: TimeSpan.FromSeconds(5),
             interval: TimeSpan.FromMilliseconds(120)).Success;
         Assert.True(seeked, $"Seek bar drag did not advance PositionText to >= 5s (current: '{session.FindElement("PositionText")?.Name}').");
+
+        // Open the transport Open, Speed, and More menus and verify each sits cleanly above the seek row.
+        Rectangle seekRect = seekBar.BoundingRectangle;
+
+        AutomationElement? openBtn = session.WaitForElement("OpenButton", TimeSpan.FromSeconds(4));
+        Assert.NotNull(openBtn);
+        openBtn!.AsButton().Invoke();
+        AutomationElement? openUrlItem = session.WaitForElement("OpenMenuUrlItem", TimeSpan.FromSeconds(4), searchDesktopPopups: true);
+        Assert.NotNull(openUrlItem);
+        Assert.True(openUrlItem!.BoundingRectangle.Bottom <= seekRect.Top + 4,
+            $"OpenMenu overlapped the seek row (menu bottom {openUrlItem.BoundingRectangle.Bottom} > seek top {seekRect.Top}).");
+        DesktopInput.PressKey(session.MainWindow, VirtualKeyShort.ESCAPE);
+        session.WaitUntilGone("OpenMenuUrlItem", TimeSpan.FromSeconds(3), searchDesktopPopups: true);
+
+        AutomationElement? moreBtn = session.WaitForElement("MoreButton", TimeSpan.FromSeconds(4));
+        Assert.NotNull(moreBtn);
+        moreBtn!.AsButton().Invoke();
+        AutomationElement? moreSettingsItem = session.WaitForElement("MoreSettingsItem", TimeSpan.FromSeconds(4), searchDesktopPopups: true);
+        Assert.NotNull(moreSettingsItem);
+        Assert.True(moreSettingsItem!.BoundingRectangle.Bottom <= seekRect.Top + 4,
+            $"MoreMenu overlapped the seek row (menu bottom {moreSettingsItem.BoundingRectangle.Bottom} > seek top {seekRect.Top}).");
+        DesktopInput.PressKey(session.MainWindow, VirtualKeyShort.ESCAPE);
+        session.WaitUntilGone("MoreSettingsItem", TimeSpan.FromSeconds(3), searchDesktopPopups: true);
 
         Assert.True(session.CloseCleanly());
     }
@@ -147,6 +182,7 @@ public sealed class ControlsAndNavigationTests : IDisposable
         }
 
         // Escape closes Settings and returns to Home.
+        session.FocusMainWindow();
         DesktopInput.PressKey(session.MainWindow, VirtualKeyShort.ESCAPE);
         Assert.True(session.WaitUntilGone("SectionList", TimeSpan.FromSeconds(5)), "Settings did not close on Escape.");
         Assert.NotNull(session.WaitForElement("OpenFileButton", TimeSpan.FromSeconds(4)));
@@ -175,6 +211,123 @@ public sealed class ControlsAndNavigationTests : IDisposable
         DesktopInput.PressKey(session.MainWindow, VirtualKeyShort.ESCAPE);
         Assert.True(session.WaitUntilGone("CtxSettings", TimeSpan.FromSeconds(4), searchDesktopPopups: true),
             "Context menu flyout did not dismiss on Escape.");
+
+        Assert.True(session.CloseCleanly());
+    }
+
+    [Fact]
+    public void RailHandle_HoverAndClick_OpensSidebarRail_AndSettingsShortcutsResizeStaysInBounds()
+    {
+        using AetherAppSession session = AetherAppSession.Launch();
+        Assert.NotNull(session.WaitForElement("OpenFileButton", TimeSpan.FromSeconds(8)));
+        session.FocusMainWindow();
+
+        // Approach left edge to reveal the dynamic chevron handle, then click it to open the floating sidebar pill.
+        Rectangle winBounds = session.MainWindow.BoundingRectangle;
+        var edgePoint = new Point(winBounds.Left + 12, winBounds.Top + winBounds.Height / 2);
+        DesktopInput.MoveTo(session.MainWindow, new Point(winBounds.Left + 40, winBounds.Top + winBounds.Height / 2));
+        DesktopInput.MoveTo(session.MainWindow, edgePoint);
+
+        AutomationElement? handle = Retry.WhileNull(
+            () =>
+            {
+                AutomationElement? el = session.FindElement("RailHandle");
+                return el is not null && el.BoundingRectangle.Width > 0 && el.BoundingRectangle.Height > 0 ? el : null;
+            },
+            timeout: TimeSpan.FromSeconds(4),
+            interval: TimeSpan.FromMilliseconds(100)).Result;
+        Assert.NotNull(handle);
+
+        Rectangle handleRect = handle!.BoundingRectangle;
+        if (DesktopInput.IsHardwareInputAvailable)
+        {
+            DesktopInput.Click(session.MainWindow, new Point(handleRect.Left + handleRect.Width / 2, handleRect.Top + handleRect.Height / 2));
+        }
+        else
+        {
+            // Non-active desktops do not dispatch uncaptured hover WM_MOUSEMOVE into WinUI 3; invoke the handle directly.
+            handle.AsButton().Invoke();
+        }
+
+        AutomationElement? railSettings = Retry.WhileNull(
+            () =>
+            {
+                AutomationElement? el = session.FindElement("RailSettings");
+                return el is not null && !el.IsOffscreen && el.BoundingRectangle.Width > 0 ? el : null;
+            },
+            timeout: TimeSpan.FromSeconds(4),
+            interval: TimeSpan.FromMilliseconds(100)).Result;
+        Assert.NotNull(railSettings);
+
+        // Open Settings via the sidebar button, navigate to Shortcuts, maximize, then resize down and verify zero right-edge clipping.
+        railSettings!.AsButton().Invoke();
+        AutomationElement? sectionList = session.WaitForElement("SectionList", TimeSpan.FromSeconds(6));
+        Assert.NotNull(sectionList);
+
+        AutomationElement? shortcutsNav = Retry.WhileNull(
+            () => sectionList!.FindFirstDescendant(session.Cf.ByName("Shortcuts")),
+            timeout: TimeSpan.FromSeconds(4),
+            interval: TimeSpan.FromMilliseconds(100)).Result;
+        Assert.NotNull(shortcutsNav);
+        if (shortcutsNav!.Patterns.SelectionItem.IsSupported)
+        {
+            shortcutsNav.Patterns.SelectionItem.Pattern.Select();
+        }
+        else if (shortcutsNav.Parent?.Patterns.SelectionItem.IsSupported == true)
+        {
+            shortcutsNav.Parent.Patterns.SelectionItem.Pattern.Select();
+        }
+        else
+        {
+            shortcutsNav.Click();
+        }
+
+        Assert.True(
+            Retry.WhileFalse(
+                () => string.Equals(session.FindElement("PageTitle")?.Name, "Shortcuts", StringComparison.Ordinal),
+                timeout: TimeSpan.FromSeconds(4),
+                interval: TimeSpan.FromMilliseconds(100)).Success,
+            "Settings did not navigate to Shortcuts.");
+
+        var windowPattern = session.MainWindow.Patterns.Window.Pattern;
+        windowPattern.SetWindowVisualState(FlaUI.Core.Definitions.WindowVisualState.Maximized);
+        Thread.Sleep(250);
+        windowPattern.SetWindowVisualState(FlaUI.Core.Definitions.WindowVisualState.Normal);
+
+        foreach ((int width, int height) in new[] { (1315, 750), (1180, 740), (540, 700) })
+        {
+            DesktopInput.ResizeWindow(session.MainWindow, width, height);
+
+            bool fitsAfterResize = Retry.WhileFalse(
+                () =>
+                {
+                    AutomationElement? scroller = session.FindElement("ContentScroller");
+                    AutomationElement? title = session.FindElement("PageTitle");
+                    AutomationElement? playPauseRow = session.MainWindow.FindFirstDescendant(session.Cf.ByName("Change: Play or pause"));
+                    if (scroller is null || title is null || playPauseRow is null)
+                    {
+                        return false;
+                    }
+                    Rectangle paneRect = scroller.BoundingRectangle;
+                    Rectangle titleRect = title.BoundingRectangle;
+                    Rectangle rowRect = playPauseRow.BoundingRectangle;
+                    return paneRect.Width > 0
+                        && titleRect.Left >= paneRect.Left
+                        && titleRect.Right <= paneRect.Right
+                        && rowRect.Width > 0
+                        && rowRect.Left >= paneRect.Left
+                        && rowRect.Right <= paneRect.Right;
+                },
+                timeout: TimeSpan.FromSeconds(4),
+                interval: TimeSpan.FromMilliseconds(120)).Success;
+
+            Rectangle finalWin = session.MainWindow.BoundingRectangle;
+            AutomationElement? finalScroller = session.FindElement("ContentScroller");
+            AutomationElement? finalTitle = session.FindElement("PageTitle");
+            AutomationElement? finalRow = session.MainWindow.FindFirstDescendant(session.Cf.ByName("Change: Play or pause"));
+            Assert.True(fitsAfterResize,
+                $"Shortcuts clipped or drifted at {width}x{height}. win={finalWin}, scroller={finalScroller?.BoundingRectangle}, title={finalTitle?.BoundingRectangle}, row={finalRow?.BoundingRectangle}");
+        }
 
         Assert.True(session.CloseCleanly());
     }

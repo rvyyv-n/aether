@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
+using Windows.Foundation;
 
 namespace Aether_App;
 
@@ -250,7 +251,8 @@ public sealed partial class MainPage
         }
     }
 
-    private void OnSpeedClick(object sender, RoutedEventArgs e) => FlyoutBase.ShowAttachedFlyout(SpeedButton);
+    private void OnSpeedClick(object sender, RoutedEventArgs e) =>
+        ShowBarFlyout(SpeedMenu, SpeedButton, FlyoutPlacementMode.TopEdgeAlignedLeft);
 
     private void OnSpeedItemClick(object sender, RoutedEventArgs e)
     {
@@ -300,7 +302,8 @@ public sealed partial class MainPage
     }
 
     // The folder button asks which to open, so a link can be played while a video is already on.
-    private void OnOpenButtonClick(object sender, RoutedEventArgs e) => FlyoutBase.ShowAttachedFlyout(OpenButton);
+    private void OnOpenButtonClick(object sender, RoutedEventArgs e) =>
+        ShowBarFlyout(OpenMenu, OpenButton, FlyoutPlacementMode.TopEdgeAlignedLeft);
 
     private void OnOpenMenuOpened(object sender, object e)
     {
@@ -320,7 +323,66 @@ public sealed partial class MainPage
         SetMenuSurface(sender, false);
     }
 
-    private void OnMoreClick(object sender, RoutedEventArgs e) => FlyoutBase.ShowAttachedFlyout(MoreButton);
+    private void OnMoreClick(object sender, RoutedEventArgs e) =>
+        ShowBarFlyout(MoreMenu, MoreButton, FlyoutPlacementMode.TopEdgeAlignedRight);
+
+    /// <summary>
+    /// Opens a transport button's flyout strictly above <see cref="Osd"/> while horizontally aligned to
+    /// <paramref name="anchor"/>, so small popups never cover the seek bar or timecodes.
+    /// </summary>
+    private void ShowBarFlyout(
+        FlyoutBase flyout,
+        FrameworkElement anchor,
+        FlyoutPlacementMode placement,
+        FlyoutShowMode showMode = FlyoutShowMode.Standard,
+        bool closeClipDrawer = true)
+    {
+        if (closeClipDrawer)
+        {
+            ClipDrawer?.Close();
+        }
+        // Anchoring to Osd directly guarantees WinUI places the flyout strictly above the full transport card (never
+        // overlapping SeekRow). Outer edge buttons align to Osd's own edges; interior buttons use Position along Osd's
+        // top edge with Osd as the ExclusionRect.
+        if (ReferenceEquals(anchor, OpenButton) && placement == FlyoutPlacementMode.TopEdgeAlignedLeft)
+        {
+            flyout.ShowAt(Osd, new FlyoutShowOptions { Placement = FlyoutPlacementMode.TopEdgeAlignedLeft, ShowMode = showMode });
+            return;
+        }
+        if (ReferenceEquals(anchor, MoreButton) && placement == FlyoutPlacementMode.TopEdgeAlignedRight)
+        {
+            flyout.ShowAt(Osd, new FlyoutShowOptions { Placement = FlyoutPlacementMode.TopEdgeAlignedRight, ShowMode = showMode });
+            return;
+        }
+
+        Point? position = null;
+        Rect? exclusion = null;
+        if (Osd.ActualWidth > 0 && Osd.ActualHeight > 0 && anchor.ActualWidth > 0)
+        {
+            try
+            {
+                double localX = placement switch
+                {
+                    FlyoutPlacementMode.TopEdgeAlignedLeft => 0,
+                    FlyoutPlacementMode.TopEdgeAlignedRight => anchor.ActualWidth,
+                    _ => anchor.ActualWidth / 2,
+                };
+                Point inOsd = anchor.TransformToVisual(Osd).TransformPoint(new Point(localX, 0));
+                position = new Point(inOsd.X, 0);
+                exclusion = new Rect(0, 0, Osd.ActualWidth, Osd.ActualHeight);
+            }
+            catch (Exception e) when (e is ArgumentException or InvalidOperationException or System.Runtime.InteropServices.COMException)
+            {
+            }
+        }
+        flyout.ShowAt(Osd, new FlyoutShowOptions
+        {
+            Placement = placement,
+            Position = position,
+            ExclusionRect = exclusion,
+            ShowMode = showMode,
+        });
+    }
 
     private void OnMoreMenuOpened(object sender, object e)
     {
@@ -429,8 +491,9 @@ public sealed partial class MainPage
         ClipLayer.Margin = new Thickness(ClipLayer.Margin.Left, ClipLayer.Margin.Top, ClipLayer.Margin.Right,
             Osd.Margin.Bottom + Osd.Height + gap);
         ClipLayer.Visibility = Osd.Visibility;
-        ClipLayer.IsHitTestVisible = _chromeShown;
-        _fader?.Fade(ClipLayer, _chromeShown);
+        _clipLayerShown = IsClipLayerVisible();
+        ClipLayer.IsHitTestVisible = _clipLayerShown;
+        _fader?.Fade(ClipLayer, _clipLayerShown);
         ApplyClipLookMode();
         PostBackdropRegion();
     }

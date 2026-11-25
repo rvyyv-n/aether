@@ -101,7 +101,7 @@ public sealed partial class MainPage
             item.Click += OnQualityItemClick;
             QualityMenu.Items.Add(item);
         }
-        FlyoutBase.ShowAttachedFlyout(QualityButton);
+        ShowBarFlyout(QualityMenu, QualityButton, FlyoutPlacementMode.TopEdgeAlignedLeft);
     }
 
     private void OnQualityItemClick(object sender, RoutedEventArgs e)
