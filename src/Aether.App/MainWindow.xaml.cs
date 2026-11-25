@@ -243,6 +243,24 @@ public sealed partial class MainWindow : Window, IShellWindow
 
     public void ShowTour() => Shell.ShowTour();
 
+    /// <summary>Resizes the overlapped window so its client area matches <paramref name="logicalWidth"/> × <paramref name="logicalHeight"/> DIPs.</summary>
+    internal void ResizeClientForAudit(int logicalWidth, int logicalHeight)
+    {
+        if (AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Maximized } presenter)
+        {
+            presenter.Restore();
+        }
+        double scale = Shell.XamlRoot?.RasterizationScale ?? 1.0;
+        int frameWidth = Math.Max(0, AppWindow.Size.Width - AppWindow.ClientSize.Width);
+        int frameHeight = Math.Max(0, AppWindow.Size.Height - AppWindow.ClientSize.Height);
+        int targetWidth = (int)Math.Round(logicalWidth * scale) + frameWidth;
+        int targetHeight = (int)Math.Round(logicalHeight * scale) + frameHeight;
+        AppWindow.Resize(new SizeInt32(targetWidth, targetHeight));
+    }
+
+    internal void StartVisualAudit(Aether.Core.Playback.Diagnostics.VisualAuditOptions options) =>
+        _ = Shell.RunVisualAuditAsync(this, options);
+
     /// <summary>
     /// Moves and resizes the window to where it was left, on a monitor that is still connected, and maximises it
     /// again if it was. Call before the first <see cref="Window.Activate"/>.

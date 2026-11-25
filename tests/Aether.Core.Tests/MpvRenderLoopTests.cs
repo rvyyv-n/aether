@@ -329,6 +329,43 @@ public class MpvRenderLoopTests
         Assert.True(loop.Stop(3000));
     }
 
+    [Fact]
+    public async System.Threading.Tasks.Task CaptureFrameAsync_ReturnsRenderedPixels_AndNullWhenDisposed()
+    {
+        var factory = new TestBackendFactory
+        {
+            RenderCallback = backend =>
+            {
+                backend.Presenter.Clear(0.1f, 0.8f, 0.3f, 1.0f);
+                return true;
+            },
+        };
+        using var host = new TestRenderLoopHost();
+        using var loop = new MpvRenderLoop(factory, host, new MpvRenderLoopOptions { VSync = false });
+        loop.SetTargetSize(80, 40, 1.0f, 1.0f);
+        loop.Start();
+
+        Assert.True(TestWait.ForCondition(() => loop.State == RenderLoopState.Running, 4000));
+
+        using var cts = new CancellationTokenSource(4000);
+        CapturedVideoFrame? frame = await loop.CaptureFrameAsync(cts.Token);
+
+        Assert.NotNull(frame);
+        Assert.Equal(80, frame.Width);
+        Assert.Equal(40, frame.Height);
+        int mid = (20 * 80 + 40) * 4;
+        Assert.InRange(frame.BgraPixels[mid], 70, 82);      // B ≈ 0.3 * 255
+        Assert.InRange(frame.BgraPixels[mid + 1], 198, 210); // G ≈ 0.8 * 255
+        Assert.InRange(frame.BgraPixels[mid + 2], 20, 32);   // R ≈ 0.1 * 255
+        Assert.Equal(255, frame.BgraPixels[mid + 3]);
+
+        Assert.True(loop.Stop(3000));
+        loop.Dispose();
+
+        CapturedVideoFrame? afterDispose = await loop.CaptureFrameAsync();
+        Assert.Null(afterDispose);
+    }
+
     private static bool HasD3D11Device()
     {
         try

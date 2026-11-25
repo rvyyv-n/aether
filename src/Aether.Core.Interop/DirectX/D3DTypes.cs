@@ -118,3 +118,55 @@ public struct D3D11QueryDataTimestampDisjoint
     public ulong Frequency;
     public int Disjoint;
 }
+
+public enum D3D11Usage : uint
+{
+    Default = 0,
+    Immutable = 1,
+    Dynamic = 2,
+    Staging = 3,
+}
+
+[Flags]
+public enum D3D11CpuAccessFlags : uint
+{
+    None = 0,
+    Write = 0x10000,
+    Read = 0x20000,
+}
+
+public enum D3D11Map : uint
+{
+    Read = 1,
+    Write = 2,
+    ReadWrite = 3,
+}
+
+/// <summary>Blittable mirror of <c>D3D11_TEXTURE2D_DESC</c>.</summary>
+[StructLayout(LayoutKind.Sequential)]
+public struct D3D11Texture2DDesc
+{
+    public uint Width;
+    public uint Height;
+    public uint MipLevels;
+    public uint ArraySize;
+    public DxgiFormat Format;
+    public uint SampleCount;
+    public uint SampleQuality;
+    public D3D11Usage Usage;
+    public uint BindFlags;
+    public D3D11CpuAccessFlags CpuAccessFlags;
+    public uint MiscFlags;
+}
+
+/// <summary>Blittable mirror of <c>D3D11_MAPPED_SUBRESOURCE</c>.</summary>
+[StructLayout(LayoutKind.Sequential)]
+public struct D3D11MappedSubresource
+{
+    public nint Data;
+    public uint RowPitch;
+    public uint DepthPitch;
+}
+
+/// <summary>Tightly-packed top-down BGRA8 back-buffer snapshot read from D3D11 on demand.</summary>
+public sealed record CapturedVideoFrame(int Width, int Height, byte[] BgraPixels);

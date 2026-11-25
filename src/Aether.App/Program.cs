@@ -34,7 +34,7 @@ public static class Program
         PerfLog.WriteGcSettings();
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
-        if (SingleInstance.TryHandOff())
+        if (!VisualAuditSession.IsActive && SingleInstance.TryHandOff())
         {
             return 0;
         }
@@ -48,6 +48,6 @@ public static class Program
         // so the process does not end with mpv's threads half stopped, but never hold up exit for long.
         MpvContext.WaitForDestroyedCores(2000);
         MainPage.WaitForLanServerStop(1000);
-        return 0;
+        return VisualAuditSession.ExitCode;
     }
 }

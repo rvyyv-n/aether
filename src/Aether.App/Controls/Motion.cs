@@ -17,7 +17,7 @@ internal static class Motion
     private static Vector4? s_easeOut;
     private static Vector4? s_easeIn;
 
-    public static bool AnimationsEnabled => Settings.AnimationsEnabled;
+    public static bool AnimationsEnabled => !VisualAuditSession.IsActive && Settings.AnimationsEnabled;
 
     /// <summary>Settings › Advanced › Motion style (preview); read as each animation starts, so a change applies at once.</summary>
     public static bool IsSpringy => App.Settings.Current.MotionStyle == "springy";

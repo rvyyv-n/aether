@@ -471,6 +471,123 @@ public sealed unsafe class DxgiPresenter : IDisposable
         return texture;
     }
 
+    /// <summary>
+    /// Owner thread, on demand (e.g. visual diagnostics): copies buffer 0 into a temporary CPU-readable
+    /// staging texture and returns tightly-packed opaque BGRA8 pixels. Never called on the hot render path.
+    /// </summary>
+    public bool TryCopyBackBufferBgra(out CapturedVideoFrame? frame)
+    {
+        frame = null;
+        if (_swapChain == 0 || _device == 0 || _context == 0 || IsDeviceLost)
+        {
+            return false;
+        }
+
+        nint backBuffer = 0;
+        nint staging = 0;
+        bool mapped = false;
+        try
+        {
+            backBuffer = GetBackBufferTexture();
+            D3D11Texture2DDesc srcDesc;
+            // ID3D11Texture2D::GetDesc (slot 10)
+            ((delegate* unmanaged[Stdcall]<nint, D3D11Texture2DDesc*, void>)Com.Vtbl(backBuffer)[10])(backBuffer, &srcDesc);
+            if (srcDesc.Width == 0 || srcDesc.Height == 0
+                || srcDesc.Format is not (DxgiFormat.B8G8R8A8Unorm or DxgiFormat.R8G8B8A8Unorm))
+            {
+                return false;
+            }
+
+            var stagingDesc = new D3D11Texture2DDesc
+            {
+                Width = srcDesc.Width,
+                Height = srcDesc.Height,
+                MipLevels = 1,
+                ArraySize = 1,
+                Format = srcDesc.Format,
+                SampleCount = 1,
+                SampleQuality = 0,
+                Usage = D3D11Usage.Staging,
+                BindFlags = 0,
+                CpuAccessFlags = D3D11CpuAccessFlags.Read,
+                MiscFlags = 0,
+            };
+
+            // ID3D11Device::CreateTexture2D (slot 5)
+            int hr = ((delegate* unmanaged[Stdcall]<nint, D3D11Texture2DDesc*, void*, nint*, int>)Com.Vtbl(_device)[5])(
+                _device, &stagingDesc, null, &staging);
+            if (hr < 0 || staging == 0)
+            {
+                return false;
+            }
+
+            // ID3D11DeviceContext::CopyResource (slot 47)
+            ((delegate* unmanaged[Stdcall]<nint, nint, nint, void>)Com.Vtbl(_context)[47])(_context, staging, backBuffer);
+
+            D3D11MappedSubresource subresource;
+            // ID3D11DeviceContext::Map (slot 14)
+            hr = ((delegate* unmanaged[Stdcall]<nint, nint, uint, D3D11Map, uint, D3D11MappedSubresource*, int>)Com.Vtbl(_context)[14])(
+                _context, staging, 0, D3D11Map.Read, 0, &subresource);
+            if (hr < 0 || subresource.Data == 0)
+            {
+                return false;
+            }
+            mapped = true;
+
+            int width = checked((int)srcDesc.Width);
+            int height = checked((int)srcDesc.Height);
+            int rowBytes = checked(width * 4);
+            byte[] pixels = new byte[checked(rowBytes * height)];
+            bool swapRb = srcDesc.Format == DxgiFormat.R8G8B8A8Unorm;
+
+            byte* srcBase = (byte*)subresource.Data;
+            fixed (byte* dstBase = pixels)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    byte* srcRow = srcBase + (long)y * subresource.RowPitch;
+                    byte* dstRow = dstBase + (long)y * rowBytes;
+                    if (swapRb)
+                    {
+                        for (int x = 0; x < rowBytes; x += 4)
+                        {
+                            dstRow[x] = srcRow[x + 2];
+                            dstRow[x + 1] = srcRow[x + 1];
+                            dstRow[x + 2] = srcRow[x];
+                            dstRow[x + 3] = 0xFF;
+                        }
+                    }
+                    else
+                    {
+                        Buffer.MemoryCopy(srcRow, dstRow, rowBytes, rowBytes);
+                        // Swap chain uses Ignore alpha; stamp 0xFF so compositing treats the video plane as opaque.
+                        for (int x = 3; x < rowBytes; x += 4)
+                        {
+                            dstRow[x] = 0xFF;
+                        }
+                    }
+                }
+            }
+
+            frame = new CapturedVideoFrame(width, height, pixels);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+        finally
+        {
+            if (mapped && staging != 0)
+            {
+                // ID3D11DeviceContext::Unmap (slot 15)
+                ((delegate* unmanaged[Stdcall]<nint, nint, uint, void>)Com.Vtbl(_context)[15])(_context, staging, 0);
+            }
+            Com.Release(ref staging);
+            Com.Release(ref backBuffer);
+        }
+    }
+
     private nint EnsureRenderTargetView()
     {
         nint rtv = _rtv;

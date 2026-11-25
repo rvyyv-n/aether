@@ -52,8 +52,11 @@ public partial class App : Application
     /// <summary>The active playback session on the main window, or null before the engine starts.</summary>
     internal static Aether_App.Playback.PlayerSession? Session => s_window?.Session;
 
+    private static ISettingsStorage CreateStorage(string defaultPath) =>
+        VisualAuditSession.IsActive ? new InMemorySettingsStorage() : new FileSettingsStorage(defaultPath);
+
     /// <summary>The single settings instance. Loaded on the thread pool at launch; it holds defaults until then.</summary>
-    public static SettingsStore Settings { get; } = new(new FileSettingsStorage(FileSettingsStorage.DefaultPath()));
+    public static SettingsStore Settings { get; } = new(CreateStorage(FileSettingsStorage.DefaultPath()));
 
     /// <summary>The configurable shortcut keys, kept in <see cref="Settings"/>.</summary>
     public static ShortcutSettings Shortcuts { get; } = new(Settings);
@@ -62,16 +65,16 @@ public partial class App : Application
     public static Task SettingsLoaded { get; private set; } = Task.CompletedTask;
 
     /// <summary>Recently opened files for the empty state. Loaded on the thread pool at launch; empty until then.</summary>
-    public static RecentsStore Recents { get; } = new(new FileSettingsStorage(RecentsStore.DefaultPath()));
+    public static RecentsStore Recents { get; } = new(CreateStorage(RecentsStore.DefaultPath()));
 
     /// <summary>Where each file was left, for Resume playback. Loaded on the thread pool at launch; empty until then.</summary>
-    public static ResumeStore Resume { get; } = new(new FileSettingsStorage(ResumeStore.DefaultPath()));
+    public static ResumeStore Resume { get; } = new(CreateStorage(ResumeStore.DefaultPath()));
 
     /// <summary>Exported clips for the clip drawer. Loaded on the thread pool at launch; empty until then.</summary>
-    public static ClipShelf Clips { get; } = new(new FileSettingsStorage(ClipShelf.DefaultPath()));
+    public static ClipShelf Clips { get; } = new(CreateStorage(ClipShelf.DefaultPath()));
 
     /// <summary>Where the main window was left, for Remember window size. Loaded on the thread pool at launch.</summary>
-    public static WindowStateStore WindowState { get; } = new(new FileSettingsStorage(WindowStateStore.DefaultPath()));
+    public static WindowStateStore WindowState { get; } = new(CreateStorage(WindowStateStore.DefaultPath()));
 
     /// <summary>Lossless clip export through FFmpeg on the PATH, pre-warmed by the clip drawer once the page is idle.</summary>
     public static ClipExportService ClipExport { get; } = new(encoderCache: new FileEncoderCache(FileEncoderCache.DefaultPath()));
@@ -113,6 +116,24 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
+        if (VisualAuditSession.Current is { } audit)
+        {
+            Settings.Set(SettingKeys.TourSeen, true);
+            Settings.Set(SettingKeys.RememberWindowSize, false);
+            Settings.Set(SettingKeys.Theme, ThemeModes.Dark);
+            Settings.Set(SettingKeys.LookMode, LookModes.Aether);
+            var auditWindow = new MainWindow();
+            _window = auditWindow;
+            lock (RedirectGate)
+            {
+                s_window = auditWindow;
+                s_queue = auditWindow.DispatcherQueue;
+            }
+            auditWindow.Activate();
+            auditWindow.StartVisualAudit(audit);
+            return;
+        }
+
         PreloadStartupState();
         var window = new MainWindow();
         PerfLog.Mark("window_created_ms");

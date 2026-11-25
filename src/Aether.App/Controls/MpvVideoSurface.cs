@@ -90,6 +90,10 @@ public sealed partial class MpvVideoSurface : SwapChainPanel
     /// <summary>The running loop, or null while unloaded.</summary>
     public MpvRenderLoop? RenderLoop => _loop;
 
+    /// <summary>On-demand D3D11 back-buffer snapshot (decoded video plus GPU backdrop blur).</summary>
+    public Task<CapturedVideoFrame?> CaptureFrameAsync(CancellationToken cancellationToken = default) =>
+        _loop is { } loop ? loop.CaptureFrameAsync(cancellationToken) : Task.FromResult<CapturedVideoFrame?>(null);
+
     /// <summary>
     /// Any thread. Where a card sits over the video (swap-chain pixels, relative to this
     /// surface) so the render thread can blur behind it; redraws even when playback is paused.

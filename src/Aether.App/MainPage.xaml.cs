@@ -430,8 +430,11 @@ public sealed partial class MainPage : Page
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _isLoaded = true;
-        YtDlpManager.StartScheduledUpdates();
-        UpdateService.StartScheduledChecks();
+        if (!VisualAuditSession.IsActive)
+        {
+            YtDlpManager.StartScheduledUpdates();
+            UpdateService.StartScheduledChecks();
+        }
         if (_fader is null)
         {
             var resources = Application.Current.Resources;
@@ -1827,6 +1830,10 @@ public sealed partial class MainPage : Page
         int version,
         CancellationToken ct)
     {
+        if (VisualAuditSession.IsActive)
+        {
+            return;
+        }
         try
         {
             string? cachePath = item.IsLink

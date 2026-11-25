@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Aether.Core.Interop.DirectX;
 using Aether.Core.Interop.DirectX.Native;
 using Aether.Core.Interop.Native;
@@ -92,6 +93,7 @@ public sealed unsafe class MpvRenderLoop : IDisposable
 
     private volatile bool _stop;
     private int _redraw;
+    private TaskCompletionSource<CapturedVideoFrame?>? _captureRequest;
     private volatile RenderLoopState _state;
     private int _started;
     private int _disposed;
@@ -206,12 +208,43 @@ public sealed unsafe class MpvRenderLoop : IDisposable
     }
 
     /// <summary>
+    /// Any thread, on demand: requests one D3D11 back-buffer readback right after the next rendered frame
+    /// (including backdrop blur) and before <c>Present</c>. Zero allocations when unused.
+    /// </summary>
+    public Task<CapturedVideoFrame?> CaptureFrameAsync(CancellationToken cancellationToken = default)
+    {
+        if (Volatile.Read(ref _disposed) != 0 || _stop || cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromResult<CapturedVideoFrame?>(null);
+        }
+        var tcs = new TaskCompletionSource<CapturedVideoFrame?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (cancellationToken.CanBeCanceled)
+        {
+            CancellationTokenRegistration registration = cancellationToken.Register(
+                static state =>
+                {
+                    var (loop, pending) = ((MpvRenderLoop, TaskCompletionSource<CapturedVideoFrame?>))state!;
+                    if (ReferenceEquals(Interlocked.CompareExchange(ref loop._captureRequest, null, pending), pending))
+                    {
+                        pending.TrySetResult(null);
+                    }
+                },
+                (this, tcs));
+            _ = tcs.Task.ContinueWith(static (_, reg) => ((CancellationTokenRegistration)reg!).Dispose(), registration, TaskScheduler.Default);
+        }
+        Interlocked.Exchange(ref _captureRequest, tcs)?.TrySetResult(null);
+        RequestRedraw();
+        return tcs.Task;
+    }
+
+    /// <summary>
     /// Asks the thread to stop and waits up to <paramref name="timeoutMilliseconds"/>. The thread
     /// tears its device stack down itself on the way out, even if this returns false (timeout).
     /// </summary>
     public bool Stop(int timeoutMilliseconds)
     {
         _stop = true;
+        CancelPendingCapture();
         Wake();
         if (Volatile.Read(ref _started) == 0 || !_thread.IsAlive)
         {
@@ -232,6 +265,7 @@ public sealed unsafe class MpvRenderLoop : IDisposable
             return;
         }
         _stop = true;
+        CancelPendingCapture();
         Wake();
         if (Volatile.Read(ref _started) == 0)
         {
@@ -336,19 +370,27 @@ public sealed unsafe class MpvRenderLoop : IDisposable
                     if (!rendered)
                     {
                         presenter.ReportDeviceLost(DxNative.DXGI_ERROR_DEVICE_REMOVED);
+                        CancelPendingCapture();
                     }
-                    else if (presenter.Present(_options.VSync) != PresentResult.DeviceLost)
+                    else
                     {
-                        // A redraw without a new video frame (backdrop fade, resize) must not tell mpv a video frame was shown.
-                        if (frame)
+                        if (Volatile.Read(ref _captureRequest) is not null)
                         {
-                            backend.ReportSwap();
+                            FulfillCaptureRequest(presenter);
                         }
-                        Interlocked.Increment(ref _framesPresented);
-                        force = _options.Backdrop?.NeedsFrame == true;
-                        if (!SizePending)
+                        if (presenter.Present(_options.VSync) != PresentResult.DeviceLost)
                         {
-                            presenter.EndStretch();
+                            // A redraw without a new video frame (backdrop fade, resize) must not tell mpv a video frame was shown.
+                            if (frame)
+                            {
+                                backend.ReportSwap();
+                            }
+                            Interlocked.Increment(ref _framesPresented);
+                            force = _options.Backdrop?.NeedsFrame == true;
+                            if (!SizePending)
+                            {
+                                presenter.EndStretch();
+                            }
                         }
                     }
 
@@ -369,11 +411,26 @@ public sealed unsafe class MpvRenderLoop : IDisposable
         }
         finally
         {
+            CancelPendingCapture();
             DestroyStack();
             _state = RenderLoopState.Stopped;
             VoteClose();
         }
     }
+
+    private void FulfillCaptureRequest(DxgiPresenter presenter)
+    {
+        TaskCompletionSource<CapturedVideoFrame?>? pending = Interlocked.Exchange(ref _captureRequest, null);
+        if (pending is null)
+        {
+            return;
+        }
+        CapturedVideoFrame? frame = presenter.TryCopyBackBufferBgra(out CapturedVideoFrame? captured) ? captured : null;
+        pending.TrySetResult(frame);
+    }
+
+    private void CancelPendingCapture() =>
+        Interlocked.Exchange(ref _captureRequest, null)?.TrySetResult(null);
 
     /// <summary>Waits for an mpv frame, a wake request, or the timeout. No allocation.</summary>
     private void WaitForWork()

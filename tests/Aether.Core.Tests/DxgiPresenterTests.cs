@@ -255,6 +255,32 @@ public class DxgiPresenterTests
     }
 
     [Fact]
+    public void TryCopyBackBufferBgra_ReadsClearedColorWithOpaqueAlpha()
+    {
+        using var manager = D3D11DeviceManager.Create();
+        using var presenter = new DxgiPresenter(manager, new DxgiPresenterOptions { Width = 64, Height = 32 });
+
+        Assert.True(presenter.WaitForNextFrame(1000));
+        presenter.Clear(0.25f, 0.5f, 0.75f, 0.0f);
+
+        Assert.True(presenter.TryCopyBackBufferBgra(out CapturedVideoFrame? frame));
+        Assert.NotNull(frame);
+        Assert.Equal(64, frame.Width);
+        Assert.Equal(32, frame.Height);
+        Assert.Equal(64 * 32 * 4, frame.BgraPixels.Length);
+
+        // Center pixel in BGRA8: B ≈ 191, G ≈ 128, R ≈ 64, A = 255
+        int center = (16 * 64 + 32) * 4;
+        Assert.InRange(frame.BgraPixels[center], 188, 194);
+        Assert.InRange(frame.BgraPixels[center + 1], 125, 131);
+        Assert.InRange(frame.BgraPixels[center + 2], 61, 67);
+        Assert.Equal(255, frame.BgraPixels[center + 3]);
+
+        PresentResult result = presenter.Present(vsync: true);
+        Assert.True(result is PresentResult.Ok or PresentResult.Occluded);
+    }
+
+    [Fact]
     public void SwapChainPanelNative_SetSwapChain_NullPanel_ThrowsArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() => SwapChainPanelNative.SetSwapChain(0, 0));
