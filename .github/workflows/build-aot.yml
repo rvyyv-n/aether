@@ -24,7 +24,7 @@ jobs:
         run: dotnet build AetherPlayer.sln -c Release -p:Platform=x64 --no-restore -warnaserror
 
       - name: Run unit & integration tests
-        run: dotnet test AetherPlayer.sln -c Release -p:Platform=x64 --no-build --verbosity normal
+        run: dotnet test AetherPlayer.sln -c Release -p:Platform=x64 --no-build --filter "Category!=UI" --verbosity normal
 
       - name: Publish Native AOT build
         run: dotnet publish src/Aether.App/Aether.App.csproj -c Release -r win-x64 -p:Platform=x64 -warnaserror

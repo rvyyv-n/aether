@@ -129,6 +129,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     private double _videoAspect;
     private bool _overVideo;
     private bool? _nativeLookApplied;
+    private bool _closed;
 
     public MainWindow()
     {
@@ -139,11 +140,11 @@ public sealed partial class MainWindow : Window, IShellWindow
         SetTitleBar(Shell.TitleBarDragRegion);
         // The page draws its own caption buttons, which fade with the chrome (12.10); the system's are hidden.
         AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Collapsed;
-        Shell.LayoutUpdated += (_, _) => UpdateCaptionRegions();
+        Shell.LayoutUpdated += OnShellLayoutUpdated;
         ApplyTheme();
         App.Settings.Changed += OnSettingsChanged;
 
-        Shell.ActualThemeChanged += (_, _) => ApplyTheme();
+        Shell.ActualThemeChanged += OnShellActualThemeChanged;
 
 
         try
@@ -204,6 +205,11 @@ public sealed partial class MainWindow : Window, IShellWindow
         }
         Closed += (_, _) =>
         {
+            _closed = true;
+            Shell.LayoutUpdated -= OnShellLayoutUpdated;
+            Shell.ActualThemeChanged -= OnShellActualThemeChanged;
+            AppWindow.Changed -= OnAppWindowChanged;
+            AppWindow.Closing -= OnAppWindowClosing;
             Shell.WritePerfTotals();
             _smtc?.Dispose();
             _taskbarButtons?.Dispose(); // before the display sync: it sits on top of that subclass
@@ -606,27 +612,48 @@ public sealed partial class MainWindow : Window, IShellWindow
     /// keeps them out of the drag region. Rectangles are in client pixels; unchanged ones are not sent again.
     /// Zero allocations on steady layout passes.
     /// </summary>
+    private void OnShellLayoutUpdated(object? sender, object e) => UpdateCaptionRegions();
+
+    private void OnShellActualThemeChanged(FrameworkElement sender, object args)
+    {
+        if (!_closed)
+        {
+            ApplyTheme();
+        }
+    }
+
     private void UpdateCaptionRegions()
     {
+        if (_closed)
+        {
+            return;
+        }
         double scale = Shell.XamlRoot?.RasterizationScale ?? 0;
         if (scale <= 0)
         {
             return;
         }
-        for (int i = 0; i < CaptionKinds.Length; i++)
+        try
         {
-            FrameworkElement? button = Shell.CaptionButton(CaptionKinds[i]);
-            bool hasRect = button is not null;
-            RectInt32 rect = hasRect
-                ? ToClientPixels(button!.TransformToVisual(null).TransformBounds(new Windows.Foundation.Rect(0, 0, button.ActualWidth, button.ActualHeight)), scale)
-                : default;
-            if (hasRect != _captionHasRect[i] || (hasRect && rect != _captionRects[i]))
+            for (int i = 0; i < CaptionKinds.Length; i++)
             {
-                _captionHasRect[i] = hasRect;
-                _captionRects[i] = rect;
-                _captionRegions[i] = hasRect ? [rect] : [];
-                _nonClient.SetRegionRects(CaptionKinds[i], _captionRegions[i]);
+                FrameworkElement? button = Shell.CaptionButton(CaptionKinds[i]);
+                bool hasRect = button is not null;
+                RectInt32 rect = hasRect
+                    ? ToClientPixels(button!.TransformToVisual(null).TransformBounds(new Windows.Foundation.Rect(0, 0, button.ActualWidth, button.ActualHeight)), scale)
+                    : default;
+                if (hasRect != _captionHasRect[i] || (hasRect && rect != _captionRects[i]))
+                {
+                    _captionHasRect[i] = hasRect;
+                    _captionRects[i] = rect;
+                    _captionRegions[i] = hasRect ? [rect] : [];
+                    _nonClient.SetRegionRects(CaptionKinds[i], _captionRegions[i]);
+                }
             }
+        }
+        catch (Exception ex) when (ex is ObjectDisposedException or System.Runtime.InteropServices.COMException)
+        {
+            // InputNonClientPointerSource closes before the final XAML teardown layout pass.
         }
     }
 

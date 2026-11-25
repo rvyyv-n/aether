@@ -440,10 +440,10 @@ One-shot target for Opus: Automated integration test harness verifying the unpac
 
 | # | Task | Effort | Status |
 |:---|:---|:---:|:---:|
-| 19.1 | Test project `tests/Aether.App.UiTests` setup: Configure project with FlaUI (UIA3) targeting the compiled unpackaged `Aether.App.exe`. | S | Open |
-| 19.2 | Automated smoke tests: Cold start timing to main window, window maximize/minimize/restore, clean exit, and file launch via command line argument. | M | Open |
-| 19.3 | Automated controls & navigation tests: Play/Pause toggling via Space key, seek bar dragging, opening Settings via `Ctrl+,`, navigating sections, and verifying right-click flyout display. | M | Open |
-| 19.4 | CI test workflow & artifact cleanup: Scripted test execution in GitHub Actions with automatic process termination and test result logging. | S | Open |
+| 19.1 | Test project `tests/Aether.App.UiTests` setup: Configure project with FlaUI (UIA3) targeting the compiled unpackaged `Aether.App.exe`. | S | **Done** (`tests/Aether.App.UiTests` added to `AetherPlayer.sln`/`AetherPlayer.slnx` with `FlaUI.UIA3` 5.0.0, `AetherAppSession` unpackaged launcher/cleanup harness, and `DesktopInput` hardware + window-targeted fallback; ADR-0034) |
+| 19.2 | Automated smoke tests: Cold start timing to main window, window maximize/minimize/restore, clean exit, and file launch via command line argument. | M | **Done** (`SmokeTests`: cold start to main window timing, maximize/restore/minimize/restore cycle, CLI video argument playback & transport verification, and exit-code-0 clean exit) |
+| 19.3 | Automated controls & navigation tests: Play/Pause toggling via Space key, seek bar dragging, opening Settings via `Ctrl+,`, navigating sections, and verifying right-click flyout display. | M | **Done** (`ControlsAndNavigationTests`: Space play/pause toggling, `PrecisionSeekBar` drag advancing `PositionText`, `Ctrl+,` Settings open + multi-section navigation + `Escape` close, and context menu flyout open/dismiss; surfaced and fixed `MainWindow` exit crash and `SettingsSection.All` Release/AOT marshaling bug) |
+| 19.4 | CI test workflow & artifact cleanup: Scripted test execution in GitHub Actions with automatic process termination and test result logging. | S | **Done** (`tools/run-ui-tests.ps1` with TRX logging and unconditional `finally` cleanup, `.github/workflows/ui-tests.yml` uploading `TestResults/ui-tests.trx` with `if: always()` process cleanup, and `--filter "Category!=UI"` in `build-aot.yml`) |
 
 **Pass 19 means:** Automated UI verification guaranteeing zero regressions in the WinUI 3 presentation layer across Windows builds.
 

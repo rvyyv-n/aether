@@ -3,7 +3,7 @@ using Aether_App.Settings.Pages;
 namespace Aether_App.Settings;
 
 /// <summary>One entry in the settings section list: its icon, its name and the page it opens.</summary>
-public sealed class SettingsSection(string glyph, string titleKey, Type pageType)
+public sealed partial class SettingsSection(string glyph, string titleKey, Type pageType)
 {
     public string Glyph { get; } = glyph;
 
@@ -11,7 +11,9 @@ public sealed class SettingsSection(string glyph, string titleKey, Type pageType
 
     public Type PageType { get; } = pageType;
 
-    public static IReadOnlyList<SettingsSection> All { get; } =
+    // Concrete List<T> rather than IReadOnlyList<T> so CsWinRT generates AOT-safe IBindableVector marshaling
+    // for ItemsControl.ItemsSource instead of exposing C#'s compiler-synthesized ReadOnlyArray wrapper.
+    public static List<SettingsSection> All { get; } =
     [
         new("", "Settings_Page_General", typeof(GeneralPage)),
         new("", "Settings_Page_Playback", typeof(PlaybackPage)),

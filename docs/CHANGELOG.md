@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Audio output device switcher**: choose any live Windows audio endpoint directly in the Audio & Subtitles flyout (`TracksPanel`) or `Settings > Audio` without changing Windows' system default, preserved across engine restarts and active audio filters.
 - **Chapter list quick-jump menu**: open a scrollable chapter list with timestamps and active-chapter checkmark from the right-click menu, transport `More` menu, optional Chapters bar button, or shortcut `C`.
 - **Home screen Recents 3-card grid**: replaced the text recents list with a minimalist 3-column 16:9 glass card shelf featuring disk-cached local/stream thumbnails (`%LOCALAPPDATA%\Aether\thumbnails` with automatic MKV/WebM frame fallback), dark tabular duration badges, and thin bottom resume progress bars synced to `ResumeStore`.
+- **End-to-end FlaUI (UIA3) UI automation suite & CI workflow**: added `tests/Aether.App.UiTests` covering cold-start timing, window maximize/minimize/restore, clean exit, CLI video launch, Space play/pause toggling, seek-bar dragging, `Ctrl+,` Settings navigation + `Escape` dismissal, and right-click context menu verification, run via `tools/run-ui-tests.ps1` and `.github/workflows/ui-tests.yml` with TRX logging and guaranteed process cleanup.
 
 ### Changed
 - **Light mode & UI surface polish sweep**: updated bright frosted overlay tokens (`#F2FCFCFC`), removed hardcoded dark theme overrides from Diagnostics and LAN Stream overlays, unified caption close hover glyph contrast and About card borders, made card corners track the active look mode, added dark drag-over scrim clarity when dragging onto playing video, refreshed card/drawer/toast/pill indicator brushes dynamically on theme changes, and made Playlist/Transcript filter boxes fill available width cleanly.
@@ -27,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Windows taskbar thumbnail toolbar icons now rescale cleanly when moving across monitors or DPI settings (`WM_DPICHANGED`).
 - Diagnostics (`Ctrl+I`) and performance logs now accurately report fractional display refresh rates (e.g. `59.94 Hz`) and high-refresh monitor rates (`SmoothMotion` off) instead of falling back to `0 Hz`.
+- Unsubscribed `MainWindow.UpdateCaptionRegions()` during window teardown and guarded against closed `InputNonClientPointerSource` instances, preventing an unhandled `ObjectDisposedException` (`0xC000027B`) on app exit so engine and LAN server shutdown hooks complete with exit code `0`.
+- Changed `SettingsSection.All` from `IReadOnlyList<SettingsSection>` (compiler-synthesized read-only array) to a concrete `List<SettingsSection>` on a `partial` class so CsWinRT AOT marshaling for `ItemsControl.ItemsSource` opens Settings cleanly in Release / Native AOT builds without `ArgumentException` (`E_INVALIDARG`).
 
 ## [1.1.0-preview.2] - 2026-11-12
 ### Changed

@@ -1,0 +1,44 @@
+name: UI Automation Tests (FlaUI)
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  ui-tests:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Fetch native libmpv and ANGLE dependencies
+        shell: pwsh
+        run: ./tools/fetch-native-deps.ps1
+
+      - name: Restore solution
+        run: dotnet restore AetherPlayer.sln -p:Platform=x64
+
+      - name: Run FlaUI UI automation tests
+        shell: pwsh
+        run: ./tools/run-ui-tests.ps1 -Configuration Release -Platform x64 -ResultsDir TestResults
+
+      - name: Upload UI test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: TestResults/ui-tests.trx
+          if-no-files-found: warn
+
+      - name: Ensure no Aether processes remain
+        if: always()
+        shell: pwsh
+        run: Get-Process Aether.App, Aether.DevHost -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
