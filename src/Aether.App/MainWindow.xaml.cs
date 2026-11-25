@@ -1,9 +1,11 @@
 ﻿using Aether.Core.Interop.Windowing;
 using Aether.Core.Playback;
+using Aether.Core.Playback.MediaIntegration;
 using Aether.Core.Playback.Settings;
 using Aether.Core.Playback.Windowing;
 using Aether_App.Controls;
 using Aether_App.Playback;
+using Aether_App.Windowing;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
@@ -75,6 +77,18 @@ public interface IShellWindow
 
     /// <summary>Raised when a button under the taskbar preview is pressed.</summary>
     event EventHandler<TaskbarCommand>? TaskbarCommandRequested;
+
+    /// <summary>Publishes live metadata, transport button state and timeline to Windows SMTC (20.1).</summary>
+    void SetMediaSession(in SmtcMetadata metadata, in SmtcButtonState buttons, in SmtcTimeline timeline);
+
+    /// <summary>Publishes a throttled timeline position update to Windows SMTC during playback.</summary>
+    void SetMediaTimeline(in SmtcTimeline timeline);
+
+    /// <summary>Raised when Windows global media keys or Quick Settings Now Playing send a transport command.</summary>
+    event EventHandler<SmtcCommand>? MediaCommandRequested;
+
+    /// <summary>Raised when the user scrubs the Windows 11 Quick Settings Now Playing timeline.</summary>
+    event EventHandler<TimeSpan>? MediaSeekRequested;
 }
 
 /// <summary>
@@ -94,6 +108,7 @@ public sealed partial class MainWindow : Window, IShellWindow
     private NonClientRegionKind? _pressedCaption;
     private readonly AspectRatioLock? _aspectLock;
     private readonly TaskbarThumbButtons? _taskbarButtons;
+    private readonly WindowsSmtcBridge? _smtc;
     private readonly string _playTip = AppStrings.Get("Taskbar_Play");
     private readonly string _pauseTip = AppStrings.Get("Taskbar_Pause");
     private readonly string _replayTip = AppStrings.Get("Taskbar_Replay");
@@ -157,6 +172,12 @@ public sealed partial class MainWindow : Window, IShellWindow
             _taskbarButtons = null; // the preview still shows, just without the buttons
         }
 
+        _smtc = WindowsSmtcBridge.TryCreate(
+            WinRT.Interop.WindowNative.GetWindowHandle(this),
+            DispatcherQueue,
+            command => MediaCommandRequested?.Invoke(this, command),
+            position => MediaSeekRequested?.Invoke(this, position));
+
         InputNonClientPointerSource nonClient = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         nonClient.PointerEntered += OnNonClientPointerMoved;
         nonClient.PointerMoved += OnNonClientPointerMoved;
@@ -183,6 +204,7 @@ public sealed partial class MainWindow : Window, IShellWindow
         Closed += (_, _) =>
         {
             Shell.WritePerfTotals();
+            _smtc?.Dispose();
             _taskbarButtons?.Dispose(); // before the display sync: it sits on top of that subclass
             DisplaySync.Dispose(); // before the aspect lock: it sits on top of that subclass
             _aspectLock?.Dispose();
@@ -490,6 +512,16 @@ public sealed partial class MainWindow : Window, IShellWindow
         "SystemUsesLightTheme", 0) is int value && value != 0;
 
     public event EventHandler<TaskbarCommand>? TaskbarCommandRequested;
+
+    public event EventHandler<SmtcCommand>? MediaCommandRequested;
+
+    public event EventHandler<TimeSpan>? MediaSeekRequested;
+
+    public void SetMediaSession(in SmtcMetadata metadata, in SmtcButtonState buttons, in SmtcTimeline timeline) =>
+        _smtc?.Update(metadata, buttons, timeline);
+
+    public void SetMediaTimeline(in SmtcTimeline timeline) =>
+        _smtc?.UpdateTimeline(timeline);
 
     private void OnTaskbarButton(TaskbarButton button) => TaskbarCommandRequested?.Invoke(this, button switch
     {

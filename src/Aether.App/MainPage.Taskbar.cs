@@ -1,10 +1,11 @@
 using Aether.Core.Playback;
+using Aether.Core.Playback.MediaIntegration;
 
 namespace Aether_App;
 
 /// <summary>
-/// The previous, Play/Pause and next buttons under the taskbar preview (11.14). The window draws them; this
-/// decides what they show and what they do. UI thread only.
+/// The previous, Play/Pause and next buttons under the taskbar preview (11.14) and Windows SMTC integration (20.1).
+/// The window draws them; this decides what they show and what they do. UI thread only.
 /// </summary>
 public sealed partial class MainPage
 {
@@ -15,9 +16,28 @@ public sealed partial class MainPage
 
     private void UpdateTaskbar(string? fileName)
     {
-        TaskbarControls controls = TaskbarControls.From(
-            _session?.ViewModel.Status ?? PlaybackStatus.Idle, _playlist.CanGoPrevious, _playlist.CanGoNext);
+        PlayerViewModel? vm = _session?.ViewModel;
+        PlaybackStatus status = vm?.Status ?? PlaybackStatus.Idle;
+        TaskbarControls controls = TaskbarControls.From(status, _playlist.CanGoPrevious, _playlist.CanGoNext);
         _host?.SetTaskbar(fileName, controls);
+
+        SmtcMetadata metadata = status == PlaybackStatus.Idle
+            ? SmtcMetadata.Empty
+            : SmtcMetadata.From(_streamTitle, _currentPath, _currentWebLink, AppStrings.Get("App_Name"));
+        SmtcButtonState smtcButtons = SmtcButtonState.From(status, _playlist.CanGoPrevious, _playlist.CanGoNext);
+        SmtcTimeline timeline = vm is not null
+            ? SmtcTimeline.From(vm.Position, vm.Duration, _isLive)
+            : SmtcTimeline.Empty;
+        _host?.SetMediaSession(metadata, smtcButtons, timeline);
+    }
+
+    private void UpdateMediaTimeline(PlayerViewModel vm)
+    {
+        if (_host is null || !HasVideo)
+        {
+            return;
+        }
+        _host.SetMediaTimeline(SmtcTimeline.From(vm.Position, vm.Duration, _isLive));
     }
 
     private void OnTaskbarCommand(object? sender, TaskbarCommand command)
@@ -33,6 +53,45 @@ public sealed partial class MainPage
             case TaskbarCommand.Next:
                 OpenNeighbour(forward: true);
                 break;
+        }
+    }
+
+    private void OnMediaCommand(object? sender, SmtcCommand command)
+    {
+        switch (command)
+        {
+            case SmtcCommand.Play:
+                if (_session is { } playSession && HasVideo)
+                {
+                    TrySend(playSession.Play);
+                }
+                break;
+            case SmtcCommand.Pause:
+                if (_session is { } pauseSession && HasVideo)
+                {
+                    TrySend(pauseSession.Pause);
+                }
+                break;
+            case SmtcCommand.Stop:
+                if (_session is { } stopSession && HasVideo)
+                {
+                    TrySend(stopSession.Stop);
+                }
+                break;
+            case SmtcCommand.Previous:
+                OpenNeighbour(forward: false);
+                break;
+            case SmtcCommand.Next:
+                OpenNeighbour(forward: true);
+                break;
+        }
+    }
+
+    private void OnMediaSeek(object? sender, TimeSpan target)
+    {
+        if (_session is { } session && HasVideo && !_isLive && target >= TimeSpan.Zero)
+        {
+            TrySend(() => session.Seek(target.TotalSeconds, dragging: false));
         }
     }
 

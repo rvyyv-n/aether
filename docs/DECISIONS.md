@@ -257,3 +257,12 @@
 - **Consequences:** Nothing restarts or reloads; every surface using those brushes changes at once. A new accent-coloured surface must use one of the overridden keys to follow the choice.
 - **Status:** Accepted.
 
+## ADR-0029: Global Windows SMTC via Raw Interop & .NET 10 Unification (Pass 20, 2026-11-25)
+- **Context:** Media keys only worked while Aether had focus, and Windows 11 Quick Settings / lock-screen Now Playing had no live session. Meanwhile three core libraries (`Aether.Core.Interop`, `Aether.Core.Playback`, `Aether.Server.LanHost`) still targeted `net9.0` while the app and tests targeted `net10.0`.
+- **Decision:**
+  - `Aether.Core.Playback.MediaIntegration` (`SmtcState.cs`) holds pure UI-agnostic metadata, button enablement, and timeline throttling rules (`SmtcTimeline.ShouldPush` pushes immediately on duration/seekable changes or >1.5 s seeks, and every 5 s during steady playback to avoid per-frame COM traffic).
+  - `WindowsSmtcBridge` in `Aether.App` acquires `SystemMediaTransportControls` for the unpackaged HWND via `[LibraryImport]` (`RoGetActivationFactory` + `WindowsCreateString`) and a raw vtable call to `ISystemMediaTransportControlsInterop::GetForWindow`, wrapping the ABI pointer with `SystemMediaTransportControls.FromAbi` and releasing our ref immediately. This stays 100% Native AOT compatible with zero reflection.
+  - Both `IsPlayEnabled` and `IsPauseEnabled` stay true while media is loaded so hardware Play/Pause keys always deliver regardless of status timing, while `PlaybackStatus` drives the displayed Quick Settings glyph. `PlaybackPositionChangeRequested` wires Quick Settings scrubbing directly to `PlayerSession.Seek`.
+  - All solution projects and `Directory.Build.props` now target `net10.0`.
+- **Status:** Accepted.
+

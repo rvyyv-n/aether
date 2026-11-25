@@ -209,6 +209,8 @@ public sealed partial class MainPage : Page
                 _host.TitleBarPointerMoved -= OnTitleBarPointerMoved;
                 _host.AlwaysOnTopChanged -= OnAlwaysOnTopChanged;
                 _host.TaskbarCommandRequested -= OnTaskbarCommand;
+                _host.MediaCommandRequested -= OnMediaCommand;
+                _host.MediaSeekRequested -= OnMediaSeek;
             }
             _host = value;
             if (_host is not null)
@@ -218,6 +220,8 @@ public sealed partial class MainPage : Page
                 _host.TitleBarPointerMoved += OnTitleBarPointerMoved;
                 _host.AlwaysOnTopChanged += OnAlwaysOnTopChanged;
                 _host.TaskbarCommandRequested += OnTaskbarCommand;
+                _host.MediaCommandRequested += OnMediaCommand;
+                _host.MediaSeekRequested += OnMediaSeek;
             }
             SyncAlwaysOnTop();
         }
@@ -605,6 +609,7 @@ public sealed partial class MainPage : Page
                 OnSponsorPosition(vm);
                 OnChapterSkipPosition(vm);
                 UpdateClock(vm);
+                UpdateMediaTimeline(vm);
                 if (_sidePanel == SidePanel.Transcript)
                 {
                     TranscriptPane.SetPosition(vm.Position);

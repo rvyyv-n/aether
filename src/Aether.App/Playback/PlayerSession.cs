@@ -215,9 +215,28 @@ public sealed class PlayerSession : IDisposable
         }
     }
 
+    /// <summary>Starts or resumes playback; on an ended file restarts from 0. Non-blocking.</summary>
+    /// <exception cref="MpvException">The core is shutting down.</exception>
+    public void Play()
+    {
+        if (ViewModel.State.IsAtEnd)
+        {
+            _context.CommandAsync(new MpvCommand("seek", "0", "absolute+exact"));
+        }
+        _context.CommandAsync(new MpvCommand("set", "pause", "no"));
+    }
+
     /// <summary>Pauses. Non-blocking.</summary>
     /// <exception cref="MpvException">The core is shutting down.</exception>
     public void Pause() => _context.CommandAsync(new MpvCommand("set", "pause", "yes"));
+
+    /// <summary>Stops playback by pausing and rewinding to the start. Non-blocking.</summary>
+    /// <exception cref="MpvException">The core is shutting down.</exception>
+    public void Stop()
+    {
+        _context.CommandAsync(new MpvCommand("set", "pause", "yes"));
+        _context.CommandAsync(new MpvCommand("seek", "0", "absolute+exact"));
+    }
 
     public SeekCoalescer SeekCoalescer => _seekCoalescer;
 

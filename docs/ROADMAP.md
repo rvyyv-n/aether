@@ -2,7 +2,9 @@
 
 ## Where things stand
 
-- Latest release: **1.1.0-preview.2** (pre-release, 2026-11-12), with Passes 13 to 16. Pass 12 is partly done; Passes 17 to 19 are next.
+- Latest release: **1.1.0-preview.2** (pre-release, 2026-11-12), with Passes 13 to 16.
+- **v1.1.0 stable target:** Pass 20 (.NET 10 + global SMTC), Pass 21 (measurable GPU/XAML/streaming/export performance & Native AOT release), Pass 12 completion + full UI polish sweep, Pass 22 (hover scrub thumbnails, audio device switcher, chapter jump menu, Home screen upgrade), and Pass 19 (FlaUI E2E tests).
+- **Deferred to v1.2+:** Pass 17 (10-bit HDR10, except 17.4 GPU frame-time diagnostics pulled into Pass 21) and Pass 18 (PvP dual-clip comparison & annotations).
 - Work happens on `dev`. `master` moves only through a PR from `dev` that the owner merges.
 - 1.1.0-preview.1 looked for updates in a repository that doesn't exist, so anyone on it installs preview.2 by hand once.
 
@@ -329,6 +331,7 @@ Design work: Opus plans architecture and tokens, Sonnet / Opus builds. Check blu
 | 12.8 | Dark theme fallback bug fix when Windows is in Light theme: With Appearance set to Dark in Settings while Windows is set to Light, Settings cards and certain flyouts still inherit Windows light grey colors. Force app-level `RequestedTheme` on `RootFrame` / `AppWindow` and ensure `ThemeTokens` lookup strictly prioritizes the selected Dark dictionary over system defaults. | S | **Done** (root cause: WinUI builds theme-dictionary brushes on first use and resolves their `{StaticResource}` colour against Windows' theme, not the dictionary's, so a Dark brush first read from code under light Windows took the Light colour. Brushes now hold literal colours; `DesignTokensTests` fails on any reference inside a theme dictionary) |
 | 12.9 | Accent colour customization: Add an Accent Colour selector in Settings > Appearance with curated presets (Aether Cyan, Ice Blue, Mint, Amethyst, Sunset, Slate) and custom HEX support, dynamically binding into `AetherFillEmphasisRest` and active toggle indicators. | M | **Done** (ADR-0028: off by default; six presets and any hex colour, set live on the theme brushes. Checked on screen) |
 | 12.10 | Title bar custom caption buttons: Replace native OS caption buttons with custom WinUI Fluent caption buttons (Min, Max, Close) that smoothly fade in/out together with the player chrome during video playback instead of staying permanently 100% opaque. | M | **Done** (ADR-0027: the system buttons are hidden and the page's own fade with the chrome; they are registered as the window's caption regions, so Snap Layouts, maximise and minimise stay Windows'. Checked on screen) |
+| 12.11 | Full UI surface polish sweep: Tighten spacing, typography, hover/press/focus states, keyboard navigation, token consistency (About page, caption hover glyph), taskbar preview DPI icon scaling, and micro-interactions across transport/seek bar, popups/flyouts, drawers/overlays, Home/Settings, and window chrome/PiP. | M | Open |
 
 **Pass 12 means:** Aether can follow Windows or be set to light, dark, native Fluent, or custom accent themes with flawless blur synchronization and zero dropped frames.
 
@@ -399,7 +402,7 @@ One-shot target for Opus: Opt-in SponsorBlock skip engine, visual segment marker
 
 ---
 
-### Pass 17: DirectX 11 10-bit HDR Pipeline & GPU Diagnostics
+### Pass 17: DirectX 11 10-bit HDR Pipeline & GPU Diagnostics *(Deferred to v1.2+; 17.4 pulled into Pass 21)*
 
 One-shot target for Opus: `Aether.Core.Interop` DirectX 11 swap chain upgrade, HDR10 wide color gamut metadata pass-through, and real-time GPU frame render time queries.
 
@@ -408,14 +411,14 @@ One-shot target for Opus: `Aether.Core.Interop` DirectX 11 swap chain upgrade, H
 | 17.1 | HDR display capability query: Use `IDXGIOutput6::GetDesc1` in `D3D11DeviceManager` to query monitor color space, peak luminance, and HDR support. Expose `IsHdrAvailable` and `IsHdrActive` to playback settings. | M | Open |
 | 17.2 | 10-bit HDR swap chain format: When HDR is active, configure the `IDXGISwapChain1` format to `DXGI_FORMAT_R10G10B10A2_UNORM` and set color space to `DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020` via `IDXGISwapChain3::SetColorSpace1`. | M | Open |
 | 17.3 | libmpv HDR metadata pass-through: Pass `target-colorspace-hint=yes` and `target-trc=pq` to libmpv render context to output raw BT.2020 PQ to the 10-bit swap chain; maintain fallback tone-mapping to BT.709 SDR on standard displays. | S | Open |
-| 17.4 | Direct3D 11 GPU query engine in Diagnostics (`Ctrl+I`): Implement `ID3D11Query` timestamp disjoint and timestamp queries to compute real GPU frame render duration (ms), unparking the GPU row in the Diagnostics panel. | M | Open |
+| 17.4 | Direct3D 11 GPU query engine in Diagnostics (`Ctrl+I`): Implement `ID3D11Query` timestamp disjoint and timestamp queries to compute real GPU frame render duration (ms), unparking the GPU row in the Diagnostics panel. | M | Moved to 21.2 |
 | 17.5 | Interop HDR & GPU query test suite: Test DXGI format selection, HDR metadata struct marshaling, mock D3D11 query safety, and SDR fallback behavior. | S | Open |
 
 **Pass 17 means:** True 10-bit HDR10 video presentation with zero banding, native wide color gamut passthrough, and precise hardware GPU frame render timing.
 
 ---
 
-### Pass 18: PvP Frame Analysis & Side-by-Side Dual Clip Comparison
+### Pass 18: PvP Frame Analysis & Side-by-Side Dual Clip Comparison *(Deferred to v1.2+)*
 
 One-shot target for Opus: Multi-surface synchronization in `Aether.PvP.Review`, synchronized dual-video playback, and paused frame drawing annotations.
 
@@ -450,11 +453,40 @@ One-shot target for Opus: Automated integration test harness verifying the unpac
 
 | # | Task | Effort | Status |
 |:---|:---|:---:|:---:|
-| 20.1 | Global Windows SMTC (System Media Transport Controls): Wire `SystemMediaTransportControls` via `ISystemMediaTransportControlsInterop` for the unpackaged window so media keys (Play/Pause, Next, Previous, Stop) work when Aether is unfocused, and publish live title, source, playback state, and timeline position to Windows 11 Quick Settings and lock-screen Now Playing. | M | Open |
-| 20.2 | Unify target frameworks on `.NET 10`: Upgrade `Directory.Build.props`, `Aether.Core.Interop`, `Aether.Core.Playback`, and `Aether.Server.LanHost` from `net9.0` to `net10.0` so the entire solution targets a single SDK and TFM, and update CI workflows and docs (`docs/AGENTS.md`, `README.md`) to match. | S | Open |
-| 20.3 | Tests & AOT verification for Pass 20: Unit tests for SMTC metadata, timeline, and transport-button state mapping, plus a full Release Native AOT build and test pass on the unified `net10.0` solution. | S | Open |
+| 20.1 | Global Windows SMTC (System Media Transport Controls): Wire `SystemMediaTransportControls` via `ISystemMediaTransportControlsInterop` for the unpackaged window so media keys (Play/Pause, Next, Previous, Stop) work when Aether is unfocused, and publish live title, source, playback state, and timeline position to Windows 11 Quick Settings and lock-screen Now Playing. | M | **Done** (`SmtcState` in `Aether.Core.Playback`, `WindowsSmtcBridge` in `Aether.App` via raw `ISystemMediaTransportControlsInterop::GetForWindow`, wired to `MainWindow`/`MainPage` including Quick Settings timeline scrubbing; ADR-0029) |
+| 20.2 | Unify target frameworks on `.NET 10`: Upgrade `Directory.Build.props`, `Aether.Core.Interop`, `Aether.Core.Playback`, and `Aether.Server.LanHost` from `net9.0` to `net10.0` so the entire solution targets a single SDK and TFM, and update CI workflows and docs (`docs/AGENTS.md`, `README.md`) to match. | S | **Done** (all 8 projects now target `net10.0`; `Directory.Build.props`, `docs/AGENTS.md` and `README.md` updated) |
+| 20.3 | Tests & AOT verification for Pass 20: Unit tests for SMTC metadata, timeline, and transport-button state mapping, plus a full Release Native AOT build and test pass on the unified `net10.0` solution. | S | **Done** (`SmtcStateTests`, 1,909 tests passing with 0 warnings and 0 skipped on unified `net10.0`; Release AOT/trim analyzers clean locally, full native AOT link runs on CI `windows-latest` or once VS C++ Build Tools are installed locally) |
 
 **Pass 20 means:** Background media-key control and native Windows 11 Now Playing integration, backed by a single unified `.NET 10` codebase.
+
+---
+
+### Pass 21: Performance, GPU Pipeline & Native AOT Optimization (v1.1.0)
+
+Strict measurable targets: `<250 ms` Native AOT cold start, `0` dropped frames at 1080p/4K/high-Hz with blur active, lower working-set RAM and GC overhead, verified with before/after benchmarks on real hardware.
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 21.1 | Performance baseline & benchmark harness: Expand `tools/measure-performance.ps1` and opt-in telemetry to measure cold start, working-set RAM, GC collections/pauses, GPU frame time, blur pass cost, and dropped frames; capture before/after baselines in `docs/reviews/v1.1-performance-baseline.md`. | S | Open |
+| 21.2 | GPU render hot path & live GPU diagnostics (includes 17.4): Bypass `VideoFrameCache` offscreen FBO copy whenever no blurred overlay is active/fading (direct-to-backbuffer fast path); add D3D11 timestamp disjoint/timestamp queries (`ID3D11Query`) to report real GPU frame duration (ms) in Diagnostics (`Ctrl+I`); optimize `BackdropBlurPass` multi-card draw overhead. | M | Open |
+| 21.3 | XAML visual tree & UI-thread optimization: Defer non-initial overlays, drawers, tour, dialogs, and Settings in `MainPage.xaml` via `x:Load="False"`; eliminate per-layout-pass allocations and redundant backdrop region updates in `MainPage.Backdrop.cs`; audit scrubbing, flyout/drawer transitions, and window resize smoothness to keep animations Composition-driven. | M | Open |
+| 21.4 | Streaming & clip export speed: Migrate `YtDlpStreamResolver` to `ProcessStartInfo.ArgumentList`, optimize yt-dlp resolution flags (`--no-playlist`, format selection), and cache resolved stream metadata/formats in-session for instant quality switches and re-opens; persist probed hardware encoder availability across sessions in `ClipExportService` and reduce keyframe probe overhead. | M | Open |
+| 21.5 | Native AOT release verification & packaging: Verify `tools/package-standalone.ps1 -NativeAot` end-to-end (WinUI 3, libmpv, ANGLE, Kestrel, Velopack, yt-dlp), confirm zero trim/AOT regressions, and validate final before/after benchmark targets. | M | Open |
+
+**Pass 21 means:** Measurably faster startup, lower memory footprint, zero wasted GPU copies during normal playback, live GPU frame-time diagnostics, and snappier streaming and exports.
+
+---
+
+### Pass 22: OSS Contender UX Features (v1.1.0)
+
+| # | Task | Effort | Status |
+|:---|:---|:---:|:---:|
+| 22.1 | Seek-bar hover thumbnail previews: On-demand background decoder with LRU frame cache for local files (zero impact on main playback decoder) plus YouTube storyboard sprite support for streamed links when available, rendered cleanly in the hover bubble above `PrecisionSeekBar`. | L | Open |
+| 22.2 | Audio output device switcher: Enumerate Windows audio endpoints via libmpv `audio-device-list`, expose live device selection in the Audio & Subtitles flyout and Settings › Audio without altering Windows' default device, and preserve selection across engine restarts. | M | Open |
+| 22.3 | Chapter list quick-jump menu: Add a clickable chapter list menu (accessible from the transport/right-click menu and shortcut) showing all chapter titles, timestamps, and active chapter highlight for instant seeking. | S | Open |
+| 22.4 | Home screen & Recents upgrade *(mockup-gated)*: Review wireframes comparing subtle enhanced recent rows vs minimalist card grid against Aether's design principles, then add cached video thumbnails and thin resume progress bars to Recents. | M | Open |
+
+**Pass 22 means:** Everyday desktop player conveniences — hover scrub previews, in-app audio device switching, chapter quick-jump, and visual recents — delivered without compromising Aether's minimalist shell.
 
 ---
 
@@ -462,3 +494,4 @@ One-shot target for Opus: Automated integration test harness verifying the unpac
 
 - **Vulkan swap chain interop (`VK_KHR_win32_surface`):** Experimental alternative to Direct3D 11 for cross-platform research.
 - **AV1 hardware encoding in precise export:** When hardware vendor libraries (NVENC/AMF) achieve consistent rate control flags across all generations.
+- **A–B loop playback:** Parked to keep the transport minimal while Clip In/Out (`I`/`O`) already marks ranges.

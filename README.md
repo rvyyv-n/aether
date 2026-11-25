@@ -176,7 +176,7 @@ Design decisions are recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 <br />
 
-You need Windows 10 1809+ with the [.NET 10 and .NET 9 SDKs](https://dotnet.microsoft.com/download) and the [Windows App SDK 1.6+](https://learn.microsoft.com/windows/apps/windows-app-sdk/).
+You need Windows 10 1809+ with the [.NET 10 SDK](https://dotnet.microsoft.com/download) and the [Windows App SDK 1.6+](https://learn.microsoft.com/windows/apps/windows-app-sdk/).
 
 ```powershell
 # Build and launch (a few seconds after the first build)
