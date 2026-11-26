@@ -89,7 +89,7 @@ public sealed partial class MainPage
     private void OnQualityClick(object sender, RoutedEventArgs e)
     {
         QualityMenu.Items.Clear();
-        foreach (QualityOption option in _qualityOptions.Count > 0 ? _qualityOptions : [QualityOptions.Auto])
+        foreach (QualityOption option in _qualityOptions.Count > 0 ? _qualityOptions : new[] { QualityOptions.Auto })
         {
             var item = new ToggleMenuFlyoutItem
             {

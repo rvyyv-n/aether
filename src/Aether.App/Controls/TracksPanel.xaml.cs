@@ -259,13 +259,13 @@ public sealed partial class TracksPanel : UserControl
         {
             _mix[index] = _mix[index] with { Muted = mute.IsChecked == true };
             mute.Content = mute.IsChecked == true ? "\uE74F" : "\uE767";
-            MixChanged?.Invoke(this, [.. _mix]);
+            MixChanged?.Invoke(this, _mix.ToArray());
         };
         slider.ValueChanged += (_, e) =>
         {
             _mix[index] = _mix[index] with { Percent = MixLevel.Clamp((int)Math.Round(e.NewValue)) };
             value.Text = Percent(_mix[index].Percent);
-            MixChanged?.Invoke(this, [.. _mix]);
+            MixChanged?.Invoke(this, _mix.ToArray());
         };
         var controls = new Grid { ColumnSpacing = 8 };
         controls.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -293,7 +293,7 @@ public sealed partial class TracksPanel : UserControl
         MixRows.Visibility = MixToggle.IsOn ? Visibility.Visible : Visibility.Collapsed;
         FillMix();
         Fill(AudioRows, _audio, offRow: false);
-        MixChanged?.Invoke(this, MixToggle.IsOn ? [.. _mix] : null);
+        MixChanged?.Invoke(this, MixToggle.IsOn ? _mix.ToArray() : null);
     }
 
     private Button Row(string label, bool isCurrent, TrackChoice choice)

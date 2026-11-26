@@ -681,10 +681,11 @@ public sealed partial class MainPage : Page
         string text = FailureDetails.Format(
             HomeTitle.Text,
             HomeSubtitle.Text,
-            [
+            new (string, string?)[]
+            {
                 (SearchedKey.Text, SearchedValue.Visibility == Visibility.Visible ? SearchedValue.Text : null),
                 (ErrorKey.Text, ErrorValue.Text),
-            ]);
+            });
         var package = new DataPackage();
         package.SetText(text);
         try

@@ -44,7 +44,7 @@ public sealed class ShortcutSettings
         get
         {
             ShortcutMap map = Map;
-            return [.. ShortcutActions.All.Select(a => Entry(map, a))];
+            return ShortcutActions.All.Select(a => Entry(map, a)).ToArray();
         }
     }
 
@@ -69,7 +69,7 @@ public sealed class ShortcutSettings
         {
             return false;
         }
-        Rebind(action, [alternative]);
+        Rebind(action, new[] { alternative });
         return true;
     }
 
@@ -117,7 +117,7 @@ public sealed class ShortcutSettings
         AppStrings.Get(NameKey(action)),
         map.Get(action),
         ShortcutActions.Defaults(action),
-        [.. map.ConflictsOf(action).Select(other => AppStrings.Get(NameKey(other)))],
+        map.ConflictsOf(action).Select(other => AppStrings.Get(NameKey(other))).ToArray(),
         ShortcutActions.Alternative(action));
 
     private static string NameKey(ShortcutAction action) => action switch

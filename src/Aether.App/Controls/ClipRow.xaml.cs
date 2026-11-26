@@ -156,7 +156,7 @@ public sealed partial class ClipRow : UserControl
         try
         {
             StorageFile file = await StorageFile.GetFileFromPathAsync(clip.Path);
-            args.Data.SetStorageItems([file], readOnly: true);
+            args.Data.SetStorageItems(new IStorageItem[] { file }, readOnly: true);
             args.Data.RequestedOperation = DataPackageOperation.Copy;
             args.AllowedOperations = DataPackageOperation.Copy;
             DraggingChanged?.Invoke(this, true);

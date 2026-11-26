@@ -140,7 +140,7 @@ internal sealed class SettingsPageBinder
         SettingsRow? row,
         Selector selector,
         string key,
-        IReadOnlyList<Choice> choices,
+        List<Choice> choices,
         string titleKey,
         string? descriptionKey = null,
         bool allowCustom = false)

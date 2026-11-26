@@ -123,7 +123,7 @@ public sealed class PlayerSession : IDisposable
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
                 BackBufferSize = MpvSettingsMap.BackBufferSize(s),
-                AdditionalOptions = [.. startOptions, fontsDirectory],
+                AdditionalOptions = (KeyValuePair<string, string>[])[.. startOptions, fontsDirectory],
             });
         }
         catch (MpvException) when (startOptions.Count > 0)
@@ -135,7 +135,7 @@ public sealed class PlayerSession : IDisposable
                 HardwareDecoder = s.HardwareDecoding,
                 VideoLatencyHacks = MpvSettingsMap.VideoLatencyHacks(s),
                 BackBufferSize = MpvSettingsMap.BackBufferSize(s),
-                AdditionalOptions = [fontsDirectory],
+                AdditionalOptions = new[] { fontsDirectory },
             });
         }
     }

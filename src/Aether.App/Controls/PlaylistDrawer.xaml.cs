@@ -184,7 +184,7 @@ public sealed partial class PlaylistDrawer : UserControl
 
     private void OnDragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
     {
-        if (Queue is { } queue && QueueRows.FindMove(_dragStart, [.. _rows]) is (int from, int to))
+        if (Queue is { } queue && QueueRows.FindMove(_dragStart, _rows.ToArray()) is (int from, int to))
         {
             queue.Move(_dragStart[from].Index, _dragStart[to].Index);
             Edited?.Invoke(this, EventArgs.Empty);

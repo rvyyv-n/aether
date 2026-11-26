@@ -74,7 +74,7 @@ public sealed partial class ShortcutsPage : Page
     private static SettingsRow FixedRow(string nameKey, string key) => Compact(new SettingsRow
     {
         Header = AppStrings.Get(nameKey),
-        Content = new KeycapStrip { Keys = [key] },
+        Content = new KeycapStrip { Keys = new[] { key } },
     });
 
     private static SettingsRow Compact(SettingsRow row)
@@ -236,7 +236,7 @@ public sealed partial class ShortcutsPage : Page
             return;
         }
         _recording = null;
-        App.Shortcuts.Rebind(action, [combination]);
+        App.Shortcuts.Rebind(action, new[] { combination });
         Refresh();
     }
 

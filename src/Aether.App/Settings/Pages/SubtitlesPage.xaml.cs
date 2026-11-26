@@ -167,7 +167,7 @@ public sealed partial class SubtitlesPage : Page
         List<string> installed = await Task.Run(InstalledFonts.Families);
         if (installed.Count > 0)
         {
-            _fonts = FontList.Build([.. installed, .. BundledFonts.Families], App.Settings.Get(SettingKeys.SubtitleFont) as string);
+            _fonts = FontList.Build((string[])[.. installed, .. BundledFonts.Families], App.Settings.Get(SettingKeys.SubtitleFont) as string);
         }
     }
 
