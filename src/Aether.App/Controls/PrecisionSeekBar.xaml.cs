@@ -8,6 +8,8 @@ using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
+using Microsoft.UI.Xaml.Automation.Provider;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
@@ -644,4 +646,43 @@ public sealed partial class PrecisionSeekBar : UserControl
         /// <summary>How much of this piece a fill reaching <paramref name="x"/> covers.</summary>
         public double Fill(double x) => Math.Clamp(x - Start, 0, End - Start);
     }
+
+    internal void SeekToAutomationValue(double seconds)
+    {
+        if (_duration <= 0 || !double.IsFinite(seconds))
+        {
+            return;
+        }
+        double clamped = Math.Clamp(seconds, 0, _duration);
+        _position = clamped;
+        ArrangeProgress();
+        SeekRequested?.Invoke(clamped, false);
+    }
+
+    protected override AutomationPeer OnCreateAutomationPeer() => new PrecisionSeekBarAutomationPeer(this);
+}
+
+internal sealed partial class PrecisionSeekBarAutomationPeer(PrecisionSeekBar owner)
+    : FrameworkElementAutomationPeer(owner), IRangeValueProvider
+{
+    protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Slider;
+
+    protected override string GetClassNameCore() => nameof(PrecisionSeekBar);
+
+    protected override object? GetPatternCore(PatternInterface patternInterface) =>
+        patternInterface == PatternInterface.RangeValue ? this : base.GetPatternCore(patternInterface);
+
+    public bool IsReadOnly => owner.Duration <= 0;
+
+    public double Minimum => 0;
+
+    public double Maximum => owner.Duration;
+
+    public double Value => owner.Position;
+
+    public double SmallChange => 5;
+
+    public double LargeChange => 30;
+
+    public void SetValue(double value) => owner.SeekToAutomationValue(value);
 }

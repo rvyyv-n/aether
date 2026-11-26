@@ -720,11 +720,12 @@ public class FrameStepperTests
 
             ulong currentId = sender.LastCommand!.Value.ReplyUserdata;
 
-            // Reply asynchronously from a background thread
-            Task.Run(() =>
-            {
-                stepper.OnCommandReply(currentId, 0);
-            });
+            // Reply asynchronously from a dedicated background thread so ThreadPool starvation on small CI VMs cannot delay it.
+            _ = Task.Factory.StartNew(
+                () => stepper.OnCommandReply(currentId, 0),
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default);
 
             bool cleared = TestWait.ForCondition(() => !stepper.IsStepInFlight, timeoutMs: 5000);
             Assert.True(cleared, $"In-flight was not cleared on iteration {i}.");
