@@ -100,7 +100,19 @@ public sealed class ControlsAndNavigationTests : IDisposable
         var dragStart = new Point(barRect.Left + (int)(barRect.Width * 0.15), centerY);
         var dragEnd = new Point(barRect.Left + (int)(barRect.Width * 0.72), centerY);
 
-        DesktopInput.Drag(session.MainWindow, dragStart, dragEnd);
+        if (DesktopInput.IsHardwareInputAvailable)
+        {
+            DesktopInput.Drag(session.MainWindow, dragStart, dragEnd);
+        }
+        else
+        {
+            // Headless CI runners drop hardware pointer events before WinUI 3's InputSiteWindowClass;
+            // scrub PrecisionSeekBar directly through its UIA RangeValue provider.
+            Assert.True(seekBar!.Patterns.RangeValue.IsSupported, "SeekBar does not expose UIA RangeValue pattern.");
+            var range = seekBar.Patterns.RangeValue.Pattern;
+            Assert.True(range.Maximum >= 8.0, $"Unexpected SeekBar RangeValue.Maximum: {range.Maximum}.");
+            range.SetValue(Math.Round(range.Maximum * 0.72, 1));
+        }
 
         bool seeked = Retry.WhileFalse(
             () =>
