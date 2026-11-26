@@ -22,14 +22,22 @@ public readonly record struct LookCornerRadii(
     double SidebarItem,
     double Tile,
     double SidePanel,
+    double ClipDrawer,
     double ClipCard,
     double Overlay,
     double TransportButton,
     double Control)
 {
-    public static LookCornerRadii Aether { get; } = new(24, 18, 18, 16, 16, 12, 8, 6, 4);
+    public static LookCornerRadii Aether { get; } = new(24, 18, 18, 16, 16, 16, 12, 8, 6, 4);
 
-    public static LookCornerRadii Native { get; } = new(8, 8, 8, 8, 8, 8, 8, 8, 4);
+    public static LookCornerRadii Native { get; } = new(8, 8, 8, 8, 8, 8, 8, 8, 8, 4);
 
     public static LookCornerRadii For(string? mode) => LookModes.IsNative(mode) ? Native : Aether;
+
+    /// <summary>
+    /// Concentric inner button corner radius for a surface with <paramref name="outerRadius"/>,
+    /// <paramref name="padding"/>, and <paramref name="borderThickness"/>, floored to <see cref="Control"/>.
+    /// </summary>
+    public double ConcentricInnerRadius(double outerRadius, double padding, double borderThickness = 1) =>
+        Math.Max(Control, outerRadius - padding - borderThickness);
 }
