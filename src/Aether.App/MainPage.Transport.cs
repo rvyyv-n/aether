@@ -327,6 +327,19 @@ public sealed partial class MainPage
         ShowBarFlyout(MoreMenu, MoreButton, FlyoutPlacementMode.TopEdgeAlignedRight);
 
     /// <summary>
+    /// Maximum scroll height for flyouts docked above the expanded transport bar so WinUI keeps them strictly
+    /// between the title bar (or top edge in full screen) and <see cref="Osd"/> instead of flipping sideways.
+    /// </summary>
+    private double MaxBarFlyoutPanelHeight()
+    {
+        double titleBar = TitleBar.Visibility == Visibility.Visible ? TitleBar.Height : 0;
+        double barHeight = Math.Max(_osdFullHeight, Osd.ActualHeight);
+        double gap = (double)Application.Current.Resources["AetherSizeOsdGap"];
+        return Aether.Core.Playback.Windowing.WindowPlacement.MaxFlyoutHeightAboveBar(
+            XamlRoot!.Size.Height, titleBar, Osd.Margin.Bottom, barHeight, gap);
+    }
+
+    /// <summary>
     /// Opens a transport button's flyout strictly above <see cref="Osd"/> while horizontally aligned to
     /// <paramref name="anchor"/>, so small popups never cover the seek bar or timecodes.
     /// </summary>

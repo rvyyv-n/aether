@@ -48,4 +48,21 @@ public static class WindowPlacement
             fittedWidth,
             fittedHeight);
     }
+
+    /// <summary>
+    /// Maximum inner scroll height for a flyout docked above the expanded transport bar so WinUI keeps it
+    /// strictly between the title bar (or top window edge when full screen) and the bar instead of flipping sideways.
+    /// </summary>
+    public static double MaxFlyoutHeightAboveBar(
+        double windowHeight,
+        double titleBarHeight,
+        double barBottomMargin,
+        double barFullHeight,
+        double gap = 8,
+        double borderThickness = 2)
+    {
+        double topReserve = Math.Max(0, titleBarHeight) + Math.Max(0, gap);
+        double bottomReserve = Math.Max(0, barBottomMargin) + Math.Max(0, barFullHeight) + Math.Max(0, gap);
+        return Math.Max(0, windowHeight - topReserve - bottomReserve - Math.Max(0, borderThickness));
+    }
 }

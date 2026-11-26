@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using Aether.Core.Playback.Windowing;
 using Aether.Core.Tests.TestSupport;
 using Xunit;
 
@@ -22,5 +23,27 @@ public class FlyoutXamlTests
             .ToList();
 
         Assert.Empty(animated);
+    }
+
+    [Theory]
+    [InlineData(760, 32, 24, 88, 598)]
+    [InlineData(760, 0, 24, 88, 630)]
+    [InlineData(400, 32, 24, 88, 238)]
+    [InlineData(1440, 32, 24, 88, 1278)]
+    [InlineData(120, 32, 24, 88, 0)]
+    public void MaxFlyoutHeightAboveBar_FitsBetweenTitleBarAndExpandedOsd(
+        double windowHeight,
+        double titleBarHeight,
+        double barBottomMargin,
+        double barFullHeight,
+        double expected)
+    {
+        double actual = WindowPlacement.MaxFlyoutHeightAboveBar(
+            windowHeight,
+            titleBarHeight,
+            barBottomMargin,
+            barFullHeight);
+
+        Assert.Equal(expected, actual);
     }
 }
