@@ -1,219 +1,215 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/aether-icon-light.png" />
-    <img src="docs/assets/aether-icon.png" width="112" alt="Aether logo" />
+    <img src="docs/assets/aether-icon.png" width="108" alt="Aether logo" />
   </picture>
 </p>
 
 <h1 align="center">Aether</h1>
 
 <p align="center">
-  <b>The video player Windows 11 deserved.</b><br />
-  Instant, frame-accurate playback. Lossless clips in a blink. Scan a code and keep watching on your phone.
+  <strong>The video player Windows 11 deserved.</strong><br />
+  Instant, frame-accurate playback &middot; Lossless &amp; GPU-encoded clips &middot; Scan a QR code to keep watching on your phone.
 </p>
 
 <p align="center">
-  <a href="https://github.com/rvyyv-n/aether/releases/latest"><img src="https://img.shields.io/github/v/release/rvyyv-n/aether?include_prereleases&label=download&style=flat-square&color=6b5bff" alt="Latest release" /></a>
-  <a href="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml"><img src="https://img.shields.io/github/actions/workflow/status/rvyyv-n/aether/build-aot.yml?branch=master&style=flat-square&label=build" alt="Build status" /></a>
-  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows11&logoColor=white" alt="Windows 10 and 11" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-lightgrey?style=flat-square" alt="GPL-3.0 licence" /></a>
+  <a href="https://github.com/rvyyv-n/aether/releases/latest"><img src="https://img.shields.io/github/v/release/rvyyv-n/aether?include_prereleases&label=release&style=flat-square&color=6b5bff" alt="Latest release" /></a>
+  <a href="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml"><img src="https://img.shields.io/github/actions/workflow/status/rvyyv-n/aether/build-aot.yml?branch=master&style=flat-square&label=build%20%26%20test" alt="Build & Test status" /></a>
+  <a href="https://github.com/rvyyv-n/aether/actions/workflows/ui-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/rvyyv-n/aether/ui-tests.yml?branch=master&style=flat-square&label=ui%20tests" alt="UI Tests status" /></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011%20x64-0078d4?style=flat-square&logo=windows11&logoColor=white" alt="Windows 10 and 11 x64" />
+  <img src="https://img.shields.io/badge/.NET%2010-WinUI%203-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10 and WinUI 3" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-lightgrey?style=flat-square" alt="GPL-3.0 license" /></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/rvyyv-n/aether/releases/latest"><b>Download</b></a> &nbsp;·&nbsp;
-  <a href="#features">Features</a> &nbsp;·&nbsp;
-  <a href="#keyboard-shortcuts">Shortcuts</a> &nbsp;·&nbsp;
-  <a href="docs/CHANGELOG.md">Changelog</a> &nbsp;·&nbsp;
+  <a href="#install"><b>Download</b></a> &nbsp;&middot;&nbsp;
+  <a href="#highlights">Highlights</a> &nbsp;&middot;&nbsp;
+  <a href="#features">Features</a> &nbsp;&middot;&nbsp;
+  <a href="#keyboard-shortcuts">Shortcuts</a> &nbsp;&middot;&nbsp;
+  <a href="#under-the-hood">Architecture</a> &nbsp;&middot;&nbsp;
+  <a href="docs/CHANGELOG.md">Changelog</a> &nbsp;&middot;&nbsp;
   <a href="docs/ROADMAP.md">Roadmap</a>
 </p>
 
-<!-- SCREENSHOT: hero. Wide shot of a video playing with the bar showing, Mica window, ~1600px wide.
-<p align="center">
-  <img src="docs/screenshots/hero.png" width="900" alt="Aether playing a video on Windows 11" />
-</p>
--->
-
-<br />
+---
 
 ## Why Aether
 
-Most players are either heavy and slow to respond, or fast but dated. Aether is a small, native Windows 11 player with no web layer in between. Seeking, scrubbing and frame stepping feel immediate, even on 144–360 Hz game recordings.
+Most desktop video players make you pick between bloated web wrappers and fast tools that feel twenty years old. **Aether** is a native Windows 11 player built directly on WinUI 3, Direct3D 11, and `libmpv`—no Electron, no browser layer, and zero per-frame managed allocations while playing.
 
-It's made for people who review footage, cut clips, and want a player that stays out of the way.
+Scrubbing, stepping frame by frame, cutting clips, and jumping through 144–360 Hz gameplay recordings feel immediate, while the chrome gets out of your way the moment you press play.
+
+## Highlights
 
 <table>
   <tr>
     <td width="33%" valign="top">
-      <h3>🎯 Look closely</h3>
-      Step one frame at a time in either direction, scrub smoothly, and jump between chapters.
+      <strong>Frame-accurate playback</strong><br />
+      Hardware-decoded video paced to your monitor's real refresh rate, with hover seek-bar thumbnail previews, chapter quick-jump, and global Windows media keys.
     </td>
     <td width="33%" valign="top">
-      <h3>✂️ Cut fast</h3>
-      Mark In and Out, then export. Fast cuts take a fraction of a second; Precise cuts land on the exact frame.
+      <strong>Instant &amp; precise clips</strong><br />
+      Mark <kbd>I</kbd> / <kbd>O</kbd> and export with <kbd>Ctrl</kbd>+<kbd>E</kbd>. Stream-copy in a fraction of a second, or GPU-encode frame-exact clips sized for Discord.
     </td>
     <td width="33%" valign="top">
-      <h3>📱 Watch anywhere</h3>
-      Press <kbd>S</kbd>, switch streaming on and scan the code to carry on watching on your phone.
+      <strong>Phone streaming</strong><br />
+      Press <kbd>S</kbd>, toggle streaming on, and scan the QR code to continue watching in your phone's browser with touch gestures—strictly over your local network.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <strong>Glass, OLED &amp; Native looks</strong><br />
+      Choose Aether's frosted glass, pure black <code>#000000</code> OLED Dark, or Windows 11 Native Desktop Acrylic—with custom accent colours or crisp monochrome.
+    </td>
+    <td width="33%" valign="top">
+      <strong>Audio &amp; subtitle studio</strong><br />
+      10-band EQ, Night mode, multi-track game/mic/chat mixing, live Windows audio device switching, dual subtitles, and a searchable <kbd>Ctrl</kbd>+<kbd>T</kbd> transcript.
+    </td>
+    <td width="33%" valign="top">
+      <strong>Streams &amp; smart queues</strong><br />
+      Paste links from 1,000+ sites via built-in <code>yt-dlp</code> with SponsorBlock and live-stream DVR, or drop folders into a reorderable <kbd>Q</kbd> queue.
     </td>
   </tr>
 </table>
 
-<br />
-
 ## Features
 
-### Playback that keeps up
-
-Hardware decoding straight to the screen, paced to your monitor's real refresh rate, so 120 and 144 fps clips play every frame. Aether remembers where you left off in every file and link.
-
-<!-- SCREENSHOT: slim bar over a playing video, or the Diagnostics panel (Ctrl+I) showing frame rate and refresh.
-<img src="docs/screenshots/playback.png" width="820" alt="Aether's slim controls over a playing video" />
--->
+### Playback, previews & navigation
+- **High-refresh pacing & resume:** Direct hardware decoding straight to a Direct3D 11 swap chain, synced to fractional and high-refresh monitors, with automatic per-file and per-link resume.
+- **Seek-bar hover previews:** Hover or drag across the timeline for thumbnail previews on local videos (lazy background decoder with LRU cache) and YouTube storyboards, automatically paused on live streams.
+- **Chapter quick-jump:** Press <kbd>C</kbd>, open the right-click or `⋯` menu, or enable the Chapters bar button to jump through timestamped chapters.
+- **Home Recents shelf:** Resume recent local files and links from a minimalist 3-card 16:9 thumbnail grid with duration badges, progress hairlines, and quick hover actions.
+- **Global Windows media controls:** Hardware media keys work even when Aether is in the background, with live artwork, title, and seekable timeline in Windows Quick Settings and on the lock screen.
 
 ### Clips without the wait
-
-Press <kbd>I</kbd> and <kbd>O</kbd>, then <kbd>Ctrl</kbd>+<kbd>E</kbd>. **Fast** copies the stream as-is with no quality loss. **Precise** re-encodes on your graphics card (NVIDIA, Intel or AMD, with a software fallback) so the clip starts and ends on the exact frame, and can fit a size limit like 10 or 25 MB for Discord.
-
-<!-- SCREENSHOT: clip drawer open, showing Fast/Precise, size limit and a clip row exporting.
-<img src="docs/screenshots/clips.png" width="820" alt="The clip drawer with Fast and Precise export" />
--->
+- Press <kbd>I</kbd> and <kbd>O</kbd> to mark a range, then <kbd>Ctrl</kbd>+<kbd>E</kbd> (or open the Clips drawer) to export.
+- **Fast mode** copies the compressed stream losslessly in a blink and previews the real keyframe cut start on the seek bar.
+- **Precise mode** re-encodes on your GPU (NVIDIA, Intel, or AMD, with automatic CPU fallback) for frame-exact cuts, optional target size limits (`10` / `25` / `50 MB` or custom), and optional baked-in Video Looks.
+- Drag finished clips straight out of the drawer into Discord, Explorer, or an editor.
 
 ### Your phone as a second screen
+- Press <kbd>S</kbd> (or choose **Stream** from the right-click menu), switch streaming on, and scan the QR code.
+- Opens a full-bleed mobile player (`/watch`) with auto-hiding controls, horizontal seek and vertical volume touch gestures, speed/mute/fullscreen controls, lock-screen media controls, and a live connection quality indicator.
+- Everything stays on your local Wi-Fi—nothing touches the cloud, and the server stops automatically when you switch it off, close the file, or quit.
 
-Press <kbd>S</kbd> (or pick Stream in the right-click menu), switch streaming on and scan the QR code. The open file plays in your phone's browser over your home network. Nothing leaves your network, and it stops when you switch it off, close the file or quit.
+### Sound, subtitles & transcripts
+- **Audio shaping:** 10-band equalizer with presets (Flat, Bass boost, Vocal, Treble boost, Rock, Electronic, Cinema), Night mode to lift quiet dialogue, and a multi-track mixer for multi-channel recordings (game, mic, chat, music).
+- **Live output switching:** Pick any active Windows audio endpoint inside the Audio & Subtitles flyout or **Settings › Audio** without changing Windows' system default.
+- **Smart subtitles:** Auto-detects nearby subtitle files even with fuzzy names, supports **two simultaneous subtitles** (bottom + top) for language learning, nudges sync by 50 ms with <kbd>[</kbd> / <kbd>]</kbd>, and ships four readable fonts (Inter, Lexend, Atkinson Hyperlegible Next, Source Sans 3).
+- **Searchable transcript:** Press <kbd>Ctrl</kbd>+<kbd>T</kbd> to search every subtitle line and click any entry to jump straight to that moment.
 
-<!-- SCREENSHOT: the streaming card with QR code, ideally beside a phone photo playing the same video.
-<img src="docs/screenshots/stream.png" width="820" alt="The phone streaming card with its QR code" />
--->
+### Web links, SponsorBlock & queues
+- **1,000+ sites built in:** Paste a link with <kbd>Ctrl</kbd>+<kbd>V</kbd> to stream with instant quality switching, subtitles, chapters, and automatic `yt-dlp` updates.
+- **SponsorBlock & live streams:** Optional YouTube SponsorBlock strips on the seek bar with auto-skip (and an undo toast) or manual skip; live streams get a `LIVE` badge with back-buffer scrubbing and one-click catch-up.
+- **Smart play queue:** Opening a file queues the rest of its folder; dropping files or folders plays them in order. Press <kbd>Q</kbd> to filter, drag-reorder, shuffle, or repeat while carrying over audio/subtitle language, zoom, and rotation.
 
-### A queue that follows you
+### Looks, themes & Windows 11 craft
+- **Live Video Looks:** Built-in colour grades (Warm, Cool, Vivid, Teal & Orange, Faded Film, Black & White), custom `.cube` LUTs, sharpen, grain, denoise, per-file zoom/rotation/aspect ratio, and always-on-top Picture in Picture (<kbd>P</kbd>).
+- **Appearance & Look mode:** Complete **Auto**, **Light**, **Dark**, and pure-black **OLED** themes, paired with either **Aether** frosted glass (GPU-blurred cards, menus, and drawers) or **Native** Windows 11 Desktop Acrylic with `8 px` system corners—plus accent presets or custom hex colours.
+- **Make it yours:** Show, hide, and reorder optional player-bar controls in **Settings › Playback**, reveal the floating sidebar via the proximity left-edge handle or <kbd>B</kbd>, and rebind every keyboard shortcut with live conflict checks.
 
-Open a video and the rest of its folder lines up behind it. Drop several videos or a whole folder and they play in turn. Press <kbd>Q</kbd> for the queue: drag to reorder, filter by name, shuffle or repeat. <kbd>N</kbd> and <kbd>Shift</kbd>+<kbd>N</kbd> (or your keyboard's media keys) move through it, and your audio language, subtitles, zoom and rotation carry over to the next video.
-
-### Sound you can shape
-
-A 10-band equalizer with presets like Bass boost, Vocal and Cinema. Night mode softens explosions and lifts quiet dialogue for late-night watching. Game recordings with separate game, mic and chat tracks can play them all at once, each at its own level.
-
-### Subtitles that work for you
-
-Subtitle files next to the video are found even when their names don't quite match, and the one in your language turns on by itself. Show two at once to learn a language, nudge them into sync with <kbd>[</kbd> and <kbd>]</kbd>, or press <kbd>Ctrl</kbd>+<kbd>T</kbd> for a searchable transcript and click any line to jump there.
-
-### Links too
-
-Paste a YouTube link (or one from 1,000+ other sites) with <kbd>Ctrl</kbd>+<kbd>V</kbd> and it plays, with a quality picker, subtitles and chapter marks. Turn on SponsorBlock and sponsor segments show as coloured strips on the seek bar and are skipped as they play, with a Back button if you wanted to see one after all. Live streams get a LIVE badge: scrub back through what has loaded, and click LIVE to catch up. The link helper (yt-dlp) comes built in and keeps itself up to date.
-
-### Make it look right
-
-Grades, sharpen, grain and denoise in the Video panel, with your own `.cube` looks if you have them. Zoom, rotate and adjust colour per file. Pop the video into a small always-on-top window with <kbd>P</kbd>.
-
-<!-- SCREENSHOT: Video panel open with a Grade applied.
-<img src="docs/screenshots/look.png" width="820" alt="The Video panel with a colour grade applied" />
--->
-
-### Feels like Windows
-
-Mica backdrop, borderless window, and controls that fade away while you watch. Light and dark themes are both complete, down to the frosted menus and pop-ups, and you can pick an accent colour or keep it black and white. Every shortcut can be changed, and settings are laid out like the Windows Settings app.
-
-<!-- SCREENSHOT: Settings page (Shortcuts or Video), light and dark side by side if possible.
-<img src="docs/screenshots/settings.png" width="820" alt="Aether's settings" />
--->
-
-<br />
+---
 
 ## Install
 
-**[Download `AetherPlayer-win-Setup.exe`](https://github.com/rvyyv-n/aether/releases/latest)** and run it.
+Requires **Windows 10 (1809+)** or **Windows 11**, 64-bit (`x64`).
 
-- Installs for your account only. No admin rights, certificates or Developer Mode.
-- Adds Start menu and desktop shortcuts, **Play with Aether** in the right-click menu, and a clean uninstall in Settings › Installed apps.
-- Updates itself: it checks once a day and installs when you close Aether. Switch this off in Settings › About.
+| Option | Download | Details |
+|:---|:---|:---|
+| **Installer (recommended)** | [`AetherPlayer-win-Setup.exe`](https://github.com/rvyyv-n/aether/releases/latest) | Per-user install with no admin rights, certificates, or Developer Mode. Adds Start menu & desktop shortcuts, **Play with Aether** context menu entry, clean uninstall, and automatic background updates. |
+| **Portable** | [`Aether-portable.zip`](https://github.com/rvyyv-n/aether/releases/latest) | Unzip anywhere (including a USB drive) and run `Aether.App.exe` or `run-portable.cmd`. Self-contained; does not auto-update. |
 
-**Prefer portable?** Grab `Aether-portable.zip` from the same release, unzip it anywhere (a USB stick works) and run `run-portable.cmd`. The portable copy doesn't update itself.
+> [!NOTE]
+> **Windows SmartScreen:** Aether builds are not code-signed yet, so Windows SmartScreen may warn on first run. Click **More info**, then **Run anyway** to continue.
 
-Requires Windows 10 version 1809 or newer, 64-bit.
-
-<br />
+---
 
 ## Keyboard shortcuts
 
+Every shortcut can be customized in **Settings › Shortcuts**.
+
 | Key | Action | | Key | Action |
 |:---|:---|---|:---|:---|
-| <kbd>Space</kbd> | Play / pause | | <kbd>I</kbd> / <kbd>O</kbd> | Set In / Out |
-| <kbd>,</kbd> / <kbd>.</kbd> | Back / forward one frame | | <kbd>Ctrl</kbd>+<kbd>E</kbd> | Export clip |
-| <kbd>←</kbd> / <kbd>→</kbd> | Skip 5 seconds | | <kbd>Ctrl</kbd>+<kbd>C</kbd> | Copy frame |
-| <kbd>Shift</kbd>+<kbd>←</kbd> / <kbd>→</kbd> | Skip 1 second | | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Save frame |
+| <kbd>Space</kbd> | Play / pause | | <kbd>I</kbd> / <kbd>O</kbd> | Set In / Out clip markers |
+| <kbd>,</kbd> / <kbd>.</kbd> | Step back / forward one frame | | <kbd>Ctrl</kbd>+<kbd>E</kbd> | Export marked clip |
+| <kbd>←</kbd> / <kbd>→</kbd> | Skip 5 seconds | | <kbd>Ctrl</kbd>+<kbd>C</kbd> | Copy current frame |
+| <kbd>Shift</kbd>+<kbd>←</kbd> / <kbd>→</kbd> | Skip 1 second | | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Save current frame |
 | <kbd>Ctrl</kbd>+<kbd>←</kbd> / <kbd>→</kbd> | Skip 30 seconds | | <kbd>S</kbd> | Stream to phone |
-| <kbd>PgUp</kbd> / <kbd>PgDn</kbd> | Previous / next chapter | | <kbd>P</kbd> | Picture in picture |
-| <kbd>M</kbd> | Mute | | <kbd>T</kbd> | Always on top |
-| <kbd>F</kbd> / <kbd>F11</kbd> | Full screen | | <kbd>L</kbd> | Loop |
-| <kbd>Ctrl</kbd>+<kbd>O</kbd> | Open file | | <kbd>B</kbd> | Side rail |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> | Open link | | <kbd>Ctrl</kbd>+<kbd>I</kbd> | Diagnostics |
-| <kbd>Ctrl</kbd>+<kbd>V</kbd> | Play a copied link (home screen) | | <kbd>Ctrl</kbd>+<kbd>,</kbd> | Settings |
-| <kbd>N</kbd> / <kbd>Shift</kbd>+<kbd>N</kbd> | Next / previous video | | <kbd>Q</kbd> | Queue |
-| <kbd>[</kbd> / <kbd>]</kbd> | Subtitles 50 ms earlier / later | | <kbd>Ctrl</kbd>+<kbd>T</kbd> | Transcript |
-| <kbd>Shift</kbd>+<kbd>[</kbd> | Reset subtitle timing | | | |
+| <kbd>C</kbd> | Chapter list | | <kbd>P</kbd> | Picture in picture |
+| <kbd>PgUp</kbd> / <kbd>PgDn</kbd> | Previous / next chapter | | <kbd>T</kbd> | Always on top |
+| <kbd>M</kbd> | Mute | | <kbd>L</kbd> | Loop |
+| <kbd>F</kbd> / <kbd>F11</kbd> | Full screen | | <kbd>Q</kbd> | Queue drawer |
+| <kbd>N</kbd> / <kbd>Shift</kbd>+<kbd>N</kbd> | Next / previous video | | <kbd>Ctrl</kbd>+<kbd>T</kbd> | Searchable transcript |
+| <kbd>[</kbd> / <kbd>]</kbd> | Subtitles 50 ms earlier / later | | <kbd>B</kbd> | Side rail |
+| <kbd>Shift</kbd>+<kbd>[</kbd> | Reset subtitle timing | | <kbd>Ctrl</kbd>+<kbd>I</kbd> | Diagnostics overlay |
+| <kbd>Ctrl</kbd>+<kbd>O</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> | Open file / Open link | | <kbd>Ctrl</kbd>+<kbd>,</kbd> | Settings |
+| <kbd>Ctrl</kbd>+<kbd>V</kbd> | Play copied link (Home) | | | |
 
-Change any of them in **Settings › Shortcuts**; Aether warns you if two actions clash.
-
-<br />
+---
 
 ## Under the hood
 
-Aether is written in C# on .NET with WinUI 3 and plays video through [libmpv](https://mpv.io). Decoded frames go from the graphics card straight into a Direct3D 11 swap chain with no copies in between, and the playback loop allocates no memory while a video plays, so there are no garbage-collection stutters. Clips are cut with FFmpeg, and phone streaming runs on a small built-in web server.
+Aether is written in C# on **.NET 10** and **WinUI 3** (`x64`), combining [libmpv](https://mpv.io) with Direct3D 11 / ANGLE GPU interop and source-generated `[LibraryImport]` P/Invoke bindings:
 
-| Project | What it does |
+- **Direct-to-backbuffer fast path:** Bypasses offscreen frame copies whenever no frosted overlay is visible, keeping normal playback lean and smooth.
+- **Batched GPU backdrop blur:** Multi-card Gaussian blur runs on the render thread in ~0.08 ms at 1080p, synced to card bounds, opacity fades, and corner radii.
+- **Zero-allocation render loop & live GPU metrics:** `MpvRenderLoop` allocates nothing per frame and reports live GPU frame time (ms) via Direct3D 11 timestamp queries in Diagnostics (<kbd>Ctrl</kbd>+<kbd>I</kbd>).
+- **Deferred UI loading:** Non-initial drawers, flyouts, overlays, and settings styles load on first use (~347 ms warm ReadyToRun startup).
+
+| Project | Responsibility |
 |:---|:---|
-| `Aether.App` | The window, controls, panels and settings (WinUI 3) |
-| `Aether.Core.Playback` | The playback engine, settings and shortcuts, with no UI |
-| `Aether.Core.Interop` | Native bindings for libmpv, Direct3D 11 and Win32 |
-| `Aether.PvP.Review` | Frame stepping and clip export |
-| `Aether.Server.LanHost` | The phone streaming server |
+| `src/Aether.App` | WinUI 3 presentation layer, Mica/Acrylic/OLED surfaces, controls, drawers, and Settings |
+| `src/Aether.Core.Playback` | UI-agnostic playback session, seek coalescing, thumbnails, chapters, subtitles, and settings |
+| `src/Aether.Core.Interop` | Native AOT `[LibraryImport]` bindings for libmpv, Direct3D 11, ANGLE EGL, and Win32 |
+| `src/Aether.PvP.Review` | Frame stepping, zero-decode keyframe probing, and lossless / GPU FFmpeg clipping |
+| `src/Aether.Server.LanHost` | Embedded Kestrel HTTP 206 LAN streaming host, QR pairing, and `/watch` mobile player |
+| `tests/*` | 2,000+ xUnit unit & integration tests plus live FlaUI (UIA3) end-to-end UI automation |
 
-Design decisions are recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md).
+Architectural decisions are documented in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 <details>
-<summary><b>Building from source</b></summary>
+<summary><b>Building &amp; testing from source</b></summary>
 
 <br />
 
-You need Windows 10 1809+ with the [.NET 10 SDK](https://dotnet.microsoft.com/download) and the [Windows App SDK 1.6+](https://learn.microsoft.com/windows/apps/windows-app-sdk/).
+Requires Windows 10 1809+ (`x64`) and the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```powershell
-# Build and launch (a few seconds after the first build)
+# Download libmpv and ANGLE native libraries (once)
+.\tools\fetch-native-deps.ps1
+
+# Incremental Debug x64 build & launch
 .\run.ps1
-
-# Open a specific video
-.\run.ps1 "path\to\video.mp4"
-
-# Launch the last build without rebuilding
-.\run.ps1 -NoBuild
-
-# Serve a video to a browser at http://localhost:8443/watch
-.\run.ps1 -Host "path\to\video.mp4"
+.\run.ps1 "path\to\video.mp4"       # open a specific file
+.\run.ps1 -NoBuild                  # relaunch without rebuilding
+.\run.ps1 -Host "path\to\video.mp4" # preview /watch at http://localhost:8443/watch
 ```
 
-Build and test the way CI does:
+Run the full CI verification suite locally:
 
 ```powershell
-.\tools\fetch-native-deps.ps1   # libmpv and ANGLE, once
-dotnet build AetherPlayer.sln -c Release -p:Platform=x64 -warnaserror
-dotnet test  AetherPlayer.sln -c Release -p:Platform=x64 --no-build
+dotnet restore AetherPlayer.sln -p:Platform=x64
+dotnet build AetherPlayer.sln -c Release -p:Platform=x64 --no-restore --no-incremental -warnaserror
+dotnet test AetherPlayer.sln -c Release -p:Platform=x64 --no-build --filter "Category!=UI"
+.\tools\run-ui-tests.ps1            # live FlaUI UIA3 automation suite
 ```
 
-`.\tools\package-standalone.ps1` builds the portable folder and zip into `dist/`. Tagged releases are built by GitHub Actions, which also makes the installer and update packages.
+Package a local standalone portable build into `dist/`:
+
+```powershell
+.\tools\package-standalone.ps1
+```
+
+Tagged `v*` pushes run `.github/workflows/release.yml` to build `AetherPlayer-win-Setup.exe`, `Aether-portable.zip`, and Velopack update packages into a draft GitHub release.
 
 </details>
 
-<br />
-
-## Part of a suite
-
-Aether is one of a family of native Windows 11 apps that share the same design language and the same rule: fast, small, and no web layer.
+---
 
 ## License
 
 Aether is by [rvyyv-n](https://github.com/rvyyv-n) and licensed under the **GNU General Public License v3.0 only**. See [LICENSE](LICENSE).
 
-- [NOTICE.md](NOTICE.md): attribution terms. The icon, logo and brand artwork are not covered by the GPL and remain all rights reserved.
-- [TRADEMARKS.md](TRADEMARKS.md): what forks may do with the name and logo.
-- [THIRD_PARTY.md](THIRD_PARTY.md): licences of bundled components (libmpv and FFmpeg are GPL builds) and the written source offer.
+- [NOTICE.md](NOTICE.md) — attribution terms (the icon, logo, and brand artwork are not covered by the GPL and remain all rights reserved).
+- [TRADEMARKS.md](TRADEMARKS.md) — guidelines for forks using the Aether name and logo.
+- [THIRD_PARTY.md](THIRD_PARTY.md) — licenses for bundled components (`libmpv`, `FFmpeg`, `yt-dlp`, fonts) and the written source offer.
