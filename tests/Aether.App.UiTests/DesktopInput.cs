@@ -186,6 +186,15 @@ internal static class DesktopInput
 
     private static bool ProbeHardwareInput()
     {
+        // Headless CI runners (e.g. GitHub Actions windows-latest) often return sent==1 from SendInput without
+        // delivering hardware pointer events to WinUI 3's InputSiteWindowClass; route CI through targeted window
+        // messages and UIA patterns so tests remain deterministic.
+        if (string.Equals(Environment.GetEnvironmentVariable("CI"), "true", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
         var input = new RawInput
         {
             Type = InputMouse,

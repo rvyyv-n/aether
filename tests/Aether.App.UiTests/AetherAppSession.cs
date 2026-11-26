@@ -205,9 +205,9 @@ internal sealed class AetherAppSession : IDisposable
         // Move across two points inside the lower half of the window so MainPage detects pointer motion.
         var p1 = new System.Drawing.Point(bounds.Left + bounds.Width / 2 - 20, bounds.Bottom - 70);
         var p2 = new System.Drawing.Point(bounds.Left + bounds.Width / 2 + 20, bounds.Bottom - 70);
-        Mouse.MoveTo(p1);
+        DesktopInput.MoveTo(MainWindow, p1);
         Thread.Sleep(60);
-        Mouse.MoveTo(p2);
+        DesktopInput.MoveTo(MainWindow, p2);
         Thread.Sleep(180);
     }
 
