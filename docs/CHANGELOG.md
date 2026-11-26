@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0-rc.1] - 2026-11-26
+## [1.1.0] - 2026-11-26
 ### Added
 - Live GPU frame render time (ms) in the Diagnostics overlay (`Ctrl+I`) via non-blocking Direct3D 11 timestamp queries (`D3D11GpuTimer`).
 - Expanded performance benchmarking (`tools/measure-performance.ps1` & `PerfLog`) with working-set/private memory footprint, GPU frame time, backdrop blur pass duration, and display refresh rate.
