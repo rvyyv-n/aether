@@ -2,9 +2,9 @@
 
 ## Where things stand
 
-- Latest release: **1.1.0-preview.2** (pre-release, 2026-11-12), with Passes 13 to 16.
-- **v1.1.0 stable target:** Pass 20 (.NET 10 + global SMTC), Pass 21 (measurable GPU/XAML/streaming/export performance & Native AOT release), Pass 12 completion + full UI polish sweep, Pass 22 (hover scrub thumbnails, audio device switcher, chapter jump menu, Home screen upgrade), and Pass 19 (FlaUI E2E tests).
-- **Deferred to v1.2+:** Pass 17 (10-bit HDR10, except 17.4 GPU frame-time diagnostics pulled into Pass 21) and Pass 18 (PvP dual-clip comparison & annotations).
+- Latest release: **1.1.0-rc.1** (release candidate, 2026-11-26), completing all v1.1.0 passes (Passes 12–16 and 19–22).
+- **v1.1.0 stable target:** All planned v1.1.0 passes are complete (Pass 20 .NET 10 + global SMTC, Pass 21 GPU/XAML/streaming/export performance, Pass 12 themes + customisation + UI polish, Pass 22 scrub previews + audio device switcher + chapters + Home grid, and Pass 19 FlaUI E2E suite); validating `1.1.0-rc.1` before tagging `v1.1.0`.
+- **Deferred to v1.2+:** Pass 17 (10-bit HDR10, except 17.4 GPU frame-time diagnostics shipped in Pass 21) and Pass 18 (PvP dual-clip comparison & annotations).
 - Work happens on `dev`. `master` moves only through a PR from `dev` that the owner merges.
 - 1.1.0-preview.1 looked for updates in a repository that doesn't exist, so anyone on it installs preview.2 by hand once.
 

@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.1.0-rc.1] - 2026-11-26
 ### Added
 - Live GPU frame render time (ms) in the Diagnostics overlay (`Ctrl+I`) via non-blocking Direct3D 11 timestamp queries (`D3D11GpuTimer`).
 - Expanded performance benchmarking (`tools/measure-performance.ps1` & `PerfLog`) with working-set/private memory footprint, GPU frame time, backdrop blur pass duration, and display refresh rate.
@@ -36,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed backdrop blur lifecycle across all glass overlays: the Clips chip/drawer blur now fades in lockstep with playback chrome instead of leaving a ghost blur behind, dialog cards (`OpenUrl` and `LanStream`) fade their blur smoothly on close, switching flyouts/menus no longer drops or leaves stale popup blur, Transcript side-panel slide-out keeps tracking its blur, transient slots initialize at zero opacity for smooth first reveals, and Toasts and Skip Chapter prompts now receive synchronized frosted backdrop blur.
 - Removed the 1 px white outline on the circular Play/Pause button and active sidebar icon, anchored transport bar menus and popups cleanly above the transport bar without overlapping the seek row or collapsed Clips chip, fixed missing-glyph boxes on the Clip drawer's `Show all in folder` button, fixed clicking the left-edge sidebar chevron handle not opening the floating sidebar pill, and fixed Settings › Shortcuts losing alignment and clipping past the right edge when resizing the window.
 - Capped the Video and Audio & Subtitles flyouts' scroll height to the space between the title bar and the expanded transport bar so tall flyouts stay docked above the transport bar at 760 px and shorter window heights instead of flipping into the title bar.
+- Replaced interface-targeted collection expressions in `Aether.App` with concrete collection types for full `.NET 10` CsWinRT Native AOT compatibility, and added a UIA `IRangeValueProvider` automation peer on `PrecisionSeekBar` for Narrator and UI automation scrubbing.
 
 ## [1.1.0-preview.2] - 2026-11-12
 ### Changed
