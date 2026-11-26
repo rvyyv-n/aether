@@ -13,11 +13,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/rvyyv-n/aether/releases/latest"><img src="https://img.shields.io/github/v/release/rvyyv-n/aether?include_prereleases&label=release&style=flat-square&color=6b5bff" alt="Latest release" /></a>
-  <a href="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml"><img src="https://img.shields.io/github/actions/workflow/status/rvyyv-n/aether/build-aot.yml?branch=master&style=flat-square&label=build%20%26%20test" alt="Build & Test status" /></a>
-  <a href="https://github.com/rvyyv-n/aether/actions/workflows/ui-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/rvyyv-n/aether/ui-tests.yml?branch=master&style=flat-square&label=ui%20tests" alt="UI Tests status" /></a>
-  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011%20x64-0078d4?style=flat-square&logo=windows11&logoColor=white" alt="Windows 10 and 11 x64" />
-  <img src="https://img.shields.io/badge/.NET%2010-WinUI%203-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10 and WinUI 3" />
+  <a href="https://github.com/rvyyv-n/aether/releases/latest"><img src="https://img.shields.io/github/v/release/rvyyv-n/aether?label=release&style=flat-square&color=6b5bff" alt="Latest release" /></a>
+  <a href="https://github.com/rvyyv-n/aether/actions/workflows/build-aot.yml"><img src="https://img.shields.io/github/actions/workflow/status/rvyyv-n/aether/build-aot.yml?branch=master&style=flat-square&label=build" alt="Build status" /></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square" alt="Windows 10 and 11" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-lightgrey?style=flat-square" alt="GPL-3.0 license" /></a>
 </p>
 
