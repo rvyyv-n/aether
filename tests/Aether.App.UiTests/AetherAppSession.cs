@@ -337,8 +337,16 @@ internal sealed class AetherAppSession : IDisposable
 
     private void DismissTourIfPresent()
     {
-        // Wait briefly for the 400 ms first-run tour timer on fresh profiles; skip immediately if it opens.
-        AutomationElement? skip = WaitForElement("TourSkipButton", TimeSpan.FromMilliseconds(900));
+        // On a fresh profile (e.g. CI VM), QueueLaunchTour starts its 400 ms timer only after libmpv finishes
+        // initializing, so give it enough time to open before dismissing; once TourSeen is persisted, check briefly.
+        bool tourAlreadySeen = IsTourAlreadySeen();
+        if (!tourAlreadySeen)
+        {
+            WaitForElement("OpenFileButton", TimeSpan.FromSeconds(8));
+        }
+
+        TimeSpan wait = tourAlreadySeen ? TimeSpan.FromMilliseconds(350) : TimeSpan.FromSeconds(4);
+        AutomationElement? skip = WaitForElement("TourSkipButton", wait);
         if (skip is not null)
         {
             try
@@ -347,9 +355,31 @@ internal sealed class AetherAppSession : IDisposable
             }
             catch
             {
-                Keyboard.Press(VirtualKeyShort.ESCAPE);
+                DesktopInput.PressKey(MainWindow, VirtualKeyShort.ESCAPE);
             }
-            WaitUntilGone("TourSkipButton", TimeSpan.FromSeconds(2));
+            WaitUntilGone("TourSkipButton", TimeSpan.FromSeconds(3));
+        }
+    }
+
+    private static bool IsTourAlreadySeen()
+    {
+        try
+        {
+            string settingsPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Aether",
+                "settings.json");
+            if (!File.Exists(settingsPath))
+            {
+                return false;
+            }
+            string json = File.ReadAllText(settingsPath);
+            return json.Contains("\"tourSeen\": true", StringComparison.OrdinalIgnoreCase)
+                || json.Contains("\"tourSeen\":true", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
         }
     }
 

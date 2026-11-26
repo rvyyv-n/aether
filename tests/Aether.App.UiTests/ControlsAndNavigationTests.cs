@@ -71,10 +71,12 @@ public sealed class ControlsAndNavigationTests : IDisposable
 
         // Pause again before dragging the seek bar so position assertions are deterministic.
         DesktopInput.PressKey(session.MainWindow, VirtualKeyShort.SPACE);
-        Retry.WhileFalse(
+        bool pausedAgain = Retry.WhileFalse(
             () => session.FindElement("PlayPauseButton")?.Name?.StartsWith("Play", StringComparison.OrdinalIgnoreCase) == true,
-            TimeSpan.FromSeconds(4));
+            TimeSpan.FromSeconds(4)).Success;
+        Assert.True(pausedAgain, "Third Space key press did not pause playback.");
 
+        session.FocusMainWindow();
         session.RevealTransportChrome();
         AutomationElement? seekBar = session.WaitForElement("SeekBar", TimeSpan.FromSeconds(5));
         Assert.NotNull(seekBar);
@@ -203,7 +205,8 @@ public sealed class ControlsAndNavigationTests : IDisposable
         DesktopInput.OpenContextMenu(session.MainWindow, target);
 
         AutomationElement? settingsItem = session.WaitForElement("CtxSettings", TimeSpan.FromSeconds(5), searchDesktopPopups: true);
-        Assert.NotNull(settingsItem);
+        Assert.True(settingsItem is not null,
+            $"Context menu did not open (hwInput={DesktopInput.IsHardwareInputAvailable}, target={target}, win={bounds}, tourVisible={session.FindElement("TourSkipButton") is not null}).");
 
         AutomationElement? openFileItem = session.WaitForElement("CtxOpenFile", TimeSpan.FromSeconds(2), searchDesktopPopups: true);
         Assert.NotNull(openFileItem);
@@ -222,11 +225,13 @@ public sealed class ControlsAndNavigationTests : IDisposable
         Assert.NotNull(session.WaitForElement("OpenFileButton", TimeSpan.FromSeconds(8)));
         session.FocusMainWindow();
 
-        // Approach left edge to reveal the dynamic chevron handle, then click it to open the floating sidebar pill.
+        // Approach left edge to reveal the dynamic chevron handle, let proximity hit-testing settle, then click it.
         Rectangle winBounds = session.MainWindow.BoundingRectangle;
         var edgePoint = new Point(winBounds.Left + 12, winBounds.Top + winBounds.Height / 2);
-        DesktopInput.MoveTo(session.MainWindow, new Point(winBounds.Left + 40, winBounds.Top + winBounds.Height / 2));
+        DesktopInput.MoveTo(session.MainWindow, new Point(winBounds.Left + 48, winBounds.Top + winBounds.Height / 2));
+        Thread.Sleep(80);
         DesktopInput.MoveTo(session.MainWindow, edgePoint);
+        Thread.Sleep(250);
 
         AutomationElement? handle = Retry.WhileNull(
             () =>
@@ -257,7 +262,8 @@ public sealed class ControlsAndNavigationTests : IDisposable
             },
             timeout: TimeSpan.FromSeconds(4),
             interval: TimeSpan.FromMilliseconds(100)).Result;
-        Assert.NotNull(railSettings);
+        Assert.True(railSettings is not null,
+            $"Sidebar rail did not open after clicking RailHandle (hwInput={DesktopInput.IsHardwareInputAvailable}, handleRect={handleRect}, win={winBounds}).");
 
         // Open Settings via the sidebar button, navigate to Shortcuts, maximize, then resize down and verify zero right-edge clipping.
         railSettings!.AsButton().Invoke();
