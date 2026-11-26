@@ -28,6 +28,9 @@ public class LookModeTests
         Assert.Equal(24, aether.Transport);
         Assert.Equal(18, aether.PlayButton);
         Assert.Equal(16, aether.Tile);
+        Assert.Equal(16, aether.SidePanel);
+        Assert.Equal(16, aether.ClipDrawer);
+        Assert.Equal(12, aether.ClipCard);
         Assert.Equal(6, aether.TransportButton);
 
         Assert.Equal(8, native.Transport);
@@ -35,10 +38,23 @@ public class LookModeTests
         Assert.Equal(8, native.SidebarItem);
         Assert.Equal(8, native.Tile);
         Assert.Equal(8, native.SidePanel);
+        Assert.Equal(8, native.ClipDrawer);
         Assert.Equal(8, native.ClipCard);
         Assert.Equal(8, native.Overlay);
         Assert.Equal(8, native.TransportButton);
         Assert.Equal(4, native.Control);
+    }
+
+    [Fact]
+    public void ConcentricInnerRadius_MatchesClipChipAndExpandedDrawerInBothLookModes()
+    {
+        LookCornerRadii aether = LookCornerRadii.For(LookModes.Aether);
+        LookCornerRadii native = LookCornerRadii.For(LookModes.Native);
+
+        Assert.Equal(8, aether.ConcentricInnerRadius(aether.ClipCard, padding: 3));
+        Assert.Equal(8, aether.ConcentricInnerRadius(aether.ClipDrawer, padding: 7));
+        Assert.Equal(4, native.ConcentricInnerRadius(native.ClipCard, padding: 3));
+        Assert.Equal(4, native.ConcentricInnerRadius(native.ClipDrawer, padding: 7));
     }
 
     [Fact]

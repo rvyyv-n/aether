@@ -498,6 +498,7 @@ public sealed partial class MainPage
         ClipDrawer.ClearRequested += (_, _) => SetClipRange(default);
         ClipDrawer.CutStartChanged += SeekBar.SetCutStart;
         ClipDrawer.HoldChanged += OnClipDrawerHoldChanged;
+        ClipDrawer.SurfaceShapeChanged += (_, _) => PostBackdropRegion();
         ClipLayer.SizeChanged += (_, _) => UpdateToastPlacement();
         double gap = _osdGap > 0 ? _osdGap : Motion.Token("AetherSizeOsdGap");
         ClipLayer.MaxWidth = Osd.MaxWidth;
@@ -515,7 +516,7 @@ public sealed partial class MainPage
     {
         if (ClipDrawer is not null)
         {
-            ClipDrawer.SetCardCornerRadius(new CornerRadius(LookCornerRadii.For(_nativeLook ? LookModes.Native : LookModes.Aether).ClipCard));
+            ClipDrawer.ApplyLookRadii(LookCornerRadii.For(_nativeLook ? LookModes.Native : LookModes.Aether));
         }
     }
 

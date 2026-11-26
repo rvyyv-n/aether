@@ -28,6 +28,9 @@ public sealed partial class ClipDrawer : UserControl
     private const string ChevronUp = "";
     private const string ChevronDown = "";
 
+    private const double CollapsedPadding = 3;
+    private const double ExpandedPadding = 7;
+
     private const int DefaultCustomMb = 100;
     private const int CustomTag = -1;
     private static readonly int[] PresetMb = [0, 10, 25, 50];
@@ -41,6 +44,8 @@ public sealed partial class ClipDrawer : UserControl
     private double _duration;
     private bool _ffmpegChecked;
     private bool _open;
+    private bool _expandedShape;
+    private LookCornerRadii _lookRadii = LookCornerRadii.Aether;
     private ChromeFader? _fader;
     private ExportMode _mode;
     private int _limitMb; // 0 = no limit
@@ -52,12 +57,20 @@ public sealed partial class ClipDrawer : UserControl
     private readonly CutStartTracker _cutStartTracker = new(new KeyframeProbe(new SystemProcessRunner()));
     private double? _cutStart;
 
-    /// <summary>Updates the card's corner radius to match Aether glass or Native look (12.2).</summary>
-    public void SetCardCornerRadius(CornerRadius radius) => Panel.CornerRadius = radius;
+    /// <summary>Raised when the card's corner radius or padding changes so the GPU backdrop blur stays synced.</summary>
+    public event EventHandler? SurfaceShapeChanged;
+
+    /// <summary>Updates the card's collapsed and expanded corner radii to match Aether glass or Native look (12.2).</summary>
+    public void ApplyLookRadii(LookCornerRadii radii)
+    {
+        _lookRadii = radii;
+        ApplyCardShape();
+    }
 
     public ClipDrawer()
     {
         InitializeComponent();
+        ApplyCardShape();
         _cutStartTracker.Changed += OnCutStartFound;
         SetUpOptions();
         ActualThemeChanged += (_, _) => RenderOptions();
@@ -389,12 +402,22 @@ public sealed partial class ClipDrawer : UserControl
         if (open)
         {
             Panel.Width = Math.Min(width, ActualWidth > 0 ? ActualWidth : width); // narrow windows
+            _expandedShape = true;
+            ApplyCardShape();
             _fader.Enter(DrawerArea, ChromeFader.FromBelow);
         }
         else
         {
-            // The chip keeps its open width until the rows have gone, so they do not reflow as they fade.
-            _fader.Exit(DrawerArea, ChromeFader.FromBelow, () => Panel.Width = double.NaN);
+            // The chip keeps its open width and drawer shape until the rows have gone, so they do not reflow as they fade.
+            _fader.Exit(DrawerArea, ChromeFader.FromBelow, () =>
+            {
+                if (!_open)
+                {
+                    Panel.Width = double.NaN;
+                    _expandedShape = false;
+                    ApplyCardShape();
+                }
+            });
         }
 
         RowsScroller.ChangeView(null, 0, null, disableAnimation: true);
@@ -405,6 +428,22 @@ public sealed partial class ClipDrawer : UserControl
         RenderOptionsBlock(); // the Look may have changed since the drawer was last open
         RenderChip();
         HoldChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ApplyCardShape()
+    {
+        double padding = _expandedShape ? ExpandedPadding : CollapsedPadding;
+        double outerRadius = _expandedShape ? _lookRadii.ClipDrawer : _lookRadii.ClipCard;
+        var buttonCorner = new CornerRadius(_lookRadii.ConcentricInnerRadius(outerRadius, padding, Panel.BorderThickness.Top));
+
+        Panel.Padding = new Thickness(padding);
+        Panel.CornerRadius = new CornerRadius(outerRadius);
+        OptionsDivider.Margin = new Thickness(-padding, 0, -padding, 0);
+        ChipDivider.Margin = new Thickness(-padding, 0, -padding, padding);
+        ExportButton.CornerRadius = buttonCorner;
+        ClearButton.CornerRadius = buttonCorner;
+        ClipsToggle.CornerRadius = buttonCorner;
+        SurfaceShapeChanged?.Invoke(this, EventArgs.Empty);
     }
 
     // ---- Export ----
